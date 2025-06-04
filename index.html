@@ -69,13 +69,17 @@
             padding: 0 20px;
         }
 
-.hero {
-    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
-                url('https://v5.airtableusercontent.com/v3/u/41/41/1749031200000/bYjz-3BZ1SbSFBaGsKv28w/MYfGDB69r5ubZmIPrVUOYfwwX8HFyKGlqHOEl4hGkW1t9v5WRGDbQXKDL7t7ki49-rAvNmaK8WDfC-SHtFPPTGotKAQCP20F2fUk7y1MDQPcGVHwk4K2XP-BQ0WBMLonTjP-WIA8_c9tgwPzFyaF5A/uXa09R6ODumyuuD2BS3x7BYTX7ArQdX8gB5Q8tc7hPM');
-    background-size: cover;
-    background-position: center;
-    ...
-}
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+                        url('https://v5.airtableusercontent.com/v3/u/41/41/1749031200000/bYjz-3BZ1SbSFBaGsKv28w/MYfGDB69r5ubZmIPrVUOYfwwX8HFyKGlqHOEl4hGkW1t9v5WRGDbQXKDL7t7ki49-rAvNmaK8WDfC-SHtFPPTGotKAQCP20F2fUk7y1MDQPcGVHwk4K2XP-BQ0WBMLonTjP-WIA8_c9tgwPzFyaF5A/uXa09R6ODumyuuD2BS3x7BYTX7ArQdX8gB5Q8tc7hPM');
+            background-size: cover;
+            background-position: center;
+            padding: 100px 0;
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
 
         .hero-content {
             z-index: 2;
@@ -507,13 +511,40 @@
                             frameborder="0" 
                             marginheight="0" 
                             marginwidth="0" 
-                            title="Roofing Quote Form">
+                            title="Roofing Quote Form Bottom">
                     </iframe>
-                    <script>var d=document,w="https://tally.so/widgets/embed.js",v=function(){"undefined"!=typeof Tally?Tally.loadEmbeds():d.querySelectorAll("iframe[data-tally-src]:not([src])").forEach((function(e){e.src=e.dataset.tallySrc}))};if("undefined"!=typeof Tally)v();else if(d.querySelector('script[src="'+w+'"]')==null){var s=d.createElement("script");s.src=w,s.onload=v,s.onerror=v,d.head.appendChild(s);}</script>
                 </div>
             </div>
         </div>
     </section>
+
+    <!-- Load Tally script once at the bottom -->
+    <script>
+        (function(d, w) {
+            var tallyScript = "https://tally.so/widgets/embed.js";
+            
+            function loadTallyEmbeds() {
+                if (typeof Tally !== "undefined") {
+                    Tally.loadEmbeds();
+                } else {
+                    // Fallback: manually set src for iframes
+                    d.querySelectorAll("iframe[data-tally-src]:not([src])").forEach(function(iframe) {
+                        iframe.src = iframe.dataset.tallySrc;
+                    });
+                }
+            }
+            
+            if (typeof Tally !== "undefined") {
+                loadTallyEmbeds();
+            } else if (!d.querySelector('script[src="' + tallyScript + '"]')) {
+                var script = d.createElement("script");
+                script.src = tallyScript;
+                script.onload = loadTallyEmbeds;
+                script.onerror = loadTallyEmbeds;
+                d.head.appendChild(script);
+            }
+        })(document, window);
+    </script>
 
     <script>
         // Smooth scrolling for anchor links
