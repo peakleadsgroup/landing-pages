@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peak Leads Group - Service Agreement</title>
+    <meta name="description" content="Pay Per Result Service Agreement between Peak Leads Group and clients for qualified homeowner leads.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .agreement-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 0.3; }
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .intro {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: rgba(248, 249, 250, 0.5);
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+        
+        .section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+        
+        .section-title {
+            font-size: 1.4em;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-number {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .highlight {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .pricing {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #28a745;
+        }
+        
+        .pricing h4 {
+            color: #155724;
+            margin-bottom: 10px;
+        }
+        
+        .criteria-list {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .criteria-list li {
+            margin: 10px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .criteria-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .footer {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            margin-top: 40px;
+        }
+        
+        .print-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 20px 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .print-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .section {
+                padding: 15px;
+            }
+            
+            .section-title {
+                font-size: 1.2em;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .section-number {
+                margin-bottom: 10px;
+                margin-right: 0;
+            }
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .agreement-card {
+                box-shadow: none;
+                background: white;
+            }
+            
+            .print-btn {
+                display: none;
+            }
+            
+            .header::before {
+                display: none;
+            }
+        }
+        
+        .scroll-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(102, 126, 234, 0.2);
+            z-index: 1000;
+        }
+        
+        .scroll-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="scroll-indicator">
+        <div class="scroll-progress" id="scrollProgress"></div>
+    </div>
+    
+    <div class="container">
+        <div class="agreement-card">
+            <div class="header">
+                <h1>Peak Leads Group</h1>
+                <div class="subtitle">Pay Per Result Service Agreement</div>
+            </div>
+            
+            <div class="content">
+                <div class="intro">
+                    <p><strong>This Service Agreement ("Agreement")</strong> is entered into by and between Peak Leads Group ("PLG") and Drew's Roofing (Testing) ("Client"). By submitting payment for the onboarding invoice, the Client acknowledges and agrees to the terms set forth in this Agreement, and Peak Leads Group agrees to uphold its responsibilities as outlined herein. Payment constitutes mutual acceptance of this Agreement, including the services, responsibilities, and billing terms described below.</p>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">
+                        <div class="section-number">1</div>
+                        Services Provided
+                    </div>
+                    <p>PLG will deliver qualified homeowner leads through targeted Facebook and Instagram ad campaigns.</p>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">
+                        <div class="section-number">2</div>
+                        Partnership Structure
+                    </div>
+                    <div class="pricing">
+                        <h4>Onboarding Package – $2160 (due upon signing)</h4>
+                        <p>This covers your full campaign setup and the first 20 qualified leads.</p>
+                    </div>
+                    <div class="pricing">
+                        <h4>Ongoing Billing – $108 per lead</h4>
+                        <p>After the initial 20 leads, you'll be billed $108 per lead, charged automatically in increments of 5 leads using the payment method on file. By entering and maintaining a valid payment method, the Client authorizes PLG to charge this method automatically in accordance with this Agreement.</p>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">
+                        <div class="section-number">3</div>
+                        Qualified Leads
+                    </div>
+                    <p>A Qualified Lead meets all of the following:</p>
+                    <div class="criteria-list">
+                        <ul style="list-style: none;">
+                            <li>Verified homeowner – as determined by the onboarding intake form on the landing page</li>
+                            <li>Zip code provided is within the agreed-upon service area</li>
+                            <li>Includes a phone number that is working and in service</li>
+                            <li>Includes a valid email address, as determined by an online email verification tool</li>
+                        </ul>
+                    </div>
+                    <p>If a lead does not meet these criteria, it can be reported to PLG within 7 days of delivery for review. If confirmed, it will be replaced free of charge.</p>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">
+                        <div class="section-number">4</div>
+                        Lead Delivery & Communication
+                    </div>
+                    <p>Qualified leads will be delivered to the client's chosen contact method. It is the client's responsibility to respond promptly to leads to ensure successful outcomes.</p>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">
+                        <div class="section-number">5</div>
+                        Guarantee
+                    </div>
+                    <div class="highlight">
+                        <p>If PLG fails to deliver the initial 20 qualified leads within 60 days of campaign launch, the client can receive a refund for the remaining undelivered leads if they so choose.</p>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">
+                        <div class="section-number">6</div>
+                        Cancellation Policy
+                    </div>
+                    <p>Either party may cancel this agreement at any time for any reason, provided the Client pays any outstanding balance owed for leads delivered up to the date of cancellation. Upon cancellation, lead delivery will cease within 24 hours. The Client remains responsible for paying for any qualified leads that are delivered during that 24-hour period.</p>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">
+                        <div class="section-number">7</div>
+                        Payment Terms
+                    </div>
+                    <p>Client agrees to maintain a valid payment method on file. If a charge fails or is declined, lead delivery will be immediately paused until the issue is resolved. Repeated payment failures may result in termination of this agreement.</p>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">
+                        <div class="section-number">8</div>
+                        Entire Agreement
+                    </div>
+                    <p>This Agreement constitutes the full understanding between the Client and PLG. No other promises or agreements shall be valid unless made in writing and signed by both parties.</p>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">
+                        <div class="section-number">9</div>
+                        Limitation of Liability
+                    </div>
+                    <p>PLG shall not be held liable for any indirect, incidental, special, or consequential damages arising out of or related to this Agreement, including but not limited to lost profits or missed opportunities. PLG's total liability under this Agreement shall not exceed the total amount paid by the Client during the term of the Agreement.</p>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">
+                        <div class="section-number">10</div>
+                        Confidentiality
+                    </div>
+                    <p>Both parties agree to keep all proprietary or confidential information shared during the term of this Agreement strictly confidential and not disclose it to any third party without prior written consent, unless required by law.</p>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">
+                        <div class="section-number">11</div>
+                        Dispute Resolution
+                    </div>
+                    <p>In the event of a dispute, both parties agree to attempt to resolve the matter through good faith negotiations. If a resolution cannot be reached, the parties agree to submit the matter to binding arbitration in the state of North Carolina.</p>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">
+                        <div class="section-number">12</div>
+                        Electronic Agreement
+                    </div>
+                    <div class="highlight">
+                        <p>The Client acknowledges that by submitting payment through Stripe or another digital platform, they are entering into a legally binding agreement equivalent to a signed written contract.</p>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 40px;">
+                    <button class="print-btn" onclick="window.print()">Print Agreement</button>
+                    <button class="print-btn" onclick="downloadPDF()">Download PDF</button>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p><strong>Peak Leads Group</strong></p>
+                <p>Professional Lead Generation Services</p>
+                <p style="margin-top: 15px; opacity: 0.8;">Last Updated: June 2025</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Scroll progress indicator
+        window.addEventListener('scroll', () => {
+            const scrollProgress = document.getElementById('scrollProgress');
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = (scrollTop / scrollHeight) * 100;
+            scrollProgress.style.width = progress + '%';
+        });
+        
+        // Smooth scrolling animation on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('.section');
+            
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+            
+            sections.forEach((section, index) => {
+                section.style.opacity = '0';
+                section.style.transform = 'translateY(30px)';
+                section.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+                observer.observe(section);
+            });
+        });
+        
+        // PDF download functionality (basic - would need a PDF library for full implementation)
+        function downloadPDF() {
+            alert('PDF download functionality would require integration with a PDF generation service. For now, please use the Print option and save as PDF.');
+        }
+        
+        // Add some interactive hover effects
+        document.querySelectorAll('.section').forEach(section => {
+            section.addEventListener('mouseenter', () => {
+                section.style.borderColor = 'rgba(102, 126, 234, 0.5)';
+            });
+            
+            section.addEventListener('mouseleave', () => {
+                section.style.borderColor = 'rgba(102, 126, 234, 0.1)';
+            });
+        });
+    </script>
+</body>
+</html>
