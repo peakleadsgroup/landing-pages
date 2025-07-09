@@ -126,7 +126,6 @@
 
         .form-embed {
             width: 100%;
-            height: 600px;
             border: none;
             border-radius: 8px;
         }
@@ -367,7 +366,6 @@
 
         .bottom-form-embed {
             width: 100%;
-            height: 700px;
             border: none;
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
@@ -467,7 +465,7 @@
             </div>
             <div class="form-card">
                 <h3>Start Getting Quality Leads Today</h3>
-                <iframe src="https://tally.so/r/3qQjO2?transparentBackground=1&hideTitle=1" class="form-embed"></iframe>
+                <iframe data-tally-src="https://tally.so/embed/3qQjO2?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1" loading="lazy" width="100%" height="246" frameborder="0" marginheight="0" marginwidth="0" title="Lead Generation Form" class="form-embed"></iframe>
             </div>
         </div>
     </section>
@@ -577,7 +575,7 @@
         <div class="bottom-form-container">
             <h2>Ready to Transform Your Siding Business?</h2>
             <p>Join successful contractors across the country who are closing more deals with our proven lead system</p>
-            <iframe src="https://tally.so/r/3qQjO2?transparentBackground=1&hideTitle=1" class="bottom-form-embed"></iframe>
+            <iframe data-tally-src="https://tally.so/embed/3qQjO2?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1" loading="lazy" width="100%" height="246" frameborder="0" marginheight="0" marginwidth="0" title="Lead Generation Form" class="bottom-form-embed"></iframe>
         </div>
     </section>
 
@@ -595,5 +593,8 @@
             </div>
         </div>
     </footer>
+
+    <!-- Tally Embed Script -->
+    <script>var d=document,w="https://tally.so/widgets/embed.js",v=function(){"undefined"!=typeof Tally?Tally.loadEmbeds():d.querySelectorAll("iframe[data-tally-src]:not([src])").forEach((function(e){e.src=e.dataset.tallySrc}))};if("undefined"!=typeof Tally)v();else if(d.querySelector('script[src="'+w+'"]')==null){var s=d.createElement("script");s.src=w,s.onload=v,s.onerror=v,d.body.appendChild(s);}</script>
 </body>
 </html>
