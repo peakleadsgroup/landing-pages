@@ -1,85 +1,267 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   <title>Peak Leads Group</title>
   <style>
-    body {
+    * {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f9f9f9;
-      color: #333;
+      padding: 0;
+      box-sizing: border-box;
     }
-
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8fafc;
+      color: #2d3748;
+      line-height: 1.6;
+    }
+    
     header {
-      background-color: #003366;
-      color: white;
-      padding: 1rem 2rem;
-      text-align: center;
+      background: white;
+      color: #003366;
+      padding: 1.5rem 2rem;
+      text-align: left;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-bottom: 2px solid #f1f5f9;
     }
-
+    
+    .logo-container {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 1.5rem;
+      margin-bottom: 0;
+    }
+    
+    .logo {
+      height: 60px;
+      width: auto;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    }
+    
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin: 0;
+    }
+    
+    header p {
+      font-size: 1.1rem;
+      opacity: 0.8;
+      margin-top: 0.25rem;
+      color: #4a5568;
+    }
+    
     section.hero {
-      background-color: #00509e;
+      background: linear-gradient(135deg, #00509e 0%, #0066cc 100%);
+      color: white;
+      padding: 5rem 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    section.hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+      background-size: 30px 30px;
+      opacity: 0.3;
+    }
+    
+    section.hero h1 {
+      font-size: 3rem;
+      margin-bottom: 1.5rem;
+      font-weight: 800;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      position: relative;
+      z-index: 1;
+    }
+    
+    section.hero p {
+      font-size: 1.3rem;
+      max-width: 800px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      opacity: 0.95;
+    }
+    
+    section.features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2.5rem;
+      padding: 4rem 2rem;
+      background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .feature {
+      background: white;
+      padding: 2.5rem;
+      border-radius: 16px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border: 1px solid rgba(0, 80, 158, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .feature::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #00509e, #0066cc);
+    }
+    
+    .feature:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .feature h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: #003366;
+      font-weight: 700;
+    }
+    
+    .feature p {
+      font-size: 1rem;
+      color: #4a5568;
+      line-height: 1.7;
+    }
+    
+    .cta-section {
+      background: linear-gradient(135deg, #003366 0%, #00509e 100%);
       color: white;
       padding: 4rem 2rem;
       text-align: center;
     }
-
-    section.hero h1 {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
+    
+    .cta-button {
+      display: inline-block;
+      background: #ffd700;
+      color: #003366;
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-top: 1rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
     }
-
-    section.hero p {
-      font-size: 1.2rem;
-      max-width: 700px;
-      margin: 0 auto;
+    
+    .cta-button:hover {
+      background: #ffed4a;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
     }
-
-    section.features {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 2rem;
-      padding: 3rem 1rem;
-      background-color: white;
-    }
-
-    .feature {
-      background: #f0f4f8;
-      padding: 2rem;
-      border-radius: 8px;
-      max-width: 300px;
-      text-align: center;
-    }
-
+    
     footer {
-      background-color: #003366;
+      background: linear-gradient(135deg, #003366 0%, #002244 100%);
       color: white;
       text-align: center;
-      padding: 2rem 1rem;
+      padding: 3rem 2rem;
     }
-
-    a {
+    
+    footer a {
       color: #ffd700;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+    
+    footer a:hover {
+      color: #ffed4a;
+    }
+    
+    .contact-info {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .copyright {
+      opacity: 0.8;
+      font-size: 0.9rem;
+    }
+    
+    @media (max-width: 768px) {
+      .logo-container {
+        flex-direction: row;
+        gap: 1rem;
+        align-items: center;
+      }
+      
+      header h1 {
+        font-size: 1.8rem;
+      }
+      
+      section.hero h1 {
+        font-size: 2.2rem;
+      }
+      
+      section.hero p {
+        font-size: 1.1rem;
+      }
+      
+      section.features {
+        grid-template-columns: 1fr;
+        padding: 3rem 1rem;
+      }
+      
+      .feature {
+        padding: 2rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .logo {
+        height: 45px;
+      }
+      
+      header h1 {
+        font-size: 1.5rem;
+      }
+      
+      section.hero {
+        padding: 3rem 1rem;
+      }
+      
+      section.hero h1 {
+        font-size: 1.8rem;
+      }
     }
   </style>
 </head>
-
 <body>
   <header>
-    <h1>Peak Leads Group</h1>
-    <p>Performance-Based Lead Generation for Home Services</p>
+    <div class="logo-container">
+      <img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Group Logo" class="logo">
+      <div>
+        <h1>Peak Leads Group</h1>
+        <p>Performance-Based Lead Generation for Home Services</p>
+      </div>
+    </div>
   </header>
-
+  
   <section class="hero">
     <h1>We Deliver Ready-to-Book Leads</h1>
     <p>Skip the retainers and risky ad budgets. Only pay when we deliver real homeowners ready to talk to you.</p>
   </section>
-
+  
   <section class="features">
     <div class="feature">
       <h2>Pay Per Result</h2>
@@ -95,18 +277,27 @@
     </div>
     <div class="feature">
       <h2>Social Media Ads That Convert</h2>
-      <p>Our ad strategies are tailored for home services. We don’t guess. We know what works.</p>
+      <p>Our ad strategies are tailored for home services. We don't guess. We know what works.</p>
     </div>
     <div class="feature">
       <h2>Direct Access to Us</h2>
-      <p>You’re not working with some big agency. We keep the team super lean and efficient so we can focus on your success.</p>
+      <p>You're not working with some big agency. We keep the team super lean and efficient so we can focus on your success.</p>
     </div>
   </section>
-
+  
+  <section class="cta-section">
+    <h2>Ready to Get Started?</h2>
+    <p>Let's discuss how we can help grow your home services business with qualified leads.</p>
+    <a href="mailto:daniel@peakleadsgroup.com" class="cta-button">Get Started Today</a>
+  </section>
+  
   <footer>
-    <p>Contact us at <a href="mailto:daniel@peakleadsgroup.com">daniel@peakleadsgroup.com</a> or call (919) 803-9255</p>
-    <p>&copy; 2025 Peak Leads Group</p>
+    <div class="contact-info">
+      <p>Contact us at <a href="mailto:daniel@peakleadsgroup.com">daniel@peakleadsgroup.com</a> or call <a href="tel:919-803-9255">(919) 803-9255</a></p>
+    </div>
+    <div class="copyright">
+      <p>&copy; 2025 Peak Leads Group</p>
+    </div>
   </footer>
 </body>
-
 </html>
