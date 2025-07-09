@@ -144,7 +144,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid #e9ecef;
         }
 
         .feature-icon img {
@@ -215,35 +214,11 @@
             background: #3a5f95;
         }
 
-        .socials-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            max-width: 300px;
+        .socials-image {
+            max-width: 400px;
+            width: 100%;
+            height: auto;
         }
-
-        .social-icon {
-            width: 80px;
-            height: 80px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 2rem;
-            transition: transform 0.3s;
-        }
-
-        .social-icon:hover {
-            transform: scale(1.1);
-        }
-
-        .facebook { background: #1877f2; }
-        .twitter { background: #1da1f2; }
-        .tiktok { background: #000; }
-        .youtube { background: #ff0000; }
-        .google { background: #4285f4; }
-        .instagram { background: #e4405f; }
 
         /* About Section */
         .about-section {
@@ -339,9 +314,10 @@
 
         /* Footer */
         .footer {
-            background: #333;
-            color: white;
+            background: white;
+            color: #333;
             padding: 3rem 2rem 1rem;
+            border-top: 1px solid #e9ecef;
         }
 
         .footer-container {
@@ -459,13 +435,8 @@
     <!-- How We Do It Section -->
     <section class="how-section" id="how">
         <div class="how-container">
-            <div class="socials-grid">
-                <div class="social-icon facebook">f</div>
-                <div class="social-icon twitter">𝕏</div>
-                <div class="social-icon tiktok">♪</div>
-                <div class="social-icon youtube">▶</div>
-                <div class="social-icon google">G</div>
-                <div class="social-icon instagram">📷</div>
+            <div class="socials-image">
+                <img src="https://github.com/peakleadsgroup/landing-pages/blob/main/Images/Socials.png?raw=true" alt="Social Media Platforms">
             </div>
             <div class="how-content">
                 <h2>How we do it</h2>
@@ -480,8 +451,7 @@
         <div class="about-container">
             <div class="about-content">
                 <h2>Who are we?</h2>
-                <p>Our names are Daniel and Drew - owners and operators of the Peak Leads Group. We're not a faceless agency. We're hands on partners who believe in helping you grow your home services business with clear proven systems, not bloated retainers or vague promises.</p>
-                <a href="#contact" class="about-btn">ABOUT US</a>
+                <p>We're not a faceless agency. We're hands on partners who believe in helping you grow your home services business with clear proven systems, not bloated retainers or vague promises.  You'll work directly with our owner operators from start to finish to ensure your success.</p>
             </div>
             <div class="about-logo">
                 <img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Marketing Group">
