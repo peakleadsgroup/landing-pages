@@ -78,54 +78,79 @@
   const KEYS = ['name','email','phone'];
   const params = new URLSearchParams(location.search);
 
-  // Save values to sessionStorage
+ <script>
+(function () {
+  const KEYS = ['name','email','phone'];
+  const params = new URLSearchParams(location.search);
+
+  // Save params in sessionStorage
   KEYS.forEach(k => {
     const v = params.get(k);
     if (v) sessionStorage.setItem('lead_' + k, v);
   });
 
-  // Build outgoing query
+  // Build the outgoing query
   const out = new URLSearchParams();
   KEYS.forEach(k => {
     const v = params.get(k) || sessionStorage.getItem('lead_' + k);
     if (v) out.set(k, v);
   });
 
+  // Normalize phone for Cal.com
+  function normalizePhone(v){
+    if(!v) return '';
+    const plus = v.trim().startsWith('+');
+    const digits = (v.match(/\d+/g)||[]).join('');
+    if(!digits) return '';
+    if(!plus && digits.length === 10) return '+1' + digits;
+    return (plus ? '+' : '') + digits;
+  }
+  const phoneNorm = normalizePhone(out.get('phone'));
+
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('a.carry').forEach(a => {
       try {
         const url = new URL(a.href, location.origin);
         const merged = new URLSearchParams(url.search);
-        out.forEach((v, k) => merged.set(k, v));
+
+        // Always pass name/email
+        if (out.get('name')) merged.set('name', out.get('name'));
+        if (out.get('email')) merged.set('email', out.get('email'));
+
+        // Pass phone ONLY if going to Cal.com
+        if (url.hostname.endsWith('cal.com') && phoneNorm) {
+          merged.set('attendeePhoneNumber', phoneNorm);
+        }
+
         url.search = merged.toString();
         a.href = url.toString();
       } catch {}
     });
-
-    // Webhook on click
-    const webhookUrl = 'https://hook.us2.make.com/s6ffnemla3z1wvkhtmx5y3c2uyrfdnkv';
-    const email = sessionStorage.getItem('lead_email') || '';
-
-    document.querySelectorAll('a.carry').forEach(a => {
-      a.addEventListener('click', () => {
-        fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: email,
-            page: document.title || location.pathname,
-            button: a.textContent.trim(),
-            timestamp: new Date().toISOString()
-          })
-        }).catch(err => console.error('Webhook error:', err));
-      });
-    });
   });
 
-  // Remove PII from address bar
+  // Fire webhook on button click
+  document.addEventListener('click', function(e){
+    const a = e.target.closest('a');
+    if(!a) return;
+    const payload = {
+      email: out.get('email') || '',
+      page: document.title || location.pathname,
+      button: a.textContent.trim()
+    };
+    fetch('https://hook.us2.make.com/s6ffnemla3z1wvkhtmx5y3c2uyrfdnkv', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    }).catch(()=>{});
+  }, true);
+
+  // Remove PII from the address bar after capture
   if ([...params.keys()].some(k => KEYS.includes(k))) {
     history.replaceState({}, '', location.pathname);
   }
+})();
+</script>
+
 })();
 </script>
 </head>
