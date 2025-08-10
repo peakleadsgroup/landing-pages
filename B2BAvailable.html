@@ -24,9 +24,15 @@
     text-align: center;
     box-shadow: 0 6px 20px rgba(0,0,0,0.15);
   }
-  h1 { font-size: 1.8rem; margin-bottom: 1rem; }
-  p  { font-size: 1rem; color: #555; margin-bottom: 2rem; }
-
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+  }
+  p {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 2rem;
+  }
   .btn {
     display: block;
     border-radius: 5px;
@@ -38,14 +44,90 @@
     margin: 0 auto 1.5rem auto;
     font-weight: bold;
   }
-  .lockin-btn { background: #4a6fa5; color: white; }
-  .lockin-btn:hover { background: #3a5f95; }
-  .lockin-btn .main-text { display:block; font-size:1.1rem; font-weight:700; }
-  .lockin-btn .sub-text  { display:block; font-size:.8rem; font-weight:400; opacity:.9; margin-top:.2rem; line-height:1.3; }
-
-  .btn-secondary { background:#ddd; color:#333; }
-  .btn-secondary:hover { background:#ccc; }
+  .lockin-btn {
+    background: #4a6fa5;
+    color: white;
+  }
+  .lockin-btn:hover {
+    background: #3a5f95;
+  }
+  .lockin-btn .main-text {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+  .lockin-btn .sub-text {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: normal;
+    opacity: 0.9;
+    margin-top: 0.2rem;
+    line-height: 1.3;
+  }
+  .btn-secondary {
+    background: #ddd;
+    color: #333;
+  }
+  .btn-secondary:hover {
+    background: #ccc;
+  }
 </style>
+
+<script>
+(function () {
+  const KEYS = ['name','email','phone'];
+  const params = new URLSearchParams(location.search);
+
+  // Save values to sessionStorage
+  KEYS.forEach(k => {
+    const v = params.get(k);
+    if (v) sessionStorage.setItem('lead_' + k, v);
+  });
+
+  // Build outgoing query
+  const out = new URLSearchParams();
+  KEYS.forEach(k => {
+    const v = params.get(k) || sessionStorage.getItem('lead_' + k);
+    if (v) out.set(k, v);
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('a.carry').forEach(a => {
+      try {
+        const url = new URL(a.href, location.origin);
+        const merged = new URLSearchParams(url.search);
+        out.forEach((v, k) => merged.set(k, v));
+        url.search = merged.toString();
+        a.href = url.toString();
+      } catch {}
+    });
+
+    // Webhook on click
+    const webhookUrl = 'https://hook.us2.make.com/s6ffnemla3z1wvkhtmx5y3c2uyrfdnkv';
+    const email = sessionStorage.getItem('lead_email') || '';
+
+    document.querySelectorAll('a.carry').forEach(a => {
+      a.addEventListener('click', () => {
+        fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: email,
+            page: document.title || location.pathname,
+            button: a.textContent.trim(),
+            timestamp: new Date().toISOString()
+          })
+        }).catch(err => console.error('Webhook error:', err));
+      });
+    });
+  });
+
+  // Remove PII from address bar
+  if ([...params.keys()].some(k => KEYS.includes(k))) {
+    history.replaceState({}, '', location.pathname);
+  }
+})();
+</script>
 </head>
 <body>
   <div class="card">
@@ -61,103 +143,5 @@
       Book a Call With Our Team
     </a>
   </div>
-
-<script>
-(function () {
-  const WEBHOOK = 'https://hook.us2.make.com/s6ffnemla3z1wvkhtmx5y3c2uyrfdnkv';
-  const KEYS = ['name','email','phone'];
-  const params = new URLSearchParams(location.search);
-
-  // Save incoming values
-  KEYS.forEach(k => {
-    const v = params.get(k);
-    if (v) sessionStorage.setItem('lead_' + k, v);
-  });
-
-  // Get lead values (from URL or storage)
-  function getLead() {
-    const out = {};
-    KEYS.forEach(k => {
-      out[k] = params.get(k) || sessionStorage.getItem('lead_' + k) || '';
-    });
-    return out;
-  }
-
-  // Normalize phone for Cal.com
-  function normalizePhone(v){
-    if(!v) return '';
-    const plus = v.trim().startsWith('+');
-    const digits = (v.match(/\d+/g)||[]).join('');
-    if(!digits) return '';
-    if(!plus && digits.length === 10) return '+1' + digits; // tweak for non-US
-    return (plus ? '+' : '') + digits;
-  }
-
-  // Merge params into a URL (without duplicating)
-  function mergeParams(href, extra = {}) {
-    const url = new URL(href, location.origin);
-    const qs  = new URLSearchParams(url.search);
-    Object.entries(extra).forEach(([k,v]) => { if(v) qs.set(k, v); });
-    url.search = qs.toString();
-    return url.toString();
-  }
-
-  // Send webhook (use sendBeacon for reliability during navigation)
-  function sendWebhook(payload){
-    try {
-      const blob = new Blob([JSON.stringify(payload)], {type:'application/json'});
-      if (!navigator.sendBeacon || !navigator.sendBeacon(WEBHOOK, blob)) {
-        fetch(WEBHOOK, {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify(payload),
-          keepalive: true
-        }).catch(()=>{});
-      }
-    } catch (e) {}
-  }
-
-  // Intercept clicks, build final href just-in-time, fire webhook, then continue
-  document.addEventListener('click', function(e){
-    const a = e.target.closest('a.carry');
-    if (!a) return;
-
-    const lead = getLead();
-    const isCal = /^([^:]+:\/\/)?([^\/]+\.)?cal\.com(\/|$)/i.test(a.href);
-
-    // Build outgoing params
-    let finalHref;
-    if (isCal) {
-      finalHref = mergeParams(a.href, {
-        name:  lead.name,
-        email: lead.email,
-        attendeePhoneNumber: normalizePhone(lead.phone)
-      });
-    } else {
-      finalHref = mergeParams(a.href, {
-        name:  lead.name,
-        email: lead.email,
-        phone: lead.phone
-      });
-    }
-
-    // Fire webhook
-    sendWebhook({
-      email: lead.email || '',
-      page: document.title || location.pathname,
-      button: a.textContent.trim(),
-      ts: new Date().toISOString()
-    });
-
-    // Swap the href to our finalized one so the nav carries params
-    a.href = finalHref;
-  }, true);
-
-  // Clean URL bar after we captured PII
-  if ([...params.keys()].some(k => KEYS.includes(k))) {
-    history.replaceState({}, '', location.pathname);
-  }
-})();
-</script>
 </body>
 </html>
