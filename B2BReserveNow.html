@@ -46,55 +46,42 @@
   .step{background:#f6f7fb;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:.95rem;display:flex;gap:10px;align-items:flex-start;}
   .badge-num{flex:0 0 28px;height:28px;border-radius:999px;background:#eef2ff;border:1px solid #c7d2fe;display:flex;align-items:center;justify-content:center;font-weight:700;}
 
-/* CTA */
-.cta { text-align: center; margin-top: 20px; }
-.cta .btn {
-  display: block;
-  width: min(100%, 320px);   /* includes padding because of border-box */
-  margin: 0 auto;
-  text-decoration: none;
-  background: var(--brand);
-  color: #fff;
-  padding: 14px 22px;
-  border-radius: 10px;
-  font-weight: 700;
-  transition: background .2s, transform .05s;
-}
-.cta .btn:hover { background: var(--brand-dark); }
-.cta .btn:active { transform: translateY(1px); }
-.cta small { display: block; color: #6b7280; margin-top: 8px; }
+  /* Primary CTA (blue) */
+  .cta { text-align: center; margin-top: 20px; }
+  .cta .btn{
+    display: block;
+    width: min(100%, 320px);
+    margin: 0 auto;
+    text-decoration: none;
+    background: var(--brand);
+    color: #fff;
+    padding: 14px 22px;
+    border-radius: 10px;
+    font-weight: 700;
+    transition: background .2s, transform .05s;
+  }
+  .cta .btn:hover{ background: var(--brand-dark); }
+  .cta .btn:active{ transform: translateY(1px); }
+  .cta small{ display:block; color:#6b7280; margin-top:8px; }
 
-/* Secondary CTA */
-.cta-secondary { text-align: center; margin-top: 20px; }
-.cta-secondary .hint { color:#6b7280; font-size:.85rem; margin-bottom:6px; }
-.cta-secondary .btn {
-  display: inline-block;          /* let it hug text */
-  padding: 10px 18px;
-  background: var(--brand-dark);
-  color: #fff;
-  border-radius: 6px;
-  text-decoration: none;
-  font-weight: 400;
-}
-@media (max-width: 480px){
-  .cta-secondary .btn { display:block; margin:0 auto; } /* ensure center on tiny screens */
-}
-
-  /* Fine print secondary CTA */
-  .cta-secondary{text-align:center;margin-top:20px;}
-  .cta-secondary .hint{color:#6b7280;font-size:.85rem;margin-bottom:6px;}
-  .cta-secondary .btn{font-size:0.9rem;font-weight:400;padding:10px 18px;background: var(--brand-dark);display:inline-block;border-radius:6px;text-decoration:none;color:#fff;}
-  .cta .btn,
-.cta-secondary .btn {
-  font-size: 0.9rem;
-  font-weight: 600;
-  padding: 10px 18px;
-  background: #e5e7eb; /* light gray */
-  display: inline-block;
-  border-radius: 6px;
-  text-decoration: none;
-  color: #111827; /* dark gray/black text */
-}
+  /* Secondary CTA (gray) */
+  .cta-secondary { text-align:center; margin-top:20px; }
+  .cta-secondary .hint{ color:#6b7280; font-size:.85rem; margin-bottom:6px; }
+  .cta-secondary .btn{
+    display: inline-block;
+    padding: 10px 18px;
+    background: #e5e7eb;
+    color: #111827;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .cta-secondary .btn:hover{ background:#d1d5db; }
+  .cta-secondary .btn:active{ background:#9ca3af; }
+  @media (max-width:480px){
+    .cta-secondary .btn{ display:block; margin:0 auto; }
+  }
 </style>
 </head>
 <body>
@@ -128,7 +115,7 @@
           <h3>Simple Pricing</h3>
           <p>Flat price per qualified lead. No retainers, no contracts, no % of ad spend. We'll even replace unqualified leads for free.</p>
         </div>
-      </div> <!-- ✅ close .grid properly -->
+      </div>
 
       <!-- How it works -->
       <div class="how">
