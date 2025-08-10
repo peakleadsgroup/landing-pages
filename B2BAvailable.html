@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <title>Good News — Your Area is Open</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
+
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -24,15 +25,9 @@
     text-align: center;
     box-shadow: 0 6px 20px rgba(0,0,0,0.15);
   }
-  h1 {
-    font-size: 1.8rem;
-    margin-bottom: 1rem;
-  }
-  p {
-    font-size: 1rem;
-    color: #555;
-    margin-bottom: 2rem;
-  }
+  h1 { font-size: 1.8rem; margin-bottom: 1rem; }
+  p  { font-size: 1rem; color: #555; margin-bottom: 2rem; }
+
   .btn {
     display: block;
     border-radius: 5px;
@@ -44,113 +39,95 @@
     margin: 0 auto 1.5rem auto;
     font-weight: bold;
   }
-  .lockin-btn {
-    background: #4a6fa5;
-    color: white;
-  }
-  .lockin-btn:hover {
-    background: #3a5f95;
-  }
-  .lockin-btn .main-text {
-    display: block;
-    font-size: 1.1rem;
-    font-weight: 700;
-  }
-  .lockin-btn .sub-text {
-    display: block;
-    font-size: 0.8rem;
-    font-weight: normal;
-    opacity: 0.9;
-    margin-top: 0.2rem;
-    line-height: 1.3;
-  }
-  .btn-secondary {
-    background: #ddd;
-    color: #333;
-  }
-  .btn-secondary:hover {
-    background: #ccc;
-  }
+  .lockin-btn { background: #4a6fa5; color: white; }
+  .lockin-btn:hover { background: #3a5f95; }
+  .lockin-btn .main-text { display:block; font-size:1.1rem; font-weight:700; }
+  .lockin-btn .sub-text  { display:block; font-size:.8rem; font-weight:400; opacity:.9; margin-top:.2rem; line-height:1.3; }
+
+  .btn-secondary { background:#ddd; color:#333; }
+  .btn-secondary:hover { background:#ccc; }
 </style>
 
 <script>
 (function () {
-  const KEYS = ['name','email','phone'];
+  const WEBHOOK = 'https://hook.us2.make.com/s6ffnemla3z1wvkhtmx5y3c2uyrfdnkv';
+  const LEAD_KEYS = ['name','email','phone'];
   const params = new URLSearchParams(location.search);
 
- <script>
-(function () {
-  const KEYS = ['name','email','phone'];
-  const params = new URLSearchParams(location.search);
-
-  // Save params in sessionStorage
-  KEYS.forEach(k => {
+  // 1) Save incoming values to sessionStorage
+  LEAD_KEYS.forEach(k => {
     const v = params.get(k);
     if (v) sessionStorage.setItem('lead_' + k, v);
   });
 
-  // Build the outgoing query
+  // 2) Build "out" values (from URL or storage)
   const out = new URLSearchParams();
-  KEYS.forEach(k => {
+  LEAD_KEYS.forEach(k => {
     const v = params.get(k) || sessionStorage.getItem('lead_' + k);
     if (v) out.set(k, v);
   });
 
-  // Normalize phone for Cal.com
+  // Phone normalization for Cal.com
   function normalizePhone(v){
     if(!v) return '';
     const plus = v.trim().startsWith('+');
     const digits = (v.match(/\d+/g)||[]).join('');
     if(!digits) return '';
-    if(!plus && digits.length === 10) return '+1' + digits;
+    if(!plus && digits.length === 10) return '+1' + digits; // tweak if non-US
     return (plus ? '+' : '') + digits;
   }
-  const phoneNorm = normalizePhone(out.get('phone'));
+  const phoneRaw  = out.get('phone') || '';
+  const phoneNorm = normalizePhone(phoneRaw);
 
+  // 3) On DOM ready, append params to links
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('a.carry').forEach(a => {
       try {
         const url = new URL(a.href, location.origin);
-        const merged = new URLSearchParams(url.search);
+        const qs  = new URLSearchParams(url.search);
 
-        // Always pass name/email
-        if (out.get('name')) merged.set('name', out.get('name'));
-        if (out.get('email')) merged.set('email', out.get('email'));
+        // Always pass these forward
+        if (out.get('name'))  qs.set('name',  out.get('name'));
+        if (out.get('email')) qs.set('email', out.get('email'));
 
-        // Pass phone ONLY if going to Cal.com
-        if (url.hostname.endsWith('cal.com') && phoneNorm) {
-          merged.set('attendeePhoneNumber', phoneNorm);
+        // For non-Cal pages, keep the original phone param as "phone"
+        if (!url.hostname.endsWith('cal.com') && phoneRaw) {
+          qs.set('phone', phoneRaw);
         }
 
-        url.search = merged.toString();
+        // For Cal.com, use the booking question slug
+        if (url.hostname.endsWith('cal.com') && phoneNorm) {
+          qs.set('attendeePhoneNumber', phoneNorm);
+        }
+
+        url.search = qs.toString();
         a.href = url.toString();
       } catch {}
     });
+
+    // Webhook on click (use sendBeacon so it still fires during navigation)
+    document.querySelectorAll('a.carry').forEach(a => {
+      a.addEventListener('click', () => {
+        const payload = {
+          email: out.get('email') || '',
+          page: document.title || location.pathname,
+          button: a.textContent.trim(),
+          ts: new Date().toISOString()
+        };
+        const blob = new Blob([JSON.stringify(payload)], {type: 'application/json'});
+        if (!navigator.sendBeacon || !navigator.sendBeacon(WEBHOOK, blob)) {
+          // Fallback if sendBeacon not available
+          fetch(WEBHOOK, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)})
+            .catch(()=>{});
+        }
+      });
+    });
   });
 
-  // Fire webhook on button click
-  document.addEventListener('click', function(e){
-    const a = e.target.closest('a');
-    if(!a) return;
-    const payload = {
-      email: out.get('email') || '',
-      page: document.title || location.pathname,
-      button: a.textContent.trim()
-    };
-    fetch('https://hook.us2.make.com/s6ffnemla3z1wvkhtmx5y3c2uyrfdnkv', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload)
-    }).catch(()=>{});
-  }, true);
-
-  // Remove PII from the address bar after capture
-  if ([...params.keys()].some(k => KEYS.includes(k))) {
+  // 4) Hide PII in address bar after capture
+  if ([...params.keys()].some(k => LEAD_KEYS.includes(k))) {
     history.replaceState({}, '', location.pathname);
   }
-})();
-</script>
-
 })();
 </script>
 </head>
@@ -170,3 +147,4 @@
   </div>
 </body>
 </html>
+
