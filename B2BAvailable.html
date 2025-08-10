@@ -44,7 +44,6 @@
     margin: 0 auto 1.5rem auto;
     font-weight: bold;
   }
-  /* Primary button with stacked text */
   .lockin-btn {
     background: #4a6fa5;
     color: white;
@@ -65,7 +64,6 @@
     margin-top: 0.2rem;
     line-height: 1.3;
   }
-  /* Secondary button */
   .btn-secondary {
     background: #ddd;
     color: #333;
@@ -76,25 +74,23 @@
 </style>
 
 <script>
-/* Carry name/email/phone into all links with class="carry" */
 (function () {
   const KEYS = ['name','email','phone'];
   const params = new URLSearchParams(location.search);
 
-  // Keep values in sessionStorage so we still have them if a user reloads without query
+  // Save values to sessionStorage
   KEYS.forEach(k => {
     const v = params.get(k);
     if (v) sessionStorage.setItem('lead_' + k, v);
   });
 
-  // Build the outgoing query
+  // Build outgoing query
   const out = new URLSearchParams();
   KEYS.forEach(k => {
     const v = params.get(k) || sessionStorage.getItem('lead_' + k);
     if (v) out.set(k, v);
   });
 
-  // When DOM is ready, append to links
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('a.carry').forEach(a => {
       try {
@@ -105,9 +101,28 @@
         a.href = url.toString();
       } catch {}
     });
+
+    // Webhook on click
+    const webhookUrl = 'https://hook.us2.make.com/s6ffnemla3z1wvkhtmx5y3c2uyrfdnkv';
+    const email = sessionStorage.getItem('lead_email') || '';
+
+    document.querySelectorAll('a.carry').forEach(a => {
+      a.addEventListener('click', () => {
+        fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: email,
+            page: document.title || location.pathname,
+            button: a.textContent.trim(),
+            timestamp: new Date().toISOString()
+          })
+        }).catch(err => console.error('Webhook error:', err));
+      });
+    });
   });
 
-  // Optional: remove PII from the address bar after capture
+  // Remove PII from address bar
   if ([...params.keys()].some(k => KEYS.includes(k))) {
     history.replaceState({}, '', location.pathname);
   }
@@ -119,13 +134,14 @@
     <h1>✅ We Are Accepting 1 Contractor in Your Area</h1>
     <p>Secure your spot now before it’s taken.</p>
 
-    <!-- Add class="carry" so parameters are appended -->
     <a href="https://peakleadsgroup.com/B2BReserveNow.html" class="btn lockin-btn carry">
       <span class="main-text">Lock In Your Zip Code</span>
       <span class="sub-text">⚠ Only select if you're ready to start receiving leads in the next 48 hours</span>
     </a>
 
-    <a href="https://yourcalendarlink.com" class="btn btn-secondary carry">Book a Call With Our Team</a>
+    <a href="https://cal.com/bennett-hair-mpzude/discovery-session" class="btn btn-secondary carry">
+      Book a Call With Our Team
+    </a>
   </div>
 </body>
 </html>
