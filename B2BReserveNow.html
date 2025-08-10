@@ -31,4 +31,127 @@
   @media (max-width: 900px){ .grid{grid-template-columns: 1fr 1fr;} }
   @media (max-width: 640px){ .grid{grid-template-columns: 1fr;} }
   .tile{background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:16px 16px 14px;min-height:120px;}
-  .tile h3{font-size:1rem;margin-bottom:6px;display:fle
+  .tile h3{font-size:1rem;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+  .tile p{font-size:.95rem;color:#475569;}
+
+  /* How it works */
+  .how{background:#fff;border:1px dashed var(--border);border-radius:12px;padding:16px;margin-top: 10px;}
+  .how h3{font-size:1.05rem;margin-bottom:8px;text-align:center;}
+  .steps{display:grid;gap:10px;grid-template-columns:1fr;} /* stacked 1–4 on all screens */
+  .step{background:#f6f7fb;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:.95rem;display:flex;gap:10px;align-items:flex-start;}
+  .badge-num{flex:0 0 28px;height:28px;border-radius:999px;background:#eef2ff;border:1px solid #c7d2fe;display:flex;align-items:center;justify-content:center;font-weight:700;}
+
+  /* CTA */
+  .cta{text-align:center;margin-top: 20px;}
+  .cta .btn{display:inline-block;text-decoration:none;background: var(--brand);color:#fff;padding: 14px 22px;border-radius:10px;font-weight:700;min-width: 320px;transition: background .2s, transform .05s;}
+  .cta .btn:hover{ background: var(--brand-dark); }
+  .cta .btn:active{ transform: translateY(1px); }
+  .cta small{display:block;color:#6b7280;margin-top:8px;}
+
+  /* Trust row */
+  .trust{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top: 14px;color:#475569;font-size:.92rem;}
+  .badge{background:#eef2ff;border:1px solid #c7d2fe;color:#364152;padding:6px 10px;border-radius:999px;}
+
+  /* Fine print */
+  .fine{text-align:center;color:#6b7280;font-size:.85rem;margin-top: 12px;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <header>
+        <h1>Get Started Now — Lock in Your Zip</h1>
+        <p class="sub">Watch this short video then follow the steps below to get leads in 48 hours or less</p>
+      </header>
+
+      <!-- Video -->
+      <div class="video">
+        <iframe
+          src="https://www.youtube.com/embed/84vB9UXYiYo?rel=0"
+          title="How Our Lead System Works"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen>
+        </iframe>
+      </div>
+
+      <!-- Benefit cards -->
+      <div class="grid">
+        <div class="tile">
+          <h3>🏷️ Exclusive, Branded Leads</h3>
+          <p>All leads are exclusive to your business. The ads showcase your name, logo, and reviews.</p>
+        </div>
+        <div class="tile">
+          <h3>📅 59% Come With Appointments Booked</h3>
+          <p>Over half of our leads come with appointments already booked—saving your sales team time and money.</p>
+        </div>
+        <div class="tile">
+          <h3>🎯 High-Intent Leads</h3>
+          <p>We filter on the front end so you’re receiving only homeowners actively looking to get work done.</p>
+        </div>
+        <div class="tile">
+          <h3>💳 Simple Pricing</h3>
+          <p>Flat price per qualified lead. No retainers, no % of ad spend. Scale volume up or down anytime.</p>
+        </div>
+        <div class="tile">
+          <h3>🛡️ Quality Guarantee</h3>
+          <p>Bad data? Out of area? Duplicate lead? We replace it at no charge.</p>
+        </div>
+        <div class="tile">
+          <h3>🔗 Seamless Handoff</h3>
+          <p>We send leads by email automatically as soon as we receive them, and can set up CRM integrations.</p>
+        </div>
+      </div>
+
+      <!-- How it works -->
+      <div class="how">
+        <h3>How It Works</h3>
+        <div class="steps">
+          <div class="step"><span class="badge-num">1</span><div><strong>Secure your spot:</strong> Complete checkout for the initial 10 leads.</div></div>
+          <div class="step"><span class="badge-num">2</span><div><strong>Quick onboarding:</strong> Fill out the onboarding form so we know your service areas and materials.</div></div>
+          <div class="step"><span class="badge-num">3</span><div><strong>Launch:</strong> We build your campaigns and launch within 48 hours.</div></div>
+          <div class="step"><span class="badge-num">4</span><div><strong>Scaling:</strong> Once the initial 10 leads are completed, we move to rolling billing—your team can cancel or pause anytime.</div></div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="cta">
+        <a id="checkout" class="btn" href="https://checkout.stripe.com/pay/YOUR_CHECKOUT_LINK">
+          Proceed to Secure Checkout
+          <div style="font-weight:600;font-size:.85rem;opacity:.9;margin-top:2px;">⚠ Only choose this if you're ready to receive leads in the next 48 hours</div>
+        </a>
+        <small>Encrypted checkout • You’ll receive a confirmation email immediately</small>
+
+        <div class="trust">
+          <span class="badge">✅ Lead replacement guarantee</span>
+          <span class="badge">🗓 Get leads booked right to calendar</span>
+          <span class="badge">👤 Small team of real people</span>
+        </div>
+      </div>
+
+      <div class="fine">Have questions first? <a href="https://yourcalendarlink.com">Book a quick call</a> — no pressure.</div>
+    </div>
+  </div>
+
+  <!-- Carry zip+UTMs into Stripe link -->
+  <script>
+    (function(){
+      const params = new URLSearchParams(location.search);
+      const passthrough = ['zip','utm_source','utm_medium','utm_campaign','utm_content','utm_term'];
+      const build = () => {
+        const q = new URLSearchParams();
+        passthrough.forEach(k => { if (params.get(k)) q.set(k, params.get(k)); });
+        return q.toString();
+      };
+      const link = document.getElementById('checkout');
+      if (link){
+        const url = new URL(link.href);
+        const appended = build();
+        if (appended){
+          url.search = url.search ? (url.search + '&' + appended) : ('?' + appended);
+          link.href = url.toString();
+        }
+      }
+    })();
+  </script>
+</body>
+</html>
