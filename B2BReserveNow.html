@@ -4,6 +4,51 @@
 <meta charset="utf-8" />
 <title>Get Started Now — Lock In Your Zip</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+<script>
+/* Carry name/email/phone (from Tally) + zip/UTMs into all links with class="carry" */
+(function () {
+  const LEAD_KEYS = ['name','email','phone'];
+  const EXTRA_KEYS = ['zip','utm_source','utm_medium','utm_campaign','utm_content','utm_term'];
+  const params = new URLSearchParams(location.search);
+
+  // Save incoming lead values so we still have them on reloads
+  LEAD_KEYS.forEach(k => {
+    const v = params.get(k);
+    if (v) sessionStorage.setItem('lead_' + k, v);
+  });
+
+  // Build outgoing query: leads from URL or storage, extras from URL if present
+  const out = new URLSearchParams();
+  LEAD_KEYS.forEach(k => {
+    const v = params.get(k) || sessionStorage.getItem('lead_' + k);
+    if (v) out.set(k, v);
+  });
+  EXTRA_KEYS.forEach(k => {
+    const v = params.get(k);
+    if (v) out.set(k, v);
+  });
+
+  // Append to any <a class="carry"> once DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('a.carry').forEach(a => {
+      try {
+        const url = new URL(a.href, location.origin);
+        const merged = new URLSearchParams(url.search);
+        out.forEach((v, k) => merged.set(k, v));
+        url.search = merged.toString();
+        a.href = url.toString();
+      } catch {}
+    });
+  });
+
+  // Hide PII after capture
+  if ([...params.keys()].some(k => LEAD_KEYS.includes(k))) {
+    history.replaceState({}, '', location.pathname + (params.get('zip') ? '?zip=' + encodeURIComponent(params.get('zip')) : ''));
+  }
+})();
+</script>
+
 <style>
   :root{
     --brand:#4a6fa5;
@@ -130,7 +175,7 @@
 
       <!-- Primary CTA -->
       <div class="cta">
-        <a id="checkout" class="btn" href="https://checkout.stripe.com/pay/YOUR_CHECKOUT_LINK">
+        <a id="checkout" class="btn carry" href="https://checkout.stripe.com/pay/YOUR_CHECKOUT_LINK">
           Click Here to Get Started
           <div style="font-weight:400;font-size:.85rem;opacity:.9;margin-top:2px;">
             ⚠ Only choose this if you're ready to receive leads in the next 48 hours
@@ -142,31 +187,11 @@
       <!-- Secondary CTA -->
       <div class="cta-secondary">
         <div class="hint">Want to talk to someone before starting?</div>
-        <a class="btn" href="https://yourcalendarlink.com">Book a Call</a>
+        <a class="btn carry" href="https://yourcalendarlink.com">Book a Call</a>
       </div>
     </div>
   </div>
 
-  <!-- Carry zip+UTMs into Stripe link -->
-  <script>
-    (function(){
-      const params = new URLSearchParams(location.search);
-      const passthrough = ['zip','utm_source','utm_medium','utm_campaign','utm_content','utm_term'];
-      const build = () => {
-        const q = new URLSearchParams();
-        passthrough.forEach(k => { if (params.get(k)) q.set(k, params.get(k)); });
-        return q.toString();
-      };
-      const link = document.getElementById('checkout');
-      if (link){
-        const url = new URL(link.href);
-        const appended = build();
-        if (appended){
-          url.search = url.search ? (url.search + '&' + appended) : ('?' + appended);
-          link.href = url.toString();
-        }
-      }
-    })();
-  </script>
+  <!-- (No extra script needed here; the head script already handles param carry) -->
 </body>
 </html>
