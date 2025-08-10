@@ -4,7 +4,6 @@
 <meta charset="utf-8" />
 <title>Good News — Your Area is Open</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -47,89 +46,6 @@
   .btn-secondary { background:#ddd; color:#333; }
   .btn-secondary:hover { background:#ccc; }
 </style>
-
-<script>
-(function () {
-  const WEBHOOK = 'https://hook.us2.make.com/s6ffnemla3z1wvkhtmx5y3c2uyrfdnkv';
-  const LEAD_KEYS = ['name','email','phone'];
-  const params = new URLSearchParams(location.search);
-
-  // 1) Save incoming values to sessionStorage
-  LEAD_KEYS.forEach(k => {
-    const v = params.get(k);
-    if (v) sessionStorage.setItem('lead_' + k, v);
-  });
-
-  // 2) Build "out" values (from URL or storage)
-  const out = new URLSearchParams();
-  LEAD_KEYS.forEach(k => {
-    const v = params.get(k) || sessionStorage.getItem('lead_' + k);
-    if (v) out.set(k, v);
-  });
-
-  // Phone normalization for Cal.com
-  function normalizePhone(v){
-    if(!v) return '';
-    const plus = v.trim().startsWith('+');
-    const digits = (v.match(/\d+/g)||[]).join('');
-    if(!digits) return '';
-    if(!plus && digits.length === 10) return '+1' + digits; // tweak if non-US
-    return (plus ? '+' : '') + digits;
-  }
-  const phoneRaw  = out.get('phone') || '';
-  const phoneNorm = normalizePhone(phoneRaw);
-
-  // 3) On DOM ready, append params to links
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('a.carry').forEach(a => {
-      try {
-        const url = new URL(a.href, location.origin);
-        const qs  = new URLSearchParams(url.search);
-
-        // Always pass these forward
-        if (out.get('name'))  qs.set('name',  out.get('name'));
-        if (out.get('email')) qs.set('email', out.get('email'));
-
-        // For non-Cal pages, keep the original phone param as "phone"
-        if (!url.hostname.endsWith('cal.com') && phoneRaw) {
-          qs.set('phone', phoneRaw);
-        }
-
-        // For Cal.com, use the booking question slug
-        if (url.hostname.endsWith('cal.com') && phoneNorm) {
-          qs.set('attendeePhoneNumber', phoneNorm);
-        }
-
-        url.search = qs.toString();
-        a.href = url.toString();
-      } catch {}
-    });
-
-    // Webhook on click (use sendBeacon so it still fires during navigation)
-    document.querySelectorAll('a.carry').forEach(a => {
-      a.addEventListener('click', () => {
-        const payload = {
-          email: out.get('email') || '',
-          page: document.title || location.pathname,
-          button: a.textContent.trim(),
-          ts: new Date().toISOString()
-        };
-        const blob = new Blob([JSON.stringify(payload)], {type: 'application/json'});
-        if (!navigator.sendBeacon || !navigator.sendBeacon(WEBHOOK, blob)) {
-          // Fallback if sendBeacon not available
-          fetch(WEBHOOK, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)})
-            .catch(()=>{});
-        }
-      });
-    });
-  });
-
-  // 4) Hide PII in address bar after capture
-  if ([...params.keys()].some(k => LEAD_KEYS.includes(k))) {
-    history.replaceState({}, '', location.pathname);
-  }
-})();
-</script>
 </head>
 <body>
   <div class="card">
@@ -145,6 +61,103 @@
       Book a Call With Our Team
     </a>
   </div>
+
+<script>
+(function () {
+  const WEBHOOK = 'https://hook.us2.make.com/s6ffnemla3z1wvkhtmx5y3c2uyrfdnkv';
+  const KEYS = ['name','email','phone'];
+  const params = new URLSearchParams(location.search);
+
+  // Save incoming values
+  KEYS.forEach(k => {
+    const v = params.get(k);
+    if (v) sessionStorage.setItem('lead_' + k, v);
+  });
+
+  // Get lead values (from URL or storage)
+  function getLead() {
+    const out = {};
+    KEYS.forEach(k => {
+      out[k] = params.get(k) || sessionStorage.getItem('lead_' + k) || '';
+    });
+    return out;
+  }
+
+  // Normalize phone for Cal.com
+  function normalizePhone(v){
+    if(!v) return '';
+    const plus = v.trim().startsWith('+');
+    const digits = (v.match(/\d+/g)||[]).join('');
+    if(!digits) return '';
+    if(!plus && digits.length === 10) return '+1' + digits; // tweak for non-US
+    return (plus ? '+' : '') + digits;
+  }
+
+  // Merge params into a URL (without duplicating)
+  function mergeParams(href, extra = {}) {
+    const url = new URL(href, location.origin);
+    const qs  = new URLSearchParams(url.search);
+    Object.entries(extra).forEach(([k,v]) => { if(v) qs.set(k, v); });
+    url.search = qs.toString();
+    return url.toString();
+  }
+
+  // Send webhook (use sendBeacon for reliability during navigation)
+  function sendWebhook(payload){
+    try {
+      const blob = new Blob([JSON.stringify(payload)], {type:'application/json'});
+      if (!navigator.sendBeacon || !navigator.sendBeacon(WEBHOOK, blob)) {
+        fetch(WEBHOOK, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(payload),
+          keepalive: true
+        }).catch(()=>{});
+      }
+    } catch (e) {}
+  }
+
+  // Intercept clicks, build final href just-in-time, fire webhook, then continue
+  document.addEventListener('click', function(e){
+    const a = e.target.closest('a.carry');
+    if (!a) return;
+
+    const lead = getLead();
+    const isCal = /^([^:]+:\/\/)?([^\/]+\.)?cal\.com(\/|$)/i.test(a.href);
+
+    // Build outgoing params
+    let finalHref;
+    if (isCal) {
+      finalHref = mergeParams(a.href, {
+        name:  lead.name,
+        email: lead.email,
+        attendeePhoneNumber: normalizePhone(lead.phone)
+      });
+    } else {
+      finalHref = mergeParams(a.href, {
+        name:  lead.name,
+        email: lead.email,
+        phone: lead.phone
+      });
+    }
+
+    // Fire webhook
+    sendWebhook({
+      email: lead.email || '',
+      page: document.title || location.pathname,
+      button: a.textContent.trim(),
+      ts: new Date().toISOString()
+    });
+
+    // Swap the href to our finalized one so the nav carries params
+    a.href = finalHref;
+  }, true);
+
+  // Clean URL bar after we captured PII
+  if ([...params.keys()].some(k => KEYS.includes(k))) {
+    history.replaceState({}, '', location.pathname);
+  }
+})();
+</script>
 </body>
 </html>
-
