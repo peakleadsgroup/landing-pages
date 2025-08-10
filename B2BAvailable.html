@@ -34,20 +34,20 @@
     margin-bottom: 2rem;
   }
   .btn {
-    display: inline-block;
+    display: block;
     border-radius: 5px;
     text-decoration: none;
     transition: background 0.3s;
     text-align: center;
+    padding: 1rem 1.5rem;
+    max-width: 350px;
+    margin: 0 auto 1.5rem auto;
+    font-weight: bold;
   }
   /* Primary button with stacked text */
   .lockin-btn {
-    display: block;
-    padding: 1rem 1.5rem;
     background: #4a6fa5;
     color: white;
-    max-width: 350px;
-    margin: 0 auto 1.5rem auto;
   }
   .lockin-btn:hover {
     background: #3a5f95;
@@ -69,8 +69,6 @@
   .btn-secondary {
     background: #ddd;
     color: #333;
-    padding: 0.8rem 1.5rem;
-    font-weight: bold;
   }
   .btn-secondary:hover {
     background: #ccc;
@@ -84,7 +82,7 @@
 
     <a href="https://yourpaymentlink.com" class="btn lockin-btn">
       <span class="main-text">Lock In Your Spot Now</span>
-      <span class="sub-text">Only select if you're ready to start receiving leads in the next 48 hours</span>
+      <span class="sub-text">⚠ Only select if you're ready to start receiving leads in the next 48 hours</span>
     </a>
 
     <a href="https://yourcalendarlink.com" class="btn btn-secondary">Book a Call With Our Team</a>
