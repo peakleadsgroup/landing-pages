@@ -55,13 +55,17 @@
     }
     .btn-secondary:hover {
         background: #ccc;
-    }
-    .note {
-        font-size: 0.9rem;
-        color: #777;
-        margin-top: -1rem;
-        margin-bottom: 1.5rem;
-    }
+.note {
+    font-size: 0.95rem;
+    margin-top: 0.6rem;
+    margin-bottom: 1.8rem;
+    line-height: 1.4;
+}
+.note.important {
+    color: #b35700; /* warm orange/brown to draw attention */
+    font-weight: 500;
+}
+
 </style>
 </head>
 <body>
@@ -69,10 +73,11 @@
     <h1>✅ Good News — We Are Accepting Contractors in Your Area</h1>
     <p>We only work with one company per ZIP code. Secure your spot now before it’s taken.</p>
 
-    <a href="https://yourpaymentlink.com" class="btn btn-primary">Lock In Your Spot Now</a>
-    <div class="note">Only select this option if you're ready to start receiving leads in the next 48 hours.</div>
+<a href="https://yourpaymentlink.com" class="btn btn-primary">Lock In Your Spot Now</a>
+<div class="note important">⚠ Only select this option if you're ready to start receiving leads in the next 48 hours.</div>
 
-    <a href="https://yourcalendarlink.com" class="btn btn-secondary">Book a Call With Our Team</a>
+<a href="https://yourcalendarlink.com" class="btn btn-secondary">Book a Call With Our Team</a>
+
 </div>
 </body>
 </html>
