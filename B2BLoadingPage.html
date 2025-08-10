@@ -4,77 +4,61 @@
 <meta charset="utf-8" />
 <title>Checking Your Zip Code...</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #f5f7fa;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-        color: #333;
-    }
-    .card {
-        background: white;
-        border-radius: 10px;
-        padding: 2rem;
-        max-width: 500px;
-        text-align: center;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-    }
-    h1 {
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-    }
-    p {
-        font-size: 1rem;
-        color: #555;
-        margin-bottom: 1.5rem;
-    }
-    .progress-bar {
-        width: 100%;
-        height: 12px;
-        background: #e0e0e0;
-        border-radius: 6px;
-        overflow: hidden;
-    }
-    .progress {
-        height: 100%;
-        width: 0%;
-        background: linear-gradient(90deg, #4a6fa5, #6bb5ff);
-        animation: load 6s ease-in-out forwards;
-    }
-    @keyframes load {
-        to { width: 100%; }
-    }
-</style>
-</head>
-<body>
-<div class="card">
-    <h1>Checking Your Zip Code...</h1>
-    <p>We’re matching your location with our service areas. This takes just a moment.</p>
-    <div class="progress-bar"><div class="progress"></div></div>
-</div>
 
 <script>
-    // Collect zip + UTM params from the URL so we can pass them along
-    const params = new URLSearchParams(location.search);
-    const passthroughKeys = ['zip','utm_source','utm_medium','utm_campaign','utm_content','utm_term'];
+/* Capture name/email/phone from Tally and stash for later pages */
+(function () {
+  const KEYS = ['name','email','phone'];
+  const urlParams = new URLSearchParams(location.search);
 
-    function buildQuery() {
-        const out = new URLSearchParams();
-        passthroughKeys.forEach(k => {
-            if (params.get(k)) out.set(k, params.get(k));
-        });
-        return out.toString();
-    }
+  // 1) Save incoming values to sessionStorage
+  KEYS.forEach(k => {
+    const v = urlParams.get(k);
+    if (v) sessionStorage.setItem('lead_' + k, v);
+  });
 
-    // After 4 seconds, redirect to the "accepted" page
-    setTimeout(() => {
-        window.location.href = `/B2BAvailable.html?${buildQuery()}`;
-    }, 6000);
+  // 2) Also make sure we can add them to links on this page if needed
+  const out = new URLSearchParams();
+  KEYS.forEach(k => {
+    const v = sessionStorage.getItem('lead_' + k);
+    if (v) out.set(k, v);
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('a.carry').forEach(a => {
+      try {
+        const url = new URL(a.href, location.origin);
+        const merged = new URLSearchParams(url.search);
+        out.forEach((v, k) => merged.set(k, v));
+        url.search = merged.toString();
+        a.href = url.toString();
+      } catch {}
+    });
+  });
+
+  // 3) Remove PII from the address bar once we’ve captured it
+  if ([...urlParams.keys()].some(k => KEYS.includes(k))) {
+    history.replaceState({}, '', location.pathname);
+  }
+})();
 </script>
-</body>
-</html>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f5f7fa;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    color: #333;
+  }
+  .card {
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0
