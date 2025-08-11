@@ -17,26 +17,7 @@
     if (v) sessionStorage.setItem('lead_' + k, v);
   });
 
-  // 2) Also make sure we can add them to links on this page if needed
-  const out = new URLSearchParams();
-  KEYS.forEach(k => {
-    const v = sessionStorage.getItem('lead_' + k);
-    if (v) out.set(k, v);
-  });
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('a.carry').forEach(a => {
-      try {
-        const url = new URL(a.href, location.origin);
-        const merged = new URLSearchParams(url.search);
-        out.forEach((v, k) => merged.set(k, v));
-        url.search = merged.toString();
-        a.href = url.toString();
-      } catch {}
-    });
-  });
-
-  // 3) Remove PII from the address bar once we’ve captured it
+  // 2) Remove PII from the address bar once we’ve captured it
   if ([...urlParams.keys()].some(k => KEYS.includes(k))) {
     history.replaceState({}, '', location.pathname);
   }
@@ -44,6 +25,7 @@
 </script>
 
 <style>
+  * { box-sizing: border-box; }
   body {
     font-family: Arial, sans-serif;
     background: #f5f7fa;
@@ -52,13 +34,70 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100vh;
+    min-height: 100vh;
     color: #333;
   }
   .card {
-    background: white;
+    background: #fff;
     border-radius: 10px;
     padding: 2rem;
-    max-width: 500px;
+    max-width: 520px;
+    width: 92%;
     text-align: center;
-    box-shadow: 0
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  }
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  p {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 1.5rem;
+  }
+  .progress-bar {
+    width: 100%;
+    height: 12px;
+    background: #e0e6ee;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .progress {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #4a6fa5, #6bb5ff);
+    animation: load 6s ease-in-out forwards;
+  }
+  @keyframes load {
+    to { width: 100%; }
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Checking Your Zip Code...</h1>
+    <p>We’re matching your location with our service areas. This takes just a moment.</p>
+    <div class="progress-bar"><div class="progress"></div></div>
+  </div>
+
+<script>
+  // Build query from sessionStorage and redirect after ~6s
+  function buildLeadQuery() {
+    const q = new URLSearchParams();
+    const fields = ['name','email','phone'];
+    fields.forEach(k => {
+      const v = sessionStorage.getItem('lead_' + k);
+      if (v) q.set(k, v);
+    });
+    return q.toString();
+  }
+
+  setTimeout(() => {
+    const qs = buildLeadQuery();
+    const next = '/B2BAvailable.html' + (qs ? ('?' + qs) : '');
+    window.location.href = next;
+  }, 6000);
+</script>
+</body>
+</html>
+
