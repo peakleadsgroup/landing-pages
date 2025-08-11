@@ -92,35 +92,44 @@
   });
 
   document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('a.carry').forEach(a => {
-      try {
-        const url = new URL(a.href, location.origin);
-        const merged = new URLSearchParams(url.search);
-        out.forEach((v, k) => merged.set(k, v));
-        url.search = merged.toString();
-        a.href = url.toString();
-      } catch {}
-    });
+  document.querySelectorAll('a.carry').forEach(a => {
+    try {
+      const url = new URL(a.href, location.origin);
+      const merged = new URLSearchParams(url.search);
 
-    // Webhook on click
-    const webhookUrl = 'https://hook.us2.make.com/s6ffnemla3z1wvkhtmx5y3c2uyrfdnkv';
-    const email = sessionStorage.getItem('lead_email') || '';
-
-    document.querySelectorAll('a.carry').forEach(a => {
-      a.addEventListener('click', () => {
-        fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: email,
-            page: document.title || location.pathname,
-            button: a.textContent.trim(),
-            timestamp: new Date().toISOString()
-          })
-        }).catch(err => console.error('Webhook error:', err));
+      out.forEach((v, k) => {
+        // Rename phone to attendeePhone in the URL
+        if (k === 'phone') {
+          merged.set('attendeePhone', v);
+        } else {
+          merged.set(k, v);
+        }
       });
+
+      url.search = merged.toString();
+      a.href = url.toString();
+    } catch {}
+  });
+
+  // Webhook on click
+  const webhookUrl = 'https://hook.us2.make.com/s6ffnemla3z1wvkhtmx5y3c2uyrfdnkv';
+  const email = sessionStorage.getItem('lead_email') || '';
+
+  document.querySelectorAll('a.carry').forEach(a => {
+    a.addEventListener('click', () => {
+      fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email,
+          page: document.title || location.pathname,
+          button: a.textContent.trim(),
+          timestamp: new Date().toISOString()
+        })
+      }).catch(err => console.error('Webhook error:', err));
     });
   });
+});
 
   // Remove PII from address bar
   if ([...params.keys()].some(k => KEYS.includes(k))) {
