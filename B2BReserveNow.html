@@ -30,7 +30,6 @@
     if (v) out.set(k, v);
   });
 
-  // Normalize phone for Cal.com
   function normalizePhone(v){
     if(!v) return '';
     const plus = v.trim().startsWith('+');
@@ -39,6 +38,9 @@
     if(!plus && digits.length === 10) return '+1' + digits; // tweak if non-US
     return (plus ? '+' : '') + digits;
   }
+
+  function isCal(url){ return /^([^:]+:\/\/)?([^\/]+\.)?cal\.com(\/|$)/i.test(url.href); }
+  function isStripe(url){ return /^([^:]+:\/\/)?([^\/]+\.)?buy\.stripe\.com(\/|$)/i.test(url.href); }
 
   // Merge params into a URL object
   function mergeParamsForLink(href){
@@ -49,30 +51,26 @@
     const email = out.get('email') || '';
     const phone = out.get('phone') || '';
 
-    // Always pass name + email where available (safe for most links)
-    if (name)  qs.set('name', name);
-    if (email) qs.set('email', email);
-
-    // Special handling for Cal.com
-    if (/^([^:]+:\/\/)?([^\/]+\.)?cal\.com(\/|$)/i.test(url.href)) {
+    if (isCal(url)) {
+      // Cal.com: pass name/email + normalized phone via attendeePhoneNumber
+      if (name)  qs.set('name', name);
+      if (email) qs.set('email', email);
       const phoneNorm = normalizePhone(phone);
       if (phoneNorm) qs.set('attendeePhoneNumber', phoneNorm);
-    }
-    // Special handling for Stripe Payment Link (buy.stripe.com) – prefill email only
-    else if (/^([^:]+:\/\/)?([^\/]+\.)?buy\.stripe\.com(\/|$)/i.test(url.href)) {
-      if (email) qs.set('prefilled_email', email);
-      // We intentionally do NOT append all extras to keep the Stripe URL clean
-    }
-    // All other links: forward ALL captured params (lead + extras)
-    else {
-      out.forEach((v,k) => { if (k) qs.set(k, v); });
+    } else if (isStripe(url)) {
+      // Stripe Payment Link: ONLY prefilled_email (remove any name/email if present)
+      qs.delete('name');
+      qs.delete('email');
+      if (email && email.includes('@')) qs.set('prefilled_email', email);
+    } else {
+      // Other links: forward everything (lead + extras)
+      out.forEach((v,k) => { qs.set(k, v); });
     }
 
     url.search = qs.toString();
     return url.toString();
   }
 
-  // Fire webhook reliably (sendBeacon with fetch fallback)
   function sendWebhook(buttonLabel){
     const payload = {
       email: out.get('email') || '',
@@ -93,7 +91,7 @@
     } catch(e){}
   }
 
-  // Apply params to links just-in-time on click (avoids timing issues)
+  // Just-in-time update + webhook
   document.addEventListener('click', function(e){
     const a = e.target.closest('a.carry');
     if (!a) return;
@@ -101,19 +99,20 @@
     sendWebhook(a.textContent.trim());
   }, true);
 
-  // Also populate hrefs on DOM ready so you can see them in the status bar
+  // Populate on load (nice for status bar previews)
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('a.carry').forEach(a => {
       try { a.href = mergeParamsForLink(a.href); } catch {}
     });
   });
 
-  // Hide PII after capture
+  // Clean the bar of PII
   if ([...params.keys()].some(k => LEAD_KEYS.includes(k))) {
     history.replaceState({}, '', location.pathname);
   }
 })();
 </script>
+
 
 <style>
   :root{
