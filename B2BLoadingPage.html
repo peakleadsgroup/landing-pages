@@ -61,6 +61,7 @@
     background: #e0e6ee;
     border-radius: 6px;
     overflow: hidden;
+    margin-bottom: 1.5rem;
   }
   .progress {
     height: 100%;
@@ -71,6 +72,19 @@
   @keyframes load {
     to { width: 100%; }
   }
+  .fallback-btn {
+    display: none;
+    padding: 0.75rem 1.25rem;
+    background: #4a6fa5;
+    color: white;
+    font-weight: bold;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background 0.3s;
+  }
+  .fallback-btn:hover {
+    background: #3a5f95;
+  }
 </style>
 </head>
 <body>
@@ -78,10 +92,10 @@
     <h1>Checking Your Zip Code...</h1>
     <p>We’re matching your location with our service areas. This takes just a moment.</p>
     <div class="progress-bar"><div class="progress"></div></div>
+    <a id="fallbackLink" href="#" class="fallback-btn">Didn't get redirected? Click here</a>
   </div>
 
 <script>
-  // Build query from sessionStorage and redirect after ~6s
   function buildLeadQuery() {
     const q = new URLSearchParams();
     const fields = ['name','email','phone'];
@@ -92,12 +106,19 @@
     return q.toString();
   }
 
+  const qs = buildLeadQuery();
+  const targetUrl = '/B2BAvailable.html' + (qs ? ('?' + qs) : '');
+  document.getElementById('fallbackLink').href = targetUrl;
+
+  // Redirect after ~6s
   setTimeout(() => {
-    const qs = buildLeadQuery();
-    const next = '/B2BAvailable.html' + (qs ? ('?' + qs) : '');
-    window.location.href = next;
+    window.location.href = targetUrl;
   }, 6000);
+
+  // Show fallback button ~8s in (2s after redirect is triggered)
+  setTimeout(() => {
+    document.getElementById('fallbackLink').style.display = 'inline-block';
+  }, 8000);
 </script>
 </body>
 </html>
-
