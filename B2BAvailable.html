@@ -100,7 +100,7 @@
       out.forEach((v, k) => {
         // Rename phone to attendeePhone in the URL
         if (k === 'phone') {
-          merged.set('attendeePhone', v);
+          merged.set('attendeePhoneNumber', v);
         } else {
           merged.set(k, v);
         }
