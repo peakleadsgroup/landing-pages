@@ -376,7 +376,7 @@
     });
   };
 
-  // Final submit guard + webhook + redirect with name/email
+  // Final submit guard + webhook + redirect (fixed email; notes = user's email only)
   document.getElementById('quiz').addEventListener('submit', async (e)=>{
     e.preventDefault();
 
@@ -396,15 +396,17 @@
       // Send to Make webhook
       await fetch(form.action, { method: 'POST', body: data });
 
-      // Build Cal.com URL with prefill
+      // Build Cal.com URL
       const first = document.getElementById('first')?.value.trim() || '';
       const last  = document.getElementById('last')?.value.trim() || '';
-      const email = document.getElementById('email')?.value.trim() || '';
       const name  = `${first} ${last}`.replace(/\s+/g, ' ').trim();
 
+      const leadEmail = document.getElementById('email')?.value.trim() || '';
+
       const params = new URLSearchParams();
-      if (email) params.set('email', email);
-      if (name)  params.set('name', name);
+      params.set('email', 'peakleadsgroup@gmail.com'); // fixed inbox
+      if (name) params.set('name', name);
+      if (leadEmail) params.set('notes', leadEmail);   // ONLY the user's email
 
       window.location.href =
         `https://cal.com/peakleadsgroup/fortress-floor-coatings-of-nwfl?${params.toString()}`;
@@ -414,6 +416,7 @@
       submitBtn.textContent = 'Upgrade my floors →';
     }
   });
+
 
   // Initialize
   show(0);
