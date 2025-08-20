@@ -37,8 +37,17 @@
   .step { display: none; }
   .step.active { display: block; }
 
-  /* Step headings */
-  .step h2 { color: #111; margin-bottom: 12px; }
+/* Step headings */
+.step h2 {
+  color: #111;
+  margin-bottom: 12px;
+  text-align: center; /* <-- add this line */
+}
+
+  .step small.muted {
+  display: block;
+  text-align: center;
+}
 
   /* Grid rows */
   .row{display:grid;gap:12px}
