@@ -407,6 +407,7 @@
       params.set('email', 'peakleadsgroup@gmail.com'); // fixed inbox
       if (name) params.set('name', name);
       if (leadEmail) params.set('notes', leadEmail);   // ONLY the user's email
+if (fullAddress) params.set('location', fullAddress);
 
       window.location.href =
         `https://cal.com/peakleadsgroup/fortress-floor-coatings-of-nwfl?${params.toString()}`;
