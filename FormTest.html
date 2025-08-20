@@ -400,14 +400,21 @@
       const first = document.getElementById('first')?.value.trim() || '';
       const last  = document.getElementById('last')?.value.trim() || '';
       const name  = `${first} ${last}`.replace(/\s+/g, ' ').trim();
-
       const leadEmail = document.getElementById('email')?.value.trim() || '';
+
+      // ⬇️ Define fullAddress (this was missing)
+      const addr  = document.getElementById('address')?.value.trim() || '';
+      const city  = document.getElementById('city')?.value.trim() || '';
+      const state = document.getElementById('state')?.value.trim() || '';
+      const zip   = document.getElementById('zip')?.value.trim() || '';
+      const fullAddress = [addr, city && `${city},`, state, zip]
+        .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
 
       const params = new URLSearchParams();
       params.set('email', 'peakleadsgroup@gmail.com'); // fixed inbox
       if (name) params.set('name', name);
-      if (leadEmail) params.set('notes', leadEmail);   // ONLY the user's email
-if (fullAddress) params.set('location', fullAddress);
+      if (leadEmail) params.set('notes', leadEmail);    // ONLY the user's email
+      if (fullAddress) params.set('location', fullAddress); // prefill location if your event shows it
 
       window.location.href =
         `https://cal.com/peakleadsgroup/fortress-floor-coatings-of-nwfl?${params.toString()}`;
@@ -417,6 +424,7 @@ if (fullAddress) params.set('location', fullAddress);
       submitBtn.textContent = 'Upgrade my floors →';
     }
   });
+
 
 
   // Initialize
