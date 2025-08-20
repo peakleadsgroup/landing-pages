@@ -3,46 +3,41 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Service Area Address Form</title>
+  <title>Service Area Address Form (Multi‑Step)</title>
   <style>
-    :root {
-      --bg: #0b0c10;
-      --card: #121318;
-      --ink: #e6e8ec;
-      --muted: #9aa4b2;
-      --accent: #4f46e5;
-      --bad: #ef4444;
-      --good: #22c55e;
-      --ring: rgba(79,70,229,.35);
-      --radius: 16px;
-    }
-    html, body { height: 100%; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-    .wrap { max-width: 720px; margin: 4rem auto; padding: 0 1rem; }
-    .card { background: var(--card); border: 1px solid #1e2027; border-radius: var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,.35); }
-    .head { padding: 1.25rem 1.25rem 0; }
-    .head h1 { margin: 0; font-size: 1.35rem; }
-    form { display: grid; gap: 1rem; padding: 1.25rem; }
-    .row { display: grid; gap: .75rem; grid-template-columns: 1fr; }
-    @media (min-width: 640px) {
-      .row-2 { grid-template-columns: 1fr 1fr; }
-      .row-3 { grid-template-columns: 2fr 1fr 1fr; }
-    }
-    label { font-size: .9rem; color: var(--muted); }
-    input, button, select { width: 100%; box-sizing: border-box; }
-    input, select { background: #0f1116; color: var(--ink); border: 1px solid #232633; border-radius: 12px; padding: .75rem .9rem; outline: none; transition: border .2s, box-shadow .2s; }
-    input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--ring); }
-    .hint { font-size: .85rem; color: var(--muted); }
-    .status { display: flex; align-items: center; gap: .5rem; font-size: .9rem; padding: .5rem .75rem; border-radius: 10px; }
-    .status.good { background: rgba(34,197,94,.1); color: var(--good); border: 1px solid rgba(34,197,94,.35); }
-    .status.bad { background: rgba(239,68,68,.1); color: var(--bad); border: 1px solid rgba(239,68,68,.35); }
-    .status.muted { background: rgba(156,163,175,.08); color: var(--muted); border: 1px dashed #2a2e3a; }
-    .btnrow { display: flex; gap: .75rem; align-items: center; }
-    button { background: var(--accent); color: white; border: none; border-radius: 12px; padding: .85rem 1rem; font-weight: 600; cursor: pointer; }
-    button[disabled] { opacity: .6; cursor: not-allowed; }
-    .invis { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
-    .pill { display: inline-block; padding: .25rem .5rem; border-radius: 999px; font-size: .75rem; color: var(--muted); border: 1px solid #2a2e3a; }
-    .foot { padding: 0 1.25rem 1.25rem; color: var(--muted); font-size: .85rem; }
-    .error { color: var(--bad); font-size: .85rem; margin-top: .25rem; }
+    :root { --bg:#0b0c10; --card:#121318; --ink:#e6e8ec; --muted:#9aa4b2; --accent:#6366f1; --bad:#ef4444; --good:#22c55e; --ring: rgba(99,102,241,.35); --radius:16px; }
+    html, body { height:100%; background:var(--bg); color:var(--ink); font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    .wrap { max-width:760px; margin:3rem auto; padding:0 1rem; }
+    .card { background:var(--card); border:1px solid #1e2027; border-radius:var(--radius); box-shadow:0 10px 30px rgba(0,0,0,.35); overflow:hidden; }
+    .head { padding:1.25rem 1.25rem 0; }
+    .head h1 { margin:0; font-size:1.35rem; }
+    .progress { padding:1rem 1.25rem; }
+    .progress-bar { height:10px; background:#1e2230; border-radius:999px; overflow:hidden; }
+    .progress-bar > span { display:block; height:100%; width:0%; background:var(--accent); transition: width .3s ease; }
+    .progress-meta { display:flex; justify-content:space-between; margin-top:.5rem; color:var(--muted); font-size:.85rem; }
+    form { padding:1.25rem; }
+    .step { display:none; }
+    .step.active { display:grid; gap:1rem; }
+    .row { display:grid; gap:.75rem; grid-template-columns:1fr; }
+    @media (min-width:640px){ .row-2{ grid-template-columns:1fr 1fr; } .row-3{ grid-template-columns:2fr 1fr 1fr; } }
+    label { font-size:.95rem; color:var(--ink); font-weight:600; }
+    .hint { font-size:.9rem; color:var(--muted); }
+    input, button { width:100%; box-sizing:border-box; }
+    input { background:#0f1116; color:var(--ink); border:1px solid #232633; border-radius:12px; padding:.8rem .9rem; outline:none; transition:border .2s, box-shadow .2s; }
+    input:focus { border-color:var(--accent); box-shadow:0 0 0 4px var(--ring); }
+    .choices{ display:flex; flex-wrap:wrap; gap:.5rem; }
+    .choice{ background:#0f1116; border:1px solid #2a2e3a; padding:.55rem .75rem; border-radius:999px; cursor:pointer; user-select:none; }
+    .choice.active{ border-color:var(--accent); box-shadow:0 0 0 3px var(--ring); }
+    .status { display:flex; align-items:center; gap:.5rem; font-size:.9rem; padding:.5rem .75rem; border-radius:10px; }
+    .status.good{ background:rgba(34,197,94,.1); color:var(--good); border:1px solid rgba(34,197,94,.35); }
+    .status.bad{ background:rgba(239,68,68,.1); color:var(--bad); border:1px solid rgba(239,68,68,.35); }
+    .status.muted{ background:rgba(156,163,175,.08); color:var(--muted); border:1px dashed #2a2e3a; }
+    .nav{ display:flex; gap:.75rem; padding:1rem 1.25rem; border-top:1px solid #1e2027; background:#0f1116; }
+    .nav .spacer{ flex:1; }
+    button{ background:var(--accent); color:white; border:none; border-radius:12px; padding:.85rem 1rem; font-weight:700; cursor:pointer; }
+    button.secondary{ background:#222533; color:#d1d5db; }
+    button[disabled]{ opacity:.6; cursor:not-allowed; }
+    .error { color:var(--bad); font-size:.85rem; margin-top:.25rem; }
   </style>
 </head>
 <body>
@@ -50,250 +45,153 @@
     <div class="card">
       <div class="head">
         <h1>Get Your Free Estimate</h1>
-        <p class="hint">Address autocomplete + live zip validation before submit. Paste this on your site and wire the webhook.</p>
+        <p class="hint">Answer a few quick questions. Address autocomplete + live ZIP validation before submit.</p>
       </div>
-
+      <div class="progress">
+        <div class="progress-bar"><span id="progressFill"></span></div>
+        <div class="progress-meta"><span id="progressLabel">Step 1 of 6</span><span id="progressPct">0%</span></div>
+      </div>
       <form id="leadForm" novalidate>
-        <!-- Contact basics -->
-        <div class="row row-2">
+        <!-- 1: Homeowner -->
+        <section class="step active" data-step="1">
           <div>
-            <label for="firstName">First name</label>
-            <input id="firstName" name="firstName" autocomplete="given-name" required />
+            <label>Are you the homeowner? <span class="hint">(Required)</span></label>
+            <div class="choices" id="homeownerChoices">
+              <span class="choice" data-value="Yes">Yes</span>
+              <span class="choice" data-value="No">No</span>
+            </div>
+            <input type="hidden" id="homeowner" name="homeowner" required>
           </div>
+        </section>
+        <!-- 2: Project type -->
+        <section class="step" data-step="2">
           <div>
-            <label for="lastName">Last name</label>
-            <input id="lastName" name="lastName" autocomplete="family-name" required />
+            <label>What type of project is this? <span class="hint">(Select one)</span></label>
+            <div class="choices" id="projectChoices">
+              <span class="choice" data-value="Garage">Garage</span>
+              <span class="choice" data-value="Porch">Porch</span>
+              <span class="choice" data-value="Deck">Deck</span>
+              <span class="choice" data-value="Patio">Patio</span>
+              <span class="choice" data-value="Basement">Basement</span>
+              <span class="choice" data-value="Pool">Pool</span>
+              <span class="choice" data-value="Other">Other</span>
+            </div>
+            <input type="hidden" id="projectType" name="projectType" required>
           </div>
-        </div>
-
-        <div class="row row-2">
+        </section>
+        <!-- 3: Timeline -->
+        <section class="step" data-step="3">
           <div>
-            <label for="email">Email</label>
-            <input id="email" name="email" type="email" autocomplete="email" required />
+            <label>When would you like your floors completed?</label>
+            <p class="hint">We only schedule projects we can start soon so you can enjoy your upgraded space.</p>
+            <div class="choices" id="timelineChoices">
+              <span class="choice" data-value="ASAP">ASAP</span>
+              <span class="choice" data-value="Within 2 weeks">Within 2 weeks</span>
+              <span class="choice" data-value="Within a month">Within a month</span>
+              <span class="choice" data-value="Within 2 months">Within 2 months</span>
+            </div>
+            <input type="hidden" id="timeline" name="timeline" required>
           </div>
-          <div>
-            <label for="phone">Phone</label>
-            <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(555) 555-5555" required />
+        </section>
+        <!-- 4: Contact -->
+        <section class="step" data-step="4">
+          <div class="row row-2">
+            <div>
+              <label for="phone">Phone</label>
+              <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(555) 555-5555" required />
+            </div>
+            <div>
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" autocomplete="email" required />
+            </div>
           </div>
-        </div>
-
-        <!-- Google Places Autocomplete input -->
-        <div class="row">
+        </section>
+        <!-- 5: Name -->
+        <section class="step" data-step="5">
+          <div class="row row-2">
+            <div>
+              <label for="firstName">First Name</label>
+              <input id="firstName" name="firstName" autocomplete="given-name" required />
+            </div>
+            <div>
+              <label for="lastName">Last Name</label>
+              <input id="lastName" name="lastName" autocomplete="family-name" required />
+            </div>
+          </div>
+        </section>
+        <!-- 6: Address -->
+        <section class="step" data-step="6">
           <div>
-            <label for="autocomplete">Search your address</label>
+            <label for="autocomplete">Where will we be meeting you?</label>
+            <p class="hint">Select your address to auto‑fill. ZIP must be in our service area.</p>
             <input id="autocomplete" name="autocomplete" placeholder="Start typing your street address…" autocomplete="address-line1" />
-            <div class="hint">Powered by Google Places. Select a suggestion to auto-fill the fields below.</div>
           </div>
-        </div>
-
-        <!-- Parsed address fields (editable) -->
-        <div class="row">
-          <div>
-            <label for="street">Street address</label>
-            <input id="street" name="street" autocomplete="address-line1" required />
+          <div class="row">
+            <div>
+              <label for="street">Street Address</label>
+              <input id="street" name="street" autocomplete="address-line1" required />
+            </div>
           </div>
-        </div>
-
-        <div class="row row-3">
-          <div>
-            <label for="city">City</label>
-            <input id="city" name="city" autocomplete="address-level2" required />
+          <div class="row row-3">
+            <div>
+              <label for="city">City</label>
+              <input id="city" name="city" autocomplete="address-level2" required />
+            </div>
+            <div>
+              <label for="state">State</label>
+              <input id="state" name="state" maxlength="2" placeholder="NC" autocomplete="address-level1" required />
+            </div>
+            <div>
+              <label for="zip">ZIP</label>
+              <input id="zip" name="zip" inputmode="numeric" pattern="\d{5}" placeholder="12345" required />
+              <div id="zipError" class="error" style="display:none">Please enter a valid 5‑digit ZIP.</div>
+            </div>
           </div>
-          <div>
-            <label for="state">State</label>
-            <input id="state" name="state" maxlength="2" placeholder="NC" autocomplete="address-level1" required />
-          </div>
-          <div>
-            <label for="zip">ZIP</label>
-            <input id="zip" name="zip" inputmode="numeric" pattern="\d{5}" placeholder="12345" required />
-            <div id="zipError" class="error" style="display:none">Please enter a valid 5‑digit ZIP.</div>
-          </div>
-        </div>
-
-        <!-- Hidden geodata -->
-        <input type="hidden" id="lat" name="lat" />
-        <input type="hidden" id="lng" name="lng" />
-        <input type="hidden" id="placeId" name="placeId" />
-
-        <!-- Live service-area status -->
-        <div id="areaStatus" class="status muted" aria-live="polite">Type a ZIP to check service area.</div>
-
-        <div class="btnrow">
-          <button id="submitBtn" type="submit" disabled>Submit</button>
-          <span class="pill">ZIP-gated before submit</span>
-        </div>
+          <input type="hidden" id="lat" name="lat" />
+          <input type="hidden" id="lng" name="lng" />
+          <input type="hidden" id="placeId" name="placeId" />
+          <div id="areaStatus" class="status muted" aria-live="polite">Type a ZIP to check service area.</div>
+        </section>
       </form>
-
-      <div class="foot">
-        <ul>
-          <li><strong>TODO:</strong> Add your Google Maps API key in the script tag (<code>AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE</code>).</li>
-          <li><strong>TODO:</strong> Replace <code>WEBHOOK_URL</code> to post data to Airtable/Make/n8n/GoHighLevel.</li>
-          <li>Restrict your Maps key (HTTP referrers) in Google Cloud Console.</li>
-        </ul>
+      <div class="nav">
+        <button id="backBtn" class="secondary" type="button">Back</button>
+        <div class="spacer"></div>
+        <button id="nextBtn" type="button">Next</button>
+        <button id="submitBtn" type="button" style="display:none">Submit</button>
       </div>
     </div>
   </div>
-
   <script>
-    // ======== CONFIGURABLES ========
-    // A. Allowed ZIPs (exact) — keep this short for the demo; replace with your real list.
-    const allowedZips = new Set([
-      '27601','27603','27604','27605','27606','27607','27608','27609','27610',
-      '27511','27513','27518','27519' // Cary area examples
-    ]);
-
-    // B. Optional: allow by state(s) too (useful as a fallback)
+    const allowedZips = new Set(['27601','27603','27604','27605','27606','27607','27608','27609','27610','27511','27513','27518','27519']);
     const allowedStates = new Set(['NC']);
-
-    // C. Optional: allow patterns or ranges. Example: any 276** (Raleigh metro)
-    const zipPatterns = [ /^276\d{2}$/ ];
-
-    // D. Where to send the submission
-    const WEBHOOK_URL = 'https://example.com/api/lead'; // <-- replace me
-
-    // ======== UTILITIES ========
-    const $ = sel => document.querySelector(sel);
-    const streetEl = $('#street');
-    const cityEl = $('#city');
-    const stateEl = $('#state');
-    const zipEl = $('#zip');
-    const latEl = $('#lat');
-    const lngEl = $('#lng');
-    const placeIdEl = $('#placeId');
-    const areaStatus = $('#areaStatus');
-    const submitBtn = $('#submitBtn');
-    const zipError = $('#zipError');
-
-    function setStatus(type, msg) {
-      areaStatus.className = `status ${type}`;
-      areaStatus.textContent = msg;
-    }
-
-    function isZipAllowed(zip, state) {
-      if (!/^\d{5}$/.test(zip)) return false;
-      if (allowedZips.has(zip)) return true;
-      if (zipPatterns.some(rx => rx.test(zip))) return true;
-      if (state && allowedStates.has(state.toUpperCase())) return true;
-      return false;
-    }
-
-    function validateZipAndToggle() {
-      const zip = zipEl.value.trim();
-      const state = stateEl.value.trim();
-      const okFormat = /^\d{5}$/.test(zip);
-      zipError.style.display = okFormat || zip === '' ? 'none' : 'block';
-      if (!okFormat) {
-        submitBtn.disabled = true;
-        setStatus('muted', 'Type a valid 5‑digit ZIP to check service area.');
-        return false;
-      }
-      const allowed = isZipAllowed(zip, state);
-      if (allowed) {
-        submitBtn.disabled = false;
-        setStatus('good', 'Great news — you are within our service area!');
-      } else {
-        submitBtn.disabled = true;
-        setStatus('bad', 'Sorry — this address is currently outside our service area.');
-      }
-      return allowed;
-    }
-
-    zipEl.addEventListener('input', validateZipAndToggle);
-    stateEl.addEventListener('input', validateZipAndToggle);
-
-    // Prevent Enter from submitting before validation
-    document.getElementById('leadForm').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && e.target.id !== 'autocomplete') {
-        e.preventDefault();
-      }
-    });
-
-    // Submit handler (demo posts JSON)
-    document.getElementById('leadForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!validateZipAndToggle()) return;
-      const payload = {
-        firstName: $('#firstName').value.trim(),
-        lastName: $('#lastName').value.trim(),
-        email: $('#email').value.trim(),
-        phone: $('#phone').value.trim(),
-        street: streetEl.value.trim(),
-        city: cityEl.value.trim(),
-        state: stateEl.value.trim().toUpperCase(),
-        zip: zipEl.value.trim(),
-        lat: latEl.value || null,
-        lng: lngEl.value || null,
-        placeId: placeIdEl.value || null,
-        source: 'website',
-        timestamp: new Date().toISOString()
-      };
-
-      try {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Submitting…';
-        const res = await fetch(WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        if (!res.ok) throw new Error('Bad response');
-        setStatus('good', 'Thanks! Your request has been received.');
-        submitBtn.textContent = 'Submitted';
-      } catch (err) {
-        console.error(err);
-        setStatus('bad', 'Submission failed — please try again or call us.');
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Submit';
-      }
-    });
+    const zipPatterns = [/^276\d{2}$/];
+    const WEBHOOK_URL = 'https://example.com/api/lead'; // replace
+    const steps = Array.from(document.querySelectorAll('.step'));
+    let current = 0;
+    const backBtn = document.getElementById('backBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const progressFill = document.getElementById('progressFill');
+    const progressLabel = document.getElementById('progressLabel');
+    const progressPct = document.getElementById('progressPct');
+    const $ = s=>document.querySelector(s);
+    const streetEl=$('#street'), cityEl=$('#city'), stateEl=$('#state'), zipEl=$('#zip');
+    const latEl=$('#lat'), lngEl=$('#lng'), placeIdEl=$('#placeId');
+    const areaStatus=$('#areaStatus'), zipError=$('#zipError');
+    function setStatus(t,m){ areaStatus.className=`status ${t}`; areaStatus.textContent=m; }
+    function isZipAllowed(zip, state){ if(!/^\d{5}$/.test(zip)) return false; if(allowedZips.has(zip)) return true; if(zipPatterns.some(rx=>rx.test(zip))) return true; if(state && allowedStates.has(state.toUpperCase())) return true; return false; }
+    function validateZipAndToggle(){ const zip=zipEl.value.trim(); const st=stateEl.value.trim(); const ok=/^\d{5}$/.test(zip); zipError.style.display = ok || zip==='' ? 'none':'block'; if(!ok){ setStatus('muted','Type a valid 5‑digit ZIP to check service area.'); return false; } const allowed=isZipAllowed(zip,st); setStatus(allowed?'good':'bad', allowed?'Great news — you are within our service area!':'Sorry — this address is currently outside our service area.'); return allowed; }
+    zipEl?.addEventListener('input', validateZipAndToggle); stateEl?.addEventListener('input', validateZipAndToggle);
+    function stepValid(i){ switch(i){ case 0: return !!$('#homeowner').value; case 1: return !!$('#projectType').value; case 2: return !!$('#timeline').value; case 3: return $('#phone').value.trim() && /@/.test($('#email').value); case 4: return $('#firstName').value.trim() && $('#lastName').value.trim(); case 5: const ok=streetEl.value.trim() && cityEl.value.trim() && /^\w{2}$/.test(stateEl.value.trim()); return ok && validateZipAndToggle(); default: return true; } }
+    function setStep(i){ steps[current].classList.remove('active'); current=Math.max(0, Math.min(i, steps.length-1)); steps[current].classList.add('active'); const n=current+1, total=steps.length, pct=Math.round(n/total*100); progressFill.style.width=pct+'%'; progressLabel.textContent=`Step ${n} of ${total}`; progressPct.textContent=pct+'%'; backBtn.style.visibility=current===0?'hidden':'visible'; nextBtn.style.display=current===total-1?'none':'inline-block'; submitBtn.style.display=current===total-1?'inline-block':'none'; nextBtn.disabled=!stepValid(current); }
+    backBtn.addEventListener('click', ()=> setStep(current-1));
+    nextBtn.addEventListener('click', ()=> { if(stepValid(current)) setStep(current+1); });
+    document.getElementById('leadForm').addEventListener('input', ()=>{ nextBtn.disabled=!stepValid(current); });
+    submitBtn.addEventListener('click', async ()=>{ if(!stepValid(current)) return; const payload={ homeowner:$('#homeowner').value, projectType:$('#projectType').value, timeline:$('#timeline').value, phone:$('#phone').value.trim(), email:$('#email').value.trim(), firstName:$('#firstName').value.trim(), lastName:$('#lastName').value.trim(), street:streetEl.value.trim(), city:cityEl.value.trim(), state:stateEl.value.trim().toUpperCase(), zip:zipEl.value.trim(), lat:latEl.value||null, lng:lngEl.value||null, placeId:placeIdEl.value||null, source:'website', timestamp:new Date().toISOString() }; submitBtn.disabled=true; submitBtn.textContent='Submitting…'; try{ const res=await fetch(WEBHOOK_URL,{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)}); if(!res.ok) throw new Error('Bad response'); submitBtn.textContent='Submitted'; }catch(e){ console.error(e); submitBtn.disabled=false; submitBtn.textContent='Submit'; } });
   </script>
-
-  <!-- Google Places Autocomplete -->
   <script>
-    let autocomplete;
-    function initPlaces() {
-      const acInput = document.getElementById('autocomplete');
-      // Bias to US; adjust if you serve other countries
-      const options = { fields: ['address_components','geometry','place_id'], types: ['address'], componentRestrictions: { country: ['us'] } };
-      autocomplete = new google.maps.places.Autocomplete(acInput, options);
-      autocomplete.addListener('place_changed', onPlaceChanged);
-    }
-
-    function onPlaceChanged() {
-      const place = autocomplete.getPlace();
-      if (!place || !place.address_components) return;
-
-      // Reset
-      streetEl.value = cityEl.value = stateEl.value = zipEl.value = '';
-      latEl.value = lngEl.value = placeIdEl.value = '';
-
-      // Parse address components
-      const comps = place.address_components;
-      let streetNumber = '', route = '';
-      comps.forEach(c => {
-        const type = c.types[0];
-        switch (type) {
-          case 'street_number': streetNumber = c.long_name || ''; break;
-          case 'route': route = c.long_name || ''; break;
-          case 'locality': cityEl.value = c.long_name || ''; break; // city
-          case 'postal_town': if (!cityEl.value) cityEl.value = c.long_name || ''; break;
-          case 'administrative_area_level_1': stateEl.value = (c.short_name || '').toUpperCase(); break; // state
-          case 'postal_code': zipEl.value = c.long_name || ''; break;
-        }
-      });
-      streetEl.value = [streetNumber, route].filter(Boolean).join(' ');
-
-      if (place.geometry && place.geometry.location) {
-        const loc = place.geometry.location;
-        latEl.value = typeof loc.lat === 'function' ? loc.lat() : loc.lat;
-        lngEl.value = typeof loc.lng === 'function' ? loc.lng() : loc.lng;
-      }
-      if (place.place_id) placeIdEl.value = place.place_id;
-
-      validateZipAndToggle();
-      // Move focus to next field for faster completion
-      if (!zipEl.value) zipEl.focus(); else $('#firstName').focus();
-    }
+    let autocomplete; function initPlaces(){ const ac=document.getElementById('autocomplete'); if(!ac) return; const opt={ fields:['address_components','geometry','place_id'], types:['address'], componentRestrictions:{country:['us']} }; autocomplete=new google.maps.places.Autocomplete(ac,opt); autocomplete.addListener('place_changed', onPlaceChanged); }
+    function onPlaceChanged(){ const place=autocomplete.getPlace(); if(!place||!place.address_components) return; const streetEl=document.getElementById('street'); const cityEl=document.getElementById('city'); const stateEl=document.getElementById('state'); const zipEl=document.getElementById('zip'); const latEl=document.getElementById('lat'); const lngEl=document.getElementById('lng'); const placeIdEl=document.getElementById('placeId'); streetEl.value=cityEl.value=stateEl.value=zipEl.value=''; latEl.value=lngEl.value=placeIdEl.value=''; let streetNumber='', route=''; place.address_components.forEach(c=>{ const t=c.types[0]; switch(t){ case 'street_number': streetNumber=c.long_name||''; break; case 'route': route=c.long_name||''; break; case 'locality': cityEl.value=c.long_name||''; break; case 'postal_town': if(!cityEl.value) cityEl.value=c.long_name||''; break; case 'administrative_area_level_1': stateEl.value=(c.short_name||'').toUpperCase(); break; case 'postal_code': zipEl.value=c.long_name||''; break; } }); streetEl.value=[streetNumber,route].filter(Boolean).join(' '); if(place.geometry&&place.geometry.location){ const loc=place.geometry.location; latEl.value=typeof loc.lat==='function'?loc.lat():loc.lat; lngEl.value=typeof loc.lng==='function'?loc.lng():loc.lng; } if(place.place_id) placeIdEl.value=place.place_id; const ev=new Event('input'); zipEl.dispatchEvent(ev); }
   </script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&libraries=places&callback=initPlaces"></script>
 </body>
