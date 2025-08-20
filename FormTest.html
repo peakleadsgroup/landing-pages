@@ -37,17 +37,17 @@
   .step { display: none; }
   .step.active { display: block; }
 
-/* Step headings */
-.step h2 {
-  color: #111;
-  margin-bottom: 12px;
-  text-align: center; /* <-- add this line */
-}
+  /* Step headings */
+  .step h2 {
+    color: #111;
+    margin-bottom: 12px;
+    text-align: center;
+  }
 
   .step small.muted {
-  display: block;
-  text-align: center;
-}
+    display: block;
+    text-align: center;
+  }
 
   /* Grid rows */
   .row{display:grid;gap:12px}
@@ -70,20 +70,28 @@
   .choice:hover { background: #efefef; }
   .choice.selected { border-color: #4f46e5; background: #e0e7ff; color: #111; }
 
-  /* Inputs */
+  /* Inputs (16px stops iOS zoom) */
   label{font-weight:600;margin-bottom:6px;display:block}
-  input[type="text"], input[type="email"], input[type="tel"] {
-    width: 100%; padding: 12px 14px; border-radius: 12px;
-    border: 1px solid #ccc; background: #fff; color: #111;
+  input[type="text"], input[type="email"], input[type="tel"],
+  textarea, select, input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    background: #fff;
+    color: #111;
+    font-size: 16px; /* prevent iOS Safari auto-zoom */
   }
-  input:focus { outline: none; box-shadow: 0 0 0 3px rgba(79,70,229,.3); border-color: #4f46e5; }
+  input:focus, textarea:focus, select:focus {
+    outline: none; box-shadow: 0 0 0 3px rgba(79,70,229,.3); border-color: #4f46e5;
+  }
 
   /* Buttons */
   .actions {
     display:flex;
-    justify-content:center;   /* CENTER the buttons */
+    justify-content:center;
     gap:12px;
-    margin-top:26px;          /* more spacing above the buttons */
+    margin-top:26px;
   }
   .btn {
     background: #4f46e5; border: none; color: #fff; font-weight: 600;
@@ -99,6 +107,24 @@
   .msg { margin-top: 10px; padding: 10px 12px; border-radius: 10px; display: none; }
   .msg.bad { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
   .msg.good { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+
+  /* Mobile centering without breaking scroll on longer forms */
+  @media (max-width: 600px) {
+    body {
+      min-height: 100svh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;              /* breathing room around the card */
+    }
+    .wrap {
+      width: 100%;
+      max-width: 760px;
+      margin: 0 auto;             /* override the desktop 40px margin */
+      padding: 0 8px;
+    }
+    .card { padding: 22px; }
+  }
 </style>
 </head>
 <body>
@@ -153,7 +179,6 @@
               <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required
                      autocomplete="tel" aria-describedby="phoneHelp">
               <small id="phoneHelp" class="muted">US number, 10 digits.</small>
-              <!-- store normalized 10-digit value for your webhook (optional but handy) -->
               <input type="hidden" id="phone_digits" name="phone_digits" value="">
             </div>
             <div>
@@ -247,8 +272,6 @@
     bar.style.width = pct + '%';
     updateNextEnabled(); // ensure correct state when switching steps
   }
-
-  // Centered Prev/Next buttons already styled via CSS
 
   document.querySelectorAll('[data-next]').forEach(btn=>btn.addEventListener('click',()=>show(idx+1)));
   document.querySelectorAll('[data-prev]').forEach(btn=>btn.addEventListener('click',()=>show(idx-1)));
@@ -402,7 +425,6 @@
       const name  = `${first} ${last}`.replace(/\s+/g, ' ').trim();
       const leadEmail = document.getElementById('email')?.value.trim() || '';
 
-      // ⬇️ Define fullAddress (this was missing)
       const addr  = document.getElementById('address')?.value.trim() || '';
       const city  = document.getElementById('city')?.value.trim() || '';
       const state = document.getElementById('state')?.value.trim() || '';
@@ -411,10 +433,10 @@
         .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
 
       const params = new URLSearchParams();
-      params.set('email', 'peakleadsgroup@gmail.com'); // fixed inbox
+      params.set('email', 'peakleadsgroup@gmail.com');  // fixed inbox
       if (name) params.set('name', name);
       if (leadEmail) params.set('notes', leadEmail);    // ONLY the user's email
-      if (fullAddress) params.set('location', fullAddress); // prefill location if your event shows it
+      if (fullAddress) params.set('location', fullAddress); // prefill location (if shown)
 
       window.location.href =
         `https://cal.com/peakleadsgroup/fortress-floor-coatings-of-nwfl?${params.toString()}`;
@@ -424,8 +446,6 @@
       submitBtn.textContent = 'Upgrade my floors →';
     }
   });
-
-
 
   // Initialize
   show(0);
@@ -439,5 +459,3 @@
 </script>
 </body>
 </html>
-
-
