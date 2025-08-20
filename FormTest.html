@@ -377,26 +377,26 @@
   };
 
   // Final submit guard (blocks if out of area)
-  document.getElementById('quiz').addEventListener('submit', (e)=>{
-    if(!inArea){
-      e.preventDefault();
-      applyZipGate(zipInput.value.trim());
-      zipInput.focus();
-    } else {
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Thanks! Submitted.';
-    }
-  });
+<script>
+document.getElementById('quiz').addEventListener('submit', async function(e){
+  e.preventDefault(); // stop the default page load
 
-  // Initialize
-  show(0);
-  validatePhone(); // set initial phone validity/format
-})();
-</script>
+  const form = e.target;
+  const data = new FormData(form);
 
-<!-- Load Google Places (async/defer) -->
-<script async defer
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&libraries=places&callback=__attachPlaces">
+  try {
+    // send form data to Make webhook
+    await fetch(form.action, {
+      method: 'POST',
+      body: data
+    });
+
+    // redirect to your calendar
+    window.location.href = "https://cal.com/peakleadsgroup/fortress-floor-coatings-of-nwfl";
+  } catch (err) {
+    alert("Something went wrong. Please try again.");
+  }
+});
 </script>
 </body>
 </html>
