@@ -6,159 +6,100 @@
 <title>Project Quiz</title>
 <style>
   :root{
-    --bg:#0b0c10; --card:#121318; --ink:#e6e8ec; --muted:#9aa4b2;
-    --accent:#4f46e5; --bad:#ef4444; --good:#22c55e; --ring:rgba(79,70,229,.35);
-    --radius:16px;
+    --accent:#4f46e5; --ring:rgba(79,70,229,.35);
   }
   *{box-sizing:border-box}
-html, body {
-  height: 100%;
-  margin: 0;
-  font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  background: url("https://github.com/peakleadsgroup/landing-pages/blob/main/Images/Siding%20Pic.png?raw=true") no-repeat center center fixed;
-  background-size: cover;
-  color: #111; /* dark text default */
-}
 
-.wrap {
-  max-width: 760px;
-  margin: 40px auto;
-  padding: 0 16px;
-}
+  html, body {
+    height: 100%;
+    margin: 0;
+    font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: url("https://github.com/peakleadsgroup/landing-pages/blob/main/Images/Siding%20Pic.png?raw=true") no-repeat center center fixed;
+    background-size: cover;
+    color: #111;
+  }
 
-h1 {
-  font-size: clamp(26px,3.4vw,40px);
-  margin: 8px 0 24px;
-  color: #fff; /* headline stays white to contrast the bg */
-  text-align: center;
-}
+  .wrap { max-width: 760px; margin: 40px auto; padding: 0 16px; }
 
-/* White card form */
-.card {
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.35);
-  padding: 28px;
-}
+  /* White card form */
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    padding: 28px;
+  }
 
-/* Progress bar */
-.progress {
-  height: 10px;
-  background: #eee;
-  border-radius: 999px;
-  overflow: hidden;
-  margin-bottom: 18px;
-}
-.bar {
-  height: 100%;
-  width: 0;
-  background: linear-gradient(90deg, #4f46e5, #7c3aed);
-  transition: width .35s ease;
-}
+  /* Progress bar */
+  .progress { height: 10px; background: #eee; border-radius: 999px; overflow: hidden; margin-bottom: 18px; }
+  .bar { height: 100%; width: 0; background: linear-gradient(90deg, #4f46e5, #7c3aed); transition: width .35s ease; }
 
-/* show one page at a time */
-.step { display: none; }
-.step.active { display: block; }
-  
-/* Step headings */
-.step h2 {
-  color: #111;
-  margin-bottom: 12px;
-}
+  /* show one page at a time */
+  .step { display: none; }
+  .step.active { display: block; }
 
-/* Choices */
-.choices {
-  display: grid;
-  gap: 10px;
-  margin-top: 12px;
-}
-.choice {
-  border: 1px solid #ccc;
-  background: #f9f9f9;
-  border-radius: 12px;
-  padding: 12px 16px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  color: #111;
-}
-.choice:hover {
-  background: #efefef;
-}
-.choice.selected {
-  border-color: #4f46e5;
-  background: #e0e7ff;
-  color: #111;
-}
+  /* Step headings */
+  .step h2 { color: #111; margin-bottom: 12px; }
 
-/* Inputs */
-input[type="text"], input[type="email"], input[type="tel"] {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid #ccc;
-  background: #fff;
-  color: #111;
-}
-input:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(79,70,229,.3);
-  border-color: #4f46e5;
-}
+  /* Grid rows */
+  .row{display:grid;gap:12px}
+  @media (min-width:720px){ .row.cols-2{grid-template-columns:1fr 1fr} }
 
-/* Buttons */
-.btn {
-  background: #4f46e5;
-  border: none;
-  color: #fff;
-  font-weight: 600;
-  padding: 12px 18px;
-  border-radius: 12px;
-  cursor: pointer;
-}
-.btn:hover {
-  background: #4338ca;
-}
-.btn[disabled] {
-  opacity: .5;
-  cursor: not-allowed;
-}
+  /* Choices */
+  .choices { display: grid; gap: 10px; margin-top: 12px; }
+  .choice {
+    border: 1px solid #ccc;
+    background: #f9f9f9;
+    border-radius: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #111;
+  }
+  .choice:hover { background: #efefef; }
+  .choice.selected { border-color: #4f46e5; background: #e0e7ff; color: #111; }
 
-/* Helper text */
-small.muted {
-  color: #555;
-}
+  /* Inputs */
+  label{font-weight:600;margin-bottom:6px;display:block}
+  input[type="text"], input[type="email"], input[type="tel"] {
+    width: 100%; padding: 12px 14px; border-radius: 12px;
+    border: 1px solid #ccc; background: #fff; color: #111;
+  }
+  input:focus { outline: none; box-shadow: 0 0 0 3px rgba(79,70,229,.3); border-color: #4f46e5; }
 
-/* Messages */
-.msg {
-  margin-top: 10px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  display: none;
-}
-.msg.bad {
-  background: #fee2e2;
-  color: #991b1b;
-  border: 1px solid #fca5a5;
-}
-.msg.good {
-  background: #dcfce7;
-  color: #166534;
-  border: 1px solid #86efac;
-}
+  /* Buttons */
+  .actions {
+    display:flex;
+    justify-content:center;   /* CENTER the buttons */
+    gap:12px;
+    margin-top:26px;          /* more spacing above the buttons */
+  }
+  .btn {
+    background: #4f46e5; border: none; color: #fff; font-weight: 600;
+    padding: 12px 18px; border-radius: 12px; cursor: pointer;
+  }
+  .btn:hover { background: #4338ca; }
+  .btn[disabled] { opacity:.5; cursor:not-allowed; }
 
+  /* Helper text */
+  small.muted { color: #555; }
+
+  /* Messages */
+  .msg { margin-top: 10px; padding: 10px 12px; border-radius: 10px; display: none; }
+  .msg.bad { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+  .msg.good { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
 </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>Flooring Quiz</h1>
+    <!-- Heading removed per request -->
 
     <div class="card">
       <div class="progress"><div class="bar" id="progressBar"></div></div>
 
-<form id="quiz" action="https://hook.us2.make.com/rek8ieum6xlpeuv9d27rret12qsxf4k4" method="POST" novalidate>
+      <form id="quiz" action="https://hook.us2.make.com/rek8ieum6xlpeuv9d27rret12qsxf4k4" method="POST" novalidate>
         <!-- Step 1 -->
         <section class="step active" data-auto-advance="true">
           <h2>Are you a homeowner?</h2>
@@ -200,16 +141,20 @@ small.muted {
           <div class="row cols-2">
             <div>
               <label for="phone">Phone</label>
-              <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="+1 (___) ___-____" required>
+              <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required
+                     autocomplete="tel" aria-describedby="phoneHelp">
+              <small id="phoneHelp" class="muted">US number, 10 digits.</small>
+              <!-- store normalized 10-digit value for your webhook (optional but handy) -->
+              <input type="hidden" id="phone_digits" name="phone_digits" value="">
             </div>
             <div>
               <label for="email">Email</label>
-              <input id="email" name="email" type="email" placeholder="you@example.com" required>
+              <input id="email" name="email" type="email" placeholder="you@example.com" required autocomplete="email">
             </div>
           </div>
           <div class="actions">
             <button type="button" class="btn" data-prev>Back</button>
-            <button type="button" class="btn" data-next>Next</button>
+            <button type="button" class="btn" data-next disabled>Next</button>
           </div>
         </section>
 
@@ -219,16 +164,16 @@ small.muted {
           <div class="row cols-2">
             <div>
               <label for="first">First Name</label>
-              <input id="first" name="first_name" type="text" required>
+              <input id="first" name="first_name" type="text" required autocomplete="given-name">
             </div>
             <div>
               <label for="last">Last Name</label>
-              <input id="last" name="last_name" type="text" required>
+              <input id="last" name="last_name" type="text" required autocomplete="family-name">
             </div>
           </div>
           <div class="actions">
             <button type="button" class="btn" data-prev>Back</button>
-            <button type="button" class="btn" data-next>Next</button>
+            <button type="button" class="btn" data-next disabled>Next</button>
           </div>
         </section>
 
@@ -246,17 +191,17 @@ small.muted {
           <div class="row cols-2">
             <div>
               <label for="city">City</label>
-              <input id="city" name="city" type="text" placeholder="i.e. Pensacola" required>
+              <input id="city" name="city" type="text" placeholder="i.e. Pensacola" required autocomplete="address-level2">
             </div>
             <div>
               <label for="state">State</label>
-              <input id="state" name="state" type="text" placeholder="i.e. FL" maxlength="2" required>
+              <input id="state" name="state" type="text" placeholder="i.e. FL" maxlength="2" required autocomplete="address-level1">
             </div>
           </div>
           <div class="row">
             <div>
               <label for="zip">Zip</label>
-              <input id="zip" name="zip" type="text" placeholder="i.e. 32501" inputmode="numeric" pattern="\\d{5}" required>
+              <input id="zip" name="zip" type="text" placeholder="i.e. 32501" inputmode="numeric" pattern="\\d{5}" required autocomplete="postal-code">
             </div>
           </div>
 
@@ -269,7 +214,7 @@ small.muted {
           </div>
         </section>
 
-        <!-- Hidden inputs are created dynamically for multiple-choice answers -->
+        <!-- Hidden inputs for multiple-choice answers are created dynamically -->
       </form>
     </div>
   </div>
@@ -277,9 +222,8 @@ small.muted {
 <script>
 (function(){
   // ------- EDIT THESE -------
-  // Provide your allowlist of ZIPs here (can be hundreds; paste as comma list).
   const serviceZips = new Set([
-    "10001","10002","10003" // <-- replace with your real list
+    "10001","10002","10003" // replace with your real list
   ]);
   // --------------------------
 
@@ -292,22 +236,23 @@ small.muted {
     steps.forEach((s,j)=>s.classList.toggle('active', j===idx));
     const pct = ((idx)/(steps.length-1))*100; // visual only
     bar.style.width = pct + '%';
+    updateNextEnabled(); // ensure correct state when switching steps
   }
 
-  // Prev/Next buttons
+  // Centered Prev/Next buttons already styled via CSS
+
   document.querySelectorAll('[data-next]').forEach(btn=>btn.addEventListener('click',()=>show(idx+1)));
   document.querySelectorAll('[data-prev]').forEach(btn=>btn.addEventListener('click',()=>show(idx-1)));
 
   // Multiple-choice auto-advance
   document.querySelectorAll('.choice').forEach(btn=>{
-    btn.addEventListener('click', (e)=>{
+    btn.addEventListener('click', ()=>{
       const name = btn.dataset.name;
       const value = btn.dataset.value;
-      // Set selected style within the group
       const group = btn.closest('.choices');
       group.querySelectorAll('.choice').forEach(c=>c.classList.remove('selected'));
       btn.classList.add('selected');
-      // Ensure we store the answer into a hidden input so it submits
+
       let hidden = document.querySelector('input[type="hidden"][name="'+name+'"]');
       if(!hidden){
         hidden = document.createElement('input');
@@ -316,7 +261,6 @@ small.muted {
       }
       hidden.value = value;
 
-      // Auto-advance if this step allows it
       const step = btn.closest('.step');
       if(step?.dataset.autoAdvance === "true"){
         setTimeout(()=>show(idx+1), 200);
@@ -324,19 +268,49 @@ small.muted {
     });
   });
 
-  // Basic required-field guards on Next buttons
-  document.querySelectorAll('[data-next]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const active = steps[idx];
-      const required = Array.from(active.querySelectorAll('input[required]'));
-      const ok = required.every(el=>el.value.trim().length>0 && el.checkValidity());
-      if(!ok){
-        required.find(el=>!el.value || !el.checkValidity())?.focus();
-      } else {
-        show(idx+1);
-      }
-    });
+  // ----- Enable/disable Next button only when step is valid -----
+  function updateNextEnabled(){
+    const active = steps[idx];
+    const nextBtn = active.querySelector('[data-next]');
+    if(!nextBtn) return; // submit step uses <button type="submit">
+    const required = Array.from(active.querySelectorAll('input[required]'));
+    const ok = required.every(el => el.value.trim().length>0 && el.checkValidity());
+    nextBtn.disabled = !ok;
+  }
+
+  // Watch inputs on all steps to toggle Next
+  document.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('input', updateNextEnabled);
+    inp.addEventListener('change', updateNextEnabled);
   });
+
+  // ----- Phone formatting + strict 10-digit validation -----
+  const phoneInput = document.getElementById('phone');
+  const phoneDigits = document.getElementById('phone_digits');
+
+  function formatPhone(val){
+    const d = val.replace(/\D/g,'').slice(0,10);
+    let f = d;
+    if(d.length > 6) f = `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+    else if(d.length > 3) f = `(${d.slice(0,3)}) ${d.slice(3)}`;
+    else if(d.length > 0) f = `(${d}`;
+    return {formatted:f, digits:d};
+  }
+
+  function validatePhone(){
+    const {formatted, digits} = formatPhone(phoneInput.value);
+    phoneInput.value = formatted;
+    phoneDigits.value = digits; // handy normalized version for Make
+    if(digits.length === 10){
+      phoneInput.setCustomValidity('');
+    } else {
+      phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
+    }
+    updateNextEnabled();
+  }
+
+  phoneInput.addEventListener('input', validatePhone);
+  phoneInput.addEventListener('blur', validatePhone);
 
   // ---- ZIP Gate + Google Places Autocomplete ----
   let inArea = false;
@@ -369,7 +343,6 @@ small.muted {
     }
   }
 
-  // Manual zip edits
   zipInput.addEventListener('input', e=>applyZipGate(e.target.value.trim()));
 
   // Autocomplete hookup after Google script loads
@@ -377,7 +350,6 @@ small.muted {
     if(!window.google || !google.maps || !google.maps.places) return;
     const ac = new google.maps.places.Autocomplete(addressInput, {
       types: ['address'],
-      // Restrict if you only operate in the US; adjust as needed:
       componentRestrictions: { country: ['us'] },
       fields: ['address_components','formatted_address']
     });
@@ -385,12 +357,9 @@ small.muted {
       const place = ac.getPlace();
       if(!place || !place.address_components) return;
 
-      // Parse address components
       const comps = Object.fromEntries(place.address_components.flatMap(c => c.types.map(t => [t, c])));
-      // Prefill city/state/zip when available
       if(comps.locality) cityInput.value = comps.locality.long_name;
       else if(comps.sublocality) cityInput.value = comps.sublocality.long_name;
-
       if(comps.administrative_area_level_1) stateInput.value = comps.administrative_area_level_1.short_name;
       if(comps.postal_code) zipInput.value = comps.postal_code.long_name;
 
@@ -398,28 +367,28 @@ small.muted {
     });
   };
 
-  // Final submit guard
+  // Final submit guard (blocks if out of area)
   document.getElementById('quiz').addEventListener('submit', (e)=>{
     if(!inArea){
       e.preventDefault();
-      applyZipGate(zipInput.value.trim()); // shows message if needed
+      applyZipGate(zipInput.value.trim());
       zipInput.focus();
     } else {
-      // At this point it's allowed. You can POST this form wherever you want.
-      // For demo purposes, prevent actual navigation:
       submitBtn.disabled = true;
       submitBtn.textContent = 'Thanks! Submitted.';
     }
   });
 
-  // Initialize first progress state
+  // Initialize
   show(0);
+  validatePhone(); // set initial phone validity/format
 })();
 </script>
 
-<!-- Load Google Places (async/defer). Replace YOUR_GOOGLE_MAPS_API_KEY -->
+<!-- Load Google Places (async/defer) -->
 <script async defer
   src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&libraries=places&callback=__attachPlaces">
 </script>
 </body>
 </html>
+
