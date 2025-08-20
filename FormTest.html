@@ -11,35 +11,140 @@
     --radius:16px;
   }
   *{box-sizing:border-box}
-  html,body{height:100%;background:var(--bg);color:var(--ink);
-    font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  .wrap{max-width:760px;margin:40px auto;padding:0 16px}
-  h1{font-size:clamp(26px,3.4vw,40px);margin:8px 0 24px}
-  .card{background:var(--card);border-radius:var(--radius);box-shadow:0 10px 30px rgba(0,0,0,.35);padding:28px}
-  .progress{height:10px;background:#1b1c22;border-radius:999px;overflow:hidden;margin-bottom:18px}
-  .bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),#7c3aed);transition:width .35s ease}
-  .step{display:none}
-  .step.active{display:block}
-  .choices{display:grid;gap:10px;margin-top:12px}
-  .choice{border:1px solid #2a2c34;background:#171820;border-radius:12px;padding:10px 14px;
-    cursor:pointer;display:inline-flex;align-items:center;gap:10px}
-  .choice:focus{outline:2px solid var(--ring);outline-offset:2px}
-  .choice.selected{border-color:var(--accent);box-shadow:0 0 0 4px var(--ring)}
-  .row{display:grid;gap:12px}
-  @media (min-width:720px){ .row.cols-2{grid-template-columns:1fr 1fr} }
-  label{font-weight:600;margin-bottom:6px;display:block;color:var(--ink)}
-  input,button{font:inherit}
-  input[type="text"],input[type="email"],input[type="tel"]{
-    width:100%;padding:12px 14px;border-radius:12px;border:1px solid #2a2c34;background:#171820;color:var(--ink)
-  }
-  input:focus{outline:none;box-shadow:0 0 0 4px var(--ring);border-color:var(--accent)}
-  .actions{display:flex;justify-content:space-between;margin-top:18px}
-  .btn{background:#000;border:1px solid #2a2c34;color:#fff;padding:10px 16px;border-radius:12px;cursor:pointer}
-  .btn[disabled]{opacity:.5;cursor:not-allowed}
-  small.muted{color:var(--muted)}
-  .msg{margin-top:10px;padding:10px 12px;border-radius:10px;display:none}
-  .msg.bad{background:#2a1111;color:#ffd7d7;border:1px solid #472020}
-  .msg.good{background:#102216;color:#dff6e6;border:1px solid #214d35}
+html, body {
+  height: 100%;
+  margin: 0;
+  font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: url("https://github.com/peakleadsgroup/landing-pages/blob/main/Images/Siding%20Pic.png?raw=true") no-repeat center center fixed;
+  background-size: cover;
+  color: #111; /* dark text default */
+}
+
+.wrap {
+  max-width: 760px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
+
+h1 {
+  font-size: clamp(26px,3.4vw,40px);
+  margin: 8px 0 24px;
+  color: #fff; /* headline stays white to contrast the bg */
+  text-align: center;
+}
+
+/* White card form */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  padding: 28px;
+}
+
+/* Progress bar */
+.progress {
+  height: 10px;
+  background: #eee;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+.bar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #4f46e5, #7c3aed);
+  transition: width .35s ease;
+}
+
+/* Step headings */
+.step h2 {
+  color: #111;
+  margin-bottom: 12px;
+}
+
+/* Choices */
+.choices {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+.choice {
+  border: 1px solid #ccc;
+  background: #f9f9f9;
+  border-radius: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #111;
+}
+.choice:hover {
+  background: #efefef;
+}
+.choice.selected {
+  border-color: #4f46e5;
+  background: #e0e7ff;
+  color: #111;
+}
+
+/* Inputs */
+input[type="text"], input[type="email"], input[type="tel"] {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  background: #fff;
+  color: #111;
+}
+input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(79,70,229,.3);
+  border-color: #4f46e5;
+}
+
+/* Buttons */
+.btn {
+  background: #4f46e5;
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  padding: 12px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.btn:hover {
+  background: #4338ca;
+}
+.btn[disabled] {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+/* Helper text */
+small.muted {
+  color: #555;
+}
+
+/* Messages */
+.msg {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  display: none;
+}
+.msg.bad {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+.msg.good {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
 </style>
 </head>
 <body>
