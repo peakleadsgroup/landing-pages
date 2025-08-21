@@ -18,14 +18,7 @@
     background-size: cover;
     color: #111;
   }
-#phoneWrap {
-  grid-column: 1 / -1;
-}
-#phoneConfirmWrap {
-  grid-column: 1 / -1;
-  margin-top: 4px;
-}
-}
+
   .wrap { max-width: 760px; margin: 40px auto; padding: 0 16px; }
 
   /* White card form */
@@ -87,7 +80,7 @@
     border: 1px solid #ccc;
     background: #fff;
     color: #111;
-    font-size: 16px; /* prevent iOS Safari auto-zoom */
+    font-size: 16px;
   }
   input:focus, textarea:focus, select:focus {
     outline: none; box-shadow: 0 0 0 3px rgba(79,70,229,.3); border-color: #4f46e5;
@@ -175,12 +168,12 @@
           </div>
         </section>
 
-        <!-- Step 4 -->
+        <!-- Step 4 (Phone + confirm, full-width stacked) -->
         <section class="step">
           <h2>Where's the best place to reach you to schedule your free, no obligation visit?</h2>
           <small class="muted">To give you an accurate quote, we'll need to measure the space. We'll make it quick, easy, and on your schedule</small>
-          <div class="row cols-2">
-            <div>
+          <div class="row">
+            <div id="phoneWrap">
               <label for="phone">Phone</label>
               <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required autocomplete="tel" aria-describedby="phoneHelp">
               <small id="phoneHelp" class="muted">US number, 10 digits.</small>
@@ -273,7 +266,7 @@
   function show(i){
     idx = Math.max(0, Math.min(i, steps.length-1));
     steps.forEach((s,j)=>s.classList.toggle('active', j===idx));
-    const pct = ((idx)/(steps.length-1))*100; // visual only
+    const pct = ((idx)/(steps.length-1))*100;
     bar.style.width = pct + '%';
     updateNextEnabled();
   }
@@ -451,7 +444,7 @@
   document.getElementById('quiz').addEventListener('submit', async (e)=>{
     e.preventDefault();
 
-    const form = e.target; // <-- define BEFORE using it
+    const form = e.target;
 
     if (!form.reportValidity()) {
       return;
@@ -484,7 +477,7 @@
       clearTimeout(timeoutId);
     }
 
-    // Build Cal.com URL (no lead email now; keep your inbox email fixed)
+    // Build Cal.com URL (no lead email; inbox email fixed)
     const first = document.getElementById('first')?.value.trim() || '';
     const last  = document.getElementById('last')?.value.trim()  || '';
     const name  = `${first} ${last}`.replace(/\s+/g, ' ').trim();
