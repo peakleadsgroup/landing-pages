@@ -418,7 +418,6 @@ function applyZipGate(zip){
   document.getElementById('quiz').addEventListener('submit', async (e)=>{
     e.preventDefault();
 
-    const form = e.target;
 if (!form.reportValidity()) {
   return; // browser will show which field is invalid
 }
