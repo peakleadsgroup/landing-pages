@@ -436,38 +436,50 @@ if (!form.reportValidity()) {
     const data = new FormData(form);
 
     try {
-      // Send to Make webhook
-      await fetch(form.action, { method: 'POST', body: data });
+   // Send to Make webhook, but don't let it block the redirect
+const controller = new AbortController();
+const timeoutId  = setTimeout(() => controller.abort(), 4000); // fail fast at 4s
+try {
+  await fetch(form.action, {
+    method: 'POST',
+    body: data,
+    mode: 'no-cors',
+    signal: controller.signal
+  });
+} catch (e) {
+  // ignore errors; we'll still redirect
+} finally {
+  clearTimeout(timeoutId);
+}
 
-      // Build Cal.com URL
-      const first = document.getElementById('first')?.value.trim() || '';
-      const last  = document.getElementById('last')?.value.trim() || '';
-      const name  = `${first} ${last}`.replace(/\s+/g, ' ').trim();
-      const leadEmail = document.getElementById('email')?.value.trim() || '';
+// Build Cal.com URL
+const first = document.getElementById('first')?.value.trim() || '';
+const last  = document.getElementById('last')?.value.trim()  || '';
+const name  = `${first} ${last}`.replace(/\s+/g, ' ').trim();
+const leadEmail = document.getElementById('email')?.value.trim() || '';
 
-      const addr  = document.getElementById('address')?.value.trim() || '';
-      const city  = document.getElementById('city')?.value.trim() || '';
-      const state = document.getElementById('state')?.value.trim() || '';
-      const zip   = document.getElementById('zip')?.value.trim() || '';
-      const fullAddress = [addr, city && `${city},`, state, zip]
-        .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+const addr  = document.getElementById('address')?.value.trim() || '';
+const city  = document.getElementById('city')?.value.trim()    || '';
+const state = document.getElementById('state')?.value.trim()   || '';
+const zip   = document.getElementById('zip')?.value.trim()     || '';
+const fullAddress = [addr, city && `${city},`, state, zip]
+  .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
 
 const params = new URLSearchParams();
-params.set('email', 'peakleadsgroup@gmail.com');  // fixed inbox
-if (name) params.set('name', name);
-if (leadEmail) params.set('notes', leadEmail);    // ONLY the user's email
+params.set('email', 'peakleadsgroup@gmail.com');        // fixed inbox
+if (name)      params.set('name', name);
+if (leadEmail) params.set('notes', leadEmail);          // ONLY the user's email
 
-// Add phone for SMS reminders (uses normalized 10 digits; sends as +1XXXXXXXXXX)
+// Phone → smsReminderNumber (+1XXXXXXXXXX)
 const sms = document.getElementById('phone_digits')?.value
-            || document.getElementById('phone')?.value.replace(/\D/g,'')
-            || '';
+         || document.getElementById('phone')?.value.replace(/\D/g,'') || '';
 if (sms) params.set('smsReminderNumber', `+1${sms}`);
 
-if (fullAddress) params.set('location', fullAddress); // prefill location (if shown)
+if (fullAddress) params.set('location', fullAddress);   // optional prefill
 
+window.location.href =
+  `https://cal.com/peakleadsgroup/fortress-floor-coatings-of-nwfl?${params.toString()}`;
 
-      window.location.href =
-        `https://cal.com/peakleadsgroup/fortress-floor-coatings-of-nwfl?${params.toString()}`;
     } catch (err) {
       alert("Something went wrong. Please try again.");
       submitBtn.disabled = false;
