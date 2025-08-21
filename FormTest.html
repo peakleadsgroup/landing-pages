@@ -355,26 +355,34 @@
   const msgGood = document.getElementById('zipOk');
   const submitBtn = document.getElementById('submitBtn');
 
-  function applyZipGate(zip){
-    if(!zip || !/^\d{5}$/.test(zip)){
-      msgBad.style.display = 'none';
-      msgGood.style.display = 'none';
-      submitBtn.disabled = true;
-      inArea = false;
-      return;
-    }
-    if(serviceZips.has(zip)){
-      msgGood.style.display = 'block';
-      msgBad.style.display = 'none';
-      submitBtn.disabled = false;
-      inArea = true;
-    } else {
-      msgBad.style.display = 'block';
-      msgGood.style.display = 'none';
-      submitBtn.disabled = true;
-      inArea = false;
-    }
+function updateSubmitEnabled(){
+  const addrOk  = addressInput.value.trim().length > 3;
+  const cityOk  = cityInput.value.trim().length > 1;
+  const stateOk = /^[A-Za-z]{2}$/.test(stateInput.value.trim());
+  const zipOk   = /^\d{5}$/.test(zipInput.value.trim());
+  submitBtn.disabled = !(inArea && addrOk && cityOk && stateOk && zipOk);
+}
+
+function applyZipGate(zip){
+  if(!zip || !/^\d{5}$/.test(zip)){
+    msgBad.style.display = 'none';
+    msgGood.style.display = 'none';
+    inArea = false;
+    updateSubmitEnabled();
+    return;
   }
+  if(serviceZips.has(zip)){
+    msgGood.style.display = 'block';
+    msgBad.style.display = 'none';
+    inArea = true;
+  } else {
+    msgBad.style.display = 'block';
+    msgGood.style.display = 'none';
+    inArea = false;
+  }
+  updateSubmitEnabled();
+}
+
 
   zipInput.addEventListener('input', e=>applyZipGate(e.target.value.trim()));
 
