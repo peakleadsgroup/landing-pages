@@ -453,11 +453,19 @@ if (!form.reportValidity()) {
       const fullAddress = [addr, city && `${city},`, state, zip]
         .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
 
-      const params = new URLSearchParams();
-      params.set('email', 'peakleadsgroup@gmail.com');  // fixed inbox
-      if (name) params.set('name', name);
-      if (leadEmail) params.set('notes', leadEmail);    // ONLY the user's email
-      if (fullAddress) params.set('location', fullAddress); // prefill location (if shown)
+const params = new URLSearchParams();
+params.set('email', 'peakleadsgroup@gmail.com');  // fixed inbox
+if (name) params.set('name', name);
+if (leadEmail) params.set('notes', leadEmail);    // ONLY the user's email
+
+// Add phone for SMS reminders (uses normalized 10 digits; sends as +1XXXXXXXXXX)
+const sms = document.getElementById('phone_digits')?.value
+            || document.getElementById('phone')?.value.replace(/\D/g,'')
+            || '';
+if (sms) params.set('smsReminderNumber', `+1${sms}`);
+
+if (fullAddress) params.set('location', fullAddress); // prefill location (if shown)
+
 
       window.location.href =
         `https://cal.com/peakleadsgroup/fortress-floor-coatings-of-nwfl?${params.toString()}`;
