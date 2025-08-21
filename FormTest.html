@@ -233,7 +233,8 @@
           <div class="row">
             <div>
               <label for="zip">Zip</label>
-              <input id="zip" name="zip" type="text" placeholder="i.e. 32501" inputmode="numeric" pattern="\\d{5}" required autocomplete="postal-code">
+<input id="zip" name="zip" type="text" placeholder="i.e. 32501"
+       inputmode="numeric" pattern="^[0-9]{5}$" maxlength="5" required autocomplete="postal-code">
             </div>
           </div>
 
