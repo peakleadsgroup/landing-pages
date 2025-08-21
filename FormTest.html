@@ -115,12 +115,12 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 12px;              /* breathing room around the card */
+      padding: 12px;
     }
     .wrap {
       width: 100%;
       max-width: 760px;
-      margin: 0 auto;             /* override the desktop 40px margin */
+      margin: 0 auto;
       padding: 0 8px;
     }
     .card { padding: 22px; }
@@ -129,8 +129,6 @@
 </head>
 <body>
   <div class="wrap">
-    <!-- Heading removed per request -->
-
     <div class="card">
       <div class="progress"><div class="bar" id="progressBar"></div></div>
 
@@ -173,12 +171,11 @@
         <!-- Step 4 -->
         <section class="step">
           <h2>Where's the best place to reach you to schedule your free, no obligation visit?</h2>
-          <small class="muted">To give you an accurate quote, we'll need to measure the space.  We'll make it quick, easy, and on your schedule</small>
+          <small class="muted">To give you an accurate quote, we'll need to measure the space. We'll make it quick, easy, and on your schedule</small>
           <div class="row cols-2">
             <div>
               <label for="phone">Phone</label>
-              <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required
-                     autocomplete="tel" aria-describedby="phoneHelp">
+              <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required autocomplete="tel" aria-describedby="phoneHelp">
               <small id="phoneHelp" class="muted">US number, 10 digits.</small>
               <input type="hidden" id="phone_digits" name="phone_digits" value="">
             </div>
@@ -248,8 +245,6 @@
             <button type="submit" class="btn" id="submitBtn" disabled>Upgrade my floors →</button>
           </div>
         </section>
-
-        <!-- Hidden inputs for multiple-choice answers are created dynamically -->
       </form>
     </div>
   </div>
@@ -258,7 +253,7 @@
 (function(){
   // ------- EDIT THESE -------
   const serviceZips = new Set([
-    "32401","32402","32403","32404","32405","32406","32407","32408","32409","32410","32411","32412","32413","32417","32422","32425","32427","32430","32433","32434","32435","32437","32438","32439","32444","32449","32455","32457","32459","32461","32462","32464","32465","32466","32501","32502","32503","32504","32505","32506","32507","32508","32509","32511","32512","32513","32514","32516","32520","32521","32522","32523","32524","32526","32530","32533","32534","32536","32537","32538","32539","32540","32541","32542","32544","32547","32548","32549","32550","32559","32560","32561","32562","32563","32564","32566","32567","32569","32570","32571","32572","32578","32579","32580","32583","32588","32591","36314","36340","36442","36455","36477" // replace with your real list
+    "32401","32402","32403","32404","32405","32406","32407","32408","32409","32410","32411","32412","32413","32417","32422","32425","32427","32430","32433","32434","32435","32437","32438","32439","32444","32449","32455","32457","32459","32461","32462","32464","32465","32466","32501","32502","32503","32504","32505","32506","32507","32508","32509","32511","32512","32513","32514","32516","32520","32521","32522","32523","32524","32526","32530","32533","32534","32536","32537","32538","32539","32540","32541","32542","32544","32547","32548","32549","32550","32559","32560","32561","32562","32563","32564","32566","32567","32569","32570","32571","32572","32578","32579","32580","32583","32588","32591","36314","36340","36442","36455","36477"
   ]);
   // --------------------------
 
@@ -271,7 +266,7 @@
     steps.forEach((s,j)=>s.classList.toggle('active', j===idx));
     const pct = ((idx)/(steps.length-1))*100; // visual only
     bar.style.width = pct + '%';
-    updateNextEnabled(); // ensure correct state when switching steps
+    updateNextEnabled();
   }
 
   document.querySelectorAll('[data-next]').forEach(btn=>btn.addEventListener('click',()=>show(idx+1)));
@@ -301,11 +296,11 @@
     });
   });
 
-  // ----- Enable/disable Next button only when step is valid -----
+  // Enable/disable Next button only when step is valid
   function updateNextEnabled(){
     const active = steps[idx];
     const nextBtn = active.querySelector('[data-next]');
-    if(!nextBtn) return; // submit step uses <button type="submit">
+    if(!nextBtn) return;
     const required = Array.from(active.querySelectorAll('input[required]'));
     const ok = required.every(el => el.value.trim().length>0 && el.checkValidity());
     nextBtn.disabled = !ok;
@@ -317,7 +312,7 @@
     inp.addEventListener('change', updateNextEnabled);
   });
 
-  // ----- Phone formatting + strict 10-digit validation -----
+  // Phone formatting + strict 10-digit validation
   const phoneInput = document.getElementById('phone');
   const phoneDigits = document.getElementById('phone_digits');
 
@@ -333,7 +328,7 @@
   function validatePhone(){
     const {formatted, digits} = formatPhone(phoneInput.value);
     phoneInput.value = formatted;
-    phoneDigits.value = digits; // handy normalized version for Make
+    phoneDigits.value = digits; // normalized 10 digits
     if(digits.length === 10){
       phoneInput.setCustomValidity('');
     } else {
@@ -345,7 +340,7 @@
   phoneInput.addEventListener('input', validatePhone);
   phoneInput.addEventListener('blur', validatePhone);
 
-  // ---- ZIP Gate + Google Places Autocomplete ----
+  // ZIP Gate + Google Places Autocomplete
   let inArea = false;
   const addressInput = document.getElementById('address');
   const cityInput = document.getElementById('city');
@@ -355,43 +350,41 @@
   const msgGood = document.getElementById('zipOk');
   const submitBtn = document.getElementById('submitBtn');
 
-function updateSubmitEnabled(){
-  const addrOk  = addressInput.value.trim().length > 3;
-  const cityOk  = cityInput.value.trim().length > 1;
-  const stateOk = /^[A-Za-z]{2}$/.test(stateInput.value.trim());
-  const zipOk   = /^\d{5}$/.test(zipInput.value.trim());
-  submitBtn.disabled = !(inArea && addrOk && cityOk && stateOk && zipOk);
-}
+  function updateSubmitEnabled(){
+    const addrOk  = addressInput.value.trim().length > 3;
+    const cityOk  = cityInput.value.trim().length > 1;
+    const stateOk = /^[A-Za-z]{2}$/.test(stateInput.value.trim());
+    const zipOk   = /^\d{5}$/.test(zipInput.value.trim());
+    submitBtn.disabled = !(inArea && addrOk && cityOk && stateOk && zipOk);
+  }
 
-function applyZipGate(zip){
-  if(!zip || !/^\d{5}$/.test(zip)){
-    msgBad.style.display = 'none';
-    msgGood.style.display = 'none';
-    inArea = false;
+  function applyZipGate(zip){
+    if(!zip || !/^\d{5}$/.test(zip)){
+      msgBad.style.display = 'none';
+      msgGood.style.display = 'none';
+      inArea = false;
+      updateSubmitEnabled();
+      return;
+    }
+    if(serviceZips.has(zip)){
+      msgGood.style.display = 'block';
+      msgBad.style.display = 'none';
+      inArea = true;
+    } else {
+      msgBad.style.display = 'block';
+      msgGood.style.display = 'none';
+      inArea = false;
+    }
     updateSubmitEnabled();
-    return;
   }
-  if(serviceZips.has(zip)){
-    msgGood.style.display = 'block';
-    msgBad.style.display = 'none';
-    inArea = true;
-  } else {
-    msgBad.style.display = 'block';
-    msgGood.style.display = 'none';
-    inArea = false;
-  }
-  updateSubmitEnabled();
-}
-
 
   zipInput.addEventListener('input', e=>applyZipGate(e.target.value.trim()));
 
-[addressInput, cityInput, stateInput].forEach(el=>{
-  el.addEventListener('input', updateSubmitEnabled);
-  el.addEventListener('change', updateSubmitEnabled);
-});
+  [addressInput, cityInput, stateInput].forEach(el=>{
+    el.addEventListener('input', updateSubmitEnabled);
+    el.addEventListener('change', updateSubmitEnabled);
+  });
 
-  
   // Autocomplete hookup after Google script loads
   window.__attachPlaces = function(){
     if(!window.google || !google.maps || !google.maps.places) return;
@@ -414,14 +407,15 @@ function applyZipGate(zip){
     });
   };
 
-  // Final submit guard + webhook + redirect (fixed email; notes = user's email only)
+  // Final submit guard + webhook + redirect
   document.getElementById('quiz').addEventListener('submit', async (e)=>{
     e.preventDefault();
 
-if (!form.reportValidity()) {
-  return; // browser will show which field is invalid
-}
+    const form = e.target; // <-- define BEFORE using it
 
+    if (!form.reportValidity()) {
+      return;
+    }
 
     if(!inArea){
       applyZipGate(zipInput.value.trim());
@@ -432,59 +426,51 @@ if (!form.reportValidity()) {
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
 
-    const form = e.target;
     const data = new FormData(form);
 
+    // Send to Make webhook, but don't let it block the redirect
+    const controller = new AbortController();
+    const timeoutId  = setTimeout(() => controller.abort(), 4000);
     try {
-   // Send to Make webhook, but don't let it block the redirect
-const controller = new AbortController();
-const timeoutId  = setTimeout(() => controller.abort(), 4000); // fail fast at 4s
-try {
-  await fetch(form.action, {
-    method: 'POST',
-    body: data,
-    mode: 'no-cors',
-    signal: controller.signal
-  });
-} catch (e) {
-  // ignore errors; we'll still redirect
-} finally {
-  clearTimeout(timeoutId);
-}
-
-// Build Cal.com URL
-const first = document.getElementById('first')?.value.trim() || '';
-const last  = document.getElementById('last')?.value.trim()  || '';
-const name  = `${first} ${last}`.replace(/\s+/g, ' ').trim();
-const leadEmail = document.getElementById('email')?.value.trim() || '';
-
-const addr  = document.getElementById('address')?.value.trim() || '';
-const city  = document.getElementById('city')?.value.trim()    || '';
-const state = document.getElementById('state')?.value.trim()   || '';
-const zip   = document.getElementById('zip')?.value.trim()     || '';
-const fullAddress = [addr, city && `${city},`, state, zip]
-  .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
-
-const params = new URLSearchParams();
-params.set('email', 'peakleadsgroup@gmail.com');        // fixed inbox
-if (name)      params.set('name', name);
-if (leadEmail) params.set('notes', leadEmail);          // ONLY the user's email
-
-// Phone → smsReminderNumber (+1XXXXXXXXXX)
-const sms = document.getElementById('phone_digits')?.value
-         || document.getElementById('phone')?.value.replace(/\D/g,'') || '';
-if (sms) params.set('smsReminderNumber', `+1${sms}`);
-
-if (fullAddress) params.set('location', fullAddress);   // optional prefill
-
-window.location.href =
-  `https://cal.com/peakleadsgroup/fortress-floor-coatings-of-nwfl?${params.toString()}`;
-
-    } catch (err) {
-      alert("Something went wrong. Please try again.");
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Upgrade my floors →';
+      await fetch(form.action, {
+        method: 'POST',
+        body: data,
+        mode: 'no-cors',
+        signal: controller.signal
+      });
+    } catch (e2) {
+      /* ignore and continue */
+    } finally {
+      clearTimeout(timeoutId);
     }
+
+    // Build Cal.com URL
+    const first = document.getElementById('first')?.value.trim() || '';
+    const last  = document.getElementById('last')?.value.trim()  || '';
+    const name  = `${first} ${last}`.replace(/\s+/g, ' ').trim();
+    const leadEmail = document.getElementById('email')?.value.trim() || '';
+
+    const addr  = document.getElementById('address')?.value.trim() || '';
+    const city  = document.getElementById('city')?.value.trim()    || '';
+    const state = document.getElementById('state')?.value.trim()   || '';
+    const zip   = document.getElementById('zip')?.value.trim()     || '';
+    const fullAddress = [addr, city && `${city},`, state, zip]
+      .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+
+    const params = new URLSearchParams();
+    params.set('email', 'peakleadsgroup@gmail.com');        // fixed inbox
+    if (name)      params.set('name', name);
+    if (leadEmail) params.set('notes', leadEmail);          // ONLY the user's email
+
+    // Phone → smsReminderNumber (+1XXXXXXXXXX) if 10 digits present
+    const smsDigits = document.getElementById('phone_digits')?.value
+                   || document.getElementById('phone')?.value.replace(/\D/g,'') || '';
+    if (smsDigits.length === 10) params.set('smsReminderNumber', `+1${smsDigits}`);
+
+    if (fullAddress) params.set('location', fullAddress);   // optional prefill
+
+    window.location.href =
+      `https://cal.com/peakleadsgroup/fortress-floor-coatings-of-nwfl?${params.toString()}`;
   });
 
   // Initialize
@@ -499,3 +485,4 @@ window.location.href =
 </script>
 </body>
 </html>
+
