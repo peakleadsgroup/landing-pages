@@ -386,6 +386,12 @@ function applyZipGate(zip){
 
   zipInput.addEventListener('input', e=>applyZipGate(e.target.value.trim()));
 
+[addressInput, cityInput, stateInput].forEach(el=>{
+  el.addEventListener('input', updateSubmitEnabled);
+  el.addEventListener('change', updateSubmitEnabled);
+});
+
+  
   // Autocomplete hookup after Google script loads
   window.__attachPlaces = function(){
     if(!window.google || !google.maps || !google.maps.places) return;
@@ -411,6 +417,12 @@ function applyZipGate(zip){
   // Final submit guard + webhook + redirect (fixed email; notes = user's email only)
   document.getElementById('quiz').addEventListener('submit', async (e)=>{
     e.preventDefault();
+
+    const form = e.target;
+if (!form.reportValidity()) {
+  return; // browser will show which field is invalid
+}
+
 
     if(!inArea){
       applyZipGate(zipInput.value.trim());
