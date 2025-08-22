@@ -132,7 +132,7 @@
     <div class="card">
       <div class="progress"><div class="bar" id="progressBar"></div></div>
 
-      <form id="quiz" action="https://hook.us2.make.com/5iehugsldo9icpk2cq5d1wj4puo3eviy" method="POST" novalidate>
+      <form id="quiz" action="https://hook.us2.make.com/qxdz19q8euzmejjffcgi6c6n9w47u1i7" method="POST" novalidate>
         <!-- Step 1 -->
         <section class="step active" data-auto-advance="true">
           <h2>Are you a homeowner?</h2>
@@ -263,6 +263,7 @@
 
   // Generate unique user ID for this session
   const USER_ID = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  const clientATID = 'recAbKUArCdZBwXDo';
 
   const steps = Array.from(document.querySelectorAll('.step'));
   const bar = document.getElementById('progressBar');
@@ -272,6 +273,7 @@
   async function sendTracking(buttonText, buttonValue, stepName) {
     const trackingData = {
       user_id: USER_ID,
+      clientATID: clientATID,
       button_text: buttonText,
       button_value: buttonValue,
       step_name: stepName,
@@ -510,6 +512,9 @@
     submitBtn.textContent = 'Submitting...';
 
     const data = new FormData(form);
+    
+    // Add clientATID to form data
+    data.append('clientATID', clientATID);
 
     // Send to Make webhook, but don't let it block the redirect
     const controller = new AbortController();
