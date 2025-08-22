@@ -535,10 +535,12 @@
     // Add clientATID to form data
     data.append('clientATID', clientATID);
 
-    // Send to Make webhook, but don't let it block the redirect
+    // Send to both webhooks
     const controller = new AbortController();
     const timeoutId  = setTimeout(() => controller.abort(), 4000);
+    
     try {
+      // Send to original form webhook
       await fetch(form.action, {
         method: 'POST',
         body: data,
@@ -546,6 +548,18 @@
         signal: controller.signal
       });
     } catch (e2) {
+      /* ignore and continue */
+    }
+
+    try {
+      // Also send to tracking webhook
+      await fetch(TRACKING_WEBHOOK, {
+        method: 'POST',
+        body: data,
+        mode: 'no-cors',
+        signal: controller.signal
+      });
+    } catch (e3) {
       /* ignore and continue */
     } finally {
       clearTimeout(timeoutId);
