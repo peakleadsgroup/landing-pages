@@ -7,191 +7,590 @@
 <style>
   :root{ --accent:#4f46e5; --ring:rgba(79,70,229,.35); }
   *{box-sizing:border-box}
-  html, body {
-    height: 100%; margin: 0;
-    font: 16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    background: url("https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/garage-floor-coating-3-car-garage.webp") no-repeat center center fixed;
-    background-size: cover; color:#111;
+
+  html, body{
+    height:100%; margin:0;
+    font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:url("https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/garage-floor-coating-3-car-garage.webp") no-repeat center center fixed;
+    background-size:cover; color:#111;
   }
+
   .wrap{ max-width:760px; margin:40px auto; padding:0 16px; }
-  .card{ background:#fff; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.35); padding:28px; }
+
+  .card{
+    background:#fff; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.35); padding:28px;
+  }
+
   .logo{ display:flex; justify-content:center; align-items:center; margin-bottom:14px; }
-  .logo img{ max-height:64px; width:auto; }
-  .progress{ height:10px; background:#eee; border-radius:999px; overflow:hidden; margin-bottom:18px;}
-  .bar{ height:100%; width:0; background:linear-gradient(90deg,#4f46e5,#7c3aed); transition:width .35s ease;}
-  .step{ display:none; } .step.active{ display:block; }
-  .step h2{text-align:center; margin-bottom:12px;}
+  .logo img{ max-height:64px; width:auto; height:auto; display:block; }
+
+  .progress{ height:10px; background:#eee; border-radius:999px; overflow:hidden; margin-bottom:18px; }
+  .bar{ height:100%; width:0; background:linear-gradient(90deg,#4f46e5,#7c3aed); transition:width .35s ease; }
+
+  .step{ display:none; }
+  .step.active{ display:block; }
+
+  .step h2{ color:#111; margin-bottom:12px; text-align:center; }
+  .step small.muted{ display:block; text-align:center; }
+
   .row{display:grid; gap:12px}
-  @media(min-width:720px){.row.cols-2{grid-template-columns:1fr 1fr}}
-  .choices{display:grid; gap:10px; margin-top:12px;}
-  .choice{border:1px solid #ccc; background:#f9f9f9; border-radius:12px; padding:12px 16px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; font-weight:600;}
-  .choice:hover{background:#efefef}
-  .choice.selected{border-color:#4f46e5; background:#e0e7ff}
-  label{font-weight:600; margin-bottom:6px; display:block}
-  input,textarea,select{width:100%; padding:12px 14px; border-radius:12px; border:1px solid #ccc; font-size:16px;}
-  input:focus{outline:none; box-shadow:0 0 0 3px rgba(79,70,229,.3); border-color:#4f46e5;}
-  .actions{display:flex; justify-content:center; gap:12px; margin-top:26px;}
-  .btn{background:#4f46e5; color:#fff; font-weight:600; padding:12px 18px; border:none; border-radius:12px; cursor:pointer;}
-  .btn:hover{background:#4338ca}
-  .btn[disabled]{opacity:.5; cursor:not-allowed;}
-  .msg{margin-top:10px; padding:10px 12px; border-radius:10px; display:none;}
-  .msg.bad{background:#fee2e2; color:#991b1b;}
-  .msg.good{background:#dcfce7; color:#166534;}
-  @media(max-width:600px){
-    body{min-height:100svh; display:flex; align-items:center; justify-content:center; padding:12px;}
-    .wrap{width:100%; max-width:760px; padding:0 8px;}
-    .card{padding:22px;}
+  @media (min-width:720px){ .row.cols-2{ grid-template-columns:1fr 1fr } }
+
+  .choices{ display:grid; gap:10px; margin-top:12px; }
+  .choice{
+    border:1px solid #ccc; background:#f9f9f9; border-radius:12px; padding:12px 16px;
+    cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
+    font-weight:600; color:#111;
+  }
+  .choice:hover{ background:#efefef; }
+  .choice.selected{ border-color:#4f46e5; background:#e0e7ff; color:#111; }
+
+  label{font-weight:600;margin-bottom:6px;display:block}
+  input[type="text"], input[type="email"], input[type="tel"], textarea, select, input{
+    width:100%; padding:12px 14px; border-radius:12px; border:1px solid #ccc; background:#fff; color:#111; font-size:16px;
+  }
+  input:focus, textarea:focus, select:focus{ outline:none; box-shadow:0 0 0 3px rgba(79,70,229,.3); border-color:#4f46e5; }
+
+  .actions{ display:flex; justify-content:center; gap:12px; margin-top:26px; }
+  .btn{ background:#4f46e5; border:none; color:#fff; font-weight:600; padding:12px 18px; border-radius:12px; cursor:pointer; }
+  .btn:hover{ background:#4338ca; }
+  .btn[disabled]{ opacity:.5; cursor:not-allowed; }
+
+  small.muted{ color:#555; }
+
+  .msg{ margin-top:10px; padding:10px 12px; border-radius:10px; display:none; }
+  .msg.bad{ background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; }
+  .msg.good{ background:#dcfce7; color:#166534; border:1px solid #86efac; }
+
+  @media (max-width:600px){
+    body{ min-height:100svh; display:flex; align-items:center; justify-content:center; padding:12px; }
+    .wrap{ width:100%; max-width:760px; margin:0 auto; padding:0 8px; }
+    .card{ padding:22px; }
   }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="card">
-    <div class="logo">
-      <img src="https://images.squarespace-cdn.com/content/v1/64909a307fc0025a2064d878/9b8fde02-b8f9-402b-be4c-366cb48134eb/Transparent+PNG+File.png" alt="Brand Logo">
-    </div>
-    <div class="progress"><div class="bar" id="progressBar"></div></div>
+  <div class="wrap">
+    <div class="card">
+      <!-- Centered Logo -->
+      <div class="logo">
+        <img alt="Brand Logo" src="https://images.squarespace-cdn.com/content/v1/64909a307fc0025a2064d878/9b8fde02-b8f9-402b-be4c-366cb48134eb/Transparent+PNG+File.png">
+      </div>
 
-    <form id="quiz" action="https://hook.us2.make.com/qxdz19q8euzmejjffcgi6c6n9w47u1i7" method="POST" novalidate>
-      <!-- Step 1 -->
-      <section class="step active" data-step-name="homeowner" data-auto-advance="true">
-        <h2>Are you a homeowner?</h2>
-        <div class="choices">
-          <button type="button" class="choice" data-name="homeowner" data-value="Yes">Yes</button>
-          <button type="button" class="choice" data-name="homeowner" data-value="No">No</button>
-        </div>
-      </section>
-      <!-- Step 2 -->
-      <section class="step" data-step-name="project_type" data-auto-advance="true">
-        <h2>What type of project is this?</h2>
-        <div class="choices">
-          <button type="button" class="choice" data-name="project_type" data-value="Garage">Garage</button>
-          <button type="button" class="choice" data-name="project_type" data-value="Porch">Porch</button>
-          <button type="button" class="choice" data-name="project_type" data-value="Deck">Deck</button>
-          <button type="button" class="choice" data-name="project_type" data-value="Patio">Patio</button>
-          <button type="button" class="choice" data-name="project_type" data-value="Basement">Basement</button>
-          <button type="button" class="choice" data-name="project_type" data-value="Pool">Pool</button>
-          <button type="button" class="choice" data-name="project_type" data-value="Other">Other</button>
-        </div>
-      </section>
-      <!-- Step 3 -->
-      <section class="step" data-step-name="timeline" data-auto-advance="true">
-        <h2>When would you like your floors completed?</h2>
-        <div class="choices">
-          <button type="button" class="choice" data-name="timeline" data-value="ASAP">ASAP</button>
-          <button type="button" class="choice" data-name="timeline" data-value="Within 2 weeks">Within 2 weeks</button>
-          <button type="button" class="choice" data-name="timeline" data-value="Within a month">Within a month</button>
-          <button type="button" class="choice" data-name="timeline" data-value="Within 2 months">Within 2 months</button>
-        </div>
-      </section>
-      <!-- Step 4 -->
-      <section class="step" data-step-name="phone">
-        <h2>Where's the best place to reach you?</h2>
-        <div class="row">
-          <div>
-            <label for="phone">Phone</label>
-            <input id="phone" name="phone" type="tel" required>
-            <input type="hidden" id="phone_digits" name="phone_digits">
+      <div class="progress"><div class="bar" id="progressBar"></div></div>
+
+      <form id="quiz" action="https://hook.us2.make.com/qxdz19q8euzmejjffcgi6c6n9w47u1i7" method="POST" novalidate>
+        <!-- Step 1 -->
+        <section class="step active" data-step-name="homeowner" data-auto-advance="true">
+          <h2>Are you a homeowner?</h2>
+          <div class="choices" role="group" aria-label="Are you the homeowner?">
+            <button type="button" class="choice" data-name="homeowner" data-value="Yes">Yes</button>
+            <button type="button" class="choice" data-name="homeowner" data-value="No">No</button>
           </div>
-        </div>
-        <div class="actions">
-          <button type="button" class="btn" data-prev>Back</button>
-          <button type="button" class="btn" data-next disabled>Next</button>
-        </div>
-      </section>
-      <!-- Step 5 -->
-      <section class="step" data-step-name="contact_name">
-        <h2>Who will we be meeting with?</h2>
-        <div class="row cols-2">
-          <div><label>First Name</label><input id="first" name="first_name" type="text" required></div>
-          <div><label>Last Name</label><input id="last" name="last_name" type="text" required></div>
-        </div>
-        <div class="actions">
-          <button type="button" class="btn" data-prev>Back</button>
-          <button type="button" class="btn" data-next disabled>Next</button>
-        </div>
-      </section>
-      <!-- Step 6 -->
-      <section class="step" data-step-name="address">
-        <h2>Where will we be meeting you?</h2>
-        <div class="row"><div><label>Address</label><input id="address" name="address" type="text" required></div></div>
-        <div class="row cols-2">
-          <div><label>City</label><input id="city" name="city" type="text" required></div>
-          <div><label>State</label><input id="state" name="state" type="text" required></div>
-        </div>
-        <div class="row"><div><label>Zip</label><input id="zip" name="zip" type="text" required></div></div>
-        <div id="zipMsg" class="msg bad">Sorry — you're not within our area.</div>
-        <div id="zipOk" class="msg good">Great — you're in our service area!</div>
-        <div class="actions">
-          <button type="button" class="btn" data-prev>Back</button>
-          <button type="submit" class="btn" id="submitBtn" disabled>Submit</button>
-        </div>
-      </section>
-    </form>
+        </section>
+
+        <!-- Step 2 -->
+        <section class="step" data-step-name="project_type" data-auto-advance="true">
+          <h2>What type of project is this?</h2>
+          <div class="choices" role="group" aria-label="Project type">
+            <button type="button" class="choice" data-name="project_type" data-value="Garage">Garage</button>
+            <button type="button" class="choice" data-name="project_type" data-value="Porch">Porch</button>
+            <button type="button" class="choice" data-name="project_type" data-value="Deck">Deck</button>
+            <button type="button" class="choice" data-name="project_type" data-value="Patio">Patio</button>
+            <button type="button" class="choice" data-name="project_type" data-value="Basement">Basement</button>
+            <button type="button" class="choice" data-name="project_type" data-value="Pool">Pool</button>
+            <button type="button" class="choice" data-name="project_type" data-value="Other">Other</button>
+          </div>
+        </section>
+
+        <!-- Step 3 -->
+        <section class="step" data-step-name="timeline" data-auto-advance="true">
+          <h2>When would you like your floors completed?</h2>
+          <small class="muted">We only schedule projects that can start soon so you can enjoy your upgraded space.</small>
+          <div class="choices" role="group" aria-label="Timeline">
+            <button type="button" class="choice" data-name="timeline" data-value="ASAP">ASAP</button>
+            <button type="button" class="choice" data-name="timeline" data-value="Within 2 weeks">Within 2 weeks</button>
+            <button type="button" class="choice" data-name="timeline" data-value="Within a month">Within a month</button>
+            <button type="button" class="choice" data-name="timeline" data-value="Within 2 months">Within 2 months</button>
+          </div>
+        </section>
+
+        <!-- Step 4 (Phone + confirm) -->
+        <section class="step" data-step-name="phone">
+          <h2>Where's the best place to reach you to schedule your free, no obligation visit?</h2>
+          <small class="muted">To give you an accurate quote, we'll need to measure the space. We'll make it quick, easy, and on your schedule</small>
+          <div class="row">
+            <div id="phoneWrap">
+              <label for="phone">Phone</label>
+              <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required autocomplete="tel" aria-describedby="phoneHelp">
+              <small id="phoneHelp" class="muted">US number, 10 digits.</small>
+              <input type="hidden" id="phone_digits" name="phone_digits" value="">
+            </div>
+            <div id="phoneConfirmWrap" style="display:none">
+              <label for="phone2">Please re-enter your phone</label>
+              <input id="phone2" name="phone_confirm" type="tel" inputmode="tel" placeholder="(___) ___-____" autocomplete="tel" aria-describedby="phone2Help">
+              <small id="phone2Help" class="muted">Must match exactly.</small>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn" data-prev>Back</button>
+            <button type="button" class="btn" data-next disabled>Next</button>
+          </div>
+        </section>
+
+        <!-- Step 5 -->
+        <section class="step" data-step-name="contact_name">
+          <h2>Who will we be meeting with?</h2>
+          <div class="row cols-2">
+            <div>
+              <label for="first">First Name</label>
+              <input id="first" name="first_name" type="text" required autocomplete="given-name">
+            </div>
+            <div>
+              <label for="last">Last Name</label>
+              <input id="last" name="last_name" type="text" required autocomplete="family-name">
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn" data-prev>Back</button>
+            <button type="button" class="btn" data-next disabled>Next</button>
+          </div>
+        </section>
+
+        <!-- Step 6 (Address + ZIP gate) -->
+        <section class="step" id="addressStep" data-step-name="address">
+          <h2>Where will we be meeting you?</h2>
+          <small class="muted">Our team will reach out within 24 hours!</small>
+
+          <div class="row">
+            <div>
+              <label for="address">Street Address</label>
+              <input id="address" name="address" type="text" placeholder="i.e. 123 Fremont St." autocomplete="street-address" required>
+            </div>
+          </div>
+          <div class="row cols-2">
+            <div>
+              <label for="city">City</label>
+              <input id="city" name="city" type="text" placeholder="i.e. Pensacola" required autocomplete="address-level2">
+            </div>
+            <div>
+              <label for="state">State</label>
+              <input id="state" name="state" type="text" placeholder="i.e. FL" maxlength="2" required autocomplete="address-level1">
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label for="zip">Zip</label>
+              <input id="zip" name="zip" type="text" placeholder="i.e. 32501"
+                     inputmode="numeric" pattern="^[0-9]{5}$" maxlength="5" required autocomplete="postal-code">
+            </div>
+          </div>
+
+          <div id="zipMsg" class="msg bad">Sorry — you're not within our area.</div>
+          <div id="zipOk" class="msg good">Great — you're in our service area!</div>
+
+          <div class="actions">
+            <button type="button" class="btn" data-prev>Back</button>
+            <button type="submit" class="btn" id="submitBtn" disabled>Upgrade my floors →</button>
+          </div>
+        </section>
+      </form>
+    </div>
   </div>
-</div>
 
 <script>
 (function(){
-  // Debug helper
-  window.onerror = (m,s,l,c,e)=>{ console.error("JS ERROR:",m,"@",s+":"+l,e); alert("JS error: "+m); };
+  /* ===================== DEBUG & UTIL ===================== */
+  window.onerror = function(m, s, l, c, e){ try{ console.error("JS ERROR:", m, "@", s+":"+l, e); alert("JS error: " + m); }catch(_){ } };
   console.log("Quiz script loaded");
-  const DEBUG = /[?&]debug=1/.test(location.search);
-  function dbg(){ if(DEBUG) console.log.apply(console, arguments); }
+  var DEBUG = /[?&]debug=1/.test(location.search);
 
-  const stepWebhook = "https://hook.us2.make.com/0kfn50ruqjdtfvwpw4meuagndb76whq8";
-  const SESSION_ID = Math.random().toString(36).slice(2);
-
-  function postEvent(payload){
-    try{
-      const body = JSON.stringify(payload);
-      dbg("POST EVENT →", payload);
-      if(navigator.sendBeacon){
-        navigator.sendBeacon(stepWebhook,new Blob([body],{type:"application/json"}));
-      } else {
-        fetch(stepWebhook,{method:"POST",headers:{"Content-Type":"application/json"},body,mode:"no-cors",keepalive:true});
-      }
-    }catch(e){console.warn("postEvent error:",e);}
+  function dbg(){ if(DEBUG && console && console.log){ console.log.apply(console, arguments); } }
+  function toast(msg){
+    if(!DEBUG) return;
+    var el = document.createElement("div");
+    el.textContent = msg;
+    el.style.cssText = "position:fixed;bottom:12px;left:12px;background:#111;color:#fff;padding:8px 10px;border-radius:8px;opacity:.95;z-index:999999;font:14px system-ui";
+    document.body.appendChild(el);
+    setTimeout(function(){ try{ el.remove(); }catch(_){ el.parentNode && el.parentNode.removeChild(el);} }, 1500);
   }
   function nowIso(){ return new Date().toISOString(); }
 
-  const answers={};
-  const steps=[...document.querySelectorAll(".step")];
-  const bar=document.getElementById("progressBar");
-  let idx=0;
+  /* ===================== CONFIG ===================== */
+  // Your service ZIPs (unchanged)
+  var serviceZips = new Set([
+    "43001","43002","43003","43004","43007","43008","43009","43010","43011","43013","43015","43016","43017","43018","43021","43023","43025","43026","43029","43030","43031","43033","43035","43036","43040","43041","43044","43045","43046","43047","43054","43060","43061","43062","43064","43065","43066","43067","43068","43069","43073","43074","43077","43078","43081","43082","43083","43084","43085","43086","43102","43103","43105","43109","43110","43112","43113","43116","43117","43119","43123","43125","43126","43130","43136","43137","43140","43143","43146","43147","43148","43154","43156","43157","43162","43164","43194","43195","43199","43201","43202","43203","43204","43205","43206","43207","43209","43210","43211","43212","43213","43214","43215","43216","43217","43218","43219","43220","43221","43222","43223","43224","43226","43227","43228","43229","43230","43231","43232","43234","43235","43236","43240","43251","43260","43266","43268","43270","43271","43272","43279","43287","43291","43301","43302","43311","43315","43318","43319","43321","43322","43324","43332","43334","43336","43340","43341","43342","43344","43345","43347","43350","43356","43357","43358","43360","45369","45372","45503","45505"
+  ]);
 
-  function show(i){
-    idx=Math.max(0,Math.min(i,steps.length-1));
-    steps.forEach((s,j)=>s.classList.toggle("active",j===idx));
-    const pct=(idx/(steps.length-1))*100;
-    bar.style.width=pct+"%";
-    const stepEl=steps[idx];
-    const stepName=(stepEl && stepEl.dataset && stepEl.dataset.stepName)?stepEl.dataset.stepName:"";
-    postEvent({event_type:"step_view",session_id:SESSION_ID,step_index:idx,step_name:stepName,progress_pct:Math.round(pct),timestamp:nowIso(),answers});
+  // Step tracking webhook (Make custom webhook)
+  var stepWebhook = "https://hook.us2.make.com/0kfn50ruqjdtfvwpw4meuagndb76whq8";
+
+  // Optional: an alternate GET-pixel endpoint for debugging (e.g., webhook.site)
+  // var pixelWebhook = "https://webhook.site/your-uuid"; // leave blank to use stepWebhook
+
+  /* ===================== SESSION & TRACKER ===================== */
+  function getSessionId(){
+    try{
+      var sid = sessionStorage.getItem("sid");
+      if(!sid){
+        if(window.crypto && crypto.randomUUID){ sid = crypto.randomUUID(); }
+        else { sid = "sid_" + Math.random().toString(36).slice(2); }
+        sessionStorage.setItem("sid", sid);
+      }
+      return sid;
+    }catch(_){ return "sid_" + Math.random().toString(36).slice(2); }
+  }
+  var SESSION_ID = getSessionId();
+
+  // Robust event poster: beacon → fetch(keepalive) → image GET
+  function postEvent(payload){
+    try{
+      payload = payload || {};
+      payload.session_id = payload.session_id || SESSION_ID;
+      payload.timestamp = payload.timestamp || nowIso();
+
+      var body = JSON.stringify(payload);
+      dbg("POST EVENT →", payload);
+      toast(payload.event_type || "event");
+
+      // 1) try sendBeacon
+      try{
+        if(navigator.sendBeacon){
+          var ok = navigator.sendBeacon(stepWebhook, new Blob([body], {type:"application/json"}));
+          if(ok){ dbg("sendBeacon ok"); return; }
+        }
+      }catch(e1){ dbg("sendBeacon error:", e1); }
+
+      // 2) try fetch keepalive (no-cors)
+      try{
+        fetch(stepWebhook, {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: body,
+          mode:"no-cors",
+          keepalive:true,
+          cache:"no-store",
+          redirect:"follow"
+        }).then(function(){ dbg("fetch keepalive fired"); });
+        // We can't confirm in no-cors, but at least it fired
+        return;
+      }catch(e2){ dbg("fetch error:", e2); }
+
+      // 3) last-resort GET pixel (encodes small payload in querystring)
+      try{
+        var qs = encodeURIComponent(body);
+        var img = new Image();
+        img.src = (typeof pixelWebhook === "string" && pixelWebhook.length ? pixelWebhook : stepWebhook) + "?evt=" + qs + "&t=" + Date.now();
+        dbg("pixel GET fired");
+      }catch(e3){ dbg("img pixel error:", e3); }
+
+    }catch(e){
+      try{ console.warn("postEvent outer error:", e); }catch(_){}
+    }
   }
 
-  document.querySelectorAll("[data-next]").forEach(btn=>btn.addEventListener("click",()=>show(idx+1)));
-  document.querySelectorAll("[data-prev]").forEach(btn=>btn.addEventListener("click",()=>show(idx-1)));
+  /* ===================== STATE & NAV ===================== */
+  var answers = {};
+  var steps = Array.prototype.slice.call(document.querySelectorAll('.step'));
+  var bar = document.getElementById('progressBar');
+  var idx = 0;
 
-  document.querySelectorAll(".choice").forEach(btn=>{
-    btn.addEventListener("click",()=>{
-      const name=btn.dataset.name, value=btn.dataset.value;
-      answers[name]=value;
-      const stepEl=btn.closest(".step");
-      const stepName=(stepEl && stepEl.dataset && stepEl.dataset.stepName)?stepEl.dataset.stepName:"";
-      postEvent({event_type:"answer_selected",session_id:SESSION_ID,step_index:idx,step_name:stepName,question:name,answer:value,timestamp:nowIso()});
-      if(stepEl.dataset.autoAdvance==="true") setTimeout(()=>show(idx+1),200);
+  function progressPct(i){ return ((i)/(steps.length-1))*100; }
+
+  function stepNameAt(i){
+    var el = steps[i];
+    if(!el || !el.dataset) return "";
+    return el.dataset.stepName || "";
+  }
+
+  function show(i){
+    idx = Math.max(0, Math.min(i, steps.length-1));
+    steps.forEach(function(s,j){ s.classList.toggle('active', j===idx); });
+    var pct = progressPct(idx);
+    bar.style.width = pct + '%';
+    updateNextEnabled();
+
+    postEvent({
+      event_type: "step_view",
+      step_index: idx,
+      step_name: stepNameAt(idx),
+      progress_pct: Math.round(pct),
+      url: location.href,
+      user_agent: navigator.userAgent,
+      answers_so_far: answers
+    });
+  }
+
+  document.querySelectorAll('[data-next]').forEach(function(btn){
+    btn.addEventListener('click', function(){ show(idx+1); });
+  });
+  document.querySelectorAll('[data-prev]').forEach(function(btn){
+    btn.addEventListener('click', function(){ show(idx-1); });
+  });
+
+  // Multiple-choice auto-advance + answer tracking
+  document.querySelectorAll('.choice').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var name = btn.getAttribute('data-name');
+      var value = btn.getAttribute('data-value');
+      var group = btn.closest('.choices');
+      if(group){
+        group.querySelectorAll('.choice').forEach(function(c){ c.classList.remove('selected'); });
+      }
+      btn.classList.add('selected');
+
+      var hidden = document.querySelector('input[type="hidden"][name="'+name+'"]');
+      if(!hidden){
+        hidden = document.createElement('input');
+        hidden.type='hidden'; hidden.name=name;
+        document.getElementById('quiz').appendChild(hidden);
+      }
+      hidden.value = value;
+      answers[name] = value;
+
+      postEvent({
+        event_type: "answer_selected",
+        step_index: idx,
+        step_name: stepNameAt(idx),
+        question: name,
+        answer: value
+      });
+
+      var stepEl = btn.closest('.step');
+      if(stepEl && stepEl.dataset && stepEl.dataset.autoAdvance === "true"){
+        setTimeout(function(){ show(idx+1); }, 200);
+      }
     });
   });
 
-  document.getElementById("quiz").addEventListener("submit",e=>{
-    e.preventDefault();
-    postEvent({event_type:"submit",session_id:SESSION_ID,timestamp:nowIso(),answers});
-    alert("Form would submit now (webhook + redirect).");
+  /* ===================== VALIDATION HELPERS ===================== */
+  function updateNextEnabled(){
+    var active = steps[idx];
+    if(!active) return;
+    var nextBtn = active.querySelector('[data-next]');
+    if(!nextBtn) return;
+    var required = Array.prototype.slice.call(active.querySelectorAll('input[required]'));
+    var ok = required.every(function(el){ return el.value && el.value.trim().length>0 && el.checkValidity(); });
+    nextBtn.disabled = !ok;
+  }
+
+  document.querySelectorAll('input').forEach(function(inp){
+    inp.addEventListener('input', updateNextEnabled);
+    inp.addEventListener('change', updateNextEnabled);
   });
 
+  /* ===================== PHONE FORMAT & CONFIRM ===================== */
+  var phoneInput = document.getElementById('phone');
+  var phone2Input = document.getElementById('phone2');
+  var phoneConfirmWrap = document.getElementById('phoneConfirmWrap');
+  var phoneDigits = document.getElementById('phone_digits');
+
+  function formatPhone(val){
+    var d = (val || "").replace(/\D/g,'').slice(0,10);
+    var f = d;
+    if(d.length > 6) f = '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6);
+    else if(d.length > 3) f = '('+d.slice(0,3)+') '+d.slice(3);
+    else if(d.length > 0) f = '('+d;
+    return {formatted:f, digits:d};
+  }
+
+  function validatePhones(){
+    var p1 = formatPhone(phoneInput.value);
+    if (phoneInput.value !== p1.formatted) phoneInput.value = p1.formatted;
+    phoneDigits.value = p1.digits;
+    answers["phone_digits"] = p1.digits;
+
+    if(p1.digits.length === 10){
+      phoneInput.setCustomValidity('');
+    } else {
+      phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
+    }
+
+    var shouldShowConfirm = p1.digits.length === 10;
+    phoneConfirmWrap.style.display = shouldShowConfirm ? '' : 'none';
+    phone2Input.required = shouldShowConfirm;
+
+    var p2 = formatPhone(phone2Input.value);
+    if (phone2Input.value !== p2.formatted) phone2Input.value = p2.formatted;
+
+    if(shouldShowConfirm){
+      if(p2.digits.length === 0){
+        phone2Input.setCustomValidity('Please re-enter your phone number.');
+      } else if(p2.digits !== p1.digits){
+        phone2Input.setCustomValidity('Phone numbers do not match.');
+      } else {
+        phone2Input.setCustomValidity('');
+      }
+    } else {
+      phone2Input.value = '';
+      phone2Input.setCustomValidity('');
+    }
+
+    updateNextEnabled();
+  }
+
+  phoneInput.addEventListener('input', validatePhones);
+  phoneInput.addEventListener('blur', validatePhones);
+  phone2Input.addEventListener('input', validatePhones);
+  phone2Input.addEventListener('blur', validatePhones);
+
+  /* ===================== ZIP GATE + ADDR AUTOCOMPLETE ===================== */
+  var inArea = false;
+  var addressInput = document.getElementById('address');
+  var cityInput = document.getElementById('city');
+  var stateInput = document.getElementById('state');
+  var zipInput = document.getElementById('zip');
+  var msgBad = document.getElementById('zipMsg');
+  var msgGood = document.getElementById('zipOk');
+  var submitBtn = document.getElementById('submitBtn');
+
+  function updateSubmitEnabled(){
+    var addrOk = addressInput.value.trim().length > 3;
+    var cityOk = cityInput.value.trim().length > 1;
+    var stateOk = /^[A-Za-z]{2}$/.test(stateInput.value.trim());
+    var zipOk = /^\d{5}$/.test(zipInput.value.trim());
+    submitBtn.disabled = !(inArea && addrOk && cityOk && stateOk && zipOk);
+  }
+
+  function applyZipGate(zip){
+    if(!zip || !/^\d{5}$/.test(zip)){
+      msgBad.style.display = 'none';
+      msgGood.style.display = 'none';
+      inArea = false;
+      updateSubmitEnabled();
+      return;
+    }
+    if(serviceZips.has(zip)){
+      msgGood.style.display = 'block';
+      msgBad.style.display = 'none';
+      inArea = true;
+    } else {
+      msgBad.style.display = 'block';
+      msgGood.style.display = 'none';
+      inArea = false;
+    }
+    answers["zip"] = zip;
+    answers["in_service_area"] = inArea;
+    updateSubmitEnabled();
+
+    postEvent({
+      event_type: "zip_check",
+      step_index: idx,
+      step_name: stepNameAt(idx),
+      zip: zip,
+      in_area: inArea
+    });
+  }
+
+  zipInput.addEventListener('input', function(e){ applyZipGate(e.target.value.trim()); });
+  [addressInput, cityInput, stateInput].forEach(function(el){
+    el.addEventListener('input', updateSubmitEnabled);
+    el.addEventListener('change', updateSubmitEnabled);
+  });
+
+  window.__attachPlaces = function(){
+    if(!window.google || !google.maps || !google.maps.places) return;
+    var ac = new google.maps.places.Autocomplete(addressInput, {
+      types: ['address'],
+      componentRestrictions: { country: ['us'] },
+      fields: ['address_components','formatted_address']
+    });
+    ac.addListener('place_changed', function(){
+      var place = ac.getPlace();
+      if(!place || !place.address_components) return;
+
+      var comps = {};
+      place.address_components.forEach(function(c){
+        c.types.forEach(function(t){ comps[t] = c; });
+      });
+      if(comps.locality) cityInput.value = comps.locality.long_name;
+      else if(comps.sublocality) cityInput.value = comps.sublocality.long_name;
+      if(comps.administrative_area_level_1) stateInput.value = comps.administrative_area_level_1.short_name;
+      if(comps.postal_code) zipInput.value = comps.postal_code.long_name;
+
+      applyZipGate(zipInput.value.trim());
+    });
+  };
+
+  /* ===================== SUBMIT → MAKE + REDIRECT ===================== */
+  document.getElementById('quiz').addEventListener('submit', function(e){
+    e.preventDefault();
+    var form = e.target;
+
+    if (!form.reportValidity()) { return; }
+    if(!inArea){
+      applyZipGate(zipInput.value.trim());
+      zipInput.focus();
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+
+    // Tracking: submit_started
+    postEvent({
+      event_type: "submit_started",
+      step_index: idx,
+      step_name: stepNameAt(idx),
+      answers_snapshot: answers
+    });
+
+    var data = new FormData(form);
+
+    // Fire Make webhook (lead capture)
+    try{
+      var controller = new AbortController();
+      var timeoutId  = setTimeout(function(){ try{ controller.abort(); }catch(_){} }, 4000);
+      fetch(form.action, {
+        method: 'POST',
+        body: data,
+        mode: 'no-cors',
+        signal: controller.signal,
+        keepalive: true
+      }).catch(function(_){}).finally(function(){ clearTimeout(timeoutId); });
+    }catch(_){}
+
+    // Build Cal.com URL
+    var first = (document.getElementById('first') && document.getElementById('first').value.trim()) || '';
+    var last  = (document.getElementById('last') && document.getElementById('last').value.trim()) || '';
+    var name  = (first + ' ' + last).replace(/\s+/g, ' ').trim();
+
+    var addr  = (document.getElementById('address') && document.getElementById('address').value.trim()) || '';
+    var city  = (document.getElementById('city') && document.getElementById('city').value.trim()) || '';
+    var state = (document.getElementById('state') && document.getElementById('state').value.trim()) || '';
+    var zip   = (document.getElementById('zip') && document.getElementById('zip').value.trim()) || '';
+    var fullAddress = [addr, city && (city+','), state, zip].filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+
+    var params = new URLSearchParams();
+    params.set('email', 'peakleadsgroup@gmail.com');
+    if (name) params.set('name', name);
+
+    var smsDigits = (document.getElementById('phone_digits') && document.getElementById('phone_digits').value) ||
+                    (document.getElementById('phone') && document.getElementById('phone').value.replace(/\D/g,'') ) || '';
+    if (smsDigits.length === 10) params.set('smsReminderNumber', '+1'+smsDigits);
+    if (fullAddress) params.set('location', fullAddress);
+
+    var calUrl = 'https://cal.com/peakleadsgroup/cathcart-company?' + params.toString();
+
+    // Tracking: submit_redirect
+    postEvent({
+      event_type: "submit_redirect",
+      cal_url: calUrl
+    });
+
+    window.location.href = calUrl;
+  });
+
+  /* ===================== INIT ===================== */
   show(0);
+  validatePhones();
 })();
+</script>
+
+<!-- Load Google Places (async/defer) -->
+<script async defer
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&libraries=places&callback=__attachPlaces">
 </script>
 </body>
 </html>
+
