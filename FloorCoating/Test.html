@@ -271,6 +271,24 @@
 
   // Function to send tracking data
   async function sendTracking(buttonText, buttonValue, stepName) {
+    // Collect all form field values
+    const formValues = {};
+    const form = document.getElementById('quiz');
+    const inputs = form.querySelectorAll('input[type="text"], input[type="tel"], input[type="email"], textarea, select');
+    inputs.forEach(input => {
+      if (input.name && input.value.trim()) {
+        formValues[input.name] = input.value.trim();
+      }
+    });
+    
+    // Also collect hidden field values (for selected choices)
+    const hiddenInputs = form.querySelectorAll('input[type="hidden"]');
+    hiddenInputs.forEach(input => {
+      if (input.name && input.value) {
+        formValues[input.name] = input.value;
+      }
+    });
+
     const trackingData = {
       user_id: USER_ID,
       clientATID: clientATID,
@@ -278,7 +296,8 @@
       button_value: buttonValue,
       step_name: stepName,
       timestamp: new Date().toISOString(),
-      step_number: idx + 1
+      step_number: idx + 1,
+      form_values: formValues
     };
 
     try {
