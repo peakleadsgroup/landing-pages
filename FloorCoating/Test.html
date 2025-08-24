@@ -510,7 +510,10 @@
     updateNextEnabled();
   }
 
-  zipInput.addEventListener('input', e=>applyZipGate(e.target.value.trim()));
+  zipInput.addEventListener('input', e=>{
+    applyZipGate(e.target.value.trim());
+    updateNextEnabled(); // Make sure to update the Next button
+  });
 
   [addressInput, cityInput, stateInput].forEach(el=>{
     el.addEventListener('input', () => {
