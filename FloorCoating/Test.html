@@ -507,6 +507,13 @@
       if(!place || !place.address_components) return;
 
       const comps = Object.fromEntries(place.address_components.flatMap(c => c.types.map(t => [t, c])));
+      
+      // Build street address from components (street number + street name only)
+      let streetAddress = '';
+      if(comps.street_number) streetAddress += comps.street_number.long_name + ' ';
+      if(comps.route) streetAddress += comps.route.long_name;
+      if(streetAddress.trim()) addressInput.value = streetAddress.trim();
+      
       if(comps.locality) cityInput.value = comps.locality.long_name;
       else if(comps.sublocality) cityInput.value = comps.sublocality.long_name;
       if(comps.administrative_area_level_1) stateInput.value = comps.administrative_area_level_1.short_name;
