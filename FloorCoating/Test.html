@@ -491,7 +491,7 @@
       msgBad.style.display = 'none';
       msgGood.style.display = 'none';
       inArea = false;
-      updateSubmitEnabled();
+      updateNextEnabled();
       return;
     }
     if(serviceZips.has(zip)){
@@ -507,7 +507,7 @@
       // Track service area validation - OUT OF AREA
       sendTracking(zip, 'zip_validation_failure', 'zip_validation_failure');
     }
-    updateSubmitEnabled();
+    updateNextEnabled();
   }
 
   zipInput.addEventListener('input', e=>applyZipGate(e.target.value.trim()));
