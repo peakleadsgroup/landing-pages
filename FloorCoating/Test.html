@@ -513,8 +513,20 @@
   zipInput.addEventListener('input', e=>applyZipGate(e.target.value.trim()));
 
   [addressInput, cityInput, stateInput].forEach(el=>{
-    el.addEventListener('input', updateSubmitEnabled);
-    el.addEventListener('change', updateSubmitEnabled);
+    el.addEventListener('input', () => {
+      if (idx === 4) { // Only call updateNextEnabled if we're on the address step
+        updateNextEnabled();
+      } else {
+        updateSubmitEnabled();
+      }
+    });
+    el.addEventListener('change', () => {
+      if (idx === 4) {
+        updateNextEnabled();
+      } else {
+        updateSubmitEnabled();
+      }
+    });
   });
 
   // Autocomplete hookup after Google script loads
