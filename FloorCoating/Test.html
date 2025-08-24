@@ -268,6 +268,10 @@
   // Generate unique user ID for this session
   const USER_ID = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   const clientATID = 'recAbKUArCdZBwXDo';
+  
+  // Get adATID from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const adATID = urlParams.get('adATID') || '';
 
   const steps = Array.from(document.querySelectorAll('.step'));
   const bar = document.getElementById('progressBar');
@@ -538,6 +542,11 @@
     
     // Add clientATID to form data
     data.append('clientATID', clientATID);
+    
+    // Add adATID to form data if it exists
+    if (adATID) {
+      data.append('adATID', adATID);
+    }
 
     // Send to both webhooks
     const controller = new AbortController();
