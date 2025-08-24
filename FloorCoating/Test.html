@@ -216,7 +216,7 @@
         <!-- Step 6 (Address + ZIP gate) -->
         <section class="step" id="addressStep">
           <h2>Where will we be meeting you?</h2>
-          <small class="muted">Our team will reach out within 24 hours!</small>
+          <small class="muted">Our team will reach out within 24 hours to schedule your floor measurement!</small>
 
           <div class="row">
             <div>
@@ -479,10 +479,14 @@
       msgGood.style.display = 'block';
       msgBad.style.display = 'none';
       inArea = true;
+      // Track service area validation - IN AREA
+      sendTracking('Zip validation: In service area', zip, 'zip_validation_success');
     } else {
       msgBad.style.display = 'block';
       msgGood.style.display = 'none';
       inArea = false;
+      // Track service area validation - OUT OF AREA
+      sendTracking('Zip validation: Not in service area', zip, 'zip_validation_failure');
     }
     updateSubmitEnabled();
   }
