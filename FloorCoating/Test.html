@@ -304,7 +304,7 @@
       button_value: buttonValue,
       step_name: stepName,
       timestamp: new Date().toISOString(),
-      step_number: idx + 1,
+      step_number: stepName === 'form_initialization' ? 0 : idx + 1,
       form_values: formValues
     };
 
