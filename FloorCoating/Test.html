@@ -607,6 +607,9 @@
   // Initialize
   show(0);
   validatePhones();
+  
+  // Send tracking webhook when form loads
+  sendTracking('Form loaded', 'page_load', 'form_initialization');
 })();
 </script>
 
