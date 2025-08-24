@@ -333,14 +333,20 @@
   // Track navigation button clicks
   document.querySelectorAll('[data-next]').forEach(btn=>{
     btn.addEventListener('click', () => {
-      sendTracking('Next', 'next', `step_${idx + 1}`);
+      let stepName = `step_${idx + 1}`;
+      if (idx === 3) stepName = 'Phone'; // Step 4 is phone
+      if (idx === 4) stepName = 'Name';  // Step 5 is name
+      sendTracking('Next', 'next', stepName);
       show(idx+1);
     });
   });
 
   document.querySelectorAll('[data-prev]').forEach(btn=>{
     btn.addEventListener('click', () => {
-      sendTracking('Back', 'back', `step_${idx + 1}`);
+      let stepName = `step_${idx + 1}`;
+      if (idx === 3) stepName = 'Phone'; // Step 4 is phone
+      if (idx === 4) stepName = 'Name';  // Step 5 is name
+      sendTracking('Back', 'back', stepName);
       show(idx-1);
     });
   });
@@ -480,13 +486,13 @@
       msgBad.style.display = 'none';
       inArea = true;
       // Track service area validation - IN AREA
-      sendTracking('Zip validation: In service area', zip, 'zip_validation_success');
+      sendTracking(zip, 'zip_validation_success', 'zip_validation_success');
     } else {
       msgBad.style.display = 'block';
       msgGood.style.display = 'none';
       inArea = false;
       // Track service area validation - OUT OF AREA
-      sendTracking('Zip validation: Not in service area', zip, 'zip_validation_failure');
+      sendTracking(zip, 'zip_validation_failure', 'zip_validation_failure');
     }
     updateSubmitEnabled();
   }
