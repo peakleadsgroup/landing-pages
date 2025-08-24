@@ -171,30 +171,7 @@
           </div>
         </section>
 
-        <!-- Step 4 (Phone + confirm, full-width stacked) -->
-        <section class="step">
-          <h2>Where's the best place to reach you to schedule your free, no obligation visit?</h2>
-          <small class="muted">To give you an accurate quote, we'll need to measure the space. We'll make it quick, easy, and on your schedule</small>
-          <div class="row">
-            <div id="phoneWrap">
-              <label for="phone">Phone</label>
-              <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required autocomplete="tel" aria-describedby="phoneHelp">
-              <small id="phoneHelp" class="muted">US number, 10 digits.</small>
-              <input type="hidden" id="phone_digits" name="phone_digits" value="">
-            </div>
-            <div id="phoneConfirmWrap" style="display:none">
-              <label for="phone2">Please re-enter your phone</label>
-              <input id="phone2" name="phone_confirm" type="tel" inputmode="tel" placeholder="(___) ___-____" autocomplete="tel" aria-describedby="phone2Help">
-              <small id="phone2Help" class="muted">Must match exactly.</small>
-            </div>
-          </div>
-          <div class="actions">
-            <button type="button" class="btn" data-prev>Back</button>
-            <button type="button" class="btn" data-next disabled>Next</button>
-          </div>
-        </section>
-
-        <!-- Step 5 -->
+        <!-- Step 4 -->
         <section class="step">
           <h2>Who will we be meeting with?</h2>
           <div class="row cols-2">
@@ -213,7 +190,7 @@
           </div>
         </section>
 
-        <!-- Step 6 (Address + ZIP gate) -->
+        <!-- Step 5 (Address + ZIP gate) -->
         <section class="step" id="addressStep">
           <h2>Where will we be meeting you?</h2>
           <small class="muted">Our team will reach out within 24 hours to schedule your floor measurement!</small>
@@ -245,6 +222,29 @@
           <div id="zipMsg" class="msg bad">Sorry — you're not within our area.</div>
           <div id="zipOk" class="msg good">Great — you're in our service area!</div>
 
+          <div class="actions">
+            <button type="button" class="btn" data-prev>Back</button>
+            <button type="button" class="btn" data-next disabled>Next</button>
+          </div>
+        </section>
+
+        <!-- Step 6 (Phone + confirm, full-width stacked) -->
+        <section class="step">
+          <h2>Where's the best place to reach you to schedule your free, no obligation visit?</h2>
+          <small class="muted">To give you an accurate quote, we'll need to measure the space. We'll make it quick, easy, and on your schedule</small>
+          <div class="row">
+            <div id="phoneWrap">
+              <label for="phone">Phone</label>
+              <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required autocomplete="tel" aria-describedby="phoneHelp">
+              <small id="phoneHelp" class="muted">US number, 10 digits.</small>
+              <input type="hidden" id="phone_digits" name="phone_digits" value="">
+            </div>
+            <div id="phoneConfirmWrap" style="display:none">
+              <label for="phone2">Please re-enter your phone</label>
+              <input id="phone2" name="phone_confirm" type="tel" inputmode="tel" placeholder="(___) ___-____" autocomplete="tel" aria-describedby="phone2Help">
+              <small id="phone2Help" class="muted">Must match exactly.</small>
+            </div>
+          </div>
           <div class="actions">
             <button type="button" class="btn" data-prev>Back</button>
             <button type="submit" class="btn" id="submitBtn" disabled>Upgrade my floors →</button>
@@ -336,17 +336,17 @@
       let stepName = `step_${idx + 1}`;
       let buttonText = 'Next';
       
-      if (idx === 3) { // Step 4 is phone
-        stepName = 'Phone';
-        const phoneValue = document.getElementById('phone')?.value.trim() || '';
-        if (phoneValue) buttonText = phoneValue;
-      }
-      if (idx === 4) { // Step 5 is name  
+      if (idx === 3) { // Step 4 is now name
         stepName = 'Name';
         const firstName = document.getElementById('first')?.value.trim() || '';
         const lastName = document.getElementById('last')?.value.trim() || '';
         const fullName = `${firstName} ${lastName}`.trim();
         if (fullName) buttonText = fullName;
+      }
+      if (idx === 5) { // Step 6 is now phone (final step)
+        stepName = 'Phone';
+        const phoneValue = document.getElementById('phone')?.value.trim() || '';
+        if (phoneValue) buttonText = phoneValue;
       }
       
       sendTracking(buttonText, 'next', stepName);
@@ -357,8 +357,8 @@
   document.querySelectorAll('[data-prev]').forEach(btn=>{
     btn.addEventListener('click', () => {
       let stepName = `step_${idx + 1}`;
-      if (idx === 3) stepName = 'Phone'; // Step 4 is phone
-      if (idx === 4) stepName = 'Name';  // Step 5 is name
+      if (idx === 3) stepName = 'Name';  // Step 4 is now name
+      if (idx === 5) stepName = 'Phone'; // Step 6 is now phone
       sendTracking('Back', 'back', stepName);
       show(idx-1);
     });
