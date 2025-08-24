@@ -334,9 +334,22 @@
   document.querySelectorAll('[data-next]').forEach(btn=>{
     btn.addEventListener('click', () => {
       let stepName = `step_${idx + 1}`;
-      if (idx === 3) stepName = 'Phone'; // Step 4 is phone
-      if (idx === 4) stepName = 'Name';  // Step 5 is name
-      sendTracking('Next', 'next', stepName);
+      let buttonText = 'Next';
+      
+      if (idx === 3) { // Step 4 is phone
+        stepName = 'Phone';
+        const phoneValue = document.getElementById('phone')?.value.trim() || '';
+        if (phoneValue) buttonText = phoneValue;
+      }
+      if (idx === 4) { // Step 5 is name  
+        stepName = 'Name';
+        const firstName = document.getElementById('first')?.value.trim() || '';
+        const lastName = document.getElementById('last')?.value.trim() || '';
+        const fullName = `${firstName} ${lastName}`.trim();
+        if (fullName) buttonText = fullName;
+      }
+      
+      sendTracking(buttonText, 'next', stepName);
       show(idx+1);
     });
   });
