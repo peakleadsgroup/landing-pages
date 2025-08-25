@@ -347,17 +347,18 @@
       let stepName = `step_${idx + 1}`;
       let buttonText = 'Next';
       
-      if (idx === 3) { // Step 4 is now name
+      if (idx === 3) { // Step 4 is name
         stepName = 'Name';
         const firstName = document.getElementById('first')?.value.trim() || '';
         const lastName = document.getElementById('last')?.value.trim() || '';
         const fullName = `${firstName} ${lastName}`.trim();
         if (fullName) buttonText = fullName;
       }
-      if (idx === 5) { // Step 6 is now phone (final step)
+      if (idx === 4) { // Step 5 is address, but call it "Phone" and send phone number
         stepName = 'Phone';
         const phoneValue = document.getElementById('phone')?.value.trim() || '';
         if (phoneValue) buttonText = phoneValue;
+        else buttonText = 'Next';
       }
       
       sendTracking(buttonText, 'next', stepName);
@@ -368,8 +369,8 @@
   document.querySelectorAll('[data-prev]').forEach(btn=>{
     btn.addEventListener('click', () => {
       let stepName = `step_${idx + 1}`;
-      if (idx === 3) stepName = 'Name';  // Step 4 is now name
-      if (idx === 5) stepName = 'Phone'; // Step 6 is now phone
+      if (idx === 3) stepName = 'Name';  // Step 4 is name
+      if (idx === 4) stepName = 'Phone'; // Step 5 is address, but call it "Phone"
       sendTracking('Back', 'back', stepName);
       show(idx-1);
     });
