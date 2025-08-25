@@ -354,10 +354,15 @@
         const fullName = `${firstName} ${lastName}`.trim();
         if (fullName) buttonText = fullName;
       }
-      if (idx === 4) { // Step 5 is address, but call it "Phone" and send phone number
-        stepName = 'Phone';
-        const phoneValue = document.getElementById('phone')?.value.trim() || '';
-        if (phoneValue) buttonText = phoneValue;
+      if (idx === 4) { // Step 5 is address, send full address
+        stepName = 'Address';
+        const addr = document.getElementById('address')?.value.trim() || '';
+        const city = document.getElementById('city')?.value.trim() || '';
+        const state = document.getElementById('state')?.value.trim() || '';
+        const zip = document.getElementById('zip')?.value.trim() || '';
+        const fullAddress = [addr, city && `${city},`, state, zip]
+          .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+        if (fullAddress) buttonText = fullAddress;
         else buttonText = 'Next';
       }
       
@@ -369,8 +374,8 @@
   document.querySelectorAll('[data-prev]').forEach(btn=>{
     btn.addEventListener('click', () => {
       let stepName = `step_${idx + 1}`;
-      if (idx === 3) stepName = 'Name';  // Step 4 is name
-      if (idx === 4) stepName = 'Phone'; // Step 5 is address, but call it "Phone"
+      if (idx === 3) stepName = 'Name';    // Step 4 is name
+      if (idx === 4) stepName = 'Address'; // Step 5 is address
       sendTracking('Back', 'back', stepName);
       show(idx-1);
     });
@@ -628,8 +633,9 @@
       return;
     }
 
-    // Track submit button click
-    sendTracking('Upgrade my floors →', 'submit', 'form_submit');
+    // Track submit button click with phone number
+    const phoneValue = document.getElementById('phone')?.value.trim() || 'Upgrade my floors →';
+    sendTracking(phoneValue, 'submit', 'Phone');
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
