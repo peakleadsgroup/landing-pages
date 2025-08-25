@@ -134,7 +134,7 @@
   <div class="wrap">
     <div class="card">
       <div style="text-align: center; margin-bottom: 20px;">
-        <img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/images/GarageForceLogo.png" alt="Logo" style="max-width: 200px; height: auto;">
+        <img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/images/Garage%20Force%20Orlando1756063097803.png" alt="Logo" style="max-width: 200px; height: auto;">
       </div>
       <div class="progress"><div class="bar" id="progressBar"></div></div>
 
@@ -203,6 +203,10 @@
             </div>
           </div>
 
+          <!-- Hidden fields for coordinates -->
+          <input type="hidden" id="latitude" name="latitude" value="">
+          <input type="hidden" id="longitude" name="longitude" value="">
+
           <div id="zipMsg" class="msg bad">Sorry — you're not within our area.</div>
           <div id="zipOk" class="msg good">Great — you're in our service area!</div>
 
@@ -261,7 +265,7 @@
 (function(){
   // ------- EDIT THESE -------
   const serviceZips = new Set([
-   "32804","32789","32808","32801","32802","32853","32854","32855","32856","32857","32858","32859","32860","32861","32862","32867","32868","32869","32872","32877","32878","32885","32886","32887","32891","32897","32896","32733","32794","32803","32810","32790","32793","32805","32799","32751","32814","32806","32811","32715","32716","32807","32714","32730","32701","32818","32839","32792","32710","32835","32812","32707","32718","32719","32809","34734","34761","32822","32817","32752","32791","32750","32703","32704","32708","32819","32899","32779","32825","34777","34778","32816","34786","32768","32712","32746","32826","32829","32745","32762","32795","32824","32765","32836","32837","32827","34760","32821","32828","32773","32798","34740","34787","32830","32772","32831","34756","32747","32757","32776","34743","32820","32832","32771","34729","34741","32777","32766","34742","34745","34744","32732","34715","32713","34755","32756","32833","32753","34705","34711","34747","32725","33848","34712","34713","32728","34746","34770","32739","32778","34769","32736","33896","32834","32763","32727","32709","32738","34737","33858","32774","34714","32726","34758","34797","32720","33897","32764","32706","32784","34771","34736","32754","32744","34753","33837","32735","34772","32767","33836","32721","32723","34788","34748","32780","34749","34789","34762","32168","34759","32702","32775","33868","33845","32722","32781","32783","32927","32926","33844","34731","32724","32796","33514","34773","32759","32141","33850","32163","32159","32158","32132","33851","32959"
+    "32804","32789","32808","32801","32802","32853","32854","32855","32856","32857","32858","32859","32860","32861","32862","32867","32868","32869","32872","32877","32878","32885","32886","32887","32891","32897","32896","32733","32794","32803","32810","32790","32793","32805","32799","32751","32814","32806","32811","32715","32716","32807","32714","32730","32701","32818","32839","32792","32710","32835","32812","32707","32718","32719","32809","34734","34761","32822","32817","32752","32791","32750","32703","32704","32708","32819","32899","32779","32825","34777","34778","32816","34786","32768","32712","32746","32826","32829","32745","32762","32795","32824","32765","32836","32837","32827","34760","32821","32828","32773","32798","34740","34787","32830","32772","32831","34756","32747","32757","32776","34743","32820","32832","32771","34729","34741","32777","32766","34742","34745","34744","32732","34715","32713","34755","32756","32833","32753","34705","34711","34747","32725","33848","34712","34713","32728","34746","34770","32739","32778","34769","32736","33896","32834","32763","32727","32709","32738","34737","33858","32774","34714","32726","34758","34797","32720","33897","32764","32706","32784","34771","34736","32754","32744","34753","33837","32735","34772","32767","33836","32721","32723","34788","34748","32780","34749","34789","34762","32168","34759","32702","32775","33868","33845","32722","32781","32783","32927","32926","33844","34731","32724","32796","33514","34773","32759","32141","33850","32163","32159","32158","32132","33851","32959","33881","32130","32124","32128","32195","32170","32923","32924","32105","32922","32815","33838","33585","32102","32169","33823","32162","33877","33809","32133","32955","32956","33882","33883","32183","34785","32180","33888","32953","33885","32129","32127","33597","32954","33884","33521","32119","33839","32179","33898","32952","32114","33880","33513","33805","33849","33537","34484","33853","32111","33856","33801","32940","34491","34492","33810","32920","32198","32115","32116","32120","32121","32122","32123","32125","32126","33593","32118","32117","33854","33859","33840","33806","32934","33802","32931","34420","33526","33804","33803","32932","34661","32174","33812","33846","33523","34421","34472","33540","32904","33827","33538","33815","34739","33820","32173","32175","32190","34483","33542","33807","32925","33539","33525","34636","33831","33524","33855","34602","33813","32935","33574","34488","34480","33830","34450","33541","33811","32937","32936","34436","32139","32176","33565","34473","32919","33867","34601","32907","32901","33576","33564","34471","34470","33545","33843","34451","32903","32902","32906","32941","34489","32112","33563","32110","32908","34603","34611","34476","32134"
   ]);
   
   const TRACKING_WEBHOOK = 'https://hook.us2.make.com/0kfn50ruqjdtfvwpw4meuagndb76whq8';
@@ -432,6 +436,8 @@
   const cityInput = document.getElementById('city');
   const stateInput = document.getElementById('state');
   const zipInput = document.getElementById('zip');
+  const latitudeInput = document.getElementById('latitude');
+  const longitudeInput = document.getElementById('longitude');
   const msgBad = document.getElementById('zipMsg');
   const msgGood = document.getElementById('zipOk');
   const submitBtn = document.getElementById('submitBtn');
@@ -661,13 +667,34 @@
   phone2Input.addEventListener('input', validatePhones);
   phone2Input.addEventListener('blur', validatePhones);
 
+  // Function to geocode address if coordinates not available from Places API
+  async function geocodeAddress(address) {
+    if (!window.google || !google.maps) return null;
+    
+    return new Promise((resolve) => {
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ address: address }, (results, status) => {
+        if (status === 'OK' && results[0]) {
+          const location = results[0].geometry.location;
+          resolve({
+            lat: location.lat(),
+            lng: location.lng()
+          });
+        } else {
+          console.log('Geocoding failed:', status);
+          resolve(null);
+        }
+      });
+    });
+  }
+
   // Autocomplete hookup after Google script loads
   window.__attachPlaces = function(){
     if(!window.google || !google.maps || !google.maps.places) return;
     const ac = new google.maps.places.Autocomplete(addressInput, {
       types: ['address'],
       componentRestrictions: { country: ['us'] },
-      fields: ['address_components','formatted_address']
+      fields: ['address_components','formatted_address','geometry']
     });
     ac.addListener('place_changed', ()=>{
       const place = ac.getPlace();
@@ -686,6 +713,15 @@
       if(comps.administrative_area_level_1) stateInput.value = comps.administrative_area_level_1.short_name;
       if(comps.postal_code) zipInput.value = comps.postal_code.long_name;
 
+      // Extract coordinates from place geometry
+      if (place.geometry && place.geometry.location) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+        latitudeInput.value = lat.toString();
+        longitudeInput.value = lng.toString();
+        console.log('Coordinates from Places API:', { lat, lng });
+      }
+
       applyZipGate(zipInput.value.trim());
     });
   };
@@ -700,12 +736,34 @@
       return;
     }
 
-// Track submit button click with name
-const firstName = document.getElementById('first')?.value.trim() || '';
-const lastName = document.getElementById('last')?.value.trim() || '';
-const fullName = `${firstName} ${lastName}`.trim();
-const nameValue = fullName || 'Upgrade my floors →';
-sendTracking(nameValue, 'submit', 'Name');
+    // Try to get coordinates if not already available
+    if (!latitudeInput.value || !longitudeInput.value) {
+      const addr = addressInput.value.trim();
+      const city = cityInput.value.trim();
+      const state = stateInput.value.trim();
+      const zip = zipInput.value.trim();
+      const fullAddress = [addr, city && `${city},`, state, zip]
+        .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+      
+      if (fullAddress) {
+        console.log('Attempting to geocode address:', fullAddress);
+        const coords = await geocodeAddress(fullAddress);
+        if (coords) {
+          latitudeInput.value = coords.lat.toString();
+          longitudeInput.value = coords.lng.toString();
+          console.log('Coordinates from geocoding:', coords);
+        } else {
+          console.log('Geocoding failed, submitting without coordinates');
+        }
+      }
+    }
+
+    // Track submit button click with name
+    const firstName = document.getElementById('first')?.value.trim() || '';
+    const lastName = document.getElementById('last')?.value.trim() || '';
+    const fullName = `${firstName} ${lastName}`.trim();
+    const nameValue = fullName || 'Upgrade my floors →';
+    sendTracking(nameValue, 'submit', 'Name');
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
@@ -719,6 +777,12 @@ sendTracking(nameValue, 'submit', 'Name');
     if (adATID) {
       data.append('adATID', adATID);
     }
+
+    // Log coordinates being sent (for debugging)
+    console.log('Submitting with coordinates:', {
+      latitude: latitudeInput.value,
+      longitude: longitudeInput.value
+    });
 
     // Send to submit webhook with longer timeout
     const controller = new AbortController();
@@ -753,7 +817,7 @@ sendTracking(nameValue, 'submit', 'Name');
     const fullAddress = [addr, city && `${city},`, state, zip]
       .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
 
-    const params = new URLSearchParams();        // fixed inbox
+    const params = new URLSearchParams();
     if (name) params.set('name', name);
 
     // Phone → smsReminderNumber (+1XXXXXXXXXX) if 10 digits present
