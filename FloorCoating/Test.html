@@ -331,6 +331,11 @@
     const pct = ((idx)/(steps.length-1))*100;
     bar.style.width = pct + '%';
     updateNextEnabled();
+    
+    // If we're on the final name step, also update submit button
+    if (idx === 5) {
+      updateSubmitEnabled();
+    }
   }
 
   // Track navigation button clicks
@@ -417,20 +422,162 @@
     });
   });
 
+  // ZIP Gate + Google Places Autocomplete
+  let inArea = false;
+  const addressInput = document.getElementById('address');
+  const cityInput = document.getElementById('city');
+  const stateInput = document.getElementById('state');
+  const zipInput = document.getElementById('zip');
+  const msgBad = document.getElementById('zipMsg');
+  const msgGood = document.getElementById('zipOk');
+  const submitBtn = document.getElementById('submitBtn');
+
+  function updateSubmitEnabled(){
+    // Always check if we're on the final name step (Step 6, idx 5)
+    if (idx !== 5) return;
+    
+    const firstName = document.getElementById('first')?.value.trim() || '';
+    const lastName = document.getElementById('last')?.value.trim() || '';
+    const nameValid = firstName.length > 0 && lastName.length > 0;
+    
+    submitBtn.disabled = !nameValid;
+    
+    // Force visual styling update
+    if (nameValid) {
+      submitBtn.classList.remove('force-disabled');
+      submitBtn.style.opacity = '1';
+      submitBtn.style.cursor = 'pointer';
+    } else {
+      submitBtn.classList.add('force-disabled');
+      submitBtn.style.opacity = '0.5';
+      submitBtn.style.cursor = 'not-allowed';
+    }
+    
+    console.log('Submit validation:', {
+      firstName,
+      lastName,
+      nameValid,
+      currentStep: idx,
+      buttonDisabled: submitBtn.disabled
+    });
+  }
+
   // Enable/disable Next button only when step is valid
   function updateNextEnabled(){
     const active = steps[idx];
     const nextBtn = active.querySelector('[data-next]');
     if(!nextBtn) return;
+    
+    // Special handling for address step (now Step 4, idx 3)
+    if (idx === 3) {
+      updateAddressStepButton();
+      return;
+    }
+    
     const required = Array.from(active.querySelectorAll('input[required]'));
     const ok = required.every(el => el.value.trim().length>0 && el.checkValidity());
     nextBtn.disabled = !ok;
+  }
+
+  function updateAddressStepButton() {
+    const nextBtn = document.querySelector('#addressStep [data-next]');
+    if (!nextBtn) return;
+    
+    const addrOk = addressInput.value.trim().length > 3;
+    const cityOk = cityInput.value.trim().length > 1;
+    const stateOk = /^[A-Za-z]{2}$/.test(stateInput.value.trim());
+    const zipOk = /^\d{5}$/.test(zipInput.value.trim());
+    const allFieldsValid = addrOk && cityOk && stateOk && zipOk;
+    
+    // Button is only enabled if ALL fields are valid AND in service area
+    const shouldEnable = allFieldsValid && inArea;
+    nextBtn.disabled = !shouldEnable;
+    
+    // Add visual styling for out of area
+    if (!inArea && zipOk) {
+      nextBtn.style.opacity = '0.3';
+      nextBtn.style.cursor = 'not-allowed';
+    } else if (shouldEnable) {
+      nextBtn.style.opacity = '1';
+      nextBtn.style.cursor = 'pointer';
+    } else {
+      nextBtn.style.opacity = '0.5';
+      nextBtn.style.cursor = 'not-allowed';
+    }
+    
+    console.log('Address step validation:', {
+      addrOk, cityOk, stateOk, zipOk, 
+      allFieldsValid, inArea, shouldEnable,
+      buttonDisabled: nextBtn.disabled,
+      currentStep: idx
+    });
+  }
+
+  function applyZipGate(zip){
+    console.log('ZIP Gate called with:', zip);
+    
+    if(!zip || !/^\d{5}$/.test(zip)){
+      msgBad.style.display = 'none';
+      msgGood.style.display = 'none';
+      inArea = false;
+      updateAddressStepButton();
+      return;
+    }
+    
+    if(serviceZips.has(zip)){
+      msgGood.style.display = 'block';
+      msgBad.style.display = 'none';
+      inArea = true;
+      sendTracking(zip, 'zip_validation_success', 'zip_validation_success');
+      console.log('ZIP validation: IN AREA');
+    } else {
+      msgBad.style.display = 'block';
+      msgGood.style.display = 'none';
+      inArea = false;
+      sendTracking(zip, 'zip_validation_failure', 'zip_validation_failure');
+      console.log('ZIP validation: OUT OF AREA');
+    }
+    
+    updateAddressStepButton();
   }
 
   // Watch inputs on all steps to toggle Next
   document.querySelectorAll('input').forEach(inp=>{
     inp.addEventListener('input', updateNextEnabled);
     inp.addEventListener('change', updateNextEnabled);
+  });
+
+  // Specifically watch name fields for submit button
+  const firstNameInput = document.getElementById('first');
+  const lastNameInput = document.getElementById('last');
+  
+  [firstNameInput, lastNameInput].forEach(input => {
+    input.addEventListener('input', updateSubmitEnabled);
+    input.addEventListener('change', updateSubmitEnabled);
+    input.addEventListener('keyup', updateSubmitEnabled);
+  });
+
+  zipInput.addEventListener('input', e=>{
+    const zipValue = e.target.value.trim();
+    applyZipGate(zipValue);
+    updateAddressStepButton();
+  });
+
+  [addressInput, cityInput, stateInput].forEach(el=>{
+    el.addEventListener('input', () => {
+      if (idx === 3) { // Address step is now idx 3
+        updateAddressStepButton();
+      } else {
+        updateSubmitEnabled();
+      }
+    });
+    el.addEventListener('change', () => {
+      if (idx === 3) {
+        updateAddressStepButton();
+      } else {
+        updateSubmitEnabled();
+      }
+    });
   });
 
   // Phone formatting + strict 10-digit validation + confirmation match
@@ -502,98 +649,13 @@
       currentStep: idx
     });
     
-    submitBtn.disabled = !buttonShouldEnable;
-    
-    if (buttonShouldEnable) {
-      submitBtn.classList.remove('force-disabled');
-    } else {
-      submitBtn.classList.add('force-disabled');
-    }
+    updateNextEnabled();
   }
 
   phoneInput.addEventListener('input', validatePhones);
   phoneInput.addEventListener('blur', validatePhones);
   phone2Input.addEventListener('input', validatePhones);
   phone2Input.addEventListener('blur', validatePhones);
-
-  // ZIP Gate + Google Places Autocomplete
-  let inArea = false;
-  const addressInput = document.getElementById('address');
-  const cityInput = document.getElementById('city');
-  const stateInput = document.getElementById('state');
-  const zipInput = document.getElementById('zip');
-  const msgBad = document.getElementById('zipMsg');
-  const msgGood = document.getElementById('zipOk');
-  const submitBtn = document.getElementById('submitBtn');
-
-  function updateSubmitEnabled(){
-    const addrOk  = addressInput.value.trim().length > 3;
-    const cityOk  = cityInput.value.trim().length > 1;
-    const stateOk = /^[A-Za-z]{2}$/.test(stateInput.value.trim());
-    const zipOk   = /^\d{5}$/.test(zipInput.value.trim());
-    submitBtn.disabled = !(inArea && addrOk && cityOk && stateOk && zipOk);
-  }
-
-  function applyZipGate(zip){
-    if(!zip || !/^\d{5}$/.test(zip)){
-      msgBad.style.display = 'none';
-      msgGood.style.display = 'none';
-      inArea = false;
-      updateNextEnabled();
-      return;
-    }
-    if(serviceZips.has(zip)){
-      msgGood.style.display = 'block';
-      msgBad.style.display = 'none';
-      inArea = true;
-      // Track service area validation - IN AREA
-      sendTracking(zip, 'zip_validation_success', 'zip_validation_success');
-    } else {
-      msgBad.style.display = 'block';
-      msgGood.style.display = 'none';
-      inArea = false;
-      // Track service area validation - OUT OF AREA
-      sendTracking(zip, 'zip_validation_failure', 'zip_validation_failure');
-    }
-    
-    // Force update the Next button immediately if we're on the address step
-    if (idx === 4) {
-      const nextBtn = document.querySelector('#addressStep [data-next]');
-      if (nextBtn) {
-        const addrOk  = addressInput.value.trim().length > 3;
-        const cityOk  = cityInput.value.trim().length > 1;
-        const stateOk = /^[A-Za-z]{2}$/.test(stateInput.value.trim());
-        const zipOk   = /^\d{5}$/.test(zipInput.value.trim());
-        const allFieldsOk = addrOk && cityOk && stateOk && zipOk;
-        console.log('ZIP Gate Debug:', {zip, inArea, addrOk, cityOk, stateOk, zipOk, allFieldsOk});
-        nextBtn.disabled = !(inArea && allFieldsOk);
-        console.log('Next button disabled:', nextBtn.disabled);
-      }
-    }
-  }
-
-  zipInput.addEventListener('input', e=>{
-    const zipValue = e.target.value.trim();
-    applyZipGate(zipValue);
-    updateAddressStepButton();
-  });
-
-  [addressInput, cityInput, stateInput].forEach(el=>{
-    el.addEventListener('input', () => {
-      if (idx === 3) { // Address step is now idx 3
-        updateAddressStepButton();
-      } else {
-        updateSubmitEnabled();
-      }
-    });
-    el.addEventListener('change', () => {
-      if (idx === 3) {
-        updateAddressStepButton();
-      } else {
-        updateSubmitEnabled();
-      }
-    });
-  });
 
   // Autocomplete hookup after Google script loads
   window.__attachPlaces = function(){
@@ -631,12 +693,6 @@
     const form = e.target;
 
     if (!form.reportValidity()) {
-      return;
-    }
-
-    if(!inArea){
-      applyZipGate(zipInput.value.trim());
-      zipInput.focus();
       return;
     }
 
