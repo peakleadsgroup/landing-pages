@@ -134,7 +134,7 @@
   <div class="wrap">
     <div class="card">
       <div style="text-align: center; margin-bottom: 20px;">
-        <img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/images/FortressFloorsLogo.jpg" alt="Fortress" alt="Logo" style="max-width: 200px; height: auto;">
+        <img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/images/Fortress%20Floor%20Coatings%20of%20NWFL%201754095323535.png" alt="Logo" style="max-width: 200px; height: auto;">
       </div>
       <div class="progress"><div class="bar" id="progressBar"></div></div>
 
@@ -202,6 +202,10 @@
                      inputmode="numeric" pattern="^[0-9]{5}$" maxlength="5" required autocomplete="postal-code">
             </div>
           </div>
+
+          <!-- Hidden fields for coordinates -->
+          <input type="hidden" id="latitude" name="latitude" value="">
+          <input type="hidden" id="longitude" name="longitude" value="">
 
           <div id="zipMsg" class="msg bad">Sorry — you're not within our area.</div>
           <div id="zipOk" class="msg good">Great — you're in our service area!</div>
@@ -432,6 +436,8 @@
   const cityInput = document.getElementById('city');
   const stateInput = document.getElementById('state');
   const zipInput = document.getElementById('zip');
+  const latitudeInput = document.getElementById('latitude');
+  const longitudeInput = document.getElementById('longitude');
   const msgBad = document.getElementById('zipMsg');
   const msgGood = document.getElementById('zipOk');
   const submitBtn = document.getElementById('submitBtn');
@@ -661,13 +667,34 @@
   phone2Input.addEventListener('input', validatePhones);
   phone2Input.addEventListener('blur', validatePhones);
 
+  // Function to geocode address if coordinates not available from Places API
+  async function geocodeAddress(address) {
+    if (!window.google || !google.maps) return null;
+    
+    return new Promise((resolve) => {
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ address: address }, (results, status) => {
+        if (status === 'OK' && results[0]) {
+          const location = results[0].geometry.location;
+          resolve({
+            lat: location.lat(),
+            lng: location.lng()
+          });
+        } else {
+          console.log('Geocoding failed:', status);
+          resolve(null);
+        }
+      });
+    });
+  }
+
   // Autocomplete hookup after Google script loads
   window.__attachPlaces = function(){
     if(!window.google || !google.maps || !google.maps.places) return;
     const ac = new google.maps.places.Autocomplete(addressInput, {
       types: ['address'],
       componentRestrictions: { country: ['us'] },
-      fields: ['address_components','formatted_address']
+      fields: ['address_components','formatted_address','geometry']
     });
     ac.addListener('place_changed', ()=>{
       const place = ac.getPlace();
@@ -686,6 +713,15 @@
       if(comps.administrative_area_level_1) stateInput.value = comps.administrative_area_level_1.short_name;
       if(comps.postal_code) zipInput.value = comps.postal_code.long_name;
 
+      // Extract coordinates from place geometry
+      if (place.geometry && place.geometry.location) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+        latitudeInput.value = lat.toString();
+        longitudeInput.value = lng.toString();
+        console.log('Coordinates from Places API:', { lat, lng });
+      }
+
       applyZipGate(zipInput.value.trim());
     });
   };
@@ -700,12 +736,34 @@
       return;
     }
 
-// Track submit button click with name
-const firstName = document.getElementById('first')?.value.trim() || '';
-const lastName = document.getElementById('last')?.value.trim() || '';
-const fullName = `${firstName} ${lastName}`.trim();
-const nameValue = fullName || 'Upgrade my floors →';
-sendTracking(nameValue, 'submit', 'Name');
+    // Try to get coordinates if not already available
+    if (!latitudeInput.value || !longitudeInput.value) {
+      const addr = addressInput.value.trim();
+      const city = cityInput.value.trim();
+      const state = stateInput.value.trim();
+      const zip = zipInput.value.trim();
+      const fullAddress = [addr, city && `${city},`, state, zip]
+        .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+      
+      if (fullAddress) {
+        console.log('Attempting to geocode address:', fullAddress);
+        const coords = await geocodeAddress(fullAddress);
+        if (coords) {
+          latitudeInput.value = coords.lat.toString();
+          longitudeInput.value = coords.lng.toString();
+          console.log('Coordinates from geocoding:', coords);
+        } else {
+          console.log('Geocoding failed, submitting without coordinates');
+        }
+      }
+    }
+
+    // Track submit button click with name
+    const firstName = document.getElementById('first')?.value.trim() || '';
+    const lastName = document.getElementById('last')?.value.trim() || '';
+    const fullName = `${firstName} ${lastName}`.trim();
+    const nameValue = fullName || 'Upgrade my floors →';
+    sendTracking(nameValue, 'submit', 'Name');
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
@@ -719,6 +777,12 @@ sendTracking(nameValue, 'submit', 'Name');
     if (adATID) {
       data.append('adATID', adATID);
     }
+
+    // Log coordinates being sent (for debugging)
+    console.log('Submitting with coordinates:', {
+      latitude: latitudeInput.value,
+      longitude: longitudeInput.value
+    });
 
     // Send to submit webhook with longer timeout
     const controller = new AbortController();
