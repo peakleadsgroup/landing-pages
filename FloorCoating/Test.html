@@ -98,7 +98,10 @@
     padding: 12px 18px; border-radius: 12px; cursor: pointer;
   }
   .btn:hover { background: #4338ca; }
-  .btn[disabled] { opacity:.5; cursor:not-allowed; }
+  .btn[disabled] { opacity:.5; cursor:not-allowed; background: #9ca3af !important; }
+  .btn[disabled]:hover { background: #9ca3af !important; }
+  .btn.force-disabled { opacity: 0.5 !important; cursor: not-allowed !important; background: #9ca3af !important; }
+  .btn.force-disabled:hover { background: #9ca3af !important; }
 
   /* Helper text */
   small.muted { color: #555; }
@@ -332,7 +335,15 @@
 
   // Track navigation button clicks
   document.querySelectorAll('[data-next]').forEach(btn=>{
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      // Special check for address step - prevent navigation if not in service area
+      if (idx === 4 && !inArea) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Blocked navigation - not in service area');
+        return false;
+      }
+      
       let stepName = `step_${idx + 1}`;
       let buttonText = 'Next';
       
@@ -460,7 +471,31 @@
       phone2Input.setCustomValidity('');
     }
 
-    updateNextEnabled();
+    // Always update submit button when validating phones
+    updateSubmitEnabled();
+    
+    // Also directly update the button here as backup
+    const phoneValid = p1.digits.length === 10;
+    const phone2Valid = !shouldShowConfirm || (p2.digits.length === 10 && p2.digits === p1.digits);
+    const buttonShouldEnable = phoneValid && phone2Valid;
+    
+    console.log('Phone validation:', {
+      phone1: p1.digits,
+      phone2: p2.digits,
+      shouldShowConfirm,
+      phoneValid,
+      phone2Valid,
+      buttonShouldEnable,
+      currentStep: idx
+    });
+    
+    submitBtn.disabled = !buttonShouldEnable;
+    
+    if (buttonShouldEnable) {
+      submitBtn.classList.remove('force-disabled');
+    } else {
+      submitBtn.classList.add('force-disabled');
+    }
   }
 
   phoneInput.addEventListener('input', validatePhones);
@@ -507,25 +542,40 @@
       // Track service area validation - OUT OF AREA
       sendTracking(zip, 'zip_validation_failure', 'zip_validation_failure');
     }
-    updateNextEnabled();
+    
+    // Force update the Next button immediately if we're on the address step
+    if (idx === 4) {
+      const nextBtn = document.querySelector('#addressStep [data-next]');
+      if (nextBtn) {
+        const addrOk  = addressInput.value.trim().length > 3;
+        const cityOk  = cityInput.value.trim().length > 1;
+        const stateOk = /^[A-Za-z]{2}$/.test(stateInput.value.trim());
+        const zipOk   = /^\d{5}$/.test(zipInput.value.trim());
+        const allFieldsOk = addrOk && cityOk && stateOk && zipOk;
+        console.log('ZIP Gate Debug:', {zip, inArea, addrOk, cityOk, stateOk, zipOk, allFieldsOk});
+        nextBtn.disabled = !(inArea && allFieldsOk);
+        console.log('Next button disabled:', nextBtn.disabled);
+      }
+    }
   }
 
   zipInput.addEventListener('input', e=>{
-    applyZipGate(e.target.value.trim());
-    updateNextEnabled(); // Make sure to update the Next button
+    const zipValue = e.target.value.trim();
+    applyZipGate(zipValue);
+    updateAddressStepButton();
   });
 
   [addressInput, cityInput, stateInput].forEach(el=>{
     el.addEventListener('input', () => {
-      if (idx === 4) { // Only call updateNextEnabled if we're on the address step
-        updateNextEnabled();
+      if (idx === 4) {
+        updateAddressStepButton();
       } else {
         updateSubmitEnabled();
       }
     });
     el.addEventListener('change', () => {
       if (idx === 4) {
-        updateNextEnabled();
+        updateAddressStepButton();
       } else {
         updateSubmitEnabled();
       }
