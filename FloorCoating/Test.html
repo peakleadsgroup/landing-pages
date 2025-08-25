@@ -174,26 +174,7 @@
           </div>
         </section>
 
-        <!-- Step 4 -->
-        <section class="step">
-          <h2>Who will we be meeting with?</h2>
-          <div class="row cols-2">
-            <div>
-              <label for="first">First Name</label>
-              <input id="first" name="first_name" type="text" required autocomplete="given-name">
-            </div>
-            <div>
-              <label for="last">Last Name</label>
-              <input id="last" name="last_name" type="text" required autocomplete="family-name">
-            </div>
-          </div>
-          <div class="actions">
-            <button type="button" class="btn" data-prev>Back</button>
-            <button type="button" class="btn" data-next disabled>Next</button>
-          </div>
-        </section>
-
-        <!-- Step 5 (Address + ZIP gate) -->
+        <!-- Step 4 (Address + ZIP gate) -->
         <section class="step" id="addressStep">
           <h2>Where will we be meeting you?</h2>
           <small class="muted">Our team will reach out within 24 hours to schedule your floor measurement!</small>
@@ -231,7 +212,7 @@
           </div>
         </section>
 
-        <!-- Step 6 (Phone + confirm, full-width stacked) -->
+        <!-- Step 5 (Phone + confirm, full-width stacked) -->
         <section class="step">
           <h2>Where's the best place to reach you to schedule your free, no obligation visit?</h2>
           <small class="muted">To give you an accurate quote, we'll need to measure the space. We'll make it quick, easy, and on your schedule</small>
@@ -246,6 +227,25 @@
               <label for="phone2">Please re-enter your phone</label>
               <input id="phone2" name="phone_confirm" type="tel" inputmode="tel" placeholder="(___) ___-____" autocomplete="tel" aria-describedby="phone2Help">
               <small id="phone2Help" class="muted">Must match exactly.</small>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn" data-prev>Back</button>
+            <button type="button" class="btn" data-next disabled>Next</button>
+          </div>
+        </section>
+
+        <!-- Step 6 -->
+        <section class="step">
+          <h2>Who will we be meeting with?</h2>
+          <div class="row cols-2">
+            <div>
+              <label for="first">First Name</label>
+              <input id="first" name="first_name" type="text" required autocomplete="given-name">
+            </div>
+            <div>
+              <label for="last">Last Name</label>
+              <input id="last" name="last_name" type="text" required autocomplete="family-name">
             </div>
           </div>
           <div class="actions">
@@ -337,7 +337,7 @@
   document.querySelectorAll('[data-next]').forEach(btn=>{
     btn.addEventListener('click', (e) => {
       // Special check for address step - prevent navigation if not in service area
-      if (idx === 4 && !inArea) {
+      if (idx === 3 && !inArea) {
         e.preventDefault();
         e.stopPropagation();
         console.log('Blocked navigation - not in service area');
@@ -347,14 +347,7 @@
       let stepName = `step_${idx + 1}`;
       let buttonText = 'Next';
       
-      if (idx === 3) { // Step 4 is name
-        stepName = 'Name';
-        const firstName = document.getElementById('first')?.value.trim() || '';
-        const lastName = document.getElementById('last')?.value.trim() || '';
-        const fullName = `${firstName} ${lastName}`.trim();
-        if (fullName) buttonText = fullName;
-      }
-      if (idx === 4) { // Step 5 is address, send full address
+      if (idx === 3) { // Step 4 is now address
         stepName = 'Address';
         const addr = document.getElementById('address')?.value.trim() || '';
         const city = document.getElementById('city')?.value.trim() || '';
@@ -365,6 +358,19 @@
         if (fullAddress) buttonText = fullAddress;
         else buttonText = 'Next';
       }
+      if (idx === 4) { // Step 5 is now phone
+        stepName = 'Phone';
+        const phoneValue = document.getElementById('phone')?.value.trim() || '';
+        if (phoneValue) buttonText = phoneValue;
+        else buttonText = 'Next';
+      }
+      if (idx === 5) { // Step 6 is now name
+        stepName = 'Name';
+        const firstName = document.getElementById('first')?.value.trim() || '';
+        const lastName = document.getElementById('last')?.value.trim() || '';
+        const fullName = `${firstName} ${lastName}`.trim();
+        if (fullName) buttonText = fullName;
+      }
       
       sendTracking(buttonText, 'next', stepName);
       show(idx+1);
@@ -374,8 +380,9 @@
   document.querySelectorAll('[data-prev]').forEach(btn=>{
     btn.addEventListener('click', () => {
       let stepName = `step_${idx + 1}`;
-      if (idx === 3) stepName = 'Name';    // Step 4 is name
-      if (idx === 4) stepName = 'Address'; // Step 5 is address
+      if (idx === 3) stepName = 'Address'; // Step 4 is address
+      if (idx === 4) stepName = 'Phone';   // Step 5 is phone
+      if (idx === 5) stepName = 'Name';    // Step 6 is name
       sendTracking('Back', 'back', stepName);
       show(idx-1);
     });
@@ -573,14 +580,14 @@
 
   [addressInput, cityInput, stateInput].forEach(el=>{
     el.addEventListener('input', () => {
-      if (idx === 4) {
+      if (idx === 3) { // Address step is now idx 3
         updateAddressStepButton();
       } else {
         updateSubmitEnabled();
       }
     });
     el.addEventListener('change', () => {
-      if (idx === 4) {
+      if (idx === 3) {
         updateAddressStepButton();
       } else {
         updateSubmitEnabled();
