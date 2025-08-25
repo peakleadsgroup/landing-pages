@@ -134,7 +134,7 @@
   <div class="wrap">
     <div class="card">
       <div style="text-align: center; margin-bottom: 20px;">
-        <img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/images/cathcartlogo.webp" alt="Logo" style="max-width: 200px; height: auto;">
+        <img src="https://images.squarespace-cdn.com/content/v1/64909a307fc0025a2064d878/9b8fde02-b8f9-402b-be4c-366cb48134eb/Transparent+PNG+File.png" alt="Logo" style="max-width: 200px; height: auto;">
       </div>
       <div class="progress"><div class="bar" id="progressBar"></div></div>
 
@@ -261,7 +261,7 @@
 (function(){
   // ------- EDIT THESE -------
   const serviceZips = new Set([
-"43017","43016","43065","43235","43002","43064","43220","43085","43026","43221","43035","43240","43214","43061","43077","43229","43202","43210","43086","43231","43015","43212","43224","43228","43204","43201","43021","43041","43211","43215","43081","43222","43119","43040","43082","43216","43218","43226","43234","43279","43236","43251","43260","43266","43268","43270","43271","43272","43287","43291","43219","43203","43162","43029","43036","43223","43045","43205","43206","43230","43209","43066","43074","43054","43123","43007","43213","43227","43207","43004","43084","43232","43044","43140","43003","43344","43060","43356","43069","43067","43126","43109","43194","43342","43073","43195","43199","43068","43137","43336","43125","43217","43319","43013","43146","43117","43031","43009","43116","43047","43010","43334","45369","43062","43147","43322","43358","43018","43011","43321","43360","43110","43315","43001","43136","43143","43350","43103","43302","43301","43048","43357","43033","43341","43023","43151","43078","43112","43332","45368","43153","43340","43320","43317","43105","43027","43311","43347","45503","45505","43314","43345","43025","43338","43083","43046","45372","43106","43337","45501","43164","43050","43157","43008","43113","43335","43019","43128","45506","43080","43148","43325","43102","43058","43093","43145","43154","43324","45504","45502","43055","43030","43323","43318","43072","43349","45314","45316","43071","43326","45349","43310","43070","43130","45387","43160","43142","43056","43022","45319","43348","43115","43343","43076","43156","45323","44849","43037","43333","45335","43346","44833","45389","45344","45317","43150","44822","44813","45353","43005","44820","43331","44856","43351","43155","44904","43739","43330","45384","44860","45307","45843","45312","45341","45326","43721","43028","45859","45340","45644","45812","45324","43107","45870","45385","45360","43740","45633","45835","43101","45334","45836","44906","45896","44827","45628","43014","44862","43149","44907","45164","45169","43783","43822","43359","44881","43135","45433","45166","43746","45367","43830","45365","45435","43843","44903","44901","43760","45424","44902","45897","45301","45373","45434","44843","45431","43748","45371","45850","45867","45810","44882","45432","45356","44887","45374","45884","45123","44825","43738","44864","44905","45430","43316","43006","45681","44854","43138","45135","45601","43735","45306","45404","45814","44875","45888","45403","43791","45302","43152","44844","43764","45177","45440","45377","45617","45410","45420","45841","45854","45890","45132","43844","45370"
+    "27502","27503"
   ]);
   
   const TRACKING_WEBHOOK = 'https://hook.us2.make.com/0kfn50ruqjdtfvwpw4meuagndb76whq8';
@@ -270,7 +270,7 @@
 
   // Generate unique user ID for this session
   const USER_ID = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-  const clientATID = 'recAbKUArCdZBwXDo';
+  const clientATID = 'rec0BJB2EQzmJcQiv';
   
   // Get adATID from URL parameters
   const urlParams = new URLSearchParams(window.location.search);
@@ -352,6 +352,8 @@
       let stepName = `step_${idx + 1}`;
       let buttonText = 'Next';
       
+      console.log('Navigation click debug:', {currentStep: idx, stepName, buttonText});
+      
       if (idx === 3) { // Step 4 is now address
         stepName = 'Address';
         const addr = document.getElementById('address')?.value.trim() || '';
@@ -363,18 +365,18 @@
         if (fullAddress) buttonText = fullAddress;
         else buttonText = 'Next';
       }
-      if (idx === 4) { // Step 5 is now phone
+      else if (idx === 4) { // Step 5 is now phone
         stepName = 'Phone';
         const phoneValue = document.getElementById('phone')?.value.trim() || '';
         if (phoneValue) buttonText = phoneValue;
         else buttonText = 'Next';
       }
-      if (idx === 5) { // Step 6 is now name
+      else if (idx === 5) { // Step 6 is now name
         stepName = 'Name';
         const firstName = document.getElementById('first')?.value.trim() || '';
         const lastName = document.getElementById('last')?.value.trim() || '';
         const fullName = `${firstName} ${lastName}`.trim();
-        if (fullName) buttonText = fullName;
+        if (fullName && fullName !== ' ') buttonText = fullName;
         else buttonText = 'Next';
       }
       
@@ -759,7 +761,7 @@
     if (fullAddress) params.set('location', fullAddress);   // optional prefill
 
     window.location.href =
-      `https://cal.com/peakleadsgroup/cathcart-company?${params.toString()}`;
+      `https://cal.com/peakleadsgroup/signature-sound-lighting?${params.toString()}`;
   });
 
   // Initialize
@@ -777,4 +779,3 @@
 </script>
 </body>
 </html>
-
