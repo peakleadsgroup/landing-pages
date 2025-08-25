@@ -188,10 +188,12 @@
         .form-question input[type="email"],
         .form-question input[type="url"] {
             width: 100%;
-            padding: 1rem;
+            max-width: 250px;
+            margin: 0 auto;
+            padding: 0.8rem;
             border: 2px solid #e9ecef;
             border-radius: 8px;
-            font-size: 1.1rem;
+            font-size: 1rem;
             transition: border-color 0.3s;
         }
 
@@ -237,18 +239,20 @@
 
         .form-navigation {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
+            gap: 1rem;
             margin-top: 2rem;
         }
 
         .btn {
-            padding: 1rem 2rem;
+            padding: 0.8rem 1.5rem;
             border: none;
             border-radius: 8px;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
+            min-width: 120px;
         }
 
         .btn-primary {
@@ -647,15 +651,13 @@
     <section class="hero" id="home">
         <div class="hero-container">
             <div class="hero-content">
-                <h1>Get <span class="highlight">$120 Exterior Painting Leads</span> That Actually Convert</h1>
+                <h1><span class="highlight">$120 Exterior Painting Leads</span> That Actually Convert</h1>
                 <p>Stop wasting money on leads that never answer the phone. Our Texas partner closed <strong>over $150,000 in sales</strong> in their first month with only $2,800 spent on leads.</p>
-                <p><strong>But the best part? 52% of our leads come through with appointments already booked.</strong></p>
             </div>
             <div class="form-card">
                 <h3>Start Getting Quality Leads Today</h3>
                 
                 <!-- Progress Bar -->
-                <div class="progress-text">Question <span id="currentQuestion">1</span> of <span id="totalQuestions">7</span></div>
                 <div class="progress-container">
                     <div class="progress-bar" id="progressBar"></div>
                 </div>
@@ -781,7 +783,7 @@
 
                     <!-- Step 6: Contact Information -->
                     <div class="form-step" id="step6">
-                        <h3 style="color: #4a6fa5; margin-bottom: 1.5rem;">Your area is still available! Where can we follow up with you?</h3>
+                        <h3 style="color: #333; margin-bottom: 1.5rem;">Your area is still available! Where can we follow up with you?</h3>
                         
                         <div class="form-question">
                             <label>Business Name</label>
@@ -927,7 +929,6 @@
                 <h3>Start Getting Quality Leads Today</h3>
                 
                 <!-- Progress Bar -->
-                <div class="progress-text">Question <span id="bottomCurrentQuestion">1</span> of <span id="bottomTotalQuestions">7</span></div>
                 <div class="progress-container">
                     <div class="progress-bar" id="bottomProgressBar"></div>
                 </div>
@@ -1053,7 +1054,7 @@
 
                     <!-- Step 6: Contact Information -->
                     <div class="form-step" id="bottomStep6">
-                        <h3 style="color: #4a6fa5; margin-bottom: 1.5rem;">Your area is still available! Where can we follow up with you?</h3>
+                        <h3 style="color: #333; margin-bottom: 1.5rem;">Your area is still available! Where can we follow up with you?</h3>
                         
                         <div class="form-question">
                             <label>Business Name</label>
