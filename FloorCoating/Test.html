@@ -261,7 +261,7 @@
 (function(){
   // ------- EDIT THESE -------
   const serviceZips = new Set([
-    "27502","28403"
+    "27502","27503"
   ]);
   
   const TRACKING_WEBHOOK = 'https://hook.us2.make.com/0kfn50ruqjdtfvwpw4meuagndb76whq8';
@@ -352,7 +352,9 @@
       let stepName = `step_${idx + 1}`;
       let buttonText = 'Next';
       
-      if (idx === 3) { // Step 4 is now address
+      console.log('Navigation click debug:', {currentStep: idx, stepName, buttonText});
+      
+      if (idx === 3) { // Step 4 is address
         stepName = 'Address';
         const addr = document.getElementById('address')?.value.trim() || '';
         const city = document.getElementById('city')?.value.trim() || '';
@@ -363,21 +365,22 @@
         if (fullAddress) buttonText = fullAddress;
         else buttonText = 'Next';
       }
-      if (idx === 4) { // Step 5 is now phone
+      else if (idx === 4) { // Step 5 is phone
         stepName = 'Phone';
         const phoneValue = document.getElementById('phone')?.value.trim() || '';
         if (phoneValue) buttonText = phoneValue;
         else buttonText = 'Next';
       }
-      if (idx === 5) { // Step 6 is now name
+      else if (idx === 5) { // Step 6 is name (this should never execute since step 6 has submit button)
         stepName = 'Name';
         const firstName = document.getElementById('first')?.value.trim() || '';
         const lastName = document.getElementById('last')?.value.trim() || '';
         const fullName = `${firstName} ${lastName}`.trim();
-        if (fullName) buttonText = fullName;
+        if (fullName && fullName !== ' ') buttonText = fullName;
         else buttonText = 'Next';
       }
       
+      console.log('Final tracking data:', {stepName, buttonText, idx});
       sendTracking(buttonText, 'next', stepName);
       show(idx+1);
     });
