@@ -1312,7 +1312,9 @@
                 // Redirect based on revenue
                 if (data.monthly_revenue === 'less-than-50k') {
                     // Show thank you screen instead of redirecting
-                    document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+                    const formSteps = form.querySelectorAll('.form-step');
+                    formSteps.forEach(s => s.classList.remove('active'));
+                    
                     if (form.id === 'leadForm') {
                         document.getElementById('thankYouScreen').classList.add('active');
                         currentStep = 6; // Complete the progress bar
