@@ -98,7 +98,10 @@
     padding: 12px 18px; border-radius: 12px; cursor: pointer;
   }
   .btn:hover { background: #4338ca; }
-  .btn[disabled] { opacity:.5; cursor:not-allowed; }
+  .btn[disabled] { opacity:.5; cursor:not-allowed; background: #9ca3af !important; }
+  .btn[disabled]:hover { background: #9ca3af !important; }
+  .btn.force-disabled { opacity: 0.5 !important; cursor: not-allowed !important; background: #9ca3af !important; }
+  .btn.force-disabled:hover { background: #9ca3af !important; }
 
   /* Helper text */
   small.muted { color: #555; }
@@ -131,7 +134,7 @@
   <div class="wrap">
     <div class="card">
       <div style="text-align: center; margin-bottom: 20px;">
-        <img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/images/GarageForceLogo.png" alt="Cathcart Company" style="max-width: 200px; height: auto;">
+        <img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/images/GarageForceLogo.png" alt="Logo" style="max-width: 200px; height: auto;">
       </div>
       <div class="progress"><div class="bar" id="progressBar"></div></div>
 
@@ -171,52 +174,10 @@
           </div>
         </section>
 
-        <!-- Step 4 (Phone + confirm, full-width stacked) -->
-        <section class="step">
-          <h2>Where's the best place to reach you to schedule your free, no obligation visit?</h2>
-          <small class="muted">To give you an accurate quote, we'll need to measure the space. We'll make it quick, easy, and on your schedule</small>
-          <div class="row">
-            <div id="phoneWrap">
-              <label for="phone">Phone</label>
-              <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required autocomplete="tel" aria-describedby="phoneHelp">
-              <small id="phoneHelp" class="muted">US number, 10 digits.</small>
-              <input type="hidden" id="phone_digits" name="phone_digits" value="">
-            </div>
-            <div id="phoneConfirmWrap" style="display:none">
-              <label for="phone2">Please re-enter your phone</label>
-              <input id="phone2" name="phone_confirm" type="tel" inputmode="tel" placeholder="(___) ___-____" autocomplete="tel" aria-describedby="phone2Help">
-              <small id="phone2Help" class="muted">Must match exactly.</small>
-            </div>
-          </div>
-          <div class="actions">
-            <button type="button" class="btn" data-prev>Back</button>
-            <button type="button" class="btn" data-next disabled>Next</button>
-          </div>
-        </section>
-
-        <!-- Step 5 -->
-        <section class="step">
-          <h2>Who will we be meeting with?</h2>
-          <div class="row cols-2">
-            <div>
-              <label for="first">First Name</label>
-              <input id="first" name="first_name" type="text" required autocomplete="given-name">
-            </div>
-            <div>
-              <label for="last">Last Name</label>
-              <input id="last" name="last_name" type="text" required autocomplete="family-name">
-            </div>
-          </div>
-          <div class="actions">
-            <button type="button" class="btn" data-prev>Back</button>
-            <button type="button" class="btn" data-next disabled>Next</button>
-          </div>
-        </section>
-
-        <!-- Step 6 (Address + ZIP gate) -->
+        <!-- Step 4 (Address + ZIP gate) -->
         <section class="step" id="addressStep">
-          <h2>Where will we be meeting you?</h2>
-          <small class="muted">Our team will reach out within 24 hours!</small>
+          <h2>What is the location of this project?</h2>
+          <small class="muted">To make sure you're within our service area</small>
 
           <div class="row">
             <div>
@@ -247,6 +208,48 @@
 
           <div class="actions">
             <button type="button" class="btn" data-prev>Back</button>
+            <button type="button" class="btn" data-next disabled>Next</button>
+          </div>
+        </section>
+
+        <!-- Step 5 (Phone + confirm, full-width stacked) -->
+        <section class="step">
+          <h2>Where's the best place to reach you to schedule your free, no obligation visit?</h2>
+          <small class="muted">To give you an accurate quote, we'll need to measure the space. We'll make it quick, easy, and on your schedule</small>
+          <div class="row">
+            <div id="phoneWrap">
+              <label for="phone">Phone</label>
+              <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required autocomplete="tel" aria-describedby="phoneHelp">
+              <small id="phoneHelp" class="muted">US number, 10 digits.</small>
+              <input type="hidden" id="phone_digits" name="phone_digits" value="">
+            </div>
+            <div id="phoneConfirmWrap" style="display:none">
+              <label for="phone2">Please re-enter your phone</label>
+              <input id="phone2" name="phone_confirm" type="tel" inputmode="tel" placeholder="(___) ___-____" autocomplete="tel" aria-describedby="phone2Help">
+              <small id="phone2Help" class="muted">Must match exactly.</small>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn" data-prev>Back</button>
+            <button type="button" class="btn" data-next disabled>Next</button>
+          </div>
+        </section>
+
+        <!-- Step 6 -->
+        <section class="step">
+          <h2>Who will we be meeting with?</h2>
+          <div class="row cols-2">
+            <div>
+              <label for="first">First Name</label>
+              <input id="first" name="first_name" type="text" required autocomplete="given-name">
+            </div>
+            <div>
+              <label for="last">Last Name</label>
+              <input id="last" name="last_name" type="text" required autocomplete="family-name">
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn" data-prev>Back</button>
             <button type="submit" class="btn" id="submitBtn" disabled>Upgrade my floors →</button>
           </div>
         </section>
@@ -258,7 +261,7 @@
 (function(){
   // ------- EDIT THESE -------
   const serviceZips = new Set([
-    "32804","32789","32808","32801","32802","32853","32854","32855","32856","32857","32858","32859","32860","32861","32862","32867","32868","32869","32872","32877","32878","32885","32886","32887","32891","32897","32896","32733","32794","32803","32810","32790","32793","32805","32799","32751","32814","32806","32811","32715","32716","32807","32714","32730","32701","32818","32839","32792","32710","32835","32812","32707","32718","32719","32809","34734","34761","32822","32817","32752","32791","32750","32703","32704","32708","32819","32899","32779","32825","34777","34778","32816","34786","32768","32712","32746","32826","32829","32745","32762","32795","32824","32765","32836","32837","32827","34760","32821","32828","32773","32798","34740","34787","32830","32772","32831","34756","32747","32757","32776","34743","32820","32832","32771","34729","34741","32777","32766","34742","34745","34744","32732","34715","32713","34755","32756","32833","32753","34705","34711","34747","32725","33848","34712","34713","32728","34746","34770","32739","32778","34769","32736","33896","32834","32763","32727","32709","32738","34737","33858","32774","34714","32726","34758","34797","32720","33897","32764","32706","32784","34771","34736","32754","32744","34753","33837","32735","34772","32767","33836","32721","32723","34788","34748","32780","34749","34789","34762","32168","34759","32702","32775","33868","33845","32722","32781","32783","32927","32926","33844","34731","32724","32796","33514","34773","32759","32141","33850","32163","32159","32158","32132","33851","32959"
+   "32804","32789","32808","32801","32802","32853","32854","32855","32856","32857","32858","32859","32860","32861","32862","32867","32868","32869","32872","32877","32878","32885","32886","32887","32891","32897","32896","32733","32794","32803","32810","32790","32793","32805","32799","32751","32814","32806","32811","32715","32716","32807","32714","32730","32701","32818","32839","32792","32710","32835","32812","32707","32718","32719","32809","34734","34761","32822","32817","32752","32791","32750","32703","32704","32708","32819","32899","32779","32825","34777","34778","32816","34786","32768","32712","32746","32826","32829","32745","32762","32795","32824","32765","32836","32837","32827","34760","32821","32828","32773","32798","34740","34787","32830","32772","32831","34756","32747","32757","32776","34743","32820","32832","32771","34729","34741","32777","32766","34742","34745","34744","32732","34715","32713","34755","32756","32833","32753","34705","34711","34747","32725","33848","34712","34713","32728","34746","34770","32739","32778","34769","32736","33896","32834","32763","32727","32709","32738","34737","33858","32774","34714","32726","34758","34797","32720","33897","32764","32706","32784","34771","34736","32754","32744","34753","33837","32735","34772","32767","33836","32721","32723","34788","34748","32780","34749","34789","34762","32168","34759","32702","32775","33868","33845","32722","32781","32783","32927","32926","33844","34731","32724","32796","33514","34773","32759","32141","33850","32163","32159","32158","32132","33851","32959"
   ]);
   
   const TRACKING_WEBHOOK = 'https://hook.us2.make.com/0kfn50ruqjdtfvwpw4meuagndb76whq8';
@@ -268,6 +271,10 @@
   // Generate unique user ID for this session
   const USER_ID = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   const clientATID = 'recu7IlLkhZ6cdtbL';
+  
+  // Get adATID from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const adATID = urlParams.get('adATID') || '';
 
   const steps = Array.from(document.querySelectorAll('.step'));
   const bar = document.getElementById('progressBar');
@@ -300,7 +307,7 @@
       button_value: buttonValue,
       step_name: stepName,
       timestamp: new Date().toISOString(),
-      step_number: idx + 1,
+      step_number: stepName === 'form_initialization' ? 0 : idx + 1,
       form_values: formValues
     };
 
@@ -324,19 +331,68 @@
     const pct = ((idx)/(steps.length-1))*100;
     bar.style.width = pct + '%';
     updateNextEnabled();
+    
+    // If we're on the final name step, also update submit button
+    if (idx === 5) {
+      updateSubmitEnabled();
+    }
   }
 
   // Track navigation button clicks
   document.querySelectorAll('[data-next]').forEach(btn=>{
-    btn.addEventListener('click', () => {
-      sendTracking('Next', 'next', `step_${idx + 1}`);
+    btn.addEventListener('click', (e) => {
+      // Special check for address step - prevent navigation if not in service area
+      if (idx === 3 && !inArea) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Blocked navigation - not in service area');
+        return false;
+      }
+      
+      let stepName = `step_${idx + 1}`;
+      let buttonText = 'Next';
+      
+      console.log('Navigation click debug:', {currentStep: idx, stepName, buttonText});
+      
+      if (idx === 3) { // Step 4 is address
+        stepName = 'Address';
+        const addr = document.getElementById('address')?.value.trim() || '';
+        const city = document.getElementById('city')?.value.trim() || '';
+        const state = document.getElementById('state')?.value.trim() || '';
+        const zip = document.getElementById('zip')?.value.trim() || '';
+        const fullAddress = [addr, city && `${city},`, state, zip]
+          .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+        if (fullAddress) buttonText = fullAddress;
+        else buttonText = 'Next';
+      }
+      else if (idx === 4) { // Step 5 is phone
+        stepName = 'Phone';
+        const phoneValue = document.getElementById('phone')?.value.trim() || '';
+        if (phoneValue) buttonText = phoneValue;
+        else buttonText = 'Next';
+      }
+      else if (idx === 5) { // Step 6 is name (this should never execute since step 6 has submit button)
+        stepName = 'Name';
+        const firstName = document.getElementById('first')?.value.trim() || '';
+        const lastName = document.getElementById('last')?.value.trim() || '';
+        const fullName = `${firstName} ${lastName}`.trim();
+        if (fullName && fullName !== ' ') buttonText = fullName;
+        else buttonText = 'Next';
+      }
+      
+      console.log('Final tracking data:', {stepName, buttonText, idx});
+      sendTracking(buttonText, 'next', stepName);
       show(idx+1);
     });
   });
 
   document.querySelectorAll('[data-prev]').forEach(btn=>{
     btn.addEventListener('click', () => {
-      sendTracking('Back', 'back', `step_${idx + 1}`);
+      let stepName = `step_${idx + 1}`;
+      if (idx === 3) stepName = 'Address'; // Step 4 is address
+      if (idx === 4) stepName = 'Phone';   // Step 5 is phone
+      if (idx === 5) stepName = 'Name';    // Step 6 is name
+      sendTracking('Back', 'back', stepName);
       show(idx-1);
     });
   });
@@ -370,20 +426,162 @@
     });
   });
 
+  // ZIP Gate + Google Places Autocomplete
+  let inArea = false;
+  const addressInput = document.getElementById('address');
+  const cityInput = document.getElementById('city');
+  const stateInput = document.getElementById('state');
+  const zipInput = document.getElementById('zip');
+  const msgBad = document.getElementById('zipMsg');
+  const msgGood = document.getElementById('zipOk');
+  const submitBtn = document.getElementById('submitBtn');
+
+  function updateSubmitEnabled(){
+    // Always check if we're on the final name step (Step 6, idx 5)
+    if (idx !== 5) return;
+    
+    const firstName = document.getElementById('first')?.value.trim() || '';
+    const lastName = document.getElementById('last')?.value.trim() || '';
+    const nameValid = firstName.length > 0 && lastName.length > 0;
+    
+    submitBtn.disabled = !nameValid;
+    
+    // Force visual styling update
+    if (nameValid) {
+      submitBtn.classList.remove('force-disabled');
+      submitBtn.style.opacity = '1';
+      submitBtn.style.cursor = 'pointer';
+    } else {
+      submitBtn.classList.add('force-disabled');
+      submitBtn.style.opacity = '0.5';
+      submitBtn.style.cursor = 'not-allowed';
+    }
+    
+    console.log('Submit validation:', {
+      firstName,
+      lastName,
+      nameValid,
+      currentStep: idx,
+      buttonDisabled: submitBtn.disabled
+    });
+  }
+
   // Enable/disable Next button only when step is valid
   function updateNextEnabled(){
     const active = steps[idx];
     const nextBtn = active.querySelector('[data-next]');
     if(!nextBtn) return;
+    
+    // Special handling for address step (now Step 4, idx 3)
+    if (idx === 3) {
+      updateAddressStepButton();
+      return;
+    }
+    
     const required = Array.from(active.querySelectorAll('input[required]'));
     const ok = required.every(el => el.value.trim().length>0 && el.checkValidity());
     nextBtn.disabled = !ok;
+  }
+
+  function updateAddressStepButton() {
+    const nextBtn = document.querySelector('#addressStep [data-next]');
+    if (!nextBtn) return;
+    
+    const addrOk = addressInput.value.trim().length > 3;
+    const cityOk = cityInput.value.trim().length > 1;
+    const stateOk = /^[A-Za-z]{2}$/.test(stateInput.value.trim());
+    const zipOk = /^\d{5}$/.test(zipInput.value.trim());
+    const allFieldsValid = addrOk && cityOk && stateOk && zipOk;
+    
+    // Button is only enabled if ALL fields are valid AND in service area
+    const shouldEnable = allFieldsValid && inArea;
+    nextBtn.disabled = !shouldEnable;
+    
+    // Add visual styling for out of area
+    if (!inArea && zipOk) {
+      nextBtn.style.opacity = '0.3';
+      nextBtn.style.cursor = 'not-allowed';
+    } else if (shouldEnable) {
+      nextBtn.style.opacity = '1';
+      nextBtn.style.cursor = 'pointer';
+    } else {
+      nextBtn.style.opacity = '0.5';
+      nextBtn.style.cursor = 'not-allowed';
+    }
+    
+    console.log('Address step validation:', {
+      addrOk, cityOk, stateOk, zipOk, 
+      allFieldsValid, inArea, shouldEnable,
+      buttonDisabled: nextBtn.disabled,
+      currentStep: idx
+    });
+  }
+
+  function applyZipGate(zip){
+    console.log('ZIP Gate called with:', zip);
+    
+    if(!zip || !/^\d{5}$/.test(zip)){
+      msgBad.style.display = 'none';
+      msgGood.style.display = 'none';
+      inArea = false;
+      updateAddressStepButton();
+      return;
+    }
+    
+    if(serviceZips.has(zip)){
+      msgGood.style.display = 'block';
+      msgBad.style.display = 'none';
+      inArea = true;
+      sendTracking(zip, 'zip_validation_success', 'zip_validation_success');
+      console.log('ZIP validation: IN AREA');
+    } else {
+      msgBad.style.display = 'block';
+      msgGood.style.display = 'none';
+      inArea = false;
+      sendTracking(zip, 'zip_validation_failure', 'zip_validation_failure');
+      console.log('ZIP validation: OUT OF AREA');
+    }
+    
+    updateAddressStepButton();
   }
 
   // Watch inputs on all steps to toggle Next
   document.querySelectorAll('input').forEach(inp=>{
     inp.addEventListener('input', updateNextEnabled);
     inp.addEventListener('change', updateNextEnabled);
+  });
+
+  // Specifically watch name fields for submit button
+  const firstNameInput = document.getElementById('first');
+  const lastNameInput = document.getElementById('last');
+  
+  [firstNameInput, lastNameInput].forEach(input => {
+    input.addEventListener('input', updateSubmitEnabled);
+    input.addEventListener('change', updateSubmitEnabled);
+    input.addEventListener('keyup', updateSubmitEnabled);
+  });
+
+  zipInput.addEventListener('input', e=>{
+    const zipValue = e.target.value.trim();
+    applyZipGate(zipValue);
+    updateAddressStepButton();
+  });
+
+  [addressInput, cityInput, stateInput].forEach(el=>{
+    el.addEventListener('input', () => {
+      if (idx === 3) { // Address step is now idx 3
+        updateAddressStepButton();
+      } else {
+        updateSubmitEnabled();
+      }
+    });
+    el.addEventListener('change', () => {
+      if (idx === 3) {
+        updateAddressStepButton();
+      } else {
+        updateSubmitEnabled();
+      }
+    });
   });
 
   // Phone formatting + strict 10-digit validation + confirmation match
@@ -437,6 +635,24 @@
       phone2Input.setCustomValidity('');
     }
 
+    // Always update submit button when validating phones
+    updateSubmitEnabled();
+    
+    // Also directly update the button here as backup
+    const phoneValid = p1.digits.length === 10;
+    const phone2Valid = !shouldShowConfirm || (p2.digits.length === 10 && p2.digits === p1.digits);
+    const buttonShouldEnable = phoneValid && phone2Valid;
+    
+    console.log('Phone validation:', {
+      phone1: p1.digits,
+      phone2: p2.digits,
+      shouldShowConfirm,
+      phoneValid,
+      phone2Valid,
+      buttonShouldEnable,
+      currentStep: idx
+    });
+    
     updateNextEnabled();
   }
 
@@ -444,51 +660,6 @@
   phoneInput.addEventListener('blur', validatePhones);
   phone2Input.addEventListener('input', validatePhones);
   phone2Input.addEventListener('blur', validatePhones);
-
-  // ZIP Gate + Google Places Autocomplete
-  let inArea = false;
-  const addressInput = document.getElementById('address');
-  const cityInput = document.getElementById('city');
-  const stateInput = document.getElementById('state');
-  const zipInput = document.getElementById('zip');
-  const msgBad = document.getElementById('zipMsg');
-  const msgGood = document.getElementById('zipOk');
-  const submitBtn = document.getElementById('submitBtn');
-
-  function updateSubmitEnabled(){
-    const addrOk  = addressInput.value.trim().length > 3;
-    const cityOk  = cityInput.value.trim().length > 1;
-    const stateOk = /^[A-Za-z]{2}$/.test(stateInput.value.trim());
-    const zipOk   = /^\d{5}$/.test(zipInput.value.trim());
-    submitBtn.disabled = !(inArea && addrOk && cityOk && stateOk && zipOk);
-  }
-
-  function applyZipGate(zip){
-    if(!zip || !/^\d{5}$/.test(zip)){
-      msgBad.style.display = 'none';
-      msgGood.style.display = 'none';
-      inArea = false;
-      updateSubmitEnabled();
-      return;
-    }
-    if(serviceZips.has(zip)){
-      msgGood.style.display = 'block';
-      msgBad.style.display = 'none';
-      inArea = true;
-    } else {
-      msgBad.style.display = 'block';
-      msgGood.style.display = 'none';
-      inArea = false;
-    }
-    updateSubmitEnabled();
-  }
-
-  zipInput.addEventListener('input', e=>applyZipGate(e.target.value.trim()));
-
-  [addressInput, cityInput, stateInput].forEach(el=>{
-    el.addEventListener('input', updateSubmitEnabled);
-    el.addEventListener('change', updateSubmitEnabled);
-  });
 
   // Autocomplete hookup after Google script loads
   window.__attachPlaces = function(){
@@ -503,6 +674,13 @@
       if(!place || !place.address_components) return;
 
       const comps = Object.fromEntries(place.address_components.flatMap(c => c.types.map(t => [t, c])));
+      
+      // Build street address from components (street number + street name only)
+      let streetAddress = '';
+      if(comps.street_number) streetAddress += comps.street_number.long_name + ' ';
+      if(comps.route) streetAddress += comps.route.long_name;
+      if(streetAddress.trim()) addressInput.value = streetAddress.trim();
+      
       if(comps.locality) cityInput.value = comps.locality.long_name;
       else if(comps.sublocality) cityInput.value = comps.sublocality.long_name;
       if(comps.administrative_area_level_1) stateInput.value = comps.administrative_area_level_1.short_name;
@@ -522,14 +700,12 @@
       return;
     }
 
-    if(!inArea){
-      applyZipGate(zipInput.value.trim());
-      zipInput.focus();
-      return;
-    }
-
-    // Track submit button click
-    sendTracking('Upgrade my floors →', 'submit', 'form_submit');
+// Track submit button click with name
+const firstName = document.getElementById('first')?.value.trim() || '';
+const lastName = document.getElementById('last')?.value.trim() || '';
+const fullName = `${firstName} ${lastName}`.trim();
+const nameValue = fullName || 'Upgrade my floors →';
+sendTracking(nameValue, 'submit', 'Name');
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
@@ -538,19 +714,27 @@
     
     // Add clientATID to form data
     data.append('clientATID', clientATID);
+    
+    // Add adATID to form data if it exists
+    if (adATID) {
+      data.append('adATID', adATID);
+    }
 
-    // Send to both webhooks
+    // Send to submit webhook with longer timeout
     const controller = new AbortController();
-    const timeoutId  = setTimeout(() => controller.abort(), 4000);
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
     
     try {
-      // Send to submit webhook
       await fetch(SUBMIT_WEBHOOK, {
         method: 'POST',
         body: data,
         mode: 'no-cors',
         signal: controller.signal
       });
+      
+      // Add a small delay to ensure webhook is sent
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
     } catch (e2) {
       /* ignore and continue */
     } finally {
@@ -569,7 +753,7 @@
     const fullAddress = [addr, city && `${city},`, state, zip]
       .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
 
-    const params = new URLSearchParams();
+    const params = new URLSearchParams();        // fixed inbox
     if (name) params.set('name', name);
 
     // Phone → smsReminderNumber (+1XXXXXXXXXX) if 10 digits present
@@ -586,6 +770,9 @@
   // Initialize
   show(0);
   validatePhones();
+  
+  // Send tracking webhook when form loads
+  sendTracking('Form loaded', 'page_load', 'form_initialization');
 })();
 </script>
 
