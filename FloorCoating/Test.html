@@ -375,6 +375,7 @@
         const lastName = document.getElementById('last')?.value.trim() || '';
         const fullName = `${firstName} ${lastName}`.trim();
         if (fullName) buttonText = fullName;
+        else buttonText = 'Next';
       }
       
       sendTracking(buttonText, 'next', stepName);
@@ -713,18 +714,21 @@
       data.append('adATID', adATID);
     }
 
-    // Send to both webhooks
+    // Send to submit webhook with longer timeout
     const controller = new AbortController();
-    const timeoutId  = setTimeout(() => controller.abort(), 4000);
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
     
     try {
-      // Send to submit webhook
       await fetch(SUBMIT_WEBHOOK, {
         method: 'POST',
         body: data,
         mode: 'no-cors',
         signal: controller.signal
       });
+      
+      // Add a small delay to ensure webhook is sent
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
     } catch (e2) {
       /* ignore and continue */
     } finally {
