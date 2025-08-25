@@ -813,6 +813,20 @@
                             <button type="submit" class="btn btn-primary">Get Qualified Leads</button>
                         </div>
                     </div>
+                    <!-- Thank You Screen -->
+                    <div class="form-step" id="thankYouScreen">
+                        <div style="text-align: center; padding: 3rem 0;">
+                            <h3 style="color: #4a6fa5; font-size: 2.5rem; margin-bottom: 1rem;">Thanks!</h3>
+                            <p style="font-size: 1.3rem; color: #333;">We'll be in touch soon</p>
+                        </div>
+                    </div>
+                    <!-- Thank You Screen -->
+                    <div class="form-step" id="bottomThankYouScreen">
+                        <div style="text-align: center; padding: 3rem 0;">
+                            <h3 style="color: #4a6fa5; font-size: 2.5rem; margin-bottom: 1rem;">Thanks!</h3>
+                            <p style="font-size: 1.3rem; color: #333;">We'll be in touch soon</p>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
@@ -1297,7 +1311,13 @@
 
                 // Redirect based on revenue
                 if (data.monthly_revenue === 'less-than-50k') {
-                    window.location.href = 'https://facebook.com';
+                    // Show thank you screen instead of redirecting
+                    document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+                    if (form.id === 'leadForm') {
+                        document.getElementById('thankYouScreen').classList.add('active');
+                    } else {
+                        document.getElementById('bottomThankYouScreen').classList.add('active');
+                    }
                 } else {
                     const name = encodeURIComponent(data.contact_name);
                     const email = encodeURIComponent(data.email);
