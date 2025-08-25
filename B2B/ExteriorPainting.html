@@ -655,7 +655,6 @@
                 <p>Stop wasting money on leads that never answer the phone. Our Texas partner closed <strong>over $150,000 in sales</strong> in their first month with only $2,800 spent on leads.</p>
             </div>
             <div class="form-card">
-                <h3>Start Getting Quality Leads Today</h3>
                 
                 <!-- Progress Bar -->
                 <div class="progress-container">
@@ -687,7 +686,6 @@
                             <input type="text" name="zipcode" pattern="[0-9]{5}" placeholder="Enter 5-digit zip code" required maxlength="5">
                         </div>
                         <div class="form-navigation">
-                            <button type="button" class="btn btn-secondary" onclick="goToStep(1)">Back</button>
                             <button type="button" class="btn btn-primary" onclick="validateZipAndContinue()">Continue</button>
                         </div>
                     </div>
@@ -783,7 +781,7 @@
 
                     <!-- Step 6: Contact Information -->
                     <div class="form-step" id="step6">
-                        <h3 style="color: #333; margin-bottom: 1.5rem;">Your area is still available! Where can we follow up with you?</h3>
+                        <h3 style="color: #333; margin-bottom: 1.5rem; font-size: 1.3rem;">Your area is still available! Where can we follow up with you?</h3>
                         
                         <div class="form-question">
                             <label>Business Name</label>
@@ -792,7 +790,7 @@
 
                         <div class="form-question">
                             <label>Business Website</label>
-                            <input type="url" name="business_website" placeholder="https://www.example.com">
+                            <input type="text" name="business_website" placeholder="example.com" pattern=".*\..+" title="Please enter a valid website (e.g., example.com)">
                         </div>
 
                         <div class="form-question">
@@ -811,7 +809,6 @@
                         </div>
 
                         <div class="form-navigation">
-                            <button type="button" class="btn btn-secondary" onclick="goToStep(5)">Back</button>
                             <button type="submit" class="btn btn-primary">Get Qualified Leads</button>
                         </div>
                     </div>
@@ -926,7 +923,6 @@
             <h2>Ready to Transform Your Exterior Painting Business?</h2>
             <p>Join successful contractors across the country who are closing more deals with our proven lead system</p>
             <div class="bottom-form-card">
-                <h3>Start Getting Quality Leads Today</h3>
                 
                 <!-- Progress Bar -->
                 <div class="progress-container">
@@ -958,7 +954,6 @@
                             <input type="text" name="zipcode" pattern="[0-9]{5}" placeholder="Enter 5-digit zip code" required maxlength="5">
                         </div>
                         <div class="form-navigation">
-                            <button type="button" class="btn btn-secondary" onclick="goToBottomStep(1)">Back</button>
                             <button type="button" class="btn btn-primary" onclick="validateBottomZipAndContinue()">Continue</button>
                         </div>
                     </div>
@@ -1054,7 +1049,7 @@
 
                     <!-- Step 6: Contact Information -->
                     <div class="form-step" id="bottomStep6">
-                        <h3 style="color: #333; margin-bottom: 1.5rem;">Your area is still available! Where can we follow up with you?</h3>
+                        <h3 style="color: #333; margin-bottom: 1.5rem; font-size: 1.3rem;">Your area is still available! Where can we follow up with you?</h3>
                         
                         <div class="form-question">
                             <label>Business Name</label>
@@ -1063,7 +1058,7 @@
 
                         <div class="form-question">
                             <label>Business Website</label>
-                            <input type="url" name="business_website" placeholder="https://www.example.com">
+                            <input type="text" name="business_website" placeholder="example.com" pattern=".*\..+" title="Please enter a valid website (e.g., example.com)">
                         </div>
 
                         <div class="form-question">
@@ -1082,7 +1077,6 @@
                         </div>
 
                         <div class="form-navigation">
-                            <button type="button" class="btn btn-secondary" onclick="goToBottomStep(5)">Back</button>
                             <button type="submit" class="btn btn-primary">Get Qualified Leads</button>
                         </div>
                     </div>
@@ -1110,8 +1104,8 @@
         // Form data storage
         const formData = {};
         const bottomFormData = {};
-        let currentStep = 1;
-        let bottomCurrentStep = 1;
+        let currentStep = 0;
+        let bottomCurrentStep = 0;
         const totalSteps = 7;
 
         // Initialize progress
@@ -1135,10 +1129,10 @@
             
             // Auto-advance to next step after short delay
             setTimeout(() => {
-                if (currentStep < 5) {
+                if (currentStep < 4) {
                     currentStep++;
-                    goToStep(currentStep);
-                } else if (currentStep === 5) {
+                    goToStep(currentStep + 1);
+                } else if (currentStep === 4) {
                     // After revenue question, show loading then contact form
                     showLoading();
                 }
@@ -1155,7 +1149,7 @@
             
             // Show target step
             document.getElementById(`step${step}`).classList.add('active');
-            currentStep = step;
+            currentStep = step - 1;
             updateProgress();
         }
 
@@ -1169,13 +1163,13 @@
             }
             
             formData.zipcode = zipValue;
-            currentStep = 3;
+            currentStep = 2;
             goToStep(3);
         }
 
         function showLoading() {
             // Hide current step
-            document.getElementById(`step${currentStep}`).classList.remove('active');
+            document.querySelectorAll('#leadForm .form-step').forEach(s => s.classList.remove('active'));
             
             // Show loading screen
             document.getElementById('loadingScreen').classList.add('active');
@@ -1183,7 +1177,7 @@
             // After 5 seconds, show contact form
             setTimeout(() => {
                 document.getElementById('loadingScreen').classList.remove('active');
-                currentStep = 6;
+                currentStep = 5;
                 document.getElementById('step6').classList.add('active');
                 updateProgress();
             }, 5000);
@@ -1192,8 +1186,6 @@
         function updateProgress() {
             const progress = (currentStep / totalSteps) * 100;
             document.getElementById('progressBar').style.width = progress + '%';
-            document.getElementById('currentQuestion').textContent = currentStep;
-            document.getElementById('totalQuestions').textContent = totalSteps;
         }
 
         // Bottom form functions
@@ -1213,10 +1205,10 @@
             
             // Auto-advance to next step after short delay
             setTimeout(() => {
-                if (bottomCurrentStep < 5) {
+                if (bottomCurrentStep < 4) {
                     bottomCurrentStep++;
-                    goToBottomStep(bottomCurrentStep);
-                } else if (bottomCurrentStep === 5) {
+                    goToBottomStep(bottomCurrentStep + 1);
+                } else if (bottomCurrentStep === 4) {
                     // After revenue question, show loading then contact form
                     showBottomLoading();
                 }
@@ -1233,7 +1225,7 @@
             
             // Show target step
             document.getElementById(`bottomStep${step}`).classList.add('active');
-            bottomCurrentStep = step;
+            bottomCurrentStep = step - 1;
             updateBottomProgress();
         }
 
@@ -1247,13 +1239,13 @@
             }
             
             bottomFormData.zipcode = zipValue;
-            bottomCurrentStep = 3;
+            bottomCurrentStep = 2;
             goToBottomStep(3);
         }
 
         function showBottomLoading() {
             // Hide current step
-            document.getElementById(`bottomStep${bottomCurrentStep}`).classList.remove('active');
+            document.querySelectorAll('#bottomLeadForm .form-step').forEach(s => s.classList.remove('active'));
             
             // Show loading screen
             document.getElementById('bottomLoadingScreen').classList.add('active');
@@ -1261,7 +1253,7 @@
             // After 5 seconds, show contact form
             setTimeout(() => {
                 document.getElementById('bottomLoadingScreen').classList.remove('active');
-                bottomCurrentStep = 6;
+                bottomCurrentStep = 5;
                 document.getElementById('bottomStep6').classList.add('active');
                 updateBottomProgress();
             }, 5000);
@@ -1270,8 +1262,6 @@
         function updateBottomProgress() {
             const progress = (bottomCurrentStep / totalSteps) * 100;
             document.getElementById('bottomProgressBar').style.width = progress + '%';
-            document.getElementById('bottomCurrentQuestion').textContent = bottomCurrentStep;
-            document.getElementById('bottomTotalQuestions').textContent = totalSteps;
         }
 
         // Form submission handlers
