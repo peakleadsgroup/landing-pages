@@ -700,9 +700,12 @@
       return;
     }
 
-    // Track submit button click with phone number
-    const phoneValue = document.getElementById('phone')?.value.trim() || 'Upgrade my floors →';
-    sendTracking(phoneValue, 'submit', 'Phone');
+// Track submit button click with name
+const firstName = document.getElementById('first')?.value.trim() || '';
+const lastName = document.getElementById('last')?.value.trim() || '';
+const fullName = `${firstName} ${lastName}`.trim();
+const nameValue = fullName || 'Upgrade my floors →';
+sendTracking(nameValue, 'submit', 'Name');
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
