@@ -1315,9 +1315,16 @@
                     document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
                     if (form.id === 'leadForm') {
                         document.getElementById('thankYouScreen').classList.add('active');
+                        currentStep = 6; // Complete the progress bar
+                        updateProgress();
                     } else {
                         document.getElementById('bottomThankYouScreen').classList.add('active');
+                        bottomCurrentStep = 6; // Complete the progress bar
+                        updateBottomProgress();
                     }
+                    
+                    // Prevent page scrolling
+                    window.scrollTo({ top: window.pageYOffset, behavior: 'instant' });
                 } else {
                     const name = encodeURIComponent(data.contact_name);
                     const email = encodeURIComponent(data.email);
