@@ -141,31 +141,30 @@
       <form id="quiz" action="https://hook.us2.make.com/qxdz19q8euzmejjffcgi6c6n9w47u1i7" method="POST" novalidate>
         <!-- Step 1 -->
         <section class="step active" data-auto-advance="true">
-          <h2>Are you a homeowner?</h2>
-          <div class="choices" role="group" aria-label="Are you the homeowner?">
-            <button type="button" class="choice" data-name="homeowner" data-value="Yes">Yes</button>
-            <button type="button" class="choice" data-name="homeowner" data-value="No">No</button>
+          <h2>Where do you need sealcoating?</h2>
+          <div class="choices" role="group" aria-label="Where do you need sealcoating?">
+            <button type="button" class="choice" data-name="location_type" data-value="My home">My home</button>
+            <button type="button" class="choice" data-name="location_type" data-value="My business">My business</button>
+            <button type="button" class="choice" data-name="location_type" data-value="Other">Other</button>
           </div>
         </section>
 
         <!-- Step 2 -->
         <section class="step" data-auto-advance="true">
-          <h2>What type of project is this?</h2>
+          <h2>Which best describes this project?</h2>
           <div class="choices" role="group" aria-label="Project type">
-            <button type="button" class="choice" data-name="project_type" data-value="Garage">Garage</button>
-            <button type="button" class="choice" data-name="project_type" data-value="Porch">Porch</button>
-            <button type="button" class="choice" data-name="project_type" data-value="Deck">Deck</button>
-            <button type="button" class="choice" data-name="project_type" data-value="Patio">Patio</button>
-            <button type="button" class="choice" data-name="project_type" data-value="Basement">Basement</button>
-            <button type="button" class="choice" data-name="project_type" data-value="Pool">Pool</button>
+            <button type="button" class="choice" data-name="project_type" data-value="Commercial parking lot">Commercial parking lot</button>
+            <button type="button" class="choice" data-name="project_type" data-value="Residential driveway">Residential driveway</button>
+            <button type="button" class="choice" data-name="project_type" data-value="HOA/Apartment Complex">HOA/Apartment Complex</button>
+            <button type="button" class="choice" data-name="project_type" data-value="Industrial Lot">Industrial Lot</button>
             <button type="button" class="choice" data-name="project_type" data-value="Other">Other</button>
           </div>
         </section>
 
         <!-- Step 3 -->
         <section class="step" data-auto-advance="true">
-          <h2>When would you like your floors completed?</h2>
-          <small class="muted">We only schedule projects that can start soon so you can enjoy your upgraded space.</small>
+          <h2>When would you like your project completed?</h2>
+          <small class="muted">We only schedule projects that can start soon so you can enjoy your upgraded space</small>
           <div class="choices" role="group" aria-label="Timeline">
             <button type="button" class="choice" data-name="timeline" data-value="ASAP">ASAP</button>
             <button type="button" class="choice" data-name="timeline" data-value="Within 2 weeks">Within 2 weeks</button>
@@ -254,7 +253,7 @@
           </div>
           <div class="actions">
             <button type="button" class="btn" data-prev>Back</button>
-            <button type="submit" class="btn" id="submitBtn" disabled>Upgrade my floors →</button>
+            <button type="submit" class="btn" id="submitBtn" disabled>Upgrade my space →</button>
           </div>
         </section>
       </form>
@@ -763,7 +762,7 @@
     const firstName = document.getElementById('first')?.value.trim() || '';
     const lastName = document.getElementById('last')?.value.trim() || '';
     const fullName = `${firstName} ${lastName}`.trim();
-    const nameValue = fullName || 'Upgrade my floors →';
+    const nameValue = fullName || 'Upgrade my space →';
     sendTracking(nameValue, 'submit', 'Name');
 
     submitBtn.disabled = true;
