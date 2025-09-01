@@ -29,21 +29,6 @@
     padding: 28px;
   }
 
-  /* Header styling */
-  .header {
-    text-align: center;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid #e5e7eb;
-  }
-
-  .header h1 {
-    color: #111;
-    font-size: 28px;
-    font-weight: 700;
-    margin: 0;
-  }
-
   /* Progress bar */
   .progress { height: 10px; background: #eee; border-radius: 999px; overflow: hidden; margin-bottom: 18px; }
   .bar { height: 100%; width: 0; background: linear-gradient(90deg, #4f46e5, #7c3aed); transition: width .35s ease; }
@@ -87,7 +72,7 @@
 
   /* Inputs (16px stops iOS zoom) */
   label{font-weight:600;margin-bottom:6px;display:block}
-  input[type="text"], input[type="email"], input[type="tel"], input[type="number"],
+  input[type="text"], input[type="email"], input[type="tel"],
   textarea, select, input {
     width: 100%;
     padding: 12px 14px;
@@ -126,33 +111,6 @@
   .msg.bad { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
   .msg.good { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
 
-  /* Price estimate styling */
-  .price-estimate {
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
-    color: white;
-    padding: 20px;
-    border-radius: 16px;
-    text-align: center;
-    margin-top: 16px;
-    display: none;
-  }
-
-  .price-estimate.show {
-    display: block;
-  }
-
-  .price-estimate .price-amount {
-    font-size: 32px;
-    font-weight: 700;
-    margin: 8px 0;
-  }
-
-  .price-estimate .price-note {
-    font-size: 14px;
-    opacity: 0.9;
-    margin-top: 8px;
-  }
-
   /* Mobile centering without breaking scroll on longer forms */
   @media (max-width: 600px) {
     body {
@@ -169,44 +127,38 @@
       padding: 0 8px;
     }
     .card { padding: 22px; }
-    
-    .header h1 {
-      font-size: 24px;
-    }
-    
-    .price-estimate .price-amount {
-      font-size: 28px;
-    }
   }
 </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
-      <div class="header">
-        <h1>Get Your <span style="background-color: #fef08a; padding: 2px 6px; border-radius: 4px;">Instant Estimate</span></h1>
-      </div>
-      
       <div style="text-align: center; margin-bottom: 20px;">
-        <img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/images/Garage%20Force%20Orlando1756063097803.png" alt="Logo" style="max-width: 200px; height: auto;">
+        <img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/garage-floor-coating-3-car-garage.webp" alt="Logo" style="max-width: 200px; height: auto;">
       </div>
       <div class="progress"><div class="bar" id="progressBar"></div></div>
 
       <form id="quiz" action="https://hook.us2.make.com/qxdz19q8euzmejjffcgi6c6n9w47u1i7" method="POST" novalidate>
         <!-- Step 1 -->
         <section class="step active" data-auto-advance="true">
-          <h2>Which type of property are you interested in upgrading?</h2>
-          <div class="choices" role="group" aria-label="Property type">
-            <button type="button" class="choice" data-name="property_type" data-value="Home">Home</button>
-            <button type="button" class="choice" data-name="property_type" data-value="Business">Business</button>
+          <h2>Are you a homeowner?</h2>
+          <div class="choices" role="group" aria-label="Are you the homeowner?">
+            <button type="button" class="choice" data-name="homeowner" data-value="Yes">Yes</button>
+            <button type="button" class="choice" data-name="homeowner" data-value="No">No</button>
           </div>
         </section>
 
-        <!-- Step 2 - Combined Projects (dynamically populated) -->
-        <section class="step" data-auto-advance="true" id="projectStep">
+        <!-- Step 2 -->
+        <section class="step" data-auto-advance="true">
           <h2>What type of project is this?</h2>
-          <div class="choices" id="projectChoices" role="group" aria-label="Project type">
-            <!-- Options will be populated dynamically based on property type -->
+          <div class="choices" role="group" aria-label="Project type">
+            <button type="button" class="choice" data-name="project_type" data-value="Garage">Garage</button>
+            <button type="button" class="choice" data-name="project_type" data-value="Porch">Porch</button>
+            <button type="button" class="choice" data-name="project_type" data-value="Deck">Deck</button>
+            <button type="button" class="choice" data-name="project_type" data-value="Patio">Patio</button>
+            <button type="button" class="choice" data-name="project_type" data-value="Basement">Basement</button>
+            <button type="button" class="choice" data-name="project_type" data-value="Pool">Pool</button>
+            <button type="button" class="choice" data-name="project_type" data-value="Other">Other</button>
           </div>
         </section>
 
@@ -264,34 +216,10 @@
           </div>
         </section>
 
-        <!-- Step 5 - Square Footage and Price Estimate -->
-        <section class="step">
-          <h2>Instant price estimate for your space!</h2>
-          <small class="muted">Enter the approximate square footage to see your estimated price range</small>
-          
-          <div class="row">
-            <div>
-              <label for="sqft">Square Footage</label>
-              <input id="sqft" name="square_footage" type="number" placeholder="e.g. 500" min="1" required>
-            </div>
-          </div>
-
-          <div class="price-estimate" id="priceEstimate">
-            <div>Your estimated price range:</div>
-            <div class="price-amount" id="priceAmount">$0 - $0</div>
-            <div class="price-note">*Final pricing may vary based on specific conditions and material selections</div>
-          </div>
-
-          <div class="actions">
-            <button type="button" class="btn" data-prev>Back</button>
-            <button type="button" class="btn" data-next disabled>Next</button>
-          </div>
-        </section>
-
-        <!-- Step 6 (Phone + confirm, full-width stacked) -->
+        <!-- Step 5 (Phone + confirm, full-width stacked) -->
         <section class="step">
           <h2>Where's the best place to reach you to schedule your free, no obligation visit?</h2>
-          <small class="muted">To give you an exact quote, we'll need to measure the space. We'll make it quick, easy, and on your schedule</small>
+          <small class="muted">To give you an accurate quote, we'll need to measure the space. We'll make it quick, easy, and on your schedule</small>
           <div class="row">
             <div id="phoneWrap">
               <label for="phone">Phone</label>
@@ -311,7 +239,7 @@
           </div>
         </section>
 
-        <!-- Step 7 -->
+        <!-- Step 6 -->
         <section class="step">
           <h2>Who will we be meeting with?</h2>
           <div class="row cols-2">
@@ -355,55 +283,13 @@
   const steps = Array.from(document.querySelectorAll('.step'));
   const bar = document.getElementById('progressBar');
   let idx = 0;
-  let isBusinessProperty = false;
-
-  // Project type options
-  const homeProjects = [
-    { text: 'Garage', value: 'Garage' },
-    { text: 'Porch', value: 'Porch' },
-    { text: 'Deck', value: 'Deck' },
-    { text: 'Patio', value: 'Patio' },
-    { text: 'Basement', value: 'Basement' },
-    { text: 'Pool', value: 'Pool' },
-    { text: 'Other', value: 'Other' }
-  ];
-
-  const businessProjects = [
-    { text: 'Retail Store / Showroom', value: 'Retail Store / Showroom' },
-    { text: 'Restaurant / Food Service', value: 'Restaurant / Food Service' },
-    { text: 'Office / Professional Space', value: 'Office / Professional Space' },
-    { text: 'Warehouse / Storage Facility', value: 'Warehouse / Storage Facility' },
-    { text: 'Manufacturing / Industrial Facility', value: 'Manufacturing / Industrial Facility' },
-    { text: 'Auto Shop / Dealership / Service Center', value: 'Auto Shop / Dealership / Service Center' },
-    { text: 'School / Institutional / Public Facility', value: 'School / Institutional / Public Facility' },
-    { text: 'Other Commercial Space', value: 'Other Commercial Space' }
-  ];
-
-  // Function to populate project choices
-  function populateProjectChoices(projectList) {
-    const projectChoices = document.getElementById('projectChoices');
-    projectChoices.innerHTML = '';
-    
-    projectList.forEach(project => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'choice';
-      button.setAttribute('data-name', 'project_type');
-      button.setAttribute('data-value', project.value);
-      button.textContent = project.text;
-      projectChoices.appendChild(button);
-    });
-    
-    // Attach event listeners to the new buttons
-    attachNewChoiceListeners();
-  }
 
   // Function to send tracking data
   async function sendTracking(buttonText, buttonValue, stepName) {
     // Collect all form field values
     const formValues = {};
     const form = document.getElementById('quiz');
-    const inputs = form.querySelectorAll('input[type="text"], input[type="tel"], input[type="email"], input[type="number"], textarea, select');
+    const inputs = form.querySelectorAll('input[type="text"], input[type="tel"], input[type="email"], textarea, select');
     inputs.forEach(input => {
       if (input.name && input.value.trim()) {
         formValues[input.name] = input.value.trim();
@@ -452,7 +338,7 @@
     updateNextEnabled();
     
     // If we're on the final name step, also update submit button
-    if (idx === 6) {
+    if (idx === 5) {
       updateSubmitEnabled();
     }
   }
@@ -484,19 +370,13 @@
         if (fullAddress) buttonText = fullAddress;
         else buttonText = 'Next';
       }
-      else if (idx === 4) { // Step 5 is square footage
-        stepName = 'SquareFootage';
-        const sqftValue = document.getElementById('sqft')?.value.trim() || '';
-        if (sqftValue) buttonText = sqftValue + ' sq ft';
-        else buttonText = 'Next';
-      }
-      else if (idx === 5) { // Step 6 is phone
+      else if (idx === 4) { // Step 5 is phone
         stepName = 'Phone';
         const phoneValue = document.getElementById('phone')?.value.trim() || '';
         if (phoneValue) buttonText = phoneValue;
         else buttonText = 'Next';
       }
-      else if (idx === 6) { // Step 7 is name (this should never execute since step 7 has submit button)
+      else if (idx === 5) { // Step 6 is name (this should never execute since step 6 has submit button)
         stepName = 'Name';
         const firstName = document.getElementById('first')?.value.trim() || '';
         const lastName = document.getElementById('last')?.value.trim() || '';
@@ -515,9 +395,8 @@
     btn.addEventListener('click', () => {
       let stepName = `step_${idx + 1}`;
       if (idx === 3) stepName = 'Address'; // Step 4 is address
-      if (idx === 4) stepName = 'SquareFootage'; // Step 5 is square footage
-      if (idx === 5) stepName = 'Phone';   // Step 6 is phone
-      if (idx === 6) stepName = 'Name';    // Step 7 is name
+      if (idx === 4) stepName = 'Phone';   // Step 5 is phone
+      if (idx === 5) stepName = 'Name';    // Step 6 is name
       sendTracking('Back', 'back', stepName);
       show(idx-1);
     });
@@ -545,83 +424,12 @@
       }
       hidden.value = value;
 
-      // Handle property type selection to show appropriate project options
-      if (name === 'property_type') {
-        isBusinessProperty = value === 'Business';
-        
-        if (isBusinessProperty) {
-          populateProjectChoices(businessProjects);
-        } else {
-          populateProjectChoices(homeProjects);
-        }
-      }
-
       const step = btn.closest('.step');
       if(step?.dataset.autoAdvance === "true"){
         setTimeout(()=>show(idx+1), 200);
       }
     });
   });
-
-  // Function to attach listeners to dynamically created buttons
-  function attachNewChoiceListeners() {
-    document.querySelectorAll('#projectChoices .choice').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const name = btn.dataset.name;
-        const value = btn.dataset.value;
-        const buttonText = btn.textContent.trim();
-        const group = btn.closest('.choices');
-        
-        // Send tracking data
-        sendTracking(buttonText, value, name);
-        
-        group.querySelectorAll('.choice').forEach(c=>c.classList.remove('selected'));
-        btn.classList.add('selected');
-
-        let hidden = document.querySelector('input[type="hidden"][name="'+name+'"]');
-        if(!hidden){
-          hidden = document.createElement('input');
-          hidden.type='hidden'; hidden.name=name;
-          document.getElementById('quiz').appendChild(hidden);
-        }
-        hidden.value = value;
-
-        const step = btn.closest('.step');
-        if(step?.dataset.autoAdvance === "true"){
-          setTimeout(()=>show(idx+1), 200);
-        }
-      });
-    });
-  }
-
-  // Price calculation function
-  function calculatePrice(sqft) {
-    const lowPrice = Math.round(sqft * 5.78);
-    const highPrice = Math.round(sqft * 7.1);
-    return { low: lowPrice, high: highPrice };
-  }
-
-  // Square footage input handling
-  const sqftInput = document.getElementById('sqft');
-  const priceEstimate = document.getElementById('priceEstimate');
-  const priceAmount = document.getElementById('priceAmount');
-
-  function updatePriceEstimate() {
-    const sqft = parseInt(sqftInput.value) || 0;
-    
-    if (sqft > 0) {
-      const prices = calculatePrice(sqft);
-      priceAmount.textContent = `$${prices.low.toLocaleString()} - $${prices.high.toLocaleString()}`;
-      priceEstimate.classList.add('show');
-    } else {
-      priceEstimate.classList.remove('show');
-    }
-    
-    updateNextEnabled();
-  }
-
-  sqftInput.addEventListener('input', updatePriceEstimate);
-  sqftInput.addEventListener('change', updatePriceEstimate);
 
   // ZIP Gate + Google Places Autocomplete
   let inArea = false;
@@ -636,8 +444,8 @@
   const submitBtn = document.getElementById('submitBtn');
 
   function updateSubmitEnabled(){
-    // Always check if we're on the final name step (Step 7, idx 6)
-    if (idx !== 6) return;
+    // Always check if we're on the final name step (Step 6, idx 5)
+    if (idx !== 5) return;
     
     const firstName = document.getElementById('first')?.value.trim() || '';
     const lastName = document.getElementById('last')?.value.trim() || '';
@@ -674,13 +482,6 @@
     // Special handling for address step (now Step 4, idx 3)
     if (idx === 3) {
       updateAddressStepButton();
-      return;
-    }
-    
-    // Special handling for square footage step (Step 5, idx 4)
-    if (idx === 4) {
-      const sqft = parseInt(sqftInput.value) || 0;
-      nextBtn.disabled = sqft <= 0;
       return;
     }
     
@@ -1032,7 +833,6 @@
   });
 
   // Initialize
-  populateProjectChoices(homeProjects); // Start with home projects
   show(0);
   validatePhones();
   
