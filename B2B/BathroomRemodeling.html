@@ -1290,72 +1290,82 @@
             await handleFormSubmission(this, bottomFormData);
         });
 
-        async function handleFormSubmission(form, data) {
-            // Get contact form data
-            const formElements = form.elements;
-            data.business_name = formElements.business_name.value;
-            data.business_website = formElements.business_website.value;
-            data.contact_name = formElements.contact_name.value;
-            data.phone = formElements.phone.value;
-            data.email = formElements.email.value;
+<script>
+async function handleFormSubmission(form, data) {
+  // Pull contact fields
+  const formElements = form.elements;
+  data.business_name = formElements.business_name.value;
+  data.business_website = formElements.business_website.value;
+  data.contact_name = formElements.contact_name.value;
+  data.phone = formElements.phone.value;
+  data.email = formElements.email.value;
 
-            try {
-                // Send to webhook
-                await fetch('https://hook.us2.make.com/547nag1innsonj48384hkem6tj7u051c', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
-
-// Redirect based on revenue (updated routing)
-const name = encodeURIComponent(data.contact_name || "");
-const email = encodeURIComponent(data.email || "");
-
-// Helper to show the correct thank-you screen for this form
-function showThankYouFor(form) {
-  const formSteps = form.querySelectorAll('.form-step');
-  formSteps.forEach(s => s.classList.remove('active'));
-  if (form.id === 'leadForm') {
-    document.getElementById('thankYouScreen').classList.add('active');
-    currentStep = 6;
-    updateProgress();
-  } else {
-    document.getElementById('bottomThankYouScreen').classList.add('active');
-    bottomCurrentStep = 6;
-    updateBottomProgress();
+  // Guard: make sure a revenue tier was selected
+  if (!data.monthly_revenue) {
+    alert('Please select your estimated monthly revenue to continue.');
+    return;
   }
-  // Keep the user in place
-  window.scrollTo({ top: window.pageYOffset, behavior: 'instant' });
+
+  // Helper to show the correct thank-you screen for this form
+  function showThankYouFor(formEl) {
+    const formSteps = formEl.querySelectorAll('.form-step');
+    formSteps.forEach(s => s.classList.remove('active'));
+    if (formEl.id === 'leadForm') {
+      document.getElementById('thankYouScreen').classList.add('active');
+      currentStep = 6;
+      updateProgress();
+    } else {
+      document.getElementById('bottomThankYouScreen').classList.add('active');
+      bottomCurrentStep = 6;
+      updateBottomProgress();
+    }
+    // Keep the user in place
+    window.scrollTo({ top: window.pageYOffset });
+  }
+
+  try {
+    // Send to webhook
+    await fetch('https://hook.us2.make.com/547nag1innsonj48384hkem6tj7u051c', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    // Redirect based on revenue (updated routing)
+    const name = encodeURIComponent(data.contact_name || "");
+    const email = encodeURIComponent(data.email || "");
+    const rrUrl = `https://cal.com/team/peak-leads-group/discovery-call?name=${name}&email=${email}`;
+    const danUrl = `https://cal.com/daniel-wellish-plg/30min?name=${name}&email=${email}`;
+
+    switch (data.monthly_revenue) {
+      case 'less-than-50k':
+        // No calendar — show thank you
+        showThankYouFor(form);
+        break;
+
+      case '50k-100k':
+      case '100k-200k':
+        // Round robin calendar
+        window.location.href = rrUrl;
+        break;
+
+      case '200k-400k':
+      case 'more-than-400k':
+        // Daniel's calendar
+        window.location.href = danUrl;
+        break;
+
+      default:
+        // Fallback to round robin
+        window.location.href = rrUrl;
+        break;
+    }
+  } catch (error) {
+    console.error('Error submitting form:', error);
+    alert('There was an error submitting your form. Please try again.');
+  }
 }
-
-switch (data.monthly_revenue) {
-  case 'less-than-50k':
-    // No calendar — show thank you
-    showThankYouFor(form);
-    break;
-
-  case '50k-100k':
-  case '100k-200k':
-    // Round robin calendar
-    window.location.href =
-      `https://cal.com/team/peak-leads-group/discovery-call?name=${name}&email=${email}`;
-    break;
-
-  case '200k-400k':
-  case 'more-than-400k':
-    // Daniel's calendar
-    window.location.href =
-      `https://cal.com/daniel-wellish-plg/30min?name=${name}&email=${email}`;
-    break;
-
-  default:
-    // Fallback: send to round robin in case value is missing/unexpected
-    window.location.href =
-      `https://cal.com/team/peak-leads-group/discovery-call?name=${name}&email=${email}`;
-    break;
-}
+</script>
 
                     
                     // Prevent page scrolling
