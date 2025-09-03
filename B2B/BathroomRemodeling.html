@@ -1309,21 +1309,54 @@
                     body: JSON.stringify(data)
                 });
 
-                // Redirect based on revenue
-                if (data.monthly_revenue === 'less-than-50k') {
-                    // Show thank you screen instead of redirecting
-                    const formSteps = form.querySelectorAll('.form-step');
-                    formSteps.forEach(s => s.classList.remove('active'));
-                    
-                    if (form.id === 'leadForm') {
-                        document.getElementById('thankYouScreen').classList.add('active');
-                        currentStep = 6; // Complete the progress bar
-                        updateProgress();
-                    } else {
-                        document.getElementById('bottomThankYouScreen').classList.add('active');
-                        bottomCurrentStep = 6; // Complete the progress bar
-                        updateBottomProgress();
-                    }
+// Redirect based on revenue (updated routing)
+const name = encodeURIComponent(data.contact_name || "");
+const email = encodeURIComponent(data.email || "");
+
+// Helper to show the correct thank-you screen for this form
+function showThankYouFor(form) {
+  const formSteps = form.querySelectorAll('.form-step');
+  formSteps.forEach(s => s.classList.remove('active'));
+  if (form.id === 'leadForm') {
+    document.getElementById('thankYouScreen').classList.add('active');
+    currentStep = 6;
+    updateProgress();
+  } else {
+    document.getElementById('bottomThankYouScreen').classList.add('active');
+    bottomCurrentStep = 6;
+    updateBottomProgress();
+  }
+  // Keep the user in place
+  window.scrollTo({ top: window.pageYOffset, behavior: 'instant' });
+}
+
+switch (data.monthly_revenue) {
+  case 'less-than-50k':
+    // No calendar — show thank you
+    showThankYouFor(form);
+    break;
+
+  case '50k-100k':
+  case '100k-200k':
+    // Round robin calendar
+    window.location.href =
+      `https://cal.com/team/peak-leads-group/discovery-call?name=${name}&email=${email}`;
+    break;
+
+  case '200k-400k':
+  case 'more-than-400k':
+    // Daniel's calendar
+    window.location.href =
+      `https://cal.com/daniel-wellish-plg/30min?name=${name}&email=${email}`;
+    break;
+
+  default:
+    // Fallback: send to round robin in case value is missing/unexpected
+    window.location.href =
+      `https://cal.com/team/peak-leads-group/discovery-call?name=${name}&email=${email}`;
+    break;
+}
+
                     
                     // Prevent page scrolling
                     window.scrollTo({ top: window.pageYOffset, behavior: 'instant' });
