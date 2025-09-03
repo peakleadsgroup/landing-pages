@@ -37,7 +37,7 @@
             margin-bottom: 30px;
             width: 200px;
             height: 80px;
-            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80"><text x="100" y="45" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="%232c3e50">NU LOOK</text><text x="100" y="65" font-family="Arial, sans-serif" font-size="10" font-weight="normal" text-anchor="middle" fill="%23ff6b35" letter-spacing="2px">HOME DESIGN</text></svg>');
+            background-image: url('https://blissful-baths-and-home-v1756573394.websitepro-cdn.com/wp-content/uploads/2023/10/Updated-Logo-2.jpg');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
@@ -310,8 +310,14 @@
 </head>
 <body>
     <div class="form-container">
-        <!-- Logo (placeholder - replace with your image) -->
-        <div class="logo"></div>
+        <!-- Logo -->
+        <div class="logo" style="display: flex; align-items: center; justify-content: center; margin-bottom: 30px;">
+            <img src="https://websitepro-cdn.com/wp-content/uploads/2023/10/Updated-Logo-2.jpg" 
+                 alt="Blissful Baths & Home" 
+                 style="max-width: 200px; max-height: 80px; object-fit: contain;"
+                 onload="console.log('Logo loaded successfully')"
+                 onerror="this.outerHTML='<div style=&quot;font-size: 18px; font-weight: bold; color: #2c3e50; text-align: center;&quot;>BLISSFUL BATHS &amp; HOME</div>';">
+        </div>
 
         <!-- Main Heading (only shown initially) -->
         <div id="mainHeading">
@@ -635,7 +641,7 @@
                     "layout": "month_view"
                 });
                 
-                // Additional CSS to hide event details
+                // Additional CSS to hide event details and fix scrolling
                 setTimeout(() => {
                     const style = document.createElement('style');
                     style.textContent = `
@@ -657,6 +663,18 @@
                         }
                         #my-cal-inline-blissful-baths-home .cal-booker {
                             margin-top: -50px;
+                        }
+                        #my-cal-inline-blissful-baths-home,
+                        #my-cal-inline-blissful-baths-home * {
+                            overflow: visible !important;
+                            max-height: none !important;
+                        }
+                        #my-cal-inline-blissful-baths-home iframe {
+                            height: auto !important;
+                            min-height: 500px !important;
+                        }
+                        .cal-container {
+                            overflow: visible !important;
                         }
                     `;
                     document.head.appendChild(style);
