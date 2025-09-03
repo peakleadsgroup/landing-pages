@@ -418,6 +418,7 @@
 
         <div class="form-step" id="step6">
             <div class="question">What is the location of this project?</div>
+            <div class="sub-heading">So we can ensure you're within our service area</div>
             <div class="address-grid">
                 <input type="text" class="address-input" id="street" placeholder="Street Address" oninput="validateAddressForm()">
                 <div class="address-row">
@@ -632,16 +633,27 @@
                             margin-top: -50px;
                         }
                         #my-cal-inline-blissful-baths-home,
-                        #my-cal-inline-blissful-baths-home * {
-                            overflow: visible !important;
+                        #my-cal-inline-blissful-baths-home *,
+                        #my-cal-inline-blissful-baths-home iframe {
+                            overflow: hidden !important;
+                            overflow-x: hidden !important;
+                            overflow-y: hidden !important;
                             max-height: none !important;
+                            scrollbar-width: none !important;
+                            -ms-overflow-style: none !important;
+                        }
+                        #my-cal-inline-blissful-baths-home::-webkit-scrollbar,
+                        #my-cal-inline-blissful-baths-home *::-webkit-scrollbar {
+                            display: none !important;
+                            width: 0 !important;
+                            height: 0 !important;
                         }
                         #my-cal-inline-blissful-baths-home iframe {
                             height: auto !important;
-                            min-height: 500px !important;
+                            min-height: 600px !important;
                         }
                         .cal-container {
-                            overflow: visible !important;
+                            overflow: hidden !important;
                         }
                     `;
                     document.head.appendChild(style);
