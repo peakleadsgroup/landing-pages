@@ -624,10 +624,43 @@
                 Cal("init", "blissful-baths-home", {origin:"https://app.cal.com"});
                 Cal.ns["blissful-baths-home"]("inline", {
                     elementOrSelector:"#my-cal-inline-blissful-baths-home",
-                    config: {"layout":"month_view"},
+                    config: {
+                        "layout":"month_view",
+                        "hideEventTypeDetails": true
+                    },
                     calLink: "peakleadsgroup/blissful-baths-home",
                 });
-                Cal.ns["blissful-baths-home"]("ui", {"hideEventTypeDetails":false,"layout":"month_view"});
+                Cal.ns["blissful-baths-home"]("ui", {
+                    "hideEventTypeDetails": true,
+                    "layout": "month_view"
+                });
+                
+                // Additional CSS to hide event details
+                setTimeout(() => {
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        #my-cal-inline-blissful-baths-home .event-type-details,
+                        #my-cal-inline-blissful-baths-home .event-meta,
+                        #my-cal-inline-blissful-baths-home [data-testid="event-meta"],
+                        #my-cal-inline-blissful-baths-home .cal-event-type-details,
+                        #my-cal-inline-blissful-baths-home .cal-event-description,
+                        #my-cal-inline-blissful-baths-home .cal-event-duration,
+                        #my-cal-inline-blissful-baths-home .cal-event-location,
+                        #my-cal-inline-blissful-baths-home .event-description,
+                        #my-cal-inline-blissful-baths-home .event-duration,
+                        #my-cal-inline-blissful-baths-home .event-location,
+                        #my-cal-inline-blissful-baths-home [class*="event-type"],
+                        #my-cal-inline-blissful-baths-home [class*="booking-item"] .text-sm,
+                        #my-cal-inline-blissful-baths-home .booking-description,
+                        #my-cal-inline-blissful-baths-home .booking-duration {
+                            display: none !important;
+                        }
+                        #my-cal-inline-blissful-baths-home .cal-booker {
+                            margin-top: -50px;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }, 1000);
                 
                 console.log("Cal.com embed initialization completed");
             } catch (error) {
