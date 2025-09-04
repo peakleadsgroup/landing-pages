@@ -134,6 +134,9 @@
   <div class="wrap">
     <div class="card">
       <div style="text-align: center; margin-bottom: 20px;">
+        <h1 style="font-size: 32px; font-weight: bold; margin: 0 0 20px 0; color: #111; line-height: 1.2;">
+          Take our 30 second quiz to get a <span style="background-color: #fef08a; padding: 2px 8px; border-radius: 4px;">fast and free quote</span>
+        </h1>
         <img src="https://media.licdn.com/dms/image/v2/D4E22AQFZubgUR6WXbw/feedshare-shrink_800/B4EZO8J12OGYAg-/0/1734028517127?e=2147483647&v=beta&t=cSyhcORwwveoIzxb-YuLMvfNkuh1XYJBgbZzqxMczrg" alt="Logo" style="max-width: 200px; height: auto;">
       </div>
       <div class="progress"><div class="bar" id="progressBar"></div></div>
@@ -160,7 +163,6 @@
         <!-- Step 3 -->
         <section class="step" data-auto-advance="true">
           <h2>When would you like your roof completed?</h2>
-          <small class="muted">We only schedule projects that can start soon so you can enjoy your upgraded roof.</small>
           <div class="choices" role="group" aria-label="Timeline">
             <button type="button" class="choice" data-name="timeline" data-value="ASAP">ASAP</button>
             <button type="button" class="choice" data-name="timeline" data-value="Within a month">Within a month</button>
@@ -169,38 +171,18 @@
           </div>
         </section>
 
-        <!-- Step 4 (Address + ZIP gate) -->
-        <section class="step" id="addressStep">
-          <h2>What is the location of this project?</h2>
+        <!-- Step 4 (ZIP code only) -->
+        <section class="step" id="zipStep">
+          <h2>What is your ZIP code?</h2>
           <small class="muted">To make sure you're within our service area</small>
 
           <div class="row">
             <div>
-              <label for="address">Street Address</label>
-              <input id="address" name="address" type="text" placeholder="i.e. 123 Fremont St." autocomplete="street-address" required>
-            </div>
-          </div>
-          <div class="row cols-2">
-            <div>
-              <label for="city">City</label>
-              <input id="city" name="city" type="text" placeholder="i.e. Pensacola" required autocomplete="address-level2">
-            </div>
-            <div>
-              <label for="state">State</label>
-              <input id="state" name="state" type="text" placeholder="i.e. FL" maxlength="2" required autocomplete="address-level1">
-            </div>
-          </div>
-          <div class="row">
-            <div>
-              <label for="zip">Zip</label>
-              <input id="zip" name="zip" type="text" placeholder="i.e. 32501"
+              <label for="zip">ZIP Code</label>
+              <input id="zip" name="zip" type="text" placeholder="12345"
                      inputmode="numeric" pattern="^[0-9]{5}$" maxlength="5" required autocomplete="postal-code">
             </div>
           </div>
-
-          <!-- Hidden fields for coordinates -->
-          <input type="hidden" id="latitude" name="latitude" value="">
-          <input type="hidden" id="longitude" name="longitude" value="">
 
           <div id="zipMsg" class="msg bad">Sorry — you're not within our area.</div>
           <div id="zipOk" class="msg good">Great — you're in our service area!</div>
@@ -213,8 +195,7 @@
 
         <!-- Step 5 (Phone + confirm, full-width stacked) -->
         <section class="step">
-          <h2>Where's the best place to reach you to schedule your free, no obligation visit?</h2>
-          <small class="muted">To give you an accurate quote, we'll need to see the condition of your roof. We'll make it quick, easy, and on your schedule</small>
+          <h2>Where can we reach you for your fast and free quote?</h2>
           <div class="row">
             <div id="phoneWrap">
               <label for="phone">Phone</label>
@@ -236,7 +217,7 @@
 
         <!-- Step 6 -->
         <section class="step">
-          <h2>Who will we be meeting with?</h2>
+          <h2>Who will we be making this quote out to?</h2>
           <div class="row cols-2">
             <div>
               <label for="first">First Name</label>
@@ -249,7 +230,7 @@
           </div>
           <div class="actions">
             <button type="button" class="btn" data-prev>Back</button>
-            <button type="submit" class="btn" id="submitBtn" disabled>Upgrade my roof →</button>
+            <button type="submit" class="btn" id="submitBtn" disabled>Get my quote →</button>
           </div>
         </section>
       </form>
@@ -342,7 +323,7 @@
   // Track navigation button clicks
   document.querySelectorAll('[data-next]').forEach(btn=>{
     btn.addEventListener('click', (e) => {
-      // Special check for address step - prevent navigation if not in service area
+      // Special check for ZIP step - prevent navigation if not in service area
       if (idx === 3 && !inArea) {
         e.preventDefault();
         e.stopPropagation();
@@ -355,15 +336,10 @@
       
       console.log('Navigation click debug:', {currentStep: idx, stepName, buttonText});
       
-      if (idx === 3) { // Step 4 is address
-        stepName = 'Address';
-        const addr = document.getElementById('address')?.value.trim() || '';
-        const city = document.getElementById('city')?.value.trim() || '';
-        const state = document.getElementById('state')?.value.trim() || '';
+      if (idx === 3) { // Step 4 is ZIP
+        stepName = 'ZIP';
         const zip = document.getElementById('zip')?.value.trim() || '';
-        const fullAddress = [addr, city && `${city},`, state, zip]
-          .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
-        if (fullAddress) buttonText = fullAddress;
+        if (zip) buttonText = zip;
         else buttonText = 'Next';
       }
       else if (idx === 4) { // Step 5 is phone
@@ -390,9 +366,9 @@
   document.querySelectorAll('[data-prev]').forEach(btn=>{
     btn.addEventListener('click', () => {
       let stepName = `step_${idx + 1}`;
-      if (idx === 3) stepName = 'Address'; // Step 4 is address
-      if (idx === 4) stepName = 'Phone';   // Step 5 is phone
-      if (idx === 5) stepName = 'Name';    // Step 6 is name
+      if (idx === 3) stepName = 'ZIP';    // Step 4 is ZIP
+      if (idx === 4) stepName = 'Phone';  // Step 5 is phone
+      if (idx === 5) stepName = 'Name';   // Step 6 is name
       sendTracking('Back', 'back', stepName);
       show(idx-1);
     });
@@ -427,14 +403,9 @@
     });
   });
 
-  // ZIP Gate + Google Places Autocomplete
+  // ZIP Gate
   let inArea = false;
-  const addressInput = document.getElementById('address');
-  const cityInput = document.getElementById('city');
-  const stateInput = document.getElementById('state');
   const zipInput = document.getElementById('zip');
-  const latitudeInput = document.getElementById('latitude');
-  const longitudeInput = document.getElementById('longitude');
   const msgBad = document.getElementById('zipMsg');
   const msgGood = document.getElementById('zipOk');
   const submitBtn = document.getElementById('submitBtn');
@@ -475,9 +446,9 @@
     const nextBtn = active.querySelector('[data-next]');
     if(!nextBtn) return;
     
-    // Special handling for address step (now Step 4, idx 3)
+    // Special handling for ZIP step (now Step 4, idx 3)
     if (idx === 3) {
-      updateAddressStepButton();
+      updateZipStepButton();
       return;
     }
     
@@ -486,18 +457,14 @@
     nextBtn.disabled = !ok;
   }
 
-  function updateAddressStepButton() {
-    const nextBtn = document.querySelector('#addressStep [data-next]');
+  function updateZipStepButton() {
+    const nextBtn = document.querySelector('#zipStep [data-next]');
     if (!nextBtn) return;
     
-    const addrOk = addressInput.value.trim().length > 3;
-    const cityOk = cityInput.value.trim().length > 1;
-    const stateOk = /^[A-Za-z]{2}$/.test(stateInput.value.trim());
     const zipOk = /^\d{5}$/.test(zipInput.value.trim());
-    const allFieldsValid = addrOk && cityOk && stateOk && zipOk;
     
-    // Button is only enabled if ALL fields are valid AND in service area
-    const shouldEnable = allFieldsValid && inArea;
+    // Button is only enabled if ZIP is valid AND in service area
+    const shouldEnable = zipOk && inArea;
     nextBtn.disabled = !shouldEnable;
     
     // Add visual styling for out of area
@@ -512,9 +479,8 @@
       nextBtn.style.cursor = 'not-allowed';
     }
     
-    console.log('Address step validation:', {
-      addrOk, cityOk, stateOk, zipOk, 
-      allFieldsValid, inArea, shouldEnable,
+    console.log('ZIP step validation:', {
+      zipOk, inArea, shouldEnable,
       buttonDisabled: nextBtn.disabled,
       currentStep: idx
     });
@@ -527,7 +493,7 @@
       msgBad.style.display = 'none';
       msgGood.style.display = 'none';
       inArea = false;
-      updateAddressStepButton();
+      updateZipStepButton();
       return;
     }
     
@@ -545,7 +511,7 @@
       console.log('ZIP validation: OUT OF AREA');
     }
     
-    updateAddressStepButton();
+    updateZipStepButton();
   }
 
   // Watch inputs on all steps to toggle Next
@@ -567,24 +533,7 @@
   zipInput.addEventListener('input', e=>{
     const zipValue = e.target.value.trim();
     applyZipGate(zipValue);
-    updateAddressStepButton();
-  });
-
-  [addressInput, cityInput, stateInput].forEach(el=>{
-    el.addEventListener('input', () => {
-      if (idx === 3) { // Address step is now idx 3
-        updateAddressStepButton();
-      } else {
-        updateSubmitEnabled();
-      }
-    });
-    el.addEventListener('change', () => {
-      if (idx === 3) {
-        updateAddressStepButton();
-      } else {
-        updateSubmitEnabled();
-      }
-    });
+    updateZipStepButton();
   });
 
   // Phone formatting + strict 10-digit validation + confirmation match
@@ -664,65 +613,6 @@
   phone2Input.addEventListener('input', validatePhones);
   phone2Input.addEventListener('blur', validatePhones);
 
-  // Function to geocode address if coordinates not available from Places API
-  async function geocodeAddress(address) {
-    if (!window.google || !google.maps) return null;
-    
-    return new Promise((resolve) => {
-      const geocoder = new google.maps.Geocoder();
-      geocoder.geocode({ address: address }, (results, status) => {
-        if (status === 'OK' && results[0]) {
-          const location = results[0].geometry.location;
-          resolve({
-            lat: location.lat(),
-            lng: location.lng()
-          });
-        } else {
-          console.log('Geocoding failed:', status);
-          resolve(null);
-        }
-      });
-    });
-  }
-
-  // Autocomplete hookup after Google script loads
-  window.__attachPlaces = function(){
-    if(!window.google || !google.maps || !google.maps.places) return;
-    const ac = new google.maps.places.Autocomplete(addressInput, {
-      types: ['address'],
-      componentRestrictions: { country: ['us'] },
-      fields: ['address_components','formatted_address','geometry']
-    });
-    ac.addListener('place_changed', ()=>{
-      const place = ac.getPlace();
-      if(!place || !place.address_components) return;
-
-      const comps = Object.fromEntries(place.address_components.flatMap(c => c.types.map(t => [t, c])));
-      
-      // Build street address from components (street number + street name only)
-      let streetAddress = '';
-      if(comps.street_number) streetAddress += comps.street_number.long_name + ' ';
-      if(comps.route) streetAddress += comps.route.long_name;
-      if(streetAddress.trim()) addressInput.value = streetAddress.trim();
-      
-      if(comps.locality) cityInput.value = comps.locality.long_name;
-      else if(comps.sublocality) cityInput.value = comps.sublocality.long_name;
-      if(comps.administrative_area_level_1) stateInput.value = comps.administrative_area_level_1.short_name;
-      if(comps.postal_code) zipInput.value = comps.postal_code.long_name;
-
-      // Extract coordinates from place geometry
-      if (place.geometry && place.geometry.location) {
-        const lat = place.geometry.location.lat();
-        const lng = place.geometry.location.lng();
-        latitudeInput.value = lat.toString();
-        longitudeInput.value = lng.toString();
-        console.log('Coordinates from Places API:', { lat, lng });
-      }
-
-      applyZipGate(zipInput.value.trim());
-    });
-  };
-
   // Final submit guard + webhook + redirect
   document.getElementById('quiz').addEventListener('submit', async (e)=>{
     e.preventDefault();
@@ -733,33 +623,11 @@
       return;
     }
 
-    // Try to get coordinates if not already available
-    if (!latitudeInput.value || !longitudeInput.value) {
-      const addr = addressInput.value.trim();
-      const city = cityInput.value.trim();
-      const state = stateInput.value.trim();
-      const zip = zipInput.value.trim();
-      const fullAddress = [addr, city && `${city},`, state, zip]
-        .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
-      
-      if (fullAddress) {
-        console.log('Attempting to geocode address:', fullAddress);
-        const coords = await geocodeAddress(fullAddress);
-        if (coords) {
-          latitudeInput.value = coords.lat.toString();
-          longitudeInput.value = coords.lng.toString();
-          console.log('Coordinates from geocoding:', coords);
-        } else {
-          console.log('Geocoding failed, submitting without coordinates');
-        }
-      }
-    }
-
     // Track submit button click with name
     const firstName = document.getElementById('first')?.value.trim() || '';
     const lastName = document.getElementById('last')?.value.trim() || '';
     const fullName = `${firstName} ${lastName}`.trim();
-    const nameValue = fullName || 'Upgrade my roof →';
+    const nameValue = fullName || 'Get my quote →';
     sendTracking(nameValue, 'submit', 'Name');
 
     submitBtn.disabled = true;
@@ -774,12 +642,6 @@
     if (adATID) {
       data.append('adATID', adATID);
     }
-
-    // Log coordinates being sent (for debugging)
-    console.log('Submitting with coordinates:', {
-      latitude: latitudeInput.value,
-      longitude: longitudeInput.value
-    });
 
     // Send to submit webhook with longer timeout
     const controller = new AbortController();
@@ -807,12 +669,7 @@
     const last  = document.getElementById('last')?.value.trim()  || '';
     const name  = `${first} ${last}`.replace(/\s+/g, ' ').trim();
 
-    const addr  = document.getElementById('address')?.value.trim() || '';
-    const city  = document.getElementById('city')?.value.trim()    || '';
-    const state = document.getElementById('state')?.value.trim()   || '';
-    const zip   = document.getElementById('zip')?.value.trim()     || '';
-    const fullAddress = [addr, city && `${city},`, state, zip]
-      .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+    const zip = document.getElementById('zip')?.value.trim() || '';
 
     const params = new URLSearchParams();
     params.set('email', 'peakleadsgroup@gmail.com');        // fixed inbox
@@ -823,7 +680,7 @@
                    || document.getElementById('phone')?.value.replace(/\D/g,'') || '';
     if (smsDigits.length === 10) params.set('smsReminderNumber', `+1${smsDigits}`);
 
-    if (fullAddress) params.set('location', fullAddress);   // optional prefill
+    if (zip) params.set('location', zip);   // Use ZIP code as location
 
     window.location.href =
       `https://cal.com/peakleadsgroup/nu-look-home-design?${params.toString()}`;
@@ -836,11 +693,6 @@
   // Send tracking webhook when form loads
   sendTracking('Form loaded', 'page_load', 'form_initialization');
 })();
-</script>
-
-<!-- Load Google Places (async/defer) -->
-<script async defer
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&libraries=places&callback=__attachPlaces">
 </script>
 </body>
 </html>
