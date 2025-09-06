@@ -789,12 +789,45 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 mode: 'no-cors'
             }).then(() => {
                 console.log('Webhook sent successfully');
+                // Show final thank you screen
+                showFinalScreen();
             }).catch((error) => {
                 console.error('Webhook error:', error);
+                // Show final screen even if webhook fails
+                showFinalScreen();
             });
+        }
+
+        function showFinalScreen() {
+            console.log('showFinalScreen called - using simple approach');
             
-            // Show success message
-            alert('Thank you! We will contact you soon to schedule your free design session.');
+            // Hide the success message and subheading at the top
+            const successMsg = document.querySelector('.success-message');
+            const successSub = document.querySelector('.success-subheading');
+            if (successMsg) successMsg.style.display = 'none';
+            if (successSub) successSub.style.display = 'none';
+            
+            // Hide phone step
+            const phoneStep = document.getElementById('phoneStep');
+            if (phoneStep) phoneStep.style.display = 'none';
+            
+            // Replace the name step content with the thank you message
+            const nameStep = document.getElementById('nameStep');
+            if (nameStep) {
+                nameStep.innerHTML = `
+                    <div style="text-align: center; padding: 40px 0;">
+                        <div style="width: 80px; height: 80px; border-radius: 50%; background: #4CAF50; margin: 0 auto 30px; display: flex; align-items: center; justify-content: center; animation: checkmarkPop 0.6s ease-out;">
+                            <div style="color: white; font-size: 30px; font-weight: bold;">✓</div>
+                        </div>
+                        <div style="font-size: 24px; color: #4CAF50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
+                        <div style="font-size: 16px; color: #666; line-height: 1.5;">We will give you a call as soon as possible to schedule your design session.</div>
+                    </div>
+                `;
+                nameStep.style.display = 'block';
+                console.log('Thank you message displayed in name step');
+            } else {
+                console.error('nameStep element not found');
+            }
         }
 
         // Helper functions for display formatting
