@@ -209,15 +209,6 @@
             margin-bottom: 30px;
         }
 
-        .cal-container {
-            width: 100%;
-            height: auto;
-            min-height: 500px;
-            border-radius: 10px;
-            overflow: hidden;
-            background: white;
-        }
-
         .form-step {
             display: none;
         }
@@ -286,6 +277,50 @@
             display: block;
         }
 
+        .name-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .phone-step label {
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: block;
+            color: #2c3e50;
+            text-align: left;
+        }
+
+        .phone-help {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+            text-align: left;
+        }
+
+        .row {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        #phone, #phone2 {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f8f9fa;
+            width: 100%;
+        }
+
+        #phone:focus, #phone2:focus {
+            outline: none;
+            border-color: #2196f3;
+            background: #fff;
+        }
+
         @media (max-width: 600px) {
             .form-container {
                 padding: 25px;
@@ -293,6 +328,10 @@
             }
 
             .address-row {
+                grid-template-columns: 1fr;
+            }
+
+            .name-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -357,35 +396,11 @@
                 <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'combo')">
                     <input type="checkbox" name="areas" value="combo" onclick="event.stopPropagation()"> Shower/Tub Combo
                 </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'toilet')">
-                    <input type="checkbox" name="areas" value="toilet" onclick="event.stopPropagation()"> Toilet
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'vanity')">
-                    <input type="checkbox" name="areas" value="vanity" onclick="event.stopPropagation()"> Vanity / Sink
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'countertops')">
-                    <input type="checkbox" name="areas" value="countertops" onclick="event.stopPropagation()"> Countertops
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'cabinets')">
-                    <input type="checkbox" name="areas" value="cabinets" onclick="event.stopPropagation()"> Cabinets / Storage
-                </div>
                 <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'flooring')">
                     <input type="checkbox" name="areas" value="flooring" onclick="event.stopPropagation()"> Flooring
                 </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'lighting')">
-                    <input type="checkbox" name="areas" value="lighting" onclick="event.stopPropagation()"> Lighting / Fixtures
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'mirrors')">
-                    <input type="checkbox" name="areas" value="mirrors" onclick="event.stopPropagation()"> Mirrors
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'walls')">
-                    <input type="checkbox" name="areas" value="walls" onclick="event.stopPropagation()"> Walls / Paint / Tile
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'plumbing')">
-                    <input type="checkbox" name="areas" value="plumbing" onclick="event.stopPropagation()"> Plumbing / Layout changes
-                </div>
                 <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'other')">
-                    <input type="checkbox" name="areas" value="other" onclick="event.stopPropagation()"> Other (please specify)
+                    <input type="checkbox" name="areas" value="other" onclick="event.stopPropagation()"> Other
                 </div>
                 <input type="text" id="otherInput" class="other-input" placeholder="Please specify...">
             </div>
@@ -418,7 +433,7 @@
 
         <div class="form-step" id="step6">
             <div class="question">What is the location of this project?</div>
-            <div class="sub-heading">We use your address to confirm if you’re in our service area for eligibility so please ensure it is full and correct</div>
+            <div class="sub-heading">We use your address to confirm if you're in our service area for eligibility so please ensure it is full and correct</div>
             <div class="address-grid">
                 <input type="text" class="address-input" id="street" placeholder="Street Address" oninput="validateAddressForm()">
                 <div class="address-row">
@@ -439,9 +454,40 @@
 
         <div class="result-screen" id="resultScreen">
             <div class="success-message">Great news! You qualify for a free design session.</div>
-            <div class="success-subheading">Request your time now and we'll reach out to confirm</div>
-            <div class="cal-container">
-                <div style="width:100%;height:auto;overflow:hidden" id="my-cal-inline-blissful-baths-home"></div>
+            <div class="success-subheading">Where can we reach you to schedule your time?</div>
+            <div class="phone-step" id="phoneStep">
+                <div class="row">
+                    <div id="phoneWrap">
+                        <label for="phone">Phone</label>
+                        <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required autocomplete="tel" aria-describedby="phoneHelp">
+                        <small id="phoneHelp" class="phone-help">US number, 10 digits.</small>
+                        <input type="hidden" id="phone_digits" name="phone_digits" value="">
+                    </div>
+                    <div id="phoneConfirmWrap" style="display:none">
+                        <label for="phone2">Please re-enter your phone</label>
+                        <input id="phone2" name="phone_confirm" type="tel" inputmode="tel" placeholder="(___) ___-____" autocomplete="tel" aria-describedby="phone2Help">
+                        <small id="phone2Help" class="phone-help">Must match exactly.</small>
+                    </div>
+                </div>
+                <div class="nav-buttons">
+                    <button class="nav-btn" onclick="goToNameStep()" id="phoneNextBtn" disabled>Next</button>
+                </div>
+            </div>
+            <div class="name-step" id="nameStep" style="display: none;">
+                <div class="question">Who will we be meeting with?</div>
+                <div class="name-grid">
+                    <div>
+                        <label for="firstName" style="font-weight: bold; margin-bottom: 10px; display: block; color: #2c3e50; text-align: center;">First Name</label>
+                        <input type="text" class="address-input" id="firstName" placeholder="First Name" required autocomplete="given-name" style="margin-bottom: 25px;">
+                    </div>
+                    <div>
+                        <label for="lastName" style="font-weight: bold; margin-bottom: 10px; display: block; color: #2c3e50; text-align: center;">Last Name</label>
+                        <input type="text" class="address-input" id="lastName" placeholder="Last Name" required autocomplete="family-name" style="margin-bottom: 25px;">
+                    </div>
+                </div>
+                <div class="nav-buttons">
+                    <button class="nav-btn" onclick="submitFinalForm()" id="finalSubmitBtn" disabled>Schedule My Design Session</button>
+                </div>
             </div>
         </div>
     </div>
@@ -457,9 +503,7 @@
             element.classList.add('selected');
             formData[field] = value;
             
-            setTimeout(() => {
-                nextStep();
-            }, 800);
+            nextStep();
         }
 
         function toggleCheckboxSelection(element, value) {
@@ -555,119 +599,187 @@
                 document.getElementById('loadingScreen').style.display = 'none';
                 document.getElementById('resultScreen').style.display = 'block';
                 
-                loadCalEmbed();
+                // Initialize phone validation
+                setupPhoneValidation();
             }, 3500);
         }
 
-        function loadCalEmbed() {
-            try {
-                (function (C, A, L) { 
-                    let p = function (a, ar) { a.q.push(ar); }; 
-                    let d = C.document; 
-                    C.Cal = C.Cal || function () { 
-                        let cal = C.Cal; 
-                        let ar = arguments; 
-                        if (!cal.loaded) { 
-                            cal.ns = {}; 
-                            cal.q = cal.q || []; 
-                            const script = d.createElement("script");
-                            script.src = A;
-                            script.onload = function() {
-                                console.log("Cal.com script loaded successfully");
-                            };
-                            script.onerror = function() {
-                                console.error("Failed to load Cal.com script");
-                            };
-                            d.head.appendChild(script);
-                            cal.loaded = true; 
-                        } 
-                        if (ar[0] === L) { 
-                            const api = function () { p(api, arguments); }; 
-                            const namespace = ar[1]; 
-                            api.q = api.q || []; 
-                            if(typeof namespace === "string"){
-                                cal.ns[namespace] = cal.ns[namespace] || api;
-                                p(cal.ns[namespace], ar);
-                                p(cal, ["initNamespace", namespace]);
-                            } else p(cal, ar); 
-                            return;
-                        } 
-                        p(cal, ar); 
-                    }; 
-                })(window, "https://app.cal.com/embed/embed.js", "init");
-                
-                Cal("init", "blissful-baths-home", {origin:"https://app.cal.com"});
-                Cal.ns["blissful-baths-home"]("inline", {
-                    elementOrSelector:"#my-cal-inline-blissful-baths-home",
-                    config: {
-                        "layout":"month_view",
-                        "hideEventTypeDetails": true
-                    },
-                    calLink: "peakleadsgroup/blissful-baths-home",
-                });
-                Cal.ns["blissful-baths-home"]("ui", {
-                    "hideEventTypeDetails": true,
-                    "layout": "month_view"
-                });
-                
-                setTimeout(() => {
-                    const style = document.createElement('style');
-                    style.textContent = `
-                        #my-cal-inline-blissful-baths-home .event-type-details,
-                        #my-cal-inline-blissful-baths-home .event-meta,
-                        #my-cal-inline-blissful-baths-home [data-testid="event-meta"],
-                        #my-cal-inline-blissful-baths-home .cal-event-type-details,
-                        #my-cal-inline-blissful-baths-home .cal-event-description,
-                        #my-cal-inline-blissful-baths-home .cal-event-duration,
-                        #my-cal-inline-blissful-baths-home .cal-event-location,
-                        #my-cal-inline-blissful-baths-home .event-description,
-                        #my-cal-inline-blissful-baths-home .event-duration,
-                        #my-cal-inline-blissful-baths-home .event-location,
-                        #my-cal-inline-blissful-baths-home [class*="event-type"],
-                        #my-cal-inline-blissful-baths-home [class*="booking-item"] .text-sm,
-                        #my-cal-inline-blissful-baths-home .booking-description,
-                        #my-cal-inline-blissful-baths-home .booking-duration {
-                            display: none !important;
-                        }
-                        #my-cal-inline-blissful-baths-home .cal-booker {
-                            margin-top: -50px;
-                        }
-                        #my-cal-inline-blissful-baths-home,
-                        #my-cal-inline-blissful-baths-home *,
-                        #my-cal-inline-blissful-baths-home iframe {
-                            overflow: hidden !important;
-                            overflow-x: hidden !important;
-                            overflow-y: hidden !important;
-                            max-height: none !important;
-                            scrollbar-width: none !important;
-                            -ms-overflow-style: none !important;
-                        }
-                        #my-cal-inline-blissful-baths-home::-webkit-scrollbar,
-                        #my-cal-inline-blissful-baths-home *::-webkit-scrollbar {
-                            display: none !important;
-                            width: 0 !important;
-                            height: 0 !important;
-                        }
-                        #my-cal-inline-blissful-baths-home iframe {
-                            height: auto !important;
-                            min-height: 600px !important;
-                        }
-                        .cal-container {
-                            overflow: hidden !important;
-                        }
-                    `;
-                    document.head.appendChild(style);
-                }, 1000);
-                
-                console.log("Cal.com embed initialization completed");
-            } catch (error) {
-                console.error("Error loading Cal.com embed:", error);
-                document.getElementById('my-cal-inline-blissful-baths-home').innerHTML = 
-                    '<div style="padding: 40px; text-align: center; color: #666;">Calendar loading... Please refresh if it doesn\'t appear shortly.</div>';
+        // Phone formatting and validation functions
+        function formatPhone(val) {
+            const d = val.replace(/\D/g,'').slice(0,10);
+            let f = d;
+            if(d.length > 6) f = `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+            else if(d.length > 3) f = `(${d.slice(0,3)}) ${d.slice(3)}`;
+            else if(d.length > 0) f = `(${d}`;
+            return {formatted:f, digits:d};
+        }
+
+        function validatePhones() {
+            const phoneInput = document.getElementById('phone');
+            const phone2Input = document.getElementById('phone2');
+            const phoneConfirmWrap = document.getElementById('phoneConfirmWrap');
+            const phoneDigits = document.getElementById('phone_digits');
+            const phoneNextBtn = document.getElementById('phoneNextBtn');
+            
+            if (!phoneInput) return;
+
+            const p1 = formatPhone(phoneInput.value);
+            if (phoneInput.value !== p1.formatted) phoneInput.value = p1.formatted;
+            phoneDigits.value = p1.digits;
+
+            // Set validity for first phone
+            if(p1.digits.length === 10){
+                phoneInput.setCustomValidity('');
+            } else {
+                phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
+            }
+
+            // Show/hide confirm field based on first phone validity
+            const shouldShowConfirm = p1.digits.length === 10;
+            phoneConfirmWrap.style.display = shouldShowConfirm ? '' : 'none';
+            if (phone2Input) phone2Input.required = shouldShowConfirm;
+
+            // Format second phone
+            const p2 = formatPhone(phone2Input ? phone2Input.value : '');
+            if (phone2Input && phone2Input.value !== p2.formatted) phone2Input.value = p2.formatted;
+
+            // Validate match
+            if(shouldShowConfirm && phone2Input){
+                if(p2.digits.length === 0){
+                    phone2Input.setCustomValidity('Please re-enter your phone number.');
+                } else if(p2.digits !== p1.digits){
+                    phone2Input.setCustomValidity('Phone numbers do not match.');
+                } else {
+                    phone2Input.setCustomValidity('');
+                }
+            } else if (phone2Input) {
+                phone2Input.value = '';
+                phone2Input.setCustomValidity('');
+            }
+
+            // Enable/disable next button
+            const phoneValid = p1.digits.length === 10;
+            const phone2Valid = !shouldShowConfirm || (p2.digits.length === 10 && p2.digits === p1.digits);
+            if (phoneNextBtn) {
+                phoneNextBtn.disabled = !(phoneValid && phone2Valid);
             }
         }
 
+        function setupPhoneValidation() {
+            const phoneInput = document.getElementById('phone');
+            const phone2Input = document.getElementById('phone2');
+            
+            if (phoneInput) {
+                phoneInput.addEventListener('input', validatePhones);
+                phoneInput.addEventListener('blur', validatePhones);
+            }
+            
+            if (phone2Input) {
+                phone2Input.addEventListener('input', validatePhones);
+                phone2Input.addEventListener('blur', validatePhones);
+            }
+            
+            // Setup name validation
+            setupNameValidation();
+        }
+
+        function goToNameStep() {
+            document.getElementById('phoneStep').style.display = 'none';
+            document.getElementById('nameStep').style.display = 'block';
+            updateFinalSubmitButton();
+        }
+
+        function updateFinalSubmitButton() {
+            const firstName = document.getElementById('firstName');
+            const lastName = document.getElementById('lastName');
+            const finalSubmitBtn = document.getElementById('finalSubmitBtn');
+            
+            if (!firstName || !lastName || !finalSubmitBtn) return;
+            
+            const firstValid = firstName.value.trim().length > 0;
+            const lastValid = lastName.value.trim().length > 0;
+            
+            finalSubmitBtn.disabled = !(firstValid && lastValid);
+        }
+
+        function setupNameValidation() {
+            const firstName = document.getElementById('firstName');
+            const lastName = document.getElementById('lastName');
+            
+            if (firstName) {
+                firstName.addEventListener('input', updateFinalSubmitButton);
+                firstName.addEventListener('change', updateFinalSubmitButton);
+            }
+            
+            if (lastName) {
+                lastName.addEventListener('input', updateFinalSubmitButton);
+                lastName.addEventListener('change', updateFinalSubmitButton);
+            }
+        }
+
+        function submitFinalForm() {
+            // Collect all form data
+            const finalData = {
+                ...formData,
+                phone: document.getElementById('phone_digits').value,
+                firstName: document.getElementById('firstName').value.trim(),
+                lastName: document.getElementById('lastName').value.trim()
+            };
+            
+            console.log('Final form data:', finalData);
+            
+            // Here you would typically send the form data to your server
+            // For now, we'll just show a success message
+            alert('Thank you! We will contact you soon to schedule your free design session.');
+        }
+
+        // Initialize
         updateProgress();
+
+        // Google Places Autocomplete setup
+        window.__attachPlaces = function(){
+            if(!window.google || !google.maps || !google.maps.places) return;
+            
+            const addressInput = document.getElementById('street');
+            if (!addressInput) return;
+            
+            const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+                types: ['address'],
+                componentRestrictions: { country: ['us'] },
+                fields: ['address_components','formatted_address','geometry']
+            });
+            
+            autocomplete.addListener('place_changed', ()=>{
+                const place = autocomplete.getPlace();
+                if(!place || !place.address_components) return;
+
+                const comps = Object.fromEntries(place.address_components.flatMap(c => c.types.map(t => [t, c])));
+                
+                // Build street address from components (street number + street name only)
+                let streetAddress = '';
+                if(comps.street_number) streetAddress += comps.street_number.long_name + ' ';
+                if(comps.route) streetAddress += comps.route.long_name;
+                if(streetAddress.trim()) addressInput.value = streetAddress.trim();
+                
+                // Fill other fields
+                const cityInput = document.getElementById('city');
+                const stateInput = document.getElementById('state');
+                const zipInput = document.getElementById('zip');
+                
+                if(comps.locality && cityInput) cityInput.value = comps.locality.long_name;
+                else if(comps.sublocality && cityInput) cityInput.value = comps.sublocality.long_name;
+                if(comps.administrative_area_level_1 && stateInput) stateInput.value = comps.administrative_area_level_1.short_name;
+                if(comps.postal_code && zipInput) zipInput.value = comps.postal_code.long_name;
+
+                // Trigger validation after autocomplete
+                validateAddressForm();
+            });
+        };
+    </script>
+
+    <!-- Load Google Places (async/defer) -->
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&libraries=places&callback=__attachPlaces">
     </script>
 </body>
 </html>
