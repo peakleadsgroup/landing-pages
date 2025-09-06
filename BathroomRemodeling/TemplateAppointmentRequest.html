@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bathroom Remodel Qualification</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
+                        url('https://github.com/peakleadsgroup/landing-pages/blob/main/Images/B2BBathroomRemodelBack%20(1).jpg?raw=true') center/cover no-repeat fixed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo-container {
+            margin-bottom: 30px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-img {
+            max-width: 200px;
+            max-height: 80px;
+            object-fit: contain;
+        }
+
+        .main-heading {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .question {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .sub-heading {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 25px;
+            font-style: italic;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .option {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .option:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .option.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            color: #1976d2;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-option:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .checkbox-option.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .checkbox-option input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .address-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .address-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 100px;
+            gap: 15px;
+        }
+
+        .address-input {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f8f9fa;
+            width: 100%;
+        }
+
+        .address-input:focus {
+            outline: none;
+            border-color: #2196f3;
+            background: #fff;
+        }
+
+        .loading-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 18px;
+            color: #2c3e50;
+        }
+
+        .result-screen {
+            display: none;
+            text-align: center;
+        }
+
+        .success-message {
+            font-size: 22px;
+            color: #4CAF50;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .success-subheading {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .cal-container {
+            width: 100%;
+            height: auto;
+            min-height: 500px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4CAF50;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .nav-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .other-input {
+            margin-top: 10px;
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #f8f9fa;
+            display: none;
+        }
+
+        .other-input.show {
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .form-container {
+                padding: 25px;
+                margin: 10px;
+            }
+
+            .address-row {
+                grid-template-columns: 1fr;
+            }
+
+            .main-heading {
+                font-size: 20px;
+            }
+
+            .question {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="logo-container">
+            <img src="https://blissful-baths-and-home-v1756573394.websitepro-cdn.com/wp-content/uploads/2023/10/Updated-Logo-2.jpg" 
+                 alt="Blissful Baths & Home" 
+                 class="logo-img"
+                 onload="console.log('Logo loaded successfully')"
+                 onerror="console.log('Logo failed to load')">
+        </div>
+
+        <div id="mainHeading">
+            <h1 class="main-heading">
+                See if you qualify for a <span class="highlight">free design session</span>
+            </h1>
+        </div>
+
+        <div class="progress-bar" id="progressBarContainer">
+            <div class="progress-fill" id="progressFill" style="width: 16.67%"></div>
+        </div>
+
+        <div class="form-step active" id="step1">
+            <div class="question">Are you a homeowner?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'yes')">Yes</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'no')">No</div>
+            </div>
+        </div>
+
+        <div class="form-step" id="step2">
+            <div class="question">What bathroom do you want to remodel?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'bathroom', 'master')">Master Bathroom</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'bathroom', 'guest')">Guest Bathroom</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'bathroom', 'half')">Half Bath / Powder Room</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'bathroom', 'jack')">Jack & Jill Bathroom</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'bathroom', 'basement')">Basement Bathroom</div>
+            </div>
+        </div>
+
+        <div class="form-step" id="step3">
+            <div class="question">Select all the areas you're thinking about remodeling:</div>
+            <div class="checkbox-group">
+                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'shower')">
+                    <input type="checkbox" name="areas" value="shower" onclick="event.stopPropagation()"> Shower
+                </div>
+                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'bathtub')">
+                    <input type="checkbox" name="areas" value="bathtub" onclick="event.stopPropagation()"> Bathtub
+                </div>
+                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'combo')">
+                    <input type="checkbox" name="areas" value="combo" onclick="event.stopPropagation()"> Shower/Tub Combo
+                </div>
+                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'toilet')">
+                    <input type="checkbox" name="areas" value="toilet" onclick="event.stopPropagation()"> Toilet
+                </div>
+                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'vanity')">
+                    <input type="checkbox" name="areas" value="vanity" onclick="event.stopPropagation()"> Vanity / Sink
+                </div>
+                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'countertops')">
+                    <input type="checkbox" name="areas" value="countertops" onclick="event.stopPropagation()"> Countertops
+                </div>
+                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'cabinets')">
+                    <input type="checkbox" name="areas" value="cabinets" onclick="event.stopPropagation()"> Cabinets / Storage
+                </div>
+                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'flooring')">
+                    <input type="checkbox" name="areas" value="flooring" onclick="event.stopPropagation()"> Flooring
+                </div>
+                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'lighting')">
+                    <input type="checkbox" name="areas" value="lighting" onclick="event.stopPropagation()"> Lighting / Fixtures
+                </div>
+                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'mirrors')">
+                    <input type="checkbox" name="areas" value="mirrors" onclick="event.stopPropagation()"> Mirrors
+                </div>
+                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'walls')">
+                    <input type="checkbox" name="areas" value="walls" onclick="event.stopPropagation()"> Walls / Paint / Tile
+                </div>
+                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'plumbing')">
+                    <input type="checkbox" name="areas" value="plumbing" onclick="event.stopPropagation()"> Plumbing / Layout changes
+                </div>
+                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'other')">
+                    <input type="checkbox" name="areas" value="other" onclick="event.stopPropagation()"> Other (please specify)
+                </div>
+                <input type="text" id="otherInput" class="other-input" placeholder="Please specify...">
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="goToStep4()" id="step3NextBtn" disabled>Next</button>
+            </div>
+        </div>
+
+        <div class="form-step" id="step4">
+            <div class="question">What style do you prefer?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'style', 'modern')">Modern</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'style', 'traditional')">Traditional</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'style', 'luxury')">Luxury</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'style', 'spa')">Spa-like</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'style', 'unsure')">Not sure yet</div>
+            </div>
+        </div>
+
+        <div class="form-step" id="step5">
+            <div class="question">When are you hoping to start the project?</div>
+            <div class="sub-heading">We only schedule projects that can start soon so you can enjoy your upgraded space</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'asap')">ASAP</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', '1-3')">1–3 months</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', '3-6')">3–6 months</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'year')">Within a year</div>
+            </div>
+        </div>
+
+        <div class="form-step" id="step6">
+            <div class="question">What is the location of this project?</div>
+            <div class="sub-heading">We use your address to confirm if you’re in our service area for eligibility so please ensure it is full and correct</div>
+            <div class="address-grid">
+                <input type="text" class="address-input" id="street" placeholder="Street Address" oninput="validateAddressForm()">
+                <div class="address-row">
+                    <input type="text" class="address-input" id="city" placeholder="City" oninput="validateAddressForm()">
+                    <input type="text" class="address-input" id="state" placeholder="State" oninput="validateAddressForm()">
+                    <input type="text" class="address-input" id="zip" placeholder="Zip Code" oninput="validateAddressForm()" maxlength="5">
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="submitFormData()" id="submitFormBtn" disabled>Check Eligibility</button>
+            </div>
+        </div>
+
+        <div class="loading-screen" id="loadingScreen">
+            <div class="spinner"></div>
+            <div class="loading-text">Checking if you're eligible for a free design session...</div>
+        </div>
+
+        <div class="result-screen" id="resultScreen">
+            <div class="success-message">Great news! You qualify for a free design session.</div>
+            <div class="success-subheading">Request your time now and we'll reach out to confirm</div>
+            <div class="cal-container">
+                <div style="width:100%;height:auto;overflow:hidden" id="my-cal-inline-blissful-baths-home"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let formData = {};
+
+        function selectOptionAndAdvance(element, field, value) {
+            const options = element.parentElement.querySelectorAll('.option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            element.classList.add('selected');
+            formData[field] = value;
+            
+            setTimeout(() => {
+                nextStep();
+            }, 800);
+        }
+
+        function toggleCheckboxSelection(element, value) {
+            const checkbox = element.querySelector('input[type="checkbox"]');
+            
+            checkbox.checked = !checkbox.checked;
+            
+            if (checkbox.checked) {
+                element.classList.add('selected');
+            } else {
+                element.classList.remove('selected');
+            }
+            
+            if (value === 'other') {
+                const otherInput = document.getElementById('otherInput');
+                if (checkbox.checked) {
+                    otherInput.classList.add('show');
+                    otherInput.focus();
+                } else {
+                    otherInput.classList.remove('show');
+                    otherInput.value = '';
+                }
+            }
+            
+            updateStep3Button();
+        }
+
+        function updateStep3Button() {
+            const checkboxes = document.querySelectorAll('input[name="areas"]:checked');
+            const nextBtn = document.getElementById('step3NextBtn');
+            
+            if (nextBtn) {
+                nextBtn.disabled = checkboxes.length === 0;
+            }
+            
+            formData.areas = Array.from(checkboxes).map(cb => cb.value);
+        }
+
+        function goToStep4() {
+            updateStep3Button();
+            if (formData.areas && formData.areas.length > 0) {
+                nextStep();
+            }
+        }
+
+        function validateAddressForm() {
+            const street = document.getElementById('street').value.trim();
+            const city = document.getElementById('city').value.trim();
+            const state = document.getElementById('state').value.trim();
+            const zip = document.getElementById('zip').value.trim();
+            
+            const submitBtn = document.getElementById('submitFormBtn');
+            if (submitBtn) {
+                submitBtn.disabled = !(street && city && state && zip);
+            }
+            
+            if (street && city && state && zip) {
+                formData.address = { street, city, state, zip };
+            }
+        }
+
+        function submitFormData() {
+            validateAddressForm();
+            if (formData.address) {
+                submitForm();
+            }
+        }
+
+        function updateProgress() {
+            const progressFill = document.getElementById('progressFill');
+            const percentage = (currentStep / 6) * 100;
+            progressFill.style.width = percentage + '%';
+        }
+
+        function nextStep() {
+            if (currentStep < 6) {
+                document.getElementById('step' + currentStep).classList.remove('active');
+                currentStep++;
+                document.getElementById('step' + currentStep).classList.add('active');
+                updateProgress();
+            }
+        }
+
+        function submitForm() {
+            document.getElementById('mainHeading').style.display = 'none';
+            document.getElementById('step' + currentStep).style.display = 'none';
+            
+            document.getElementById('loadingScreen').style.display = 'flex';
+            
+            document.getElementById('progressBarContainer').style.display = 'none';
+            
+            setTimeout(() => {
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('resultScreen').style.display = 'block';
+                
+                loadCalEmbed();
+            }, 3500);
+        }
+
+        function loadCalEmbed() {
+            try {
+                (function (C, A, L) { 
+                    let p = function (a, ar) { a.q.push(ar); }; 
+                    let d = C.document; 
+                    C.Cal = C.Cal || function () { 
+                        let cal = C.Cal; 
+                        let ar = arguments; 
+                        if (!cal.loaded) { 
+                            cal.ns = {}; 
+                            cal.q = cal.q || []; 
+                            const script = d.createElement("script");
+                            script.src = A;
+                            script.onload = function() {
+                                console.log("Cal.com script loaded successfully");
+                            };
+                            script.onerror = function() {
+                                console.error("Failed to load Cal.com script");
+                            };
+                            d.head.appendChild(script);
+                            cal.loaded = true; 
+                        } 
+                        if (ar[0] === L) { 
+                            const api = function () { p(api, arguments); }; 
+                            const namespace = ar[1]; 
+                            api.q = api.q || []; 
+                            if(typeof namespace === "string"){
+                                cal.ns[namespace] = cal.ns[namespace] || api;
+                                p(cal.ns[namespace], ar);
+                                p(cal, ["initNamespace", namespace]);
+                            } else p(cal, ar); 
+                            return;
+                        } 
+                        p(cal, ar); 
+                    }; 
+                })(window, "https://app.cal.com/embed/embed.js", "init");
+                
+                Cal("init", "blissful-baths-home", {origin:"https://app.cal.com"});
+                Cal.ns["blissful-baths-home"]("inline", {
+                    elementOrSelector:"#my-cal-inline-blissful-baths-home",
+                    config: {
+                        "layout":"month_view",
+                        "hideEventTypeDetails": true
+                    },
+                    calLink: "peakleadsgroup/blissful-baths-home",
+                });
+                Cal.ns["blissful-baths-home"]("ui", {
+                    "hideEventTypeDetails": true,
+                    "layout": "month_view"
+                });
+                
+                setTimeout(() => {
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        #my-cal-inline-blissful-baths-home .event-type-details,
+                        #my-cal-inline-blissful-baths-home .event-meta,
+                        #my-cal-inline-blissful-baths-home [data-testid="event-meta"],
+                        #my-cal-inline-blissful-baths-home .cal-event-type-details,
+                        #my-cal-inline-blissful-baths-home .cal-event-description,
+                        #my-cal-inline-blissful-baths-home .cal-event-duration,
+                        #my-cal-inline-blissful-baths-home .cal-event-location,
+                        #my-cal-inline-blissful-baths-home .event-description,
+                        #my-cal-inline-blissful-baths-home .event-duration,
+                        #my-cal-inline-blissful-baths-home .event-location,
+                        #my-cal-inline-blissful-baths-home [class*="event-type"],
+                        #my-cal-inline-blissful-baths-home [class*="booking-item"] .text-sm,
+                        #my-cal-inline-blissful-baths-home .booking-description,
+                        #my-cal-inline-blissful-baths-home .booking-duration {
+                            display: none !important;
+                        }
+                        #my-cal-inline-blissful-baths-home .cal-booker {
+                            margin-top: -50px;
+                        }
+                        #my-cal-inline-blissful-baths-home,
+                        #my-cal-inline-blissful-baths-home *,
+                        #my-cal-inline-blissful-baths-home iframe {
+                            overflow: hidden !important;
+                            overflow-x: hidden !important;
+                            overflow-y: hidden !important;
+                            max-height: none !important;
+                            scrollbar-width: none !important;
+                            -ms-overflow-style: none !important;
+                        }
+                        #my-cal-inline-blissful-baths-home::-webkit-scrollbar,
+                        #my-cal-inline-blissful-baths-home *::-webkit-scrollbar {
+                            display: none !important;
+                            width: 0 !important;
+                            height: 0 !important;
+                        }
+                        #my-cal-inline-blissful-baths-home iframe {
+                            height: auto !important;
+                            min-height: 600px !important;
+                        }
+                        .cal-container {
+                            overflow: hidden !important;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }, 1000);
+                
+                console.log("Cal.com embed initialization completed");
+            } catch (error) {
+                console.error("Error loading Cal.com embed:", error);
+                document.getElementById('my-cal-inline-blissful-baths-home').innerHTML = 
+                    '<div style="padding: 40px; text-align: center; color: #666;">Calendar loading... Please refresh if it doesn\'t appear shortly.</div>';
+            }
+        }
+
+        updateProgress();
+    </script>
+</body>
+</html>
