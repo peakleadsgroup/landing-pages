@@ -539,7 +539,17 @@
                 nextBtn.disabled = checkboxes.length === 0;
             }
             
-            formData.areas = Array.from(checkboxes).map(cb => cb.value);
+            // Collect areas and include custom "other" text
+            const areas = Array.from(checkboxes).map(cb => {
+                if (cb.value === 'other') {
+                    const otherInput = document.getElementById('otherInput');
+                    const otherText = otherInput ? otherInput.value.trim() : '';
+                    return otherText ? `Other: ${otherText}` : 'Other';
+                }
+                return cb.value;
+            });
+            
+            formData.areas = areas;
         }
 
         function goToStep4() {
@@ -599,12 +609,10 @@
                 document.getElementById('loadingScreen').style.display = 'none';
                 document.getElementById('resultScreen').style.display = 'block';
                 
-                // Initialize phone validation
                 setupPhoneValidation();
-            }, 3500);
+            }, 1750);
         }
 
-        // Phone formatting and validation functions
         function formatPhone(val) {
             const d = val.replace(/\D/g,'').slice(0,10);
             let f = d;
@@ -627,23 +635,19 @@
             if (phoneInput.value !== p1.formatted) phoneInput.value = p1.formatted;
             phoneDigits.value = p1.digits;
 
-            // Set validity for first phone
             if(p1.digits.length === 10){
                 phoneInput.setCustomValidity('');
             } else {
                 phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
             }
 
-            // Show/hide confirm field based on first phone validity
             const shouldShowConfirm = p1.digits.length === 10;
             phoneConfirmWrap.style.display = shouldShowConfirm ? '' : 'none';
             if (phone2Input) phone2Input.required = shouldShowConfirm;
 
-            // Format second phone
             const p2 = formatPhone(phone2Input ? phone2Input.value : '');
             if (phone2Input && phone2Input.value !== p2.formatted) phone2Input.value = p2.formatted;
 
-            // Validate match
             if(shouldShowConfirm && phone2Input){
                 if(p2.digits.length === 0){
                     phone2Input.setCustomValidity('Please re-enter your phone number.');
@@ -657,7 +661,6 @@
                 phone2Input.setCustomValidity('');
             }
 
-            // Enable/disable next button
             const phoneValid = p1.digits.length === 10;
             const phone2Valid = !shouldShowConfirm || (p2.digits.length === 10 && p2.digits === p1.digits);
             if (phoneNextBtn) {
@@ -679,7 +682,6 @@
                 phone2Input.addEventListener('blur', validatePhones);
             }
             
-            // Setup name validation
             setupNameValidation();
         }
 
@@ -718,7 +720,6 @@
         }
 
         function submitFinalForm() {
-            // Collect all form data
             const finalData = {
                 ...formData,
                 phone: document.getElementById('phone_digits').value,
@@ -726,9 +727,7 @@
                 lastName: document.getElementById('lastName').value.trim()
             };
             
-            // Create formatted summary for email
-            const fullSummary = `
-Bathroom Remodel Lead Information:
+            const fullSummary = `Bathroom Remodel Lead Information:
 
 Name: ${finalData.firstName} ${finalData.lastName}
 Phone: ${formatPhoneForDisplay(finalData.phone)}
@@ -752,12 +751,9 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
     minute: '2-digit',
     hour12: true,
     timeZone: 'America/New_York'
-})} EST
-            `.trim();
+})} EST`.trim();
 
-            // Prepare webhook data
             const webhookData = {
-                // Individual fields
                 homeowner: finalData.homeowner,
                 bathroom_type: finalData.bathroom,
                 areas: finalData.areas,
@@ -771,19 +767,13 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 first_name: finalData.firstName,
                 last_name: finalData.lastName,
                 full_name: `${finalData.firstName} ${finalData.lastName}`,
-                // Full formatted summary
                 full_summary: fullSummary,
-                // Timestamp and meta data
                 timestamp: new Date().toISOString(),
                 form_type: 'bathroom_remodel_qualification',
                 clientATID: 'recsipJqxO8s7t6cI',
-                adATID: adATID,
-                adATID: adATID
+                adATID: new URLSearchParams(window.location.search).get('adATID')
             };
             
-            console.log('Sending webhook data:', webhookData);
-            
-            // Send to webhook
             fetch('https://hook.us2.make.com/9c9klf6673x5nmo1kob6mh96me02ptsj', {
                 method: 'POST',
                 headers: {
@@ -792,30 +782,21 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 body: JSON.stringify(webhookData),
                 mode: 'no-cors'
             }).then(() => {
-                console.log('Webhook sent successfully');
-                // Show final thank you screen
                 showFinalScreen();
             }).catch((error) => {
-                console.error('Webhook error:', error);
-                // Show final screen even if webhook fails
                 showFinalScreen();
             });
         }
 
         function showFinalScreen() {
-            console.log('showFinalScreen called - using simple approach');
-            
-            // Hide the success message and subheading at the top
             const successMsg = document.querySelector('.success-message');
             const successSub = document.querySelector('.success-subheading');
             if (successMsg) successMsg.style.display = 'none';
             if (successSub) successSub.style.display = 'none';
             
-            // Hide phone step
             const phoneStep = document.getElementById('phoneStep');
             if (phoneStep) phoneStep.style.display = 'none';
             
-            // Replace the name step content with the thank you message
             const nameStep = document.getElementById('nameStep');
             if (nameStep) {
                 nameStep.innerHTML = `
@@ -828,13 +809,9 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                     </div>
                 `;
                 nameStep.style.display = 'block';
-                console.log('Thank you message displayed in name step');
-            } else {
-                console.error('nameStep element not found');
             }
         }
 
-        // Helper functions for display formatting
         function formatPhoneForDisplay(digits) {
             if (digits && digits.length === 10) {
                 return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
@@ -888,10 +865,8 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             return timelines[value] || value;
         }
 
-        // Initialize
         updateProgress();
 
-        // Google Places Autocomplete setup
         window.__attachPlaces = function(){
             if(!window.google || !google.maps || !google.maps.places) return;
             
@@ -910,13 +885,11 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
 
                 const comps = Object.fromEntries(place.address_components.flatMap(c => c.types.map(t => [t, c])));
                 
-                // Build street address from components (street number + street name only)
                 let streetAddress = '';
                 if(comps.street_number) streetAddress += comps.street_number.long_name + ' ';
                 if(comps.route) streetAddress += comps.route.long_name;
                 if(streetAddress.trim()) addressInput.value = streetAddress.trim();
                 
-                // Fill other fields
                 const cityInput = document.getElementById('city');
                 const stateInput = document.getElementById('state');
                 const zipInput = document.getElementById('zip');
@@ -926,7 +899,6 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 if(comps.administrative_area_level_1 && stateInput) stateInput.value = comps.administrative_area_level_1.short_name;
                 if(comps.postal_code && zipInput) zipInput.value = comps.postal_code.long_name;
 
-                // Trigger validation after autocomplete
                 validateAddressForm();
             });
         };
