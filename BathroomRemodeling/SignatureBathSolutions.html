@@ -833,12 +833,14 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 // Build the Cal.com link with parameters
                 const fullName = `${finalData.firstName} ${finalData.lastName}`;
                 const email = "peakleadsgroup@gmail.com";
-                const phone = finalData.phone;
+                const phone = `+1${finalData.phone}`;
+                const location = `${finalData.address.street}, ${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}`;
                 
                 const calParams = new URLSearchParams({
                     name: fullName,
                     email: email,
-                    smsReminderNumber: phone
+                    smsReminderNumber: phone,
+                    location: location
                 });
                 
                 Cal("init", "signature-bath", {origin:"https://app.cal.com"});
