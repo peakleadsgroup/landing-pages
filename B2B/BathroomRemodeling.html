@@ -438,14 +438,12 @@
       formData[name] = value;
       el.querySelector('input[type="radio"]').checked = true;
 
-      setTimeout(() => {
-        if (currentStep < 4) {
-          currentStep++;
-          goToStep(currentStep + 1);
-        } else if (currentStep === 4) {
-          showLoading();
-        }
-      }, 500);
+      if (currentStep < 4) {
+        currentStep++;
+        goToStep(currentStep + 1);
+      } else if (currentStep === 4) {
+        showLoading();
+      }
     }
 
     function goToStep(step) {
@@ -492,14 +490,12 @@
       bottomFormData[name] = value;
       el.querySelector('input[type="radio"]').checked = true;
 
-      setTimeout(() => {
-        if (bottomCurrentStep < 4) {
-          bottomCurrentStep++;
-          goToBottomStep(bottomCurrentStep + 1);
-        } else if (bottomCurrentStep === 4) {
-          showBottomLoading();
-        }
-      }, 500);
+      if (bottomCurrentStep < 4) {
+        bottomCurrentStep++;
+        goToBottomStep(bottomCurrentStep + 1);
+      } else if (bottomCurrentStep === 4) {
+        showBottomLoading();
+      }
     }
 
     function goToBottomStep(step) {
@@ -592,13 +588,14 @@
         // Redirect rules
         const name = encodeURIComponent(data.contact_name || "");
         const email = encodeURIComponent(data.email || "");
+        const bennettUrl = `https://cal.com/bennett-hair-mpzude/discovery-session?name=${name}&email=${email}`;
         const rrUrl = `https://cal.com/team/peak-leads-group/discovery-call?name=${name}&email=${email}`;
         const danUrl = `https://cal.com/daniel-wellish-plg/30min?name=${name}&email=${email}`;
 
         switch (data.monthly_revenue) {
           case 'less-than-50k':
-            // No calendar — thank you only
-            showThankYouFor(form);
+            // Bennett's calendar
+            window.location.href = bennettUrl;
             break;
 
           case '50k-100k':
