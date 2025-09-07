@@ -53,6 +53,22 @@
             line-height: 1.4;
         }
 
+        .success-heading {
+            font-size: 28px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .success-subtext {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-weight: bold;
+            text-align: center;
+        }
+
         .highlight {
             background: #ffeb3b;
             padding: 2px 6px;
@@ -209,6 +225,15 @@
             margin-bottom: 30px;
         }
 
+        .cal-container {
+            width: 100%;
+            height: auto;
+            min-height: 500px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: white;
+        }
+
         .form-step {
             display: none;
         }
@@ -260,21 +285,6 @@
             background: #ccc;
             cursor: not-allowed;
             transform: none;
-        }
-
-        .other-input {
-            margin-top: 10px;
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 14px;
-            background: #f8f9fa;
-            display: none;
-        }
-
-        .other-input.show {
-            display: block;
         }
 
         .name-grid {
@@ -349,7 +359,7 @@
     <div class="form-container">
         <div class="logo-container">
             <img src="https://github.com/peakleadsgroup/landing-pages/blob/main/Images/Signature-Bath-Solutions_Logo.webp?raw=true" 
-                 alt="Blissful Baths & Home" 
+                 alt="Signature Bath Solutions" 
                  class="logo-img"
                  onload="console.log('Logo loaded successfully')"
                  onerror="console.log('Logo failed to load')">
@@ -362,7 +372,7 @@
         </div>
 
         <div class="progress-bar" id="progressBarContainer">
-            <div class="progress-fill" id="progressFill" style="width: 16.67%"></div>
+            <div class="progress-fill" id="progressFill" style="width: 14.29%"></div>
         </div>
 
         <div class="form-step active" id="step1">
@@ -388,21 +398,14 @@
             <div class="question">Select all the areas you're thinking about remodeling:</div>
             <div class="checkbox-group">
                 <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'shower')">
-                    <input type="checkbox" name="areas" value="shower" onclick="event.stopPropagation()"> Shower
+                    <input type="checkbox" name="areas" value="shower"> Shower
                 </div>
                 <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'bathtub')">
-                    <input type="checkbox" name="areas" value="bathtub" onclick="event.stopPropagation()"> Bathtub
+                    <input type="checkbox" name="areas" value="bathtub"> Bathtub
                 </div>
                 <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'combo')">
-                    <input type="checkbox" name="areas" value="combo" onclick="event.stopPropagation()"> Shower/Tub Combo
+                    <input type="checkbox" name="areas" value="combo"> Shower/Tub Combo
                 </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'flooring')">
-                    <input type="checkbox" name="areas" value="flooring" onclick="event.stopPropagation()"> Flooring
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'other')">
-                    <input type="checkbox" name="areas" value="other" onclick="event.stopPropagation()"> Other
-                </div>
-                <input type="text" id="otherInput" class="other-input" placeholder="Please specify...">
             </div>
             <div class="nav-buttons">
                 <button class="nav-btn" onclick="goToStep4()" id="step3NextBtn" disabled>Next</button>
@@ -412,6 +415,7 @@
         <div class="form-step" id="step4">
             <div class="question">What style do you prefer?</div>
             <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'style', 'accessible')">Accessible</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'style', 'modern')">Modern</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'style', 'traditional')">Traditional</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'style', 'luxury')">Luxury</div>
@@ -452,10 +456,11 @@
             <div class="loading-text">Checking if you're eligible for a free design session...</div>
         </div>
 
-        <div class="result-screen" id="resultScreen">
-            <div class="success-message">Great news! You qualify for a free design session.</div>
-            <div class="success-subheading">Where can we reach you to schedule your time?</div>
-            <div class="phone-step" id="phoneStep">
+        <div id="qualifiedScreen" style="display: none;">
+            <div class="success-heading">Great news! You qualify for a free design session.</div>
+            <div class="success-subtext">Where can we reach you?</div>
+            
+            <div id="phoneSection">
                 <div class="row">
                     <div id="phoneWrap">
                         <label for="phone">Phone</label>
@@ -470,10 +475,11 @@
                     </div>
                 </div>
                 <div class="nav-buttons">
-                    <button class="nav-btn" onclick="goToNameStep()" id="phoneNextBtn" disabled>Next</button>
+                    <button class="nav-btn" onclick="showNameSection()" id="phoneNextBtn" disabled>Next</button>
                 </div>
             </div>
-            <div class="name-step" id="nameStep" style="display: none;">
+
+            <div id="nameSection" style="display: none;">
                 <div class="question">Who will we be meeting with?</div>
                 <div class="name-grid">
                     <div>
@@ -488,6 +494,14 @@
                 <div class="nav-buttons">
                     <button class="nav-btn" onclick="submitFinalForm()" id="finalSubmitBtn" disabled>Schedule My Design Session</button>
                 </div>
+            </div>
+        </div>
+
+        <div class="result-screen" id="resultScreen">
+            <div class="success-message">Great news! You qualify for a free design session.</div>
+            <div class="success-subheading">Request your time now and we'll reach out to confirm</div>
+            <div class="cal-container">
+                <div style="width:100%;height:auto;overflow:hidden" id="my-cal-inline-signature-bath"></div>
             </div>
         </div>
     </div>
@@ -517,17 +531,6 @@
                 element.classList.remove('selected');
             }
             
-            if (value === 'other') {
-                const otherInput = document.getElementById('otherInput');
-                if (checkbox.checked) {
-                    otherInput.classList.add('show');
-                    otherInput.focus();
-                } else {
-                    otherInput.classList.remove('show');
-                    otherInput.value = '';
-                }
-            }
-            
             updateStep3Button();
         }
 
@@ -539,16 +542,7 @@
                 nextBtn.disabled = checkboxes.length === 0;
             }
             
-            // Collect areas and include custom "other" text
-            const areas = Array.from(checkboxes).map(cb => {
-                if (cb.value === 'other') {
-                    const otherInput = document.getElementById('otherInput');
-                    const otherText = otherInput ? otherInput.value.trim() : '';
-                    return otherText ? `Other: ${otherText}` : 'Other';
-                }
-                return cb.value;
-            });
-            
+            const areas = Array.from(checkboxes).map(cb => cb.value);
             formData.areas = areas;
         }
 
@@ -598,16 +592,18 @@
         }
 
         function submitForm() {
+            // Hide main heading and current step
             document.getElementById('mainHeading').style.display = 'none';
             document.getElementById('step' + currentStep).style.display = 'none';
-            
-            document.getElementById('loadingScreen').style.display = 'flex';
-            
             document.getElementById('progressBarContainer').style.display = 'none';
             
+            // Show loading screen
+            document.getElementById('loadingScreen').style.display = 'flex';
+            
             setTimeout(() => {
+                // Hide loading screen and show qualified screen
                 document.getElementById('loadingScreen').style.display = 'none';
-                document.getElementById('resultScreen').style.display = 'block';
+                document.getElementById('qualifiedScreen').style.display = 'block';
                 
                 setupPhoneValidation();
             }, 1750);
@@ -685,9 +681,10 @@
             setupNameValidation();
         }
 
-        function goToNameStep() {
-            document.getElementById('phoneStep').style.display = 'none';
-            document.getElementById('nameStep').style.display = 'block';
+        function showNameSection() {
+            document.getElementById('phoneSection').style.display = 'none';
+            document.querySelector('.success-subtext').style.display = 'none';
+            document.getElementById('nameSection').style.display = 'block';
             updateFinalSubmitButton();
         }
 
@@ -774,7 +771,8 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 adATID: new URLSearchParams(window.location.search).get('adATID')
             };
             
-            fetch('https://hook.us2.make.com/9c9klf6673x5nmo1kob6mh96me02ptsj', {
+            // Send webhook first
+            fetch('https://hook.us2.make.com/qwgitlu2eizeqeecf7lif1utk7gf2knl', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -782,33 +780,135 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 body: JSON.stringify(webhookData),
                 mode: 'no-cors'
             }).then(() => {
-                showFinalScreen();
+                showCalendarScreen(finalData);
             }).catch((error) => {
-                showFinalScreen();
+                showCalendarScreen(finalData);
             });
         }
 
-        function showFinalScreen() {
-            const successMsg = document.querySelector('.success-message');
-            const successSub = document.querySelector('.success-subheading');
-            if (successMsg) successMsg.style.display = 'none';
-            if (successSub) successSub.style.display = 'none';
+        function showCalendarScreen(finalData) {
+            document.getElementById('qualifiedScreen').style.display = 'none';
+            document.getElementById('resultScreen').style.display = 'block';
             
-            const phoneStep = document.getElementById('phoneStep');
-            if (phoneStep) phoneStep.style.display = 'none';
-            
-            const nameStep = document.getElementById('nameStep');
-            if (nameStep) {
-                nameStep.innerHTML = `
-                    <div style="text-align: center; padding: 40px 0;">
-                        <div style="width: 80px; height: 80px; border-radius: 50%; background: #4CAF50; margin: 0 auto 30px; display: flex; align-items: center; justify-content: center; animation: checkmarkPop 0.6s ease-out;">
-                            <div style="color: white; font-size: 30px; font-weight: bold;">✓</div>
-                        </div>
-                        <div style="font-size: 24px; color: #4CAF50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
-                        <div style="font-size: 16px; color: #666; line-height: 1.5;">We will give you a call as soon as possible to schedule your design session.</div>
-                    </div>
-                `;
-                nameStep.style.display = 'block';
+            loadCalEmbed(finalData);
+        }
+
+        function loadCalEmbed(finalData) {
+            try {
+                (function (C, A, L) { 
+                    let p = function (a, ar) { a.q.push(ar); }; 
+                    let d = C.document; 
+                    C.Cal = C.Cal || function () { 
+                        let cal = C.Cal; 
+                        let ar = arguments; 
+                        if (!cal.loaded) { 
+                            cal.ns = {}; 
+                            cal.q = cal.q || []; 
+                            const script = d.createElement("script");
+                            script.src = A;
+                            script.onload = function() {
+                                console.log("Cal.com script loaded successfully");
+                            };
+                            script.onerror = function() {
+                                console.error("Failed to load Cal.com script");
+                            };
+                            d.head.appendChild(script);
+                            cal.loaded = true; 
+                        } 
+                        if (ar[0] === L) { 
+                            const api = function () { p(api, arguments); }; 
+                            const namespace = ar[1]; 
+                            api.q = api.q || []; 
+                            if(typeof namespace === "string"){
+                                cal.ns[namespace] = cal.ns[namespace] || api;
+                                p(cal.ns[namespace], ar);
+                                p(cal, ["initNamespace", namespace]);
+                            } else p(cal, ar); 
+                            return;
+                        } 
+                        p(cal, ar); 
+                    }; 
+                })(window, "https://app.cal.com/embed/embed.js", "init");
+                
+                // Build the Cal.com link with parameters
+                const fullName = `${finalData.firstName} ${finalData.lastName}`;
+                const email = "peakleadsgroup@gmail.com";
+                const phone = finalData.phone;
+                
+                const calParams = new URLSearchParams({
+                    name: fullName,
+                    email: email,
+                    smsReminderNumber: phone
+                });
+                
+                Cal("init", "signature-bath", {origin:"https://app.cal.com"});
+                Cal.ns["signature-bath"]("inline", {
+                    elementOrSelector:"#my-cal-inline-signature-bath",
+                    config: {
+                        "layout":"month_view",
+                        "hideEventTypeDetails": true
+                    },
+                    calLink: `peakleadsgroup/signature-bath-solutions?${calParams.toString()}`,
+                });
+                Cal.ns["signature-bath"]("ui", {
+                    "hideEventTypeDetails": true,
+                    "layout": "month_view"
+                });
+                
+                setTimeout(() => {
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        #my-cal-inline-signature-bath .event-type-details,
+                        #my-cal-inline-signature-bath .event-meta,
+                        #my-cal-inline-signature-bath [data-testid="event-meta"],
+                        #my-cal-inline-signature-bath .cal-event-type-details,
+                        #my-cal-inline-signature-bath .cal-event-description,
+                        #my-cal-inline-signature-bath .cal-event-duration,
+                        #my-cal-inline-signature-bath .cal-event-location,
+                        #my-cal-inline-signature-bath .event-description,
+                        #my-cal-inline-signature-bath .event-duration,
+                        #my-cal-inline-signature-bath .event-location,
+                        #my-cal-inline-signature-bath [class*="event-type"],
+                        #my-cal-inline-signature-bath [class*="booking-item"] .text-sm,
+                        #my-cal-inline-signature-bath .booking-description,
+                        #my-cal-inline-signature-bath .booking-duration {
+                            display: none !important;
+                        }
+                        #my-cal-inline-signature-bath .cal-booker {
+                            margin-top: -50px;
+                        }
+                        #my-cal-inline-signature-bath,
+                        #my-cal-inline-signature-bath *,
+                        #my-cal-inline-signature-bath iframe {
+                            overflow: hidden !important;
+                            overflow-x: hidden !important;
+                            overflow-y: hidden !important;
+                            max-height: none !important;
+                            scrollbar-width: none !important;
+                            -ms-overflow-style: none !important;
+                        }
+                        #my-cal-inline-signature-bath::-webkit-scrollbar,
+                        #my-cal-inline-signature-bath *::-webkit-scrollbar {
+                            display: none !important;
+                            width: 0 !important;
+                            height: 0 !important;
+                        }
+                        #my-cal-inline-signature-bath iframe {
+                            height: auto !important;
+                            min-height: 600px !important;
+                        }
+                        .cal-container {
+                            overflow: hidden !important;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }, 1000);
+                
+                console.log("Cal.com embed initialization completed with params:", calParams.toString());
+            } catch (error) {
+                console.error("Error loading Cal.com embed:", error);
+                document.getElementById('my-cal-inline-signature-bath').innerHTML = 
+                    '<div style="padding: 40px; text-align: center; color: #666;">Calendar loading... Please refresh if it doesn\'t appear shortly.</div>';
             }
         }
 
@@ -836,9 +936,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             const areaLabels = {
                 'shower': 'Shower',
                 'bathtub': 'Bathtub',
-                'combo': 'Shower/Tub Combo',
-                'flooring': 'Flooring',
-                'other': 'Other'
+                'combo': 'Shower/Tub Combo'
             };
             
             return areas.map(area => areaLabels[area] || area).join(', ');
@@ -846,6 +944,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
 
         function getStyleDisplay(value) {
             const styles = {
+                'accessible': 'Accessible',
                 'modern': 'Modern',
                 'traditional': 'Traditional',
                 'luxury': 'Luxury',
