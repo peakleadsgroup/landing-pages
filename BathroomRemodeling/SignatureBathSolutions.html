@@ -313,7 +313,7 @@
         .row {
             display: grid;
             gap: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
 
         #phone, #phone2 {
@@ -462,14 +462,14 @@
             
             <div id="phoneSection">
                 <div class="row">
-                    <div id="phoneWrap">
-                        <label for="phone">Phone</label>
+                    <div id="phoneWrap" style="margin-bottom: 30px;">
+                        <label for="phone" style="font-weight: bold; font-size: 16px; margin-bottom: 10px; display: block; color: #2c3e50;">Phone</label>
                         <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required autocomplete="tel" aria-describedby="phoneHelp">
                         <small id="phoneHelp" class="phone-help">US number, 10 digits.</small>
                         <input type="hidden" id="phone_digits" name="phone_digits" value="">
                     </div>
-                    <div id="phoneConfirmWrap" style="display:none">
-                        <label for="phone2">Please re-enter your phone</label>
+                    <div id="phoneConfirmWrap" style="display:none; margin-bottom: 30px;">
+                        <label for="phone2" style="font-weight: bold; font-size: 16px; margin-bottom: 10px; display: block; color: #2c3e50;">Please re-enter your phone</label>
                         <input id="phone2" name="phone_confirm" type="tel" inputmode="tel" placeholder="(___) ___-____" autocomplete="tel" aria-describedby="phone2Help">
                         <small id="phone2Help" class="phone-help">Must match exactly.</small>
                     </div>
@@ -624,6 +624,7 @@
             const phoneConfirmWrap = document.getElementById('phoneConfirmWrap');
             const phoneDigits = document.getElementById('phone_digits');
             const phoneNextBtn = document.getElementById('phoneNextBtn');
+            const phoneError = document.getElementById('phoneError');
             
             if (!phoneInput) return;
 
@@ -631,14 +632,44 @@
             if (phoneInput.value !== p1.formatted) phoneInput.value = p1.formatted;
             phoneDigits.value = p1.digits;
 
-            if(p1.digits.length === 10){
-                phoneInput.setCustomValidity('');
-            } else {
+            // Check if phone starts with 1
+            if (p1.digits.length > 0 && p1.digits.charAt(0) === '1') {
+                console.log('Phone starts with 1, showing error');
+                
+                // Create error element if it doesn't exist
+                let phoneError = document.getElementById('phoneError');
+                if (!phoneError) {
+                    phoneError = document.createElement('div');
+                    phoneError.id = 'phoneError';
+                    phoneError.style.color = 'red';
+                    phoneError.style.fontSize = '12px';
+                    phoneError.style.marginTop = '5px';
+                    phoneError.textContent = "Your phone number shouldn't start with a 1";
+                    
+                    // Insert after the phone help text
+                    const phoneHelp = document.getElementById('phoneHelp');
+                    if (phoneHelp) {
+                        phoneHelp.parentNode.insertBefore(phoneError, phoneHelp.nextSibling);
+                    }
+                }
+                phoneError.style.display = 'block';
+                console.log('Error message shown');
                 phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
+            } else {
+                console.log('Phone does not start with 1, hiding error');
+                const phoneError = document.getElementById('phoneError');
+                if (phoneError) {
+                    phoneError.style.display = 'none';
+                }
+                if (p1.digits.length === 10) {
+                    phoneInput.setCustomValidity('');
+                } else {
+                    phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
+                }
             }
 
-            const shouldShowConfirm = p1.digits.length === 10;
-            phoneConfirmWrap.style.display = shouldShowConfirm ? '' : 'none';
+            const shouldShowConfirm = p1.digits.length === 10 && p1.digits.charAt(0) !== '1';
+            if (phoneConfirmWrap) phoneConfirmWrap.style.display = shouldShowConfirm ? '' : 'none';
             if (phone2Input) phone2Input.required = shouldShowConfirm;
 
             const p2 = formatPhone(phone2Input ? phone2Input.value : '');
@@ -657,7 +688,7 @@
                 phone2Input.setCustomValidity('');
             }
 
-            const phoneValid = p1.digits.length === 10;
+            const phoneValid = p1.digits.length === 10 && p1.digits.charAt(0) !== '1';
             const phone2Valid = !shouldShowConfirm || (p2.digits.length === 10 && p2.digits === p1.digits);
             if (phoneNextBtn) {
                 phoneNextBtn.disabled = !(phoneValid && phone2Valid);
@@ -767,7 +798,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 full_summary: fullSummary,
                 timestamp: new Date().toISOString(),
                 form_type: 'bathroom_remodel_qualification',
-                clientATID: 'recOh883Xa4gDW4Vr',
+                clientATID: 'recsipJqxO8s7t6cI',
                 adATID: new URLSearchParams(window.location.search).get('adATID')
             };
             
@@ -881,29 +912,72 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                         }
                         #my-cal-inline-signature-bath,
                         #my-cal-inline-signature-bath *,
-                        #my-cal-inline-signature-bath iframe {
-                            overflow: hidden !important;
-                            overflow-x: hidden !important;
-                            overflow-y: hidden !important;
+                        #my-cal-inline-signature-bath iframe,
+                        #my-cal-inline-signature-bath div {
+                            overflow: visible !important;
+                            overflow-x: visible !important;
+                            overflow-y: visible !important;
                             max-height: none !important;
+                            height: auto !important;
+                            scrollbar-width: none !important;
+                            -ms-overflow-style: none !important;
+                            scroll-behavior: auto !important;
+                        }
+                        #my-cal-inline-signature-bath::-webkit-scrollbar,
+                        #my-cal-inline-signature-bath *::-webkit-scrollbar,
+                        #my-cal-inline-signature-bath iframe::-webkit-scrollbar,
+                        #my-cal-inline-signature-bath div::-webkit-scrollbar {
+                            display: none !important;
+                            width: 0 !important;
+                            height: 0 !important;
+                            background: transparent !important;
+                        }
+                        #my-cal-inline-signature-bath iframe {
+                            min-height: 1200px !important;
+                            height: 1200px !important;
+                        }
+                        .cal-container {
+                            overflow: visible !important;
+                            height: auto !important;
+                            min-height: 1200px !important;
+                        }
+                        
+                        /* Target Cal.com specific classes */
+                        [data-cal-namespace="signature-bath"],
+                        [data-cal-namespace="signature-bath"] *,
+                        [data-testid="booker-layout"],
+                        [data-testid="booker-layout"] * {
+                            overflow: visible !important;
                             scrollbar-width: none !important;
                             -ms-overflow-style: none !important;
                         }
-                        #my-cal-inline-signature-bath::-webkit-scrollbar,
-                        #my-cal-inline-signature-bath *::-webkit-scrollbar {
+                        
+                        [data-cal-namespace="signature-bath"]::-webkit-scrollbar,
+                        [data-cal-namespace="signature-bath"] *::-webkit-scrollbar,
+                        [data-testid="booker-layout"]::-webkit-scrollbar,
+                        [data-testid="booker-layout"] *::-webkit-scrollbar {
                             display: none !important;
                             width: 0 !important;
                             height: 0 !important;
                         }
-                        #my-cal-inline-signature-bath iframe {
-                            height: auto !important;
-                            min-height: 600px !important;
-                        }
-                        .cal-container {
-                            overflow: hidden !important;
-                        }
                     `;
                     document.head.appendChild(style);
+                    
+                    // Expand the form container when calendar is shown
+                    const formContainer = document.querySelector('.form-container');
+                    if (formContainer) {
+                        formContainer.classList.add('calendar-mode');
+                    }
+                    
+                    // Additional attempt to remove scrollbars after a delay
+                    setTimeout(() => {
+                        const iframes = document.querySelectorAll('#my-cal-inline-signature-bath iframe');
+                        iframes.forEach(iframe => {
+                            iframe.style.overflow = 'visible';
+                            iframe.style.height = '800px';
+                            iframe.style.minHeight = '800px';
+                        });
+                    }, 2000);
                 }, 1000);
                 
                 console.log("Cal.com embed initialization completed with params:", calParams.toString());
