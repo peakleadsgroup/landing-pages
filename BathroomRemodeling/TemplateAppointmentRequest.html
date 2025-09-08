@@ -53,6 +53,22 @@
             line-height: 1.4;
         }
 
+        .success-heading {
+            font-size: 28px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .success-subtext {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-weight: bold;
+            text-align: center;
+        }
+
         .highlight {
             background: #ffeb3b;
             padding: 2px 6px;
@@ -271,19 +287,48 @@
             transform: none;
         }
 
-        .other-input {
-            margin-top: 10px;
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 14px;
-            background: #f8f9fa;
-            display: none;
+        .name-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
         }
 
-        .other-input.show {
+        .phone-step label {
+            font-weight: 600;
+            margin-bottom: 6px;
             display: block;
+            color: #2c3e50;
+            text-align: left;
+        }
+
+        .phone-help {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+            text-align: left;
+        }
+
+        .row {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        #phone, #phone2 {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f8f9fa;
+            width: 100%;
+        }
+
+        #phone:focus, #phone2:focus {
+            outline: none;
+            border-color: #2196f3;
+            background: #fff;
         }
 
         @media (max-width: 600px) {
@@ -293,6 +338,10 @@
             }
 
             .address-row {
+                grid-template-columns: 1fr;
+            }
+
+            .name-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -309,8 +358,8 @@
 <body>
     <div class="form-container">
         <div class="logo-container">
-            <img src="https://blissful-baths-and-home-v1756573394.websitepro-cdn.com/wp-content/uploads/2023/10/Updated-Logo-2.jpg" 
-                 alt="Blissful Baths & Home" 
+            <img src="https://github.com/peakleadsgroup/landing-pages/blob/main/Images/Signature-Bath-Solutions_Logo.webp?raw=true" 
+                 alt="Signature Bath Solutions" 
                  class="logo-img"
                  onload="console.log('Logo loaded successfully')"
                  onerror="console.log('Logo failed to load')">
@@ -323,7 +372,7 @@
         </div>
 
         <div class="progress-bar" id="progressBarContainer">
-            <div class="progress-fill" id="progressFill" style="width: 16.67%"></div>
+            <div class="progress-fill" id="progressFill" style="width: 14.29%"></div>
         </div>
 
         <div class="form-step active" id="step1">
@@ -349,45 +398,14 @@
             <div class="question">Select all the areas you're thinking about remodeling:</div>
             <div class="checkbox-group">
                 <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'shower')">
-                    <input type="checkbox" name="areas" value="shower" onclick="event.stopPropagation()"> Shower
+                    <input type="checkbox" name="areas" value="shower"> Shower
                 </div>
                 <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'bathtub')">
-                    <input type="checkbox" name="areas" value="bathtub" onclick="event.stopPropagation()"> Bathtub
+                    <input type="checkbox" name="areas" value="bathtub"> Bathtub
                 </div>
                 <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'combo')">
-                    <input type="checkbox" name="areas" value="combo" onclick="event.stopPropagation()"> Shower/Tub Combo
+                    <input type="checkbox" name="areas" value="combo"> Shower/Tub Combo
                 </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'toilet')">
-                    <input type="checkbox" name="areas" value="toilet" onclick="event.stopPropagation()"> Toilet
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'vanity')">
-                    <input type="checkbox" name="areas" value="vanity" onclick="event.stopPropagation()"> Vanity / Sink
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'countertops')">
-                    <input type="checkbox" name="areas" value="countertops" onclick="event.stopPropagation()"> Countertops
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'cabinets')">
-                    <input type="checkbox" name="areas" value="cabinets" onclick="event.stopPropagation()"> Cabinets / Storage
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'flooring')">
-                    <input type="checkbox" name="areas" value="flooring" onclick="event.stopPropagation()"> Flooring
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'lighting')">
-                    <input type="checkbox" name="areas" value="lighting" onclick="event.stopPropagation()"> Lighting / Fixtures
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'mirrors')">
-                    <input type="checkbox" name="areas" value="mirrors" onclick="event.stopPropagation()"> Mirrors
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'walls')">
-                    <input type="checkbox" name="areas" value="walls" onclick="event.stopPropagation()"> Walls / Paint / Tile
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'plumbing')">
-                    <input type="checkbox" name="areas" value="plumbing" onclick="event.stopPropagation()"> Plumbing / Layout changes
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'other')">
-                    <input type="checkbox" name="areas" value="other" onclick="event.stopPropagation()"> Other (please specify)
-                </div>
-                <input type="text" id="otherInput" class="other-input" placeholder="Please specify...">
             </div>
             <div class="nav-buttons">
                 <button class="nav-btn" onclick="goToStep4()" id="step3NextBtn" disabled>Next</button>
@@ -397,6 +415,7 @@
         <div class="form-step" id="step4">
             <div class="question">What style do you prefer?</div>
             <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'style', 'accessible')">Accessible</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'style', 'modern')">Modern</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'style', 'traditional')">Traditional</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'style', 'luxury')">Luxury</div>
@@ -418,7 +437,7 @@
 
         <div class="form-step" id="step6">
             <div class="question">What is the location of this project?</div>
-            <div class="sub-heading">We use your address to confirm if you’re in our service area for eligibility so please ensure it is full and correct</div>
+            <div class="sub-heading">We use your address to confirm if you're in our service area for eligibility so please ensure it is full and correct</div>
             <div class="address-grid">
                 <input type="text" class="address-input" id="street" placeholder="Street Address" oninput="validateAddressForm()">
                 <div class="address-row">
@@ -437,11 +456,52 @@
             <div class="loading-text">Checking if you're eligible for a free design session...</div>
         </div>
 
+        <div id="qualifiedScreen" style="display: none;">
+            <div class="success-heading">Great news! You qualify for a free design session.</div>
+            <div class="success-subtext">Where can we reach you?</div>
+            
+            <div id="phoneSection">
+                <div class="row">
+                    <div id="phoneWrap" style="margin-bottom: 30px;">
+                        <label for="phone" style="font-weight: bold; font-size: 16px; margin-bottom: 10px; display: block; color: #2c3e50;">Phone</label>
+                        <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required autocomplete="tel" aria-describedby="phoneHelp">
+                        <small id="phoneHelp" class="phone-help">US number, 10 digits.</small>
+                        <input type="hidden" id="phone_digits" name="phone_digits" value="">
+                    </div>
+                    <div id="phoneConfirmWrap" style="display:none; margin-bottom: 30px;">
+                        <label for="phone2" style="font-weight: bold; font-size: 16px; margin-bottom: 10px; display: block; color: #2c3e50;">Please re-enter your phone</label>
+                        <input id="phone2" name="phone_confirm" type="tel" inputmode="tel" placeholder="(___) ___-____" autocomplete="tel" aria-describedby="phone2Help">
+                        <small id="phone2Help" class="phone-help">Must match exactly.</small>
+                    </div>
+                </div>
+                <div class="nav-buttons">
+                    <button class="nav-btn" onclick="showNameSection()" id="phoneNextBtn" disabled>Next</button>
+                </div>
+            </div>
+
+            <div id="nameSection" style="display: none;">
+                <div class="question">Who will we be meeting with?</div>
+                <div class="name-grid">
+                    <div>
+                        <label for="firstName" style="font-weight: bold; margin-bottom: 10px; display: block; color: #2c3e50; text-align: center;">First Name</label>
+                        <input type="text" class="address-input" id="firstName" placeholder="First Name" required autocomplete="given-name" style="margin-bottom: 25px;">
+                    </div>
+                    <div>
+                        <label for="lastName" style="font-weight: bold; margin-bottom: 10px; display: block; color: #2c3e50; text-align: center;">Last Name</label>
+                        <input type="text" class="address-input" id="lastName" placeholder="Last Name" required autocomplete="family-name" style="margin-bottom: 25px;">
+                    </div>
+                </div>
+                <div class="nav-buttons">
+                    <button class="nav-btn" onclick="submitFinalForm()" id="finalSubmitBtn" disabled>Schedule My Design Session</button>
+                </div>
+            </div>
+        </div>
+
         <div class="result-screen" id="resultScreen">
             <div class="success-message">Great news! You qualify for a free design session.</div>
             <div class="success-subheading">Request your time now and we'll reach out to confirm</div>
             <div class="cal-container">
-                <div style="width:100%;height:auto;overflow:hidden" id="my-cal-inline-blissful-baths-home"></div>
+                <div style="width:100%;height:auto;overflow:hidden" id="my-cal-inline-signature-bath"></div>
             </div>
         </div>
     </div>
@@ -457,9 +517,7 @@
             element.classList.add('selected');
             formData[field] = value;
             
-            setTimeout(() => {
-                nextStep();
-            }, 800);
+            nextStep();
         }
 
         function toggleCheckboxSelection(element, value) {
@@ -473,17 +531,6 @@
                 element.classList.remove('selected');
             }
             
-            if (value === 'other') {
-                const otherInput = document.getElementById('otherInput');
-                if (checkbox.checked) {
-                    otherInput.classList.add('show');
-                    otherInput.focus();
-                } else {
-                    otherInput.classList.remove('show');
-                    otherInput.value = '';
-                }
-            }
-            
             updateStep3Button();
         }
 
@@ -495,7 +542,8 @@
                 nextBtn.disabled = checkboxes.length === 0;
             }
             
-            formData.areas = Array.from(checkboxes).map(cb => cb.value);
+            const areas = Array.from(checkboxes).map(cb => cb.value);
+            formData.areas = areas;
         }
 
         function goToStep4() {
@@ -544,22 +592,239 @@
         }
 
         function submitForm() {
+            // Hide main heading and current step
             document.getElementById('mainHeading').style.display = 'none';
             document.getElementById('step' + currentStep).style.display = 'none';
-            
-            document.getElementById('loadingScreen').style.display = 'flex';
-            
             document.getElementById('progressBarContainer').style.display = 'none';
             
+            // Show loading screen
+            document.getElementById('loadingScreen').style.display = 'flex';
+            
             setTimeout(() => {
+                // Hide loading screen and show qualified screen
                 document.getElementById('loadingScreen').style.display = 'none';
-                document.getElementById('resultScreen').style.display = 'block';
+                document.getElementById('qualifiedScreen').style.display = 'block';
                 
-                loadCalEmbed();
-            }, 3500);
+                setupPhoneValidation();
+            }, 1750);
         }
 
-        function loadCalEmbed() {
+        function formatPhone(val) {
+            const d = val.replace(/\D/g,'').slice(0,10);
+            let f = d;
+            if(d.length > 6) f = `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+            else if(d.length > 3) f = `(${d.slice(0,3)}) ${d.slice(3)}`;
+            else if(d.length > 0) f = `(${d}`;
+            return {formatted:f, digits:d};
+        }
+
+        function validatePhones() {
+            const phoneInput = document.getElementById('phone');
+            const phone2Input = document.getElementById('phone2');
+            const phoneConfirmWrap = document.getElementById('phoneConfirmWrap');
+            const phoneDigits = document.getElementById('phone_digits');
+            const phoneNextBtn = document.getElementById('phoneNextBtn');
+            const phoneError = document.getElementById('phoneError');
+            
+            if (!phoneInput) return;
+
+            const p1 = formatPhone(phoneInput.value);
+            if (phoneInput.value !== p1.formatted) phoneInput.value = p1.formatted;
+            phoneDigits.value = p1.digits;
+
+            // Check if phone starts with 1
+            if (p1.digits.length > 0 && p1.digits.charAt(0) === '1') {
+                console.log('Phone starts with 1, showing error');
+                
+                // Create error element if it doesn't exist
+                let phoneError = document.getElementById('phoneError');
+                if (!phoneError) {
+                    phoneError = document.createElement('div');
+                    phoneError.id = 'phoneError';
+                    phoneError.style.color = 'red';
+                    phoneError.style.fontSize = '12px';
+                    phoneError.style.marginTop = '5px';
+                    phoneError.textContent = "Your phone number shouldn't start with a 1";
+                    
+                    // Insert after the phone help text
+                    const phoneHelp = document.getElementById('phoneHelp');
+                    if (phoneHelp) {
+                        phoneHelp.parentNode.insertBefore(phoneError, phoneHelp.nextSibling);
+                    }
+                }
+                phoneError.style.display = 'block';
+                console.log('Error message shown');
+                phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
+            } else {
+                console.log('Phone does not start with 1, hiding error');
+                const phoneError = document.getElementById('phoneError');
+                if (phoneError) {
+                    phoneError.style.display = 'none';
+                }
+                if (p1.digits.length === 10) {
+                    phoneInput.setCustomValidity('');
+                } else {
+                    phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
+                }
+            }
+
+            const shouldShowConfirm = p1.digits.length === 10 && p1.digits.charAt(0) !== '1';
+            if (phoneConfirmWrap) phoneConfirmWrap.style.display = shouldShowConfirm ? '' : 'none';
+            if (phone2Input) phone2Input.required = shouldShowConfirm;
+
+            const p2 = formatPhone(phone2Input ? phone2Input.value : '');
+            if (phone2Input && phone2Input.value !== p2.formatted) phone2Input.value = p2.formatted;
+
+            if(shouldShowConfirm && phone2Input){
+                if(p2.digits.length === 0){
+                    phone2Input.setCustomValidity('Please re-enter your phone number.');
+                } else if(p2.digits !== p1.digits){
+                    phone2Input.setCustomValidity('Phone numbers do not match.');
+                } else {
+                    phone2Input.setCustomValidity('');
+                }
+            } else if (phone2Input) {
+                phone2Input.value = '';
+                phone2Input.setCustomValidity('');
+            }
+
+            const phoneValid = p1.digits.length === 10 && p1.digits.charAt(0) !== '1';
+            const phone2Valid = !shouldShowConfirm || (p2.digits.length === 10 && p2.digits === p1.digits);
+            if (phoneNextBtn) {
+                phoneNextBtn.disabled = !(phoneValid && phone2Valid);
+            }
+        }
+
+        function setupPhoneValidation() {
+            const phoneInput = document.getElementById('phone');
+            const phone2Input = document.getElementById('phone2');
+            
+            if (phoneInput) {
+                phoneInput.addEventListener('input', validatePhones);
+                phoneInput.addEventListener('blur', validatePhones);
+            }
+            
+            if (phone2Input) {
+                phone2Input.addEventListener('input', validatePhones);
+                phone2Input.addEventListener('blur', validatePhones);
+            }
+            
+            setupNameValidation();
+        }
+
+        function showNameSection() {
+            document.getElementById('phoneSection').style.display = 'none';
+            document.querySelector('.success-subtext').style.display = 'none';
+            document.getElementById('nameSection').style.display = 'block';
+            updateFinalSubmitButton();
+        }
+
+        function updateFinalSubmitButton() {
+            const firstName = document.getElementById('firstName');
+            const lastName = document.getElementById('lastName');
+            const finalSubmitBtn = document.getElementById('finalSubmitBtn');
+            
+            if (!firstName || !lastName || !finalSubmitBtn) return;
+            
+            const firstValid = firstName.value.trim().length > 0;
+            const lastValid = lastName.value.trim().length > 0;
+            
+            finalSubmitBtn.disabled = !(firstValid && lastValid);
+        }
+
+        function setupNameValidation() {
+            const firstName = document.getElementById('firstName');
+            const lastName = document.getElementById('lastName');
+            
+            if (firstName) {
+                firstName.addEventListener('input', updateFinalSubmitButton);
+                firstName.addEventListener('change', updateFinalSubmitButton);
+            }
+            
+            if (lastName) {
+                lastName.addEventListener('input', updateFinalSubmitButton);
+                lastName.addEventListener('change', updateFinalSubmitButton);
+            }
+        }
+
+        function submitFinalForm() {
+            const finalData = {
+                ...formData,
+                phone: document.getElementById('phone_digits').value,
+                firstName: document.getElementById('firstName').value.trim(),
+                lastName: document.getElementById('lastName').value.trim()
+            };
+            
+            const fullSummary = `Bathroom Remodel Lead Information:
+
+Name: ${finalData.firstName} ${finalData.lastName}
+Phone: ${formatPhoneForDisplay(finalData.phone)}
+
+Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}
+Bathroom Type: ${getBathroomTypeDisplay(finalData.bathroom)}
+Areas to Remodel: ${getAreasDisplay(finalData.areas)}
+Style Preference: ${getStyleDisplay(finalData.style)}
+Timeline: ${getTimelineDisplay(finalData.timeline)}
+
+Address:
+${finalData.address.street}
+${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}
+
+Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'America/New_York'
+})} EST`.trim();
+
+            const webhookData = {
+                homeowner: finalData.homeowner,
+                bathroom_type: finalData.bathroom,
+                areas: finalData.areas,
+                style: finalData.style,
+                timeline: finalData.timeline,
+                street_address: finalData.address.street,
+                city: finalData.address.city,
+                state: finalData.address.state,
+                zip: finalData.address.zip,
+                phone: finalData.phone,
+                first_name: finalData.firstName,
+                last_name: finalData.lastName,
+                full_name: `${finalData.firstName} ${finalData.lastName}`,
+                full_summary: fullSummary,
+                timestamp: new Date().toISOString(),
+                form_type: 'bathroom_remodel_qualification',
+                clientATID: 'recsipJqxO8s7t6cI',
+                adATID: new URLSearchParams(window.location.search).get('adATID')
+            };
+            
+            // Send webhook first
+            fetch('https://hook.us2.make.com/qwgitlu2eizeqeecf7lif1utk7gf2knl', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(webhookData),
+                mode: 'no-cors'
+            }).then(() => {
+                showCalendarScreen(finalData);
+            }).catch((error) => {
+                showCalendarScreen(finalData);
+            });
+        }
+
+        function showCalendarScreen(finalData) {
+            document.getElementById('qualifiedScreen').style.display = 'none';
+            document.getElementById('resultScreen').style.display = 'block';
+            
+            loadCalEmbed(finalData);
+        }
+
+        function loadCalEmbed(finalData) {
             try {
                 (function (C, A, L) { 
                     let p = function (a, ar) { a.q.push(ar); }; 
@@ -596,16 +861,29 @@
                     }; 
                 })(window, "https://app.cal.com/embed/embed.js", "init");
                 
-                Cal("init", "blissful-baths-home", {origin:"https://app.cal.com"});
-                Cal.ns["blissful-baths-home"]("inline", {
-                    elementOrSelector:"#my-cal-inline-blissful-baths-home",
+                // Build the Cal.com link with parameters
+                const fullName = `${finalData.firstName} ${finalData.lastName}`;
+                const email = "peakleadsgroup@gmail.com";
+                const phone = `+1${finalData.phone}`;
+                const location = `${finalData.address.street}, ${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}`;
+                
+                const calParams = new URLSearchParams({
+                    name: fullName,
+                    email: email,
+                    smsReminderNumber: phone,
+                    location: location
+                });
+                
+                Cal("init", "signature-bath", {origin:"https://app.cal.com"});
+                Cal.ns["signature-bath"]("inline", {
+                    elementOrSelector:"#my-cal-inline-signature-bath",
                     config: {
                         "layout":"month_view",
                         "hideEventTypeDetails": true
                     },
-                    calLink: "peakleadsgroup/blissful-baths-home",
+                    calLink: `peakleadsgroup/signature-bath-solutions?${calParams.toString()}`,
                 });
-                Cal.ns["blissful-baths-home"]("ui", {
+                Cal.ns["signature-bath"]("ui", {
                     "hideEventTypeDetails": true,
                     "layout": "month_view"
                 });
@@ -613,61 +891,162 @@
                 setTimeout(() => {
                     const style = document.createElement('style');
                     style.textContent = `
-                        #my-cal-inline-blissful-baths-home .event-type-details,
-                        #my-cal-inline-blissful-baths-home .event-meta,
-                        #my-cal-inline-blissful-baths-home [data-testid="event-meta"],
-                        #my-cal-inline-blissful-baths-home .cal-event-type-details,
-                        #my-cal-inline-blissful-baths-home .cal-event-description,
-                        #my-cal-inline-blissful-baths-home .cal-event-duration,
-                        #my-cal-inline-blissful-baths-home .cal-event-location,
-                        #my-cal-inline-blissful-baths-home .event-description,
-                        #my-cal-inline-blissful-baths-home .event-duration,
-                        #my-cal-inline-blissful-baths-home .event-location,
-                        #my-cal-inline-blissful-baths-home [class*="event-type"],
-                        #my-cal-inline-blissful-baths-home [class*="booking-item"] .text-sm,
-                        #my-cal-inline-blissful-baths-home .booking-description,
-                        #my-cal-inline-blissful-baths-home .booking-duration {
+                        #my-cal-inline-signature-bath .event-type-details,
+                        #my-cal-inline-signature-bath .event-meta,
+                        #my-cal-inline-signature-bath [data-testid="event-meta"],
+                        #my-cal-inline-signature-bath .cal-event-type-details,
+                        #my-cal-inline-signature-bath .cal-event-description,
+                        #my-cal-inline-signature-bath .cal-event-duration,
+                        #my-cal-inline-signature-bath .cal-event-location,
+                        #my-cal-inline-signature-bath .event-description,
+                        #my-cal-inline-signature-bath .event-duration,
+                        #my-cal-inline-signature-bath .event-location,
+                        #my-cal-inline-signature-bath [class*="event-type"],
+                        #my-cal-inline-signature-bath [class*="booking-item"] .text-sm,
+                        #my-cal-inline-signature-bath .booking-description,
+                        #my-cal-inline-signature-bath .booking-duration {
                             display: none !important;
                         }
-                        #my-cal-inline-blissful-baths-home .cal-booker {
+                        #my-cal-inline-signature-bath .cal-booker {
                             margin-top: -50px;
                         }
-                        #my-cal-inline-blissful-baths-home,
-                        #my-cal-inline-blissful-baths-home *,
-                        #my-cal-inline-blissful-baths-home iframe {
-                            overflow: hidden !important;
-                            overflow-x: hidden !important;
-                            overflow-y: hidden !important;
+                        #my-cal-inline-signature-bath,
+                        #my-cal-inline-signature-bath *,
+                        #my-cal-inline-signature-bath iframe {
+                            overflow: visible !important;
+                            overflow-x: visible !important;
+                            overflow-y: visible !important;
                             max-height: none !important;
+                            height: auto !important;
                             scrollbar-width: none !important;
                             -ms-overflow-style: none !important;
                         }
-                        #my-cal-inline-blissful-baths-home::-webkit-scrollbar,
-                        #my-cal-inline-blissful-baths-home *::-webkit-scrollbar {
+                        #my-cal-inline-signature-bath::-webkit-scrollbar,
+                        #my-cal-inline-signature-bath *::-webkit-scrollbar {
                             display: none !important;
                             width: 0 !important;
                             height: 0 !important;
                         }
-                        #my-cal-inline-blissful-baths-home iframe {
-                            height: auto !important;
-                            min-height: 600px !important;
+                        #my-cal-inline-signature-bath iframe {
+                            min-height: 700px !important;
                         }
                         .cal-container {
-                            overflow: hidden !important;
+                            overflow: visible !important;
+                            height: auto !important;
+                            min-height: 700px !important;
                         }
                     `;
                     document.head.appendChild(style);
+                    
+                    // Expand the form container when calendar is shown
+                    const formContainer = document.querySelector('.form-container');
+                    if (formContainer) {
+                        formContainer.classList.add('calendar-mode');
+                    }
                 }, 1000);
                 
-                console.log("Cal.com embed initialization completed");
+                console.log("Cal.com embed initialization completed with params:", calParams.toString());
             } catch (error) {
                 console.error("Error loading Cal.com embed:", error);
-                document.getElementById('my-cal-inline-blissful-baths-home').innerHTML = 
+                document.getElementById('my-cal-inline-signature-bath').innerHTML = 
                     '<div style="padding: 40px; text-align: center; color: #666;">Calendar loading... Please refresh if it doesn\'t appear shortly.</div>';
             }
         }
 
+        function formatPhoneForDisplay(digits) {
+            if (digits && digits.length === 10) {
+                return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+            }
+            return digits;
+        }
+
+        function getBathroomTypeDisplay(value) {
+            const types = {
+                'master': 'Master Bathroom',
+                'guest': 'Guest Bathroom',
+                'half': 'Half Bath / Powder Room',
+                'jack': 'Jack & Jill Bathroom',
+                'basement': 'Basement Bathroom'
+            };
+            return types[value] || value;
+        }
+
+        function getAreasDisplay(areas) {
+            if (!areas || areas.length === 0) return 'None selected';
+            
+            const areaLabels = {
+                'shower': 'Shower',
+                'bathtub': 'Bathtub',
+                'combo': 'Shower/Tub Combo'
+            };
+            
+            return areas.map(area => areaLabels[area] || area).join(', ');
+        }
+
+        function getStyleDisplay(value) {
+            const styles = {
+                'accessible': 'Accessible',
+                'modern': 'Modern',
+                'traditional': 'Traditional',
+                'luxury': 'Luxury',
+                'spa': 'Spa-like',
+                'unsure': 'Not sure yet'
+            };
+            return styles[value] || value;
+        }
+
+        function getTimelineDisplay(value) {
+            const timelines = {
+                'asap': 'ASAP',
+                '1-3': '1–3 months',
+                '3-6': '3–6 months',
+                'year': 'Within a year'
+            };
+            return timelines[value] || value;
+        }
+
         updateProgress();
+
+        window.__attachPlaces = function(){
+            if(!window.google || !google.maps || !google.maps.places) return;
+            
+            const addressInput = document.getElementById('street');
+            if (!addressInput) return;
+            
+            const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+                types: ['address'],
+                componentRestrictions: { country: ['us'] },
+                fields: ['address_components','formatted_address','geometry']
+            });
+            
+            autocomplete.addListener('place_changed', ()=>{
+                const place = autocomplete.getPlace();
+                if(!place || !place.address_components) return;
+
+                const comps = Object.fromEntries(place.address_components.flatMap(c => c.types.map(t => [t, c])));
+                
+                let streetAddress = '';
+                if(comps.street_number) streetAddress += comps.street_number.long_name + ' ';
+                if(comps.route) streetAddress += comps.route.long_name;
+                if(streetAddress.trim()) addressInput.value = streetAddress.trim();
+                
+                const cityInput = document.getElementById('city');
+                const stateInput = document.getElementById('state');
+                const zipInput = document.getElementById('zip');
+                
+                if(comps.locality && cityInput) cityInput.value = comps.locality.long_name;
+                else if(comps.sublocality && cityInput) cityInput.value = comps.sublocality.long_name;
+                if(comps.administrative_area_level_1 && stateInput) stateInput.value = comps.administrative_area_level_1.short_name;
+                if(comps.postal_code && zipInput) zipInput.value = comps.postal_code.long_name;
+
+                validateAddressForm();
+            });
+        };
+    </script>
+
+    <!-- Load Google Places (async/defer) -->
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&libraries=places&callback=__attachPlaces">
     </script>
 </body>
 </html>
