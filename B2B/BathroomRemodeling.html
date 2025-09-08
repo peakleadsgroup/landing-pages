@@ -588,16 +588,11 @@
         // Redirect rules
         const name = encodeURIComponent(data.contact_name || "");
         const email = encodeURIComponent(data.email || "");
-        const bennettUrl = `https://cal.com/bennett-hair-mpzude/discovery-session?name=${name}&email=${email}`;
         const rrUrl = `https://cal.com/team/peak-leads-group/discovery-call?name=${name}&email=${email}`;
         const danUrl = `https://cal.com/daniel-wellish-plg/30min?name=${name}&email=${email}`;
 
         switch (data.monthly_revenue) {
           case 'less-than-50k':
-            // Bennett's calendar
-            window.location.href = bennettUrl;
-            break;
-
           case '50k-100k':
           case '100k-200k':
             // Round-robin
