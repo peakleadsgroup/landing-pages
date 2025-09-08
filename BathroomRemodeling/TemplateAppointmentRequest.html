@@ -912,7 +912,8 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                         }
                         #my-cal-inline-signature-bath,
                         #my-cal-inline-signature-bath *,
-                        #my-cal-inline-signature-bath iframe {
+                        #my-cal-inline-signature-bath iframe,
+                        #my-cal-inline-signature-bath div {
                             overflow: visible !important;
                             overflow-x: visible !important;
                             overflow-y: visible !important;
@@ -920,20 +921,44 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                             height: auto !important;
                             scrollbar-width: none !important;
                             -ms-overflow-style: none !important;
+                            scroll-behavior: auto !important;
                         }
                         #my-cal-inline-signature-bath::-webkit-scrollbar,
-                        #my-cal-inline-signature-bath *::-webkit-scrollbar {
+                        #my-cal-inline-signature-bath *::-webkit-scrollbar,
+                        #my-cal-inline-signature-bath iframe::-webkit-scrollbar,
+                        #my-cal-inline-signature-bath div::-webkit-scrollbar {
                             display: none !important;
                             width: 0 !important;
                             height: 0 !important;
+                            background: transparent !important;
                         }
                         #my-cal-inline-signature-bath iframe {
-                            min-height: 700px !important;
+                            min-height: 800px !important;
+                            height: 800px !important;
                         }
                         .cal-container {
                             overflow: visible !important;
                             height: auto !important;
-                            min-height: 700px !important;
+                            min-height: 800px !important;
+                        }
+                        
+                        /* Target Cal.com specific classes */
+                        [data-cal-namespace="signature-bath"],
+                        [data-cal-namespace="signature-bath"] *,
+                        [data-testid="booker-layout"],
+                        [data-testid="booker-layout"] * {
+                            overflow: visible !important;
+                            scrollbar-width: none !important;
+                            -ms-overflow-style: none !important;
+                        }
+                        
+                        [data-cal-namespace="signature-bath"]::-webkit-scrollbar,
+                        [data-cal-namespace="signature-bath"] *::-webkit-scrollbar,
+                        [data-testid="booker-layout"]::-webkit-scrollbar,
+                        [data-testid="booker-layout"] *::-webkit-scrollbar {
+                            display: none !important;
+                            width: 0 !important;
+                            height: 0 !important;
                         }
                     `;
                     document.head.appendChild(style);
@@ -943,6 +968,16 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                     if (formContainer) {
                         formContainer.classList.add('calendar-mode');
                     }
+                    
+                    // Additional attempt to remove scrollbars after a delay
+                    setTimeout(() => {
+                        const iframes = document.querySelectorAll('#my-cal-inline-signature-bath iframe');
+                        iframes.forEach(iframe => {
+                            iframe.style.overflow = 'visible';
+                            iframe.style.height = '800px';
+                            iframe.style.minHeight = '800px';
+                        });
+                    }, 2000);
                 }, 1000);
                 
                 console.log("Cal.com embed initialization completed with params:", calParams.toString());
