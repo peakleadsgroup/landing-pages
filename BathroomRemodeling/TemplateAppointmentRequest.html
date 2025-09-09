@@ -509,6 +509,31 @@
     <script>
         let currentStep = 1;
         let formData = {};
+        
+        // Generate unique user ID for tracking
+        const userID = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        
+        // Function to send step tracking webhook
+        function sendStepWebhook(stepNumber) {
+            const webhookData = {
+                userID: userID,
+                clientATID: 'recOh883Xa4gDW4Vr',
+                adATID: new URLSearchParams(window.location.search).get('adATID') || null,
+                lastButtonClicked: stepNumber,
+                lastUpdated: new Date().toISOString(),
+                formData: JSON.stringify(formData),
+                status: stepNumber === 'completed' ? 'Completed' : 'Active'
+            };
+            
+            fetch('https://hook.us2.make.com/addbcptoqdtai0ne4yy685zgoru52euh', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(webhookData),
+                mode: 'no-cors'
+            }).catch(() => {}); // Fail silently
+        }
 
         function selectOptionAndAdvance(element, field, value) {
             const options = element.parentElement.querySelectorAll('.option');
@@ -516,6 +541,9 @@
             
             element.classList.add('selected');
             formData[field] = value;
+            
+            // Send webhook for step completion
+            sendStepWebhook(currentStep);
             
             nextStep();
         }
@@ -549,6 +577,8 @@
         function goToStep4() {
             updateStep3Button();
             if (formData.areas && formData.areas.length > 0) {
+                // Send webhook for step 3 completion
+                sendStepWebhook(currentStep);
                 nextStep();
             }
         }
@@ -572,6 +602,8 @@
         function submitFormData() {
             validateAddressForm();
             if (formData.address) {
+                // Send webhook for step 6 completion
+                sendStepWebhook(currentStep);
                 submitForm();
             }
         }
@@ -713,6 +745,9 @@
         }
 
         function showNameSection() {
+            // Send webhook for phone section completion
+            sendStepWebhook('phone');
+            
             document.getElementById('phoneSection').style.display = 'none';
             document.querySelector('.success-subtext').style.display = 'none';
             document.getElementById('nameSection').style.display = 'block';
@@ -754,6 +789,9 @@
                 firstName: document.getElementById('firstName').value.trim(),
                 lastName: document.getElementById('lastName').value.trim()
             };
+            
+            // Send step tracking webhook for final completion
+            sendStepWebhook('completed');
             
             const fullSummary = `Bathroom Remodel Lead Information:
 
@@ -799,7 +837,8 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 timestamp: new Date().toISOString(),
                 form_type: 'bathroom_remodel_qualification',
                 clientATID: 'recOh883Xa4gDW4Vr',
-                adATID: new URLSearchParams(window.location.search).get('adATID')
+                adATID: new URLSearchParams(window.location.search).get('adATID'),
+                userID: userID // Include the user ID in the final webhook too
             };
             
             // Send webhook first
