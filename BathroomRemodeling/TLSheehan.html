@@ -594,15 +594,17 @@
         function toggleCheckboxSelection(element, value) {
             const checkbox = element.querySelector('input[type="checkbox"]');
             
-            checkbox.checked = !checkbox.checked;
-            
-            if (checkbox.checked) {
-                element.classList.add('selected');
-            } else {
-                element.classList.remove('selected');
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+                
+                if (checkbox.checked) {
+                    element.classList.add('selected');
+                } else {
+                    element.classList.remove('selected');
+                }
+                
+                updateStep3Button();
             }
-            
-            updateStep3Button();
         }
 
         function updateStep3Button() {
@@ -699,7 +701,6 @@
             const phoneConfirmWrap = document.getElementById('phoneConfirmWrap');
             const phoneDigits = document.getElementById('phone_digits');
             const phoneNextBtn = document.getElementById('phoneNextBtn');
-            const phoneError = document.getElementById('phoneError');
             
             if (!phoneInput) return;
 
@@ -779,4 +780,397 @@
                 phoneInput.addEventListener('blur', validatePhones);
             }
             
-            if (
+            if (phone2Input) {
+                phone2Input.addEventListener('input', validatePhones);
+                phone2Input.addEventListener('blur', validatePhones);
+            }
+            
+            setupNameValidation();
+        }
+
+        function showNameSection() {
+            // Send webhook for phone section completion
+            sendStepWebhook('phone');
+            
+            document.getElementById('phoneSection').style.display = 'none';
+            document.querySelector('.success-subtext').style.display = 'none';
+            document.getElementById('nameSection').style.display = 'block';
+            updateFinalSubmitButton();
+        }
+
+        function updateFinalSubmitButton() {
+            const firstName = document.getElementById('firstName');
+            const lastName = document.getElementById('lastName');
+            const finalSubmitBtn = document.getElementById('finalSubmitBtn');
+            
+            if (!firstName || !lastName || !finalSubmitBtn) return;
+            
+            const firstValid = firstName.value.trim().length > 0;
+            const lastValid = lastName.value.trim().length > 0;
+            
+            finalSubmitBtn.disabled = !(firstValid && lastValid);
+        }
+
+        function setupNameValidation() {
+            const firstName = document.getElementById('firstName');
+            const lastName = document.getElementById('lastName');
+            
+            if (firstName) {
+                firstName.addEventListener('input', updateFinalSubmitButton);
+                firstName.addEventListener('change', updateFinalSubmitButton);
+            }
+            
+            if (lastName) {
+                lastName.addEventListener('input', updateFinalSubmitButton);
+                lastName.addEventListener('change', updateFinalSubmitButton);
+            }
+        }
+
+        function submitFinalForm() {
+            const finalData = {
+                ...formData,
+                phone: document.getElementById('phone_digits').value,
+                firstName: document.getElementById('firstName').value.trim(),
+                lastName: document.getElementById('lastName').value.trim()
+            };
+            
+            // Send step tracking webhook for final completion
+            sendStepWebhook('completed');
+            
+            const fullSummary = `Bathroom Remodel Lead Information:
+
+Name: ${finalData.firstName} ${finalData.lastName}
+Phone: ${formatPhoneForDisplay(finalData.phone)}
+
+Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}
+Bathroom Type: ${getBathroomTypeDisplay(finalData.bathroom)}
+Areas to Remodel: ${getAreasDisplay(finalData.areas)}
+Style Preference: ${getStyleDisplay(finalData.style)}
+Timeline: ${getTimelineDisplay(finalData.timeline)}
+
+Address:
+${finalData.address.street}
+${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}
+
+Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'America/New_York'
+})} EST`.trim();
+
+            const webhookData = {
+                homeowner: finalData.homeowner,
+                bathroom_type: finalData.bathroom,
+                areas: finalData.areas,
+                style: finalData.style,
+                timeline: finalData.timeline,
+                street_address: finalData.address.street,
+                city: finalData.address.city,
+                state: finalData.address.state,
+                zip: finalData.address.zip,
+                phone: finalData.phone,
+                first_name: finalData.firstName,
+                last_name: finalData.lastName,
+                full_name: `${finalData.firstName} ${finalData.lastName}`,
+                full_summary: fullSummary,
+                timestamp: new Date().toISOString(),
+                form_type: 'bathroom_remodel_qualification',
+                clientATID: 'recKSMAmpWgzZCVmb',
+                adATID: new URLSearchParams(window.location.search).get('adATID'),
+                userID: userID // Include the user ID in the final webhook too
+            };
+            
+            // Send webhook first
+            fetch('https://hook.us2.make.com/qwgitlu2eizeqeecf7lif1utk7gf2knl', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(webhookData),
+                mode: 'no-cors'
+            }).then(() => {
+                showCalendarScreen(finalData);
+            }).catch((error) => {
+                showCalendarScreen(finalData);
+            });
+        }
+
+        function showCalendarScreen(finalData) {
+            document.getElementById('qualifiedScreen').style.display = 'none';
+            document.getElementById('resultScreen').style.display = 'block';
+            
+            loadCalEmbed(finalData);
+        }
+
+        function loadCalEmbed(finalData) {
+            try {
+                (function (C, A, L) { 
+                    let p = function (a, ar) { a.q.push(ar); }; 
+                    let d = C.document; 
+                    C.Cal = C.Cal || function () { 
+                        let cal = C.Cal; 
+                        let ar = arguments; 
+                        if (!cal.loaded) { 
+                            cal.ns = {}; 
+                            cal.q = cal.q || []; 
+                            const script = d.createElement("script");
+                            script.src = A;
+                            script.onload = function() {
+                                console.log("Cal.com script loaded successfully");
+                            };
+                            script.onerror = function() {
+                                console.error("Failed to load Cal.com script");
+                            };
+                            d.head.appendChild(script);
+                            cal.loaded = true; 
+                        } 
+                        if (ar[0] === L) { 
+                            const api = function () { p(api, arguments); }; 
+                            const namespace = ar[1]; 
+                            api.q = api.q || []; 
+                            if(typeof namespace === "string"){
+                                cal.ns[namespace] = cal.ns[namespace] || api;
+                                p(cal.ns[namespace], ar);
+                                p(cal, ["initNamespace", namespace]);
+                            } else p(cal, ar); 
+                            return;
+                        } 
+                        p(cal, ar); 
+                    }; 
+                })(window, "https://app.cal.com/embed/embed.js", "init");
+                
+                // Build the Cal.com link with parameters
+                const fullName = `${finalData.firstName} ${finalData.lastName}`;
+                const email = "peakleadsgroup@gmail.com";
+                const phone = `+1${finalData.phone}`;
+                const location = `${finalData.address.street}, ${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}`;
+                
+                const calParams = new URLSearchParams({
+                    name: fullName,
+                    email: email,
+                    smsReminderNumber: phone,
+                    location: location
+                });
+                
+                Cal("init", "signature-bath", {origin:"https://app.cal.com"});
+                Cal.ns["signature-bath"]("inline", {
+                    elementOrSelector:"#my-cal-inline-signature-bath",
+                    config: {
+                        "layout":"month_view",
+                        "hideEventTypeDetails": true
+                    },
+                    calLink: `peakleadsgroup/signature-bath-solutions?${calParams.toString()}`,
+                });
+                Cal.ns["signature-bath"]("ui", {
+                    "hideEventTypeDetails": true,
+                    "layout": "month_view"
+                });
+                
+                setTimeout(() => {
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        #my-cal-inline-signature-bath .event-type-details,
+                        #my-cal-inline-signature-bath .event-meta,
+                        #my-cal-inline-signature-bath [data-testid="event-meta"],
+                        #my-cal-inline-signature-bath .cal-event-type-details,
+                        #my-cal-inline-signature-bath .cal-event-description,
+                        #my-cal-inline-signature-bath .cal-event-duration,
+                        #my-cal-inline-signature-bath .cal-event-location,
+                        #my-cal-inline-signature-bath .event-description,
+                        #my-cal-inline-signature-bath .event-duration,
+                        #my-cal-inline-signature-bath .event-location,
+                        #my-cal-inline-signature-bath [class*="event-type"],
+                        #my-cal-inline-signature-bath [class*="booking-item"] .text-sm,
+                        #my-cal-inline-signature-bath .booking-description,
+                        #my-cal-inline-signature-bath .booking-duration {
+                            display: none !important;
+                        }
+                        #my-cal-inline-signature-bath .cal-booker {
+                            margin-top: -50px;
+                        }
+                        #my-cal-inline-signature-bath,
+                        #my-cal-inline-signature-bath *,
+                        #my-cal-inline-signature-bath iframe,
+                        #my-cal-inline-signature-bath div {
+                            overflow: visible !important;
+                            overflow-x: visible !important;
+                            overflow-y: visible !important;
+                            max-height: none !important;
+                            height: auto !important;
+                            scrollbar-width: none !important;
+                            -ms-overflow-style: none !important;
+                            scroll-behavior: auto !important;
+                        }
+                        #my-cal-inline-signature-bath::-webkit-scrollbar,
+                        #my-cal-inline-signature-bath *::-webkit-scrollbar,
+                        #my-cal-inline-signature-bath iframe::-webkit-scrollbar,
+                        #my-cal-inline-signature-bath div::-webkit-scrollbar {
+                            display: none !important;
+                            width: 0 !important;
+                            height: 0 !important;
+                            background: transparent !important;
+                        }
+                        #my-cal-inline-signature-bath iframe {
+                            min-height: 1200px !important;
+                            height: 1200px !important;
+                        }
+                        .cal-container {
+                            overflow: visible !important;
+                            height: auto !important;
+                            min-height: 1200px !important;
+                        }
+                        
+                        /* Target Cal.com specific classes */
+                        [data-cal-namespace="signature-bath"],
+                        [data-cal-namespace="signature-bath"] *,
+                        [data-testid="booker-layout"],
+                        [data-testid="booker-layout"] * {
+                            overflow: visible !important;
+                            scrollbar-width: none !important;
+                            -ms-overflow-style: none !important;
+                        }
+                        
+                        [data-cal-namespace="signature-bath"]::-webkit-scrollbar,
+                        [data-cal-namespace="signature-bath"] *::-webkit-scrollbar,
+                        [data-testid="booker-layout"]::-webkit-scrollbar,
+                        [data-testid="booker-layout"] *::-webkit-scrollbar {
+                            display: none !important;
+                            width: 0 !important;
+                            height: 0 !important;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                    
+                    // Expand the form container when calendar is shown
+                    const formContainer = document.querySelector('.form-container');
+                    if (formContainer) {
+                        formContainer.classList.add('calendar-mode');
+                    }
+                    
+                    // Additional attempt to remove scrollbars after a delay
+                    setTimeout(() => {
+                        const iframes = document.querySelectorAll('#my-cal-inline-signature-bath iframe');
+                        iframes.forEach(iframe => {
+                            iframe.style.overflow = 'visible';
+                            iframe.style.height = '800px';
+                            iframe.style.minHeight = '800px';
+                        });
+                    }, 2000);
+                }, 1000);
+                
+                console.log("Cal.com embed initialization completed with params:", calParams.toString());
+            } catch (error) {
+                console.error("Error loading Cal.com embed:", error);
+                document.getElementById('my-cal-inline-signature-bath').innerHTML = 
+                    '<div style="padding: 40px; text-align: center; color: #666;">Calendar loading... Please refresh if it doesn\'t appear shortly.</div>';
+            }
+        }
+
+        function formatPhoneForDisplay(digits) {
+            if (digits && digits.length === 10) {
+                return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+            }
+            return digits;
+        }
+
+        function getBathroomTypeDisplay(value) {
+            const types = {
+                'master': 'Master Bathroom',
+                'guest': 'Guest Bathroom',
+                'half': 'Half Bath / Powder Room',
+                'jack': 'Jack & Jill Bathroom',
+                'basement': 'Basement Bathroom'
+            };
+            return types[value] || value;
+        }
+
+        function getAreasDisplay(areas) {
+            if (!areas || areas.length === 0) return 'None selected';
+            
+            const areaLabels = {
+                'shower': 'Shower',
+                'bathtub': 'Bathtub',
+                'combo': 'Shower/Tub Combo',
+                'floors': 'Floors',
+                'cabinets': 'Cabinets',
+                'sinks': 'Sinks',
+                'vanities': 'Vanities',
+                'toilet': 'Toilet',
+                'lighting': 'Lighting'
+            };
+            
+            return areas.map(area => areaLabels[area] || area).join(', ');
+        }
+
+        function getStyleDisplay(value) {
+            const styles = {
+                'accessible': 'Accessible',
+                'modern': 'Modern',
+                'traditional': 'Traditional',
+                'luxury': 'Luxury',
+                'spa': 'Spa-like',
+                'unsure': 'Not sure yet'
+            };
+            return styles[value] || value;
+        }
+
+        function getTimelineDisplay(value) {
+            const timelines = {
+                'asap': 'ASAP',
+                '1-3': '1–3 months',
+                '3-6': '3–6 months',
+                'year': 'Within a year'
+            };
+            return timelines[value] || value;
+        }
+
+        updateProgress();
+
+        window.__attachPlaces = function(){
+            if(!window.google || !google.maps || !google.maps.places) return;
+            
+            const addressInput = document.getElementById('street');
+            if (!addressInput) return;
+            
+            const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+                types: ['address'],
+                componentRestrictions: { country: ['us'] },
+                fields: ['address_components','formatted_address','geometry']
+            });
+            
+            autocomplete.addListener('place_changed', ()=>{
+                const place = autocomplete.getPlace();
+                if(!place || !place.address_components) return;
+
+                const comps = Object.fromEntries(place.address_components.flatMap(c => c.types.map(t => [t, c])));
+                
+                let streetAddress = '';
+                if(comps.street_number) streetAddress += comps.street_number.long_name + ' ';
+                if(comps.route) streetAddress += comps.route.long_name;
+                if(streetAddress.trim()) addressInput.value = streetAddress.trim();
+                
+                const cityInput = document.getElementById('city');
+                const stateInput = document.getElementById('state');
+                const zipInput = document.getElementById('zip');
+                
+                if(comps.locality && cityInput) cityInput.value = comps.locality.long_name;
+                else if(comps.sublocality && cityInput) cityInput.value = comps.sublocality.long_name;
+                if(comps.administrative_area_level_1 && stateInput) stateInput.value = comps.administrative_area_level_1.short_name;
+                if(comps.postal_code && zipInput) zipInput.value = comps.postal_code.long_name;
+
+                validateAddressForm();
+            });
+        };
+    </script>
+
+    <!-- Load Google Places (async/defer) -->
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&libraries=places&callback=__attachPlaces">
+    </script>
+</body>
+</html>
