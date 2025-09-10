@@ -374,7 +374,7 @@
 <body>
     <div class="form-container">
         <div class="logo-container">
-            <img src="https://github.com/peakleadsgroup/landing-pages/blob/main/Images/TL%20SHeehan%20Logo%20(1).jpg?raw=true" 
+            <img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/TL%20SHeehan%20Logo.jpg" 
                  alt="Signature Bath Solutions" 
                  class="logo-img"
                  onload="console.log('Logo loaded successfully')"
@@ -885,17 +885,23 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 userID: userID // Include the user ID in the final webhook too
             };
             
+            console.log('Sending final form webhook:', webhookData);
+            
             // Send webhook first
             fetch('https://hook.us2.make.com/qwgitlu2eizeqeecf7lif1utk7gf2knl', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(webhookData),
-                mode: 'no-cors'
-            }).then(() => {
+                body: JSON.stringify(webhookData)
+            }).then(response => {
+                console.log('Final webhook sent successfully:', response.status);
                 showCalendarScreen(finalData);
             }).catch((error) => {
+                console.error('Final webhook failed:', error);
+                // Try alternative method
+                const img = new Image();
+                img.src = `https://hook.us2.make.com/qwgitlu2eizeqeecf7lif1utk7gf2knl?userID=${encodeURIComponent(userID)}&data=${encodeURIComponent(JSON.stringify(webhookData))}`;
                 showCalendarScreen(finalData);
             });
         }
