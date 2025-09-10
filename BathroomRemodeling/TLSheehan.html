@@ -120,7 +120,7 @@
 
         .checkbox-group {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 10px;
             margin-bottom: 30px;
         }
@@ -135,7 +135,6 @@
             padding: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
-            min-height: 50px;
         }
 
         .checkbox-option:hover {
@@ -149,15 +148,8 @@
         }
 
         .checkbox-option input[type="checkbox"] {
-            margin-right: 8px;
+            margin-right: 10px;
             transform: scale(1.2);
-        }
-
-        .checkbox-option label {
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            text-align: center;
         }
 
         .address-grid {
@@ -360,21 +352,13 @@
             .question {
                 font-size: 18px;
             }
-
-            .checkbox-group {
-                grid-template-columns: 1fr;
-            }
-
-            .checkbox-option {
-                min-height: 45px;
-            }
         }
     </style>
 </head>
 <body>
     <div class="form-container">
         <div class="logo-container">
-            <img src="https://github.com/peakleadsgroup/landing-pages/blob/main/Images/TL%20SHeehan%20Logo%20(1).jpg?raw=true" 
+            <img src="https://github.com/peakleadsgroup/landing-pages/blob/main/Images/Signature-Bath-Solutions_Logo.webp?raw=true" 
                  alt="Signature Bath Solutions" 
                  class="logo-img"
                  onload="console.log('Logo loaded successfully')"
@@ -413,42 +397,42 @@
         <div class="form-step" id="step3">
             <div class="question">Select all the areas you're thinking about remodeling:</div>
             <div class="checkbox-group">
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'shower')">
-                    <input type="checkbox" name="areas" value="shower" id="area_shower">
-                    <label for="area_shower">Shower</label>
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'bathtub')">
-                    <input type="checkbox" name="areas" value="bathtub" id="area_bathtub">
-                    <label for="area_bathtub">Bathtub</label>
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'combo')">
-                    <input type="checkbox" name="areas" value="combo" id="area_combo">
-                    <label for="area_combo">Shower/Tub Combo</label>
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'floors')">
-                    <input type="checkbox" name="areas" value="floors" id="area_floors">
-                    <label for="area_floors">Floors</label>
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'cabinets')">
-                    <input type="checkbox" name="areas" value="cabinets" id="area_cabinets">
-                    <label for="area_cabinets">Cabinets</label>
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'sinks')">
-                    <input type="checkbox" name="areas" value="sinks" id="area_sinks">
-                    <label for="area_sinks">Sinks</label>
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'vanities')">
-                    <input type="checkbox" name="areas" value="vanities" id="area_vanities">
-                    <label for="area_vanities">Vanities</label>
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'toilet')">
-                    <input type="checkbox" name="areas" value="toilet" id="area_toilet">
-                    <label for="area_toilet">Toilet</label>
-                </div>
-                <div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'lighting')">
-                    <input type="checkbox" name="areas" value="lighting" id="area_lighting">
-                    <label for="area_lighting">Lighting</label>
-                </div>
+<div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'shower')">
+    <input type="checkbox" name="areas" value="shower"> Shower
+</div>
+
+<div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'bathtub')">
+    <input type="checkbox" name="areas" value="bathtub"> Bathtub
+</div>
+
+<div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'combo')">
+    <input type="checkbox" name="areas" value="combo"> Shower/Tub Combo
+</div>
+
+<div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'floors')">
+    <input type="checkbox" name="areas" value="floors"> Floors
+</div>
+
+<div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'cabinets')">
+    <input type="checkbox" name="areas" value="cabinets"> Cabinets
+</div>
+
+<div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'sinks')">
+    <input type="checkbox" name="areas" value="sinks"> Sinks
+</div>
+
+<div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'vanities')">
+    <input type="checkbox" name="areas" value="vanities"> Vanities
+</div>
+
+<div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'toilet')">
+    <input type="checkbox" name="areas" value="toilet"> Toilet
+</div>
+
+<div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'lighting')">
+    <input type="checkbox" name="areas" value="lighting"> Lighting
+</div>
+
             </div>
             <div class="nav-buttons">
                 <button class="nav-btn" onclick="goToStep4()" id="step3NextBtn" disabled>Next</button>
@@ -560,7 +544,7 @@
         function sendStepWebhook(stepNumber) {
             const webhookData = {
                 userID: userID,
-                clientATID: 'recOh883Xa4gDW4Vr',
+                clientATID: 'recKSMAmpWgzZCVmb',
                 adATID: new URLSearchParams(window.location.search).get('adATID') || null,
                 lastButtonClicked: stepNumber,
                 lastUpdated: new Date().toISOString(),
@@ -594,17 +578,15 @@
         function toggleCheckboxSelection(element, value) {
             const checkbox = element.querySelector('input[type="checkbox"]');
             
-            if (checkbox) {
-                checkbox.checked = !checkbox.checked;
-                
-                if (checkbox.checked) {
-                    element.classList.add('selected');
-                } else {
-                    element.classList.remove('selected');
-                }
-                
-                updateStep3Button();
+            checkbox.checked = !checkbox.checked;
+            
+            if (checkbox.checked) {
+                element.classList.add('selected');
+            } else {
+                element.classList.remove('selected');
             }
+            
+            updateStep3Button();
         }
 
         function updateStep3Button() {
@@ -701,6 +683,7 @@
             const phoneConfirmWrap = document.getElementById('phoneConfirmWrap');
             const phoneDigits = document.getElementById('phone_digits');
             const phoneNextBtn = document.getElementById('phoneNextBtn');
+            const phoneError = document.getElementById('phoneError');
             
             if (!phoneInput) return;
 
@@ -880,12 +863,10 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 full_summary: fullSummary,
                 timestamp: new Date().toISOString(),
                 form_type: 'bathroom_remodel_qualification',
-                clientATID: 'recKSMAmpWgzZCVmb',
+                clientATID: 'recOh883Xa4gDW4Vr',
                 adATID: new URLSearchParams(window.location.search).get('adATID'),
                 userID: userID // Include the user ID in the final webhook too
             };
-            
-            console.log('Sending final form webhook:', webhookData);
             
             // Send webhook first
             fetch('https://hook.us2.make.com/qwgitlu2eizeqeecf7lif1utk7gf2knl', {
@@ -893,15 +874,11 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(webhookData)
-            }).then(response => {
-                console.log('Final webhook sent successfully:', response.status);
+                body: JSON.stringify(webhookData),
+                mode: 'no-cors'
+            }).then(() => {
                 showCalendarScreen(finalData);
             }).catch((error) => {
-                console.error('Final webhook failed:', error);
-                // Try alternative method
-                const img = new Image();
-                img.src = `https://hook.us2.make.com/qwgitlu2eizeqeecf7lif1utk7gf2knl?userID=${encodeURIComponent(userID)}&data=${encodeURIComponent(JSON.stringify(webhookData))}`;
                 showCalendarScreen(finalData);
             });
         }
@@ -1099,15 +1076,15 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             if (!areas || areas.length === 0) return 'None selected';
             
             const areaLabels = {
-                'shower': 'Shower',
-                'bathtub': 'Bathtub',
-                'combo': 'Shower/Tub Combo',
-                'floors': 'Floors',
-                'cabinets': 'Cabinets',
-                'sinks': 'Sinks',
-                'vanities': 'Vanities',
-                'toilet': 'Toilet',
-                'lighting': 'Lighting'
+'shower': 'Shower',
+'bathtub': 'Bathtub',
+'combo': 'Shower/Tub Combo',
+'floors': 'Floors',
+'cabinets': 'Cabinets',
+'sinks': 'Sinks',
+'vanities': 'Vanities',
+'toilet': 'Toilet',
+'lighting': 'Lighting'
             };
             
             return areas.map(area => areaLabels[area] || area).join(', ');
