@@ -528,7 +528,7 @@
             <div class="success-message">Great news! You qualify for a free design session.</div>
             <div class="success-subheading">Request your time now and we'll reach out to confirm</div>
             <div class="cal-container">
-                <div style="width:100%;height:auto;overflow:hidden" id="my-cal-inline-signature-bath"></div>
+                <div style="width:100%;height:auto;overflow:hidden" id="my-cal-inline-tl-sheehan"></div>
             </div>
         </div>
     </div>
@@ -940,16 +940,16 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                     location: location
                 });
                 
-                Cal("init", "signature-bath", {origin:"https://app.cal.com"});
-                Cal.ns["signature-bath"]("inline", {
-                    elementOrSelector:"#my-cal-inline-signature-bath",
+                Cal("init", "tl-sheehan", {origin:"https://app.cal.com"});
+                Cal.ns["tl-sheehan"]("inline", {
+                    elementOrSelector:"#my-cal-inline-tl-sheehan",
                     config: {
                         "layout":"month_view",
                         "hideEventTypeDetails": true
                     },
                     calLink: `peakleadsgroup/tl-sheehan?${calParams.toString()}`,
                 });
-                Cal.ns["signature-bath"]("ui", {
+                Cal.ns["tl-sheehan"]("ui", {
                     "hideEventTypeDetails": true,
                     "layout": "month_view"
                 });
@@ -957,29 +957,29 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 setTimeout(() => {
                     const style = document.createElement('style');
                     style.textContent = `
-                        #my-cal-inline-signature-bath .event-type-details,
-                        #my-cal-inline-signature-bath .event-meta,
-                        #my-cal-inline-signature-bath [data-testid="event-meta"],
-                        #my-cal-inline-signature-bath .cal-event-type-details,
-                        #my-cal-inline-signature-bath .cal-event-description,
-                        #my-cal-inline-signature-bath .cal-event-duration,
-                        #my-cal-inline-signature-bath .cal-event-location,
-                        #my-cal-inline-signature-bath .event-description,
-                        #my-cal-inline-signature-bath .event-duration,
-                        #my-cal-inline-signature-bath .event-location,
-                        #my-cal-inline-signature-bath [class*="event-type"],
-                        #my-cal-inline-signature-bath [class*="booking-item"] .text-sm,
-                        #my-cal-inline-signature-bath .booking-description,
-                        #my-cal-inline-signature-bath .booking-duration {
+                        #my-cal-inline-tl-sheehan .event-type-details,
+                        #my-cal-inline-tl-sheehan .event-meta,
+                        #my-cal-inline-tl-sheehan [data-testid="event-meta"],
+                        #my-cal-inline-tl-sheehan .cal-event-type-details,
+                        #my-cal-inline-tl-sheehan .cal-event-description,
+                        #my-cal-inline-tl-sheehan .cal-event-duration,
+                        #my-cal-inline-tl-sheehan .cal-event-location,
+                        #my-cal-inline-tl-sheehan .event-description,
+                        #my-cal-inline-tl-sheehan .event-duration,
+                        #my-cal-inline-tl-sheehan .event-location,
+                        #my-cal-inline-tl-sheehan [class*="event-type"],
+                        #my-cal-inline-tl-sheehan [class*="booking-item"] .text-sm,
+                        #my-cal-inline-tl-sheehan .booking-description,
+                        #my-cal-inline-tl-sheehan .booking-duration {
                             display: none !important;
                         }
-                        #my-cal-inline-signature-bath .cal-booker {
+                        #my-cal-inline-tl-sheehan .cal-booker {
                             margin-top: -50px;
                         }
-                        #my-cal-inline-signature-bath,
-                        #my-cal-inline-signature-bath *,
-                        #my-cal-inline-signature-bath iframe,
-                        #my-cal-inline-signature-bath div {
+                        #my-cal-inline-tl-sheehan,
+                        #my-cal-inline-tl-sheehan *,
+                        #my-cal-inline-tl-sheehan iframe,
+                        #my-cal-inline-tl-sheehan div {
                             overflow: visible !important;
                             overflow-x: visible !important;
                             overflow-y: visible !important;
@@ -989,16 +989,16 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                             -ms-overflow-style: none !important;
                             scroll-behavior: auto !important;
                         }
-                        #my-cal-inline-signature-bath::-webkit-scrollbar,
-                        #my-cal-inline-signature-bath *::-webkit-scrollbar,
-                        #my-cal-inline-signature-bath iframe::-webkit-scrollbar,
-                        #my-cal-inline-signature-bath div::-webkit-scrollbar {
+                        #my-cal-inline-tl-sheehan::-webkit-scrollbar,
+                        #my-cal-inline-tl-sheehan *::-webkit-scrollbar,
+                        #my-cal-inline-tl-sheehan iframe::-webkit-scrollbar,
+                        #my-cal-inline-tl-sheehan div::-webkit-scrollbar {
                             display: none !important;
                             width: 0 !important;
                             height: 0 !important;
                             background: transparent !important;
                         }
-                        #my-cal-inline-signature-bath iframe {
+                        #my-cal-inline-tl-sheehan iframe {
                             min-height: 1200px !important;
                             height: 1200px !important;
                         }
@@ -1009,8 +1009,8 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                         }
                         
                         /* Target Cal.com specific classes */
-                        [data-cal-namespace="signature-bath"],
-                        [data-cal-namespace="signature-bath"] *,
+                        [data-cal-namespace="tl-sheehan"],
+                        [data-cal-namespace="tl-sheehan"] *,
                         [data-testid="booker-layout"],
                         [data-testid="booker-layout"] * {
                             overflow: visible !important;
@@ -1018,8 +1018,8 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                             -ms-overflow-style: none !important;
                         }
                         
-                        [data-cal-namespace="signature-bath"]::-webkit-scrollbar,
-                        [data-cal-namespace="signature-bath"] *::-webkit-scrollbar,
+                        [data-cal-namespace="tl-sheehan"]::-webkit-scrollbar,
+                        [data-cal-namespace="tl-sheehan"] *::-webkit-scrollbar,
                         [data-testid="booker-layout"]::-webkit-scrollbar,
                         [data-testid="booker-layout"] *::-webkit-scrollbar {
                             display: none !important;
@@ -1037,7 +1037,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                     
                     // Additional attempt to remove scrollbars after a delay
                     setTimeout(() => {
-                        const iframes = document.querySelectorAll('#my-cal-inline-signature-bath iframe');
+                        const iframes = document.querySelectorAll('#my-cal-inline-tl-sheehan iframe');
                         iframes.forEach(iframe => {
                             iframe.style.overflow = 'visible';
                             iframe.style.height = '800px';
@@ -1049,7 +1049,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 console.log("Cal.com embed initialization completed with params:", calParams.toString());
             } catch (error) {
                 console.error("Error loading Cal.com embed:", error);
-                document.getElementById('my-cal-inline-signature-bath').innerHTML = 
+                document.getElementById('my-cal-inline-tl-sheehan').innerHTML = 
                     '<div style="padding: 40px; text-align: center; color: #666;">Calendar loading... Please refresh if it doesn\'t appear shortly.</div>';
             }
         }
