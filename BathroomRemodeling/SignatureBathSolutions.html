@@ -429,8 +429,8 @@
             <div class="sub-heading">We only schedule projects that can start soon so you can enjoy your upgraded space</div>
             <div class="options">
                 <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'asap')">ASAP</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', '1-3')">1–3 months</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', '3-6')">3–6 months</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', '1-3mos')">1–3 months</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', '3-6mos')">3–6 months</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'year')">Within a year</div>
             </div>
         </div>
@@ -1072,8 +1072,8 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
         function getTimelineDisplay(value) {
             const timelines = {
                 'asap': 'ASAP',
-                '1-3': '1–3 months',
-                '3-6': '3–6 months',
+                '1-3mos': '1–3 months',
+                '3-6mos': '3–6 months',
                 'year': 'Within a year'
             };
             return timelines[value] || value;
