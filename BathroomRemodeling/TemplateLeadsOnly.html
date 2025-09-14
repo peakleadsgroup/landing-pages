@@ -4,6 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bathroom Remodel Qualification</title>
+    
+    <!-- Meta Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1829626247589986');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1829626247589986&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Meta Pixel Code -->
+    
     <style>
         * {
             margin: 0;
@@ -411,6 +430,13 @@
     <script>
         let currentStep = 1;
         let formData = {};
+        let eventId = null;
+        let hasTrackedEngagement = false;
+
+        // Generate unique event ID for pixel and CAPI matching
+        function generateEventId() {
+            return 'event_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
 
         function selectOptionAndAdvance(element, field, value) {
             const options = element.parentElement.querySelectorAll('.option');
@@ -418,6 +444,17 @@
             
             element.classList.add('selected');
             formData[field] = value;
+            
+            // Track engagement event on first question interaction
+            if (!hasTrackedEngagement) {
+                if (typeof fbq !== 'undefined') {
+                    fbq('track', 'ViewContent', {
+                        content_category: 'home_improvement',
+                        content_name: 'bathroom_remodel_quiz_start'
+                    });
+                }
+                hasTrackedEngagement = true;
+            }
             
             nextStep();
         }
