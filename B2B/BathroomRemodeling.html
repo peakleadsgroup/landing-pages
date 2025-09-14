@@ -252,13 +252,13 @@
           <div class="form-step" id="thankYouScreen">
             <div style="text-align:center; padding:3rem 0;">
               <h3 style="color:#4a6fa5; font-size:2.5rem; margin-bottom:1rem;">Thanks!</h3>
-              <p style="font-size:1.3rem; color:#333;">We'll be in touch soon</p>
+              <p style="font-size:1.3rem; color:#333;">We'll reach out to you soon</p>
             </div>
           </div>
           <div class="form-step" id="bottomThankYouScreen">
             <div style="text-align:center; padding:3rem 0;">
               <h3 style="color:#4a6fa5; font-size:2.5rem; margin-bottom:1rem;">Thanks!</h3>
-              <p style="font-size:1.3rem; color:#333;">We'll be in touch soon</p>
+              <p style="font-size:1.3rem; color:#333;">We'll reach out to you soon</p>
             </div>
           </div>
         </form>
@@ -545,7 +545,7 @@
       await handleFormSubmission(this, bottomFormData);
     });
 
-    // ------------------ Shared submit function with routing ------------------
+    // ------------------ Updated submit function with new redirect logic ------------------
     async function handleFormSubmission(form, data) {
       // Collect contact fields
       const formElements = form.elements;
@@ -585,7 +585,7 @@
           body: JSON.stringify(data)
         });
 
-        // Redirect rules
+        // Updated redirect logic based on revenue tiers
         const name = encodeURIComponent(data.contact_name || "");
         const email = encodeURIComponent(data.email || "");
         const rrUrl = `https://cal.com/team/peak-leads-group/discovery-call?name=${name}&email=${email}`;
@@ -594,20 +594,24 @@
         switch (data.monthly_revenue) {
           case 'less-than-50k':
           case '50k-100k':
+            // Show thank you page only - no redirect
+            showThankYouFor(form);
+            break;
+
           case '100k-200k':
-            // Round-robin
+          case '200k-400k':
+            // Round-robin calendar
             window.location.href = rrUrl;
             break;
 
-          case '200k-400k':
           case 'more-than-400k':
-            // Daniel's calendar
+            // Daniel's calendar only
             window.location.href = danUrl;
             break;
 
           default:
-            // Fallback to round-robin
-            window.location.href = rrUrl;
+            // Fallback to thank you page
+            showThankYouFor(form);
             break;
         }
       } catch (err) {
