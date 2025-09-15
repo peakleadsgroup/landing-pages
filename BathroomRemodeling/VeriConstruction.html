@@ -15,11 +15,11 @@
     t.src=v;s=b.getElementsByTagName(e)[0];
     s.parentNode.insertBefore(t,s)}(window, document,'script',
     'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '1477458779985171');
+    fbq('init', '1496544758057328');
     fbq('track', 'PageView');
     </script>
     <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=1477458779985171&ev=PageView&noscript=1"
+    src="https://www.facebook.com/tr?id=1496544758057328&ev=PageView&noscript=1"
     /></noscript>
     <!-- End Meta Pixel Code -->
     
@@ -50,6 +50,8 @@
             width: 100%;
             text-align: center;
             overflow: hidden;
+            min-height: auto;
+            height: auto;
         }
 
         .logo-container {
@@ -311,8 +313,8 @@
 <body>
     <div class="form-container">
         <div class="logo-container">
-            <img src="https://github.com/peakleadsgroup/landing-pages/blob/main/Images/Signature-Bath-Solutions_Logo.webp?raw=true" 
-                 alt="Signature Bath Solutions" 
+            <img src="https://vericonstruction.com/wp-content/uploads/2025/04/head-logo-retina-wood.png" 
+                 alt="Veri Construction" 
                  class="logo-img">
         </div>
 
@@ -441,7 +443,7 @@
                 To give you an accurate quote we'll need to see your bathroom. Request a time now and we'll reach out to confirm
             </div>
             <div class="cal-container">
-                <div style="width:100%;height:auto;overflow:hidden" id="my-cal-inline-signature-bath"></div>
+                <div style="width:100%;height:auto;overflow:hidden" id="my-cal-inline-veri"></div>
             </div>
         </div>
     </div>
@@ -706,7 +708,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 full_summary_html: fullSummaryHTML,
                 timestamp: new Date().toISOString(),
                 form_type: 'bathroom_remodel_qualification',
-                clientATID: 'recOh883Xa4gDW4Vr',
+                clientATID: 'recRNzfY9AdZDfSJ8',
                 adATID: new URLSearchParams(window.location.search).get('adATID'),
                 event_id: eventId  // Include event ID for CAPI matching
             };
@@ -797,16 +799,16 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 console.log("Cal.com params:", calParams.toString());
                 
                 // Initialize Cal.com with the correct parameters
-                Cal("init", "signature-bath", {origin:"https://app.cal.com"});
-                Cal.ns["signature-bath"]("inline", {
-                    elementOrSelector:"#my-cal-inline-signature-bath",
+                Cal("init", "veri-construction", {origin:"https://app.cal.com"});
+                Cal.ns["veri-construction"]("inline", {
+                    elementOrSelector:"#my-cal-inline-veri",
                     config: {
                         "layout":"month_view",
                         "hideEventTypeDetails": true
                     },
                     calLink: `peakleadsgroup/veri-construction-co?${calParams.toString()}`,
                 });
-                Cal.ns["signature-bath"]("ui", {
+                Cal.ns["veri-construction"]("ui", {
                     "hideEventTypeDetails": true,
                     "layout": "month_view"
                 });
@@ -815,32 +817,32 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 setTimeout(() => {
                     const style = document.createElement('style');
                     style.textContent = `
-                        #my-cal-inline-signature-bath .event-type-details,
-                        #my-cal-inline-signature-bath .event-meta,
-                        #my-cal-inline-signature-bath [data-testid="event-meta"],
-                        #my-cal-inline-signature-bath .cal-event-type-details,
-                        #my-cal-inline-signature-bath .cal-event-description,
-                        #my-cal-inline-signature-bath .cal-event-duration,
-                        #my-cal-inline-signature-bath .cal-event-location,
-                        #my-cal-inline-signature-bath .event-description,
-                        #my-cal-inline-signature-bath .event-duration,
-                        #my-cal-inline-signature-bath .event-location,
-                        #my-cal-inline-signature-bath [class*="event-type"],
-                        #my-cal-inline-signature-bath [class*="booking-item"] .text-sm,
-                        #my-cal-inline-signature-bath .booking-description,
-                        #my-cal-inline-signature-bath .booking-duration {
+                        #my-cal-inline-veri .event-type-details,
+                        #my-cal-inline-veri .event-meta,
+                        #my-cal-inline-veri [data-testid="event-meta"],
+                        #my-cal-inline-veri .cal-event-type-details,
+                        #my-cal-inline-veri .cal-event-description,
+                        #my-cal-inline-veri .cal-event-duration,
+                        #my-cal-inline-veri .cal-event-location,
+                        #my-cal-inline-veri .event-description,
+                        #my-cal-inline-veri .event-duration,
+                        #my-cal-inline-veri .event-location,
+                        #my-cal-inline-veri [class*="event-type"],
+                        #my-cal-inline-veri [class*="booking-item"] .text-sm,
+                        #my-cal-inline-veri .booking-description,
+                        #my-cal-inline-veri .booking-duration {
                             display: none !important;
                         }
-                        #my-cal-inline-signature-bath,
-                        #my-cal-inline-signature-bath *,
-                        #my-cal-inline-signature-bath iframe,
-                        #my-cal-inline-signature-bath div {
+                        #my-cal-inline-veri,
+                        #my-cal-inline-veri *,
+                        #my-cal-inline-veri iframe,
+                        #my-cal-inline-veri div {
                             overflow: hidden !important;
                             max-width: 100% !important;
                             width: 100% !important;
                             box-sizing: border-box !important;
                         }
-                        #my-cal-inline-signature-bath iframe {
+                        #my-cal-inline-veri iframe {
                             min-height: 600px !important;
                             height: 600px !important;
                             max-width: 100% !important;
@@ -863,7 +865,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 console.log("Cal.com embed initialization completed with params:", calParams.toString());
             } catch (error) {
                 console.error("Error loading Cal.com embed:", error);
-                document.getElementById('my-cal-inline-signature-bath').innerHTML = 
+                document.getElementById('my-cal-inline-veri').innerHTML = 
                     '<div style="padding: 40px; text-align: center; color: #666;">Calendar loading... Please refresh if it doesn\'t appear shortly.</div>';
                 
                 // Complete progress even if calendar fails to load
