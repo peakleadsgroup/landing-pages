@@ -268,7 +268,7 @@
             width: 100%;
             max-width: 100%;
             height: auto;
-            min-height: 500px;
+            min-height: 600px;
             border-radius: 10px;
             overflow: hidden;
             background: white;
@@ -781,7 +781,8 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 // Build the Cal.com link with form data
                 const fullName = formData.firstName && formData.lastName ? 
                     `${formData.firstName} ${formData.lastName}` : '';
-                const phone = formData.phone ? `+1${formData.phone}` : '';
+                const phoneDigits = document.getElementById('phone_digits').value;
+                const phone = phoneDigits ? `+1${phoneDigits}` : '';
                 const location = formData.address ? 
                     `${formData.address.street}, ${formData.address.city}, ${formData.address.state} ${formData.address.zip}` : '';
                 
@@ -790,6 +791,10 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 calParams.set('email', 'peakleadsgroup@gmail.com');
                 if (phone) calParams.set('smsReminderNumber', phone);
                 if (location) calParams.set('location', location);
+                
+                console.log("Phone digits:", phoneDigits);
+                console.log("Formatted phone for Cal.com:", phone);
+                console.log("Cal.com params:", calParams.toString());
                 
                 // Initialize Cal.com with the correct parameters
                 Cal("init", "signature-bath", {origin:"https://app.cal.com"});
