@@ -4,6 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bathroom Remodel Qualification</title>
+    
+    <!-- Meta Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '2193891901108418');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=2193891901108418&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Meta Pixel Code -->
+    
     <style>
         * {
             margin: 0;
@@ -14,7 +33,7 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
-                        url('https://github.com/peakleadsgroup/landing-pages/blob/main/Images/B2BBathroomRemodelBack%20(1).jpg?raw=true') center/cover no-repeat fixed;
+                        url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/BlissfulBathsBack.jpg') center/cover no-repeat fixed;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -30,6 +49,9 @@
             max-width: 500px;
             width: 100%;
             text-align: center;
+            overflow: hidden;
+            min-height: auto;
+            height: auto;
         }
 
         .logo-container {
@@ -51,22 +73,6 @@
             color: #2c3e50;
             margin-bottom: 30px;
             line-height: 1.4;
-        }
-
-        .success-heading {
-            font-size: 28px;
-            color: #4CAF50;
-            margin-bottom: 20px;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .success-subtext {
-            font-size: 18px;
-            color: #2c3e50;
-            margin-bottom: 30px;
-            font-weight: bold;
-            text-align: center;
         }
 
         .highlight {
@@ -118,40 +124,6 @@
             color: #1976d2;
         }
 
-        .checkbox-group {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-
-        .checkbox-option {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f8f9fa;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            padding: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .checkbox-option:hover {
-            background: #e3f2fd;
-            border-color: #2196f3;
-        }
-
-        .checkbox-option.selected {
-            background: #e3f2fd;
-            border-color: #2196f3;
-        }
-
-        .checkbox-option input[type="checkbox"] {
-            margin-right: 10px;
-            transform: scale(1.2);
-        }
-
         .address-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -161,7 +133,7 @@
 
         .address-row {
             display: grid;
-            grid-template-columns: 1fr 1fr 100px;
+            grid-template-columns: 1fr 1fr;
             gap: 15px;
         }
 
@@ -180,58 +152,21 @@
             background: #fff;
         }
 
-        .loading-screen {
-            display: none;
+        .address-field {
+            display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
         }
 
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #4CAF50;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            font-size: 18px;
-            color: #2c3e50;
-        }
-
-        .result-screen {
-            display: none;
-            text-align: center;
-        }
-
-        .success-message {
-            font-size: 22px;
-            color: #4CAF50;
-            margin-bottom: 15px;
+        .address-label {
             font-weight: bold;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            text-align: left;
+            font-size: 14px;
         }
 
-        .success-subheading {
-            font-size: 16px;
-            color: #666;
-            margin-bottom: 30px;
-        }
-
-        .cal-container {
-            width: 100%;
-            height: auto;
-            min-height: 500px;
-            border-radius: 10px;
-            overflow: hidden;
-            background: white;
+        .hidden-initially {
+            display: none !important;
         }
 
         .form-step {
@@ -313,7 +248,7 @@
         .row {
             display: grid;
             gap: 15px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         #phone, #phone2 {
@@ -329,6 +264,26 @@
             outline: none;
             border-color: #2196f3;
             background: #fff;
+        }
+
+        .cal-container {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            min-height: 600px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: white;
+            margin-top: 20px;
+            box-sizing: border-box;
+        }
+
+        .calendar-text {
+            font-size: 18px;
+            color: #2c3e50;
+            line-height: 1.5;
+            margin-bottom: 30px;
+            text-align: center;
         }
 
         @media (max-width: 600px) {
@@ -359,22 +314,21 @@
     <div class="form-container">
         <div class="logo-container">
             <img src="https://github.com/peakleadsgroup/landing-pages/blob/main/Images/TL%20SHeehan%20Logo%20(1).jpg?raw=true" 
-                 alt="Signature Bath Solutions" 
-                 class="logo-img"
-                 onload="console.log('Logo loaded successfully')"
-                 onerror="console.log('Logo failed to load')">
+                 alt="TLSheehan" 
+                 class="logo-img">
         </div>
 
         <div id="mainHeading">
             <h1 class="main-heading">
-                See if you qualify for a <span class="highlight">free design session</span>
+                Take our 30 second quiz to get a <span class="highlight">fast and free quote</span>
             </h1>
         </div>
 
         <div class="progress-bar" id="progressBarContainer">
-            <div class="progress-fill" id="progressFill" style="width: 14.29%"></div>
+            <div class="progress-fill" id="progressFill" style="width: 14.3%"></div>
         </div>
 
+        <!-- STEP 1: Homeowner -->
         <div class="form-step active" id="step1">
             <div class="question">Are you a homeowner?</div>
             <div class="options">
@@ -383,152 +337,113 @@
             </div>
         </div>
 
+        <!-- STEP 2: Last Updated -->
         <div class="form-step" id="step2">
-            <div class="question">What bathroom do you want to remodel?</div>
+            <div class="question">When was your bathroom last updated?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'bathroom', 'master')">Master Bathroom</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'bathroom', 'guest')">Guest Bathroom</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'bathroom', 'half')">Half Bath / Powder Room</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'bathroom', 'jack')">Jack & Jill Bathroom</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'bathroom', 'basement')">Basement Bathroom</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'lastUpdated', 'less_than_10')">Less than 10 years ago</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'lastUpdated', 'more_than_10')">More than 10 years ago</div>
             </div>
         </div>
 
+        <!-- STEP 3: Project Type -->
         <div class="form-step" id="step3">
-            <div class="question">Select all the areas you're thinking about remodeling:</div>
-            <div class="checkbox-group">
-<div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'shower')">
-    <input type="checkbox" name="areas" value="shower"> Shower
-</div>
-
-<div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'bathtub')">
-    <input type="checkbox" name="areas" value="bathtub"> Bathtub
-</div>
-
-<div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'combo')">
-    <input type="checkbox" name="areas" value="combo"> Shower/Tub Combo
-</div>
-
-<div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'floors')">
-    <input type="checkbox" name="areas" value="floors"> Floors
-</div>
-
-<div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'cabinets')">
-    <input type="checkbox" name="areas" value="cabinets"> Cabinets
-</div>
-
-<div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'sinks')">
-    <input type="checkbox" name="areas" value="sinks"> Sinks
-</div>
-
-<div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'vanities')">
-    <input type="checkbox" name="areas" value="vanities"> Vanities
-</div>
-
-<div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'toilet')">
-    <input type="checkbox" name="areas" value="toilet"> Toilet
-</div>
-
-<div class="checkbox-option" onclick="toggleCheckboxSelection(this, 'lighting')">
-    <input type="checkbox" name="areas" value="lighting"> Lighting
-</div>
-
-            </div>
-            <div class="nav-buttons">
-                <button class="nav-btn" onclick="goToStep4()" id="step3NextBtn" disabled>Next</button>
+            <div class="question">Which best describes this project?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'full_remodel')">Full remodel</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'shower_replacement')">Shower replacement</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'tub_replacement')">Tub replacement</div>
             </div>
         </div>
 
+        <!-- STEP 4: Main Goal -->
         <div class="form-step" id="step4">
-            <div class="question">What style do you prefer?</div>
+            <div class="question">What do you want most in your remodel?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'style', 'accessible')">Accessible</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'style', 'modern')">Modern</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'style', 'traditional')">Traditional</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'style', 'luxury')">Luxury</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'style', 'spa')">Spa-like</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'style', 'unsure')">Not sure yet</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'function_accessibility')">Improving function/accessibility</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'prevent_damage')">Fixing/preventing home damage</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'update_look')">Updating the look</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'home_value')">Increasing home value</div>
             </div>
         </div>
 
+        <!-- STEP 5: Address -->
         <div class="form-step" id="step5">
-            <div class="question">When are you hoping to start the project?</div>
-            <div class="sub-heading">We only schedule projects that can start soon so you can enjoy your upgraded space</div>
-            <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'asap')">ASAP</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', '1-3')">1–3 months</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', '3-6')">3–6 months</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'year')">Within a year</div>
-            </div>
-        </div>
-
-        <div class="form-step" id="step6">
             <div class="question">What is the location of this project?</div>
-            <div class="sub-heading">We use your address to confirm if you're in our service area for eligibility so please ensure it is full and correct</div>
+            <div class="sub-heading">Please make sure your address is full and correct so we can confirm you are within our service area</div>
             <div class="address-grid">
-                <input type="text" class="address-input" id="street" placeholder="Street Address" oninput="validateAddressForm()">
-                <div class="address-row">
+                <div class="address-field">
+                    <label class="address-label" for="street">Street Address</label>
+                    <input type="text" class="address-input" id="street" placeholder="Street Address" oninput="validateAddressForm()">
+                </div>
+                
+                <div id="cityField" class="address-field hidden-initially">
+                    <label class="address-label" for="city">City</label>
                     <input type="text" class="address-input" id="city" placeholder="City" oninput="validateAddressForm()">
-                    <input type="text" class="address-input" id="state" placeholder="State" oninput="validateAddressForm()">
-                    <input type="text" class="address-input" id="zip" placeholder="Zip Code" oninput="validateAddressForm()" maxlength="5">
+                </div>
+                
+                <div class="address-row hidden-initially" id="stateZipRow">
+                    <div class="address-field">
+                        <label class="address-label" for="state">State</label>
+                        <input type="text" class="address-input" id="state" placeholder="State" oninput="validateAddressForm()">
+                    </div>
+                    <div class="address-field">
+                        <label class="address-label" for="zip">Zip Code</label>
+                        <input type="text" class="address-input" id="zip" placeholder="Zip Code" oninput="validateAddressForm()" maxlength="5">
+                    </div>
                 </div>
             </div>
             <div class="nav-buttons">
-                <button class="nav-btn" onclick="submitFormData()" id="submitFormBtn" disabled>Check Eligibility</button>
+                <button class="nav-btn" onclick="goToStep6()" id="submitFormBtn" disabled>Next</button>
             </div>
         </div>
 
-        <div class="loading-screen" id="loadingScreen">
-            <div class="spinner"></div>
-            <div class="loading-text">Checking if you're eligible for a free design session...</div>
-        </div>
-
-        <div id="qualifiedScreen" style="display: none;">
-            <div class="success-heading">Great news! You qualify for a free design session.</div>
-            <div class="success-subtext">Where can we reach you?</div>
-            
-            <div id="phoneSection">
-                <div class="row">
-                    <div id="phoneWrap" style="margin-bottom: 30px;">
-                        <label for="phone" style="font-weight: bold; font-size: 16px; margin-bottom: 10px; display: block; color: #2c3e50;">Phone</label>
-                        <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required autocomplete="tel" aria-describedby="phoneHelp">
-                        <small id="phoneHelp" class="phone-help">US number, 10 digits.</small>
-                        <input type="hidden" id="phone_digits" name="phone_digits" value="">
-                    </div>
-                    <div id="phoneConfirmWrap" style="display:none; margin-bottom: 30px;">
-                        <label for="phone2" style="font-weight: bold; font-size: 16px; margin-bottom: 10px; display: block; color: #2c3e50;">Please re-enter your phone</label>
-                        <input id="phone2" name="phone_confirm" type="tel" inputmode="tel" placeholder="(___) ___-____" autocomplete="tel" aria-describedby="phone2Help">
-                        <small id="phone2Help" class="phone-help">Must match exactly.</small>
-                    </div>
+        <!-- STEP 6: NAME -->
+        <div class="form-step" id="step6">
+            <div class="question">Who will we be making this quote out to?</div>
+            <div class="name-grid">
+                <div>
+                    <label for="firstName" style="margin-bottom: 10px; display: block; color: #2c3e50; text-align: center;">First Name</label>
+                    <input type="text" class="address-input" id="firstName" placeholder="First Name" required autocomplete="given-name" oninput="validateNameForm()">
                 </div>
-                <div class="nav-buttons">
-                    <button class="nav-btn" onclick="showNameSection()" id="phoneNextBtn" disabled>Next</button>
+                <div>
+                    <label for="lastName" style="margin-bottom: 10px; display: block; color: #2c3e50; text-align: center;">Last Name</label>
+                    <input type="text" class="address-input" id="lastName" placeholder="Last Name" required autocomplete="family-name" oninput="validateNameForm()">
                 </div>
             </div>
-
-            <div id="nameSection" style="display: none;">
-                <div class="question">Who will we be meeting with?</div>
-                <div class="name-grid">
-                    <div>
-                        <label for="firstName" style="font-weight: bold; margin-bottom: 10px; display: block; color: #2c3e50; text-align: center;">First Name</label>
-                        <input type="text" class="address-input" id="firstName" placeholder="First Name" required autocomplete="given-name" style="margin-bottom: 25px;">
-                    </div>
-                    <div>
-                        <label for="lastName" style="font-weight: bold; margin-bottom: 10px; display: block; color: #2c3e50; text-align: center;">Last Name</label>
-                        <input type="text" class="address-input" id="lastName" placeholder="Last Name" required autocomplete="family-name" style="margin-bottom: 25px;">
-                    </div>
-                </div>
-                <div class="nav-buttons">
-                    <button class="nav-btn" onclick="submitFinalForm()" id="finalSubmitBtn" disabled>Schedule My Design Session</button>
-                </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="goToStep7()" id="nameNextBtn" disabled>Next</button>
             </div>
         </div>
 
-        <div class="result-screen" id="resultScreen">
-            <div class="success-message">Great news! You qualify for a free design session.</div>
-            <div class="success-subheading">Request your time now and we'll reach out to confirm</div>
+        <!-- STEP 7: PHONE -->
+        <div class="form-step" id="step7">
+            <div class="question">Where can we reach you with your quote?</div>
+            <div class="row">
+                <div id="phoneWrap">
+                    <label for="phone">Phone</label>
+                    <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required autocomplete="tel" aria-describedby="phoneHelp">
+                    <small id="phoneHelp" class="phone-help">US number, 10 digits.</small>
+                    <input type="hidden" id="phone_digits" name="phone_digits" value="">
+                </div>
+                <div id="phoneConfirmWrap" style="display:none">
+                    <label for="phone2">Please re-enter your phone</label>
+                    <input id="phone2" name="phone_confirm" type="tel" inputmode="tel" placeholder="(___) ___-____" autocomplete="tel" aria-describedby="phone2Help">
+                    <small id="phone2Help" class="phone-help">Must match exactly.</small>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Next</button>
+            </div>
+        </div>
+
+        <!-- SUCCESS SCREEN -->
+        <div class="form-step" id="successStep">
+            <div class="calendar-text">
+                To give you an accurate quote we'll need to see your bathroom. Request a time now and we'll reach out to confirm
+            </div>
             <div class="cal-container">
-                <div style="width:100%;height:auto;overflow:hidden" id="my-cal-inline-tl-sheehan"></div>
+                <div style="width:100%;height:auto;overflow:hidden" id="my-cal-inline-TLSheehan"></div>
             </div>
         </div>
     </div>
@@ -536,30 +451,12 @@
     <script>
         let currentStep = 1;
         let formData = {};
-        
-        // Generate unique user ID for tracking
-        const userID = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        
-        // Function to send step tracking webhook
-        function sendStepWebhook(stepNumber) {
-            const webhookData = {
-                userID: userID,
-                clientATID: 'recKSMAmpWgzZCVmb',
-                adATID: new URLSearchParams(window.location.search).get('adATID') || null,
-                lastButtonClicked: stepNumber,
-                lastUpdated: new Date().toISOString(),
-                formData: JSON.stringify(formData),
-                status: stepNumber === 'completed' ? 'Completed' : 'Active'
-            };
-            
-            fetch('https://hook.us2.make.com/addbcptoqdtai0ne4yy685zgoru52euh', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(webhookData),
-                mode: 'no-cors'
-            }).catch(() => {}); // Fail silently
+        let eventId = null;
+        let hasTrackedEngagement = false;
+
+        // Generate unique event ID for pixel and CAPI matching
+        function generateEventId() {
+            return 'event_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
 
         function selectOptionAndAdvance(element, field, value) {
@@ -569,45 +466,18 @@
             element.classList.add('selected');
             formData[field] = value;
             
-            // Send webhook for step completion
-            sendStepWebhook(currentStep);
+            // Track engagement event on first question interaction
+            if (!hasTrackedEngagement) {
+                if (typeof fbq !== 'undefined') {
+                    fbq('track', 'ViewContent', {
+                        content_category: 'home_improvement',
+                        content_name: 'bathroom_remodel_quiz_start'
+                    });
+                }
+                hasTrackedEngagement = true;
+            }
             
             nextStep();
-        }
-
-        function toggleCheckboxSelection(element, value) {
-            const checkbox = element.querySelector('input[type="checkbox"]');
-            
-            checkbox.checked = !checkbox.checked;
-            
-            if (checkbox.checked) {
-                element.classList.add('selected');
-            } else {
-                element.classList.remove('selected');
-            }
-            
-            updateStep3Button();
-        }
-
-        function updateStep3Button() {
-            const checkboxes = document.querySelectorAll('input[name="areas"]:checked');
-            const nextBtn = document.getElementById('step3NextBtn');
-            
-            if (nextBtn) {
-                nextBtn.disabled = checkboxes.length === 0;
-            }
-            
-            const areas = Array.from(checkboxes).map(cb => cb.value);
-            formData.areas = areas;
-        }
-
-        function goToStep4() {
-            updateStep3Button();
-            if (formData.areas && formData.areas.length > 0) {
-                // Send webhook for step 3 completion
-                sendStepWebhook(currentStep);
-                nextStep();
-            }
         }
 
         function validateAddressForm() {
@@ -615,6 +485,21 @@
             const city = document.getElementById('city').value.trim();
             const state = document.getElementById('state').value.trim();
             const zip = document.getElementById('zip').value.trim();
+            const cityField = document.getElementById('cityField');
+            const stateZipRow = document.getElementById('stateZipRow');
+            
+            // Show city/state/zip fields if street has content
+            if (street.length > 0) {
+                cityField.classList.remove('hidden-initially');
+                stateZipRow.classList.remove('hidden-initially');
+            } else {
+                cityField.classList.add('hidden-initially');
+                stateZipRow.classList.add('hidden-initially');
+                // Clear the hidden fields when street is empty
+                document.getElementById('city').value = '';
+                document.getElementById('state').value = '';
+                document.getElementById('zip').value = '';
+            }
             
             const submitBtn = document.getElementById('submitFormBtn');
             if (submitBtn) {
@@ -626,23 +511,17 @@
             }
         }
 
-        function submitFormData() {
-            validateAddressForm();
-            if (formData.address) {
-                // Send webhook for step 6 completion
-                sendStepWebhook(currentStep);
-                submitForm();
+        function updateProgress() {
+            const progressFill = document.getElementById('progressFill');
+            // Only update progress for steps 1-7, stop at ~86% for step 7
+            if (currentStep <= 7) {
+                const percentage = (currentStep / 7) * 86; // Cap at 86% until calendar loads
+                progressFill.style.width = percentage + '%';
             }
         }
 
-        function updateProgress() {
-            const progressFill = document.getElementById('progressFill');
-            const percentage = (currentStep / 6) * 100;
-            progressFill.style.width = percentage + '%';
-        }
-
         function nextStep() {
-            if (currentStep < 6) {
+            if (currentStep < 7) {
                 document.getElementById('step' + currentStep).classList.remove('active');
                 currentStep++;
                 document.getElementById('step' + currentStep).classList.add('active');
@@ -650,22 +529,34 @@
             }
         }
 
-        function submitForm() {
-            // Hide main heading and current step
-            document.getElementById('mainHeading').style.display = 'none';
-            document.getElementById('step' + currentStep).style.display = 'none';
-            document.getElementById('progressBarContainer').style.display = 'none';
+        function goToStep6() {
+            validateAddressForm();
+            if (formData.address) {
+                nextStep();
+            }
+        }
+
+        function validateNameForm() {
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const nameNextBtn = document.getElementById('nameNextBtn');
             
-            // Show loading screen
-            document.getElementById('loadingScreen').style.display = 'flex';
+            if (nameNextBtn) {
+                nameNextBtn.disabled = !(firstName && lastName);
+            }
             
-            setTimeout(() => {
-                // Hide loading screen and show qualified screen
-                document.getElementById('loadingScreen').style.display = 'none';
-                document.getElementById('qualifiedScreen').style.display = 'block';
-                
+            if (firstName && lastName) {
+                formData.firstName = firstName;
+                formData.lastName = lastName;
+            }
+        }
+
+        function goToStep7() {
+            validateNameForm();
+            if (formData.firstName && formData.lastName) {
+                nextStep();
                 setupPhoneValidation();
-            }, 1750);
+            }
         }
 
         function formatPhone(val) {
@@ -682,8 +573,7 @@
             const phone2Input = document.getElementById('phone2');
             const phoneConfirmWrap = document.getElementById('phoneConfirmWrap');
             const phoneDigits = document.getElementById('phone_digits');
-            const phoneNextBtn = document.getElementById('phoneNextBtn');
-            const phoneError = document.getElementById('phoneError');
+            const phoneSubmitBtn = document.getElementById('phoneSubmitBtn');
             
             if (!phoneInput) return;
 
@@ -691,44 +581,14 @@
             if (phoneInput.value !== p1.formatted) phoneInput.value = p1.formatted;
             phoneDigits.value = p1.digits;
 
-            // Check if phone starts with 1
-            if (p1.digits.length > 0 && p1.digits.charAt(0) === '1') {
-                console.log('Phone starts with 1, showing error');
-                
-                // Create error element if it doesn't exist
-                let phoneError = document.getElementById('phoneError');
-                if (!phoneError) {
-                    phoneError = document.createElement('div');
-                    phoneError.id = 'phoneError';
-                    phoneError.style.color = 'red';
-                    phoneError.style.fontSize = '12px';
-                    phoneError.style.marginTop = '5px';
-                    phoneError.textContent = "Your phone number shouldn't start with a 1";
-                    
-                    // Insert after the phone help text
-                    const phoneHelp = document.getElementById('phoneHelp');
-                    if (phoneHelp) {
-                        phoneHelp.parentNode.insertBefore(phoneError, phoneHelp.nextSibling);
-                    }
-                }
-                phoneError.style.display = 'block';
-                console.log('Error message shown');
-                phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
+            if(p1.digits.length === 10){
+                phoneInput.setCustomValidity('');
             } else {
-                console.log('Phone does not start with 1, hiding error');
-                const phoneError = document.getElementById('phoneError');
-                if (phoneError) {
-                    phoneError.style.display = 'none';
-                }
-                if (p1.digits.length === 10) {
-                    phoneInput.setCustomValidity('');
-                } else {
-                    phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
-                }
+                phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
             }
 
-            const shouldShowConfirm = p1.digits.length === 10 && p1.digits.charAt(0) !== '1';
-            if (phoneConfirmWrap) phoneConfirmWrap.style.display = shouldShowConfirm ? '' : 'none';
+            const shouldShowConfirm = p1.digits.length === 10;
+            phoneConfirmWrap.style.display = shouldShowConfirm ? '' : 'none';
             if (phone2Input) phone2Input.required = shouldShowConfirm;
 
             const p2 = formatPhone(phone2Input ? phone2Input.value : '');
@@ -747,10 +607,10 @@
                 phone2Input.setCustomValidity('');
             }
 
-            const phoneValid = p1.digits.length === 10 && p1.digits.charAt(0) !== '1';
+            const phoneValid = p1.digits.length === 10;
             const phone2Valid = !shouldShowConfirm || (p2.digits.length === 10 && p2.digits === p1.digits);
-            if (phoneNextBtn) {
-                phoneNextBtn.disabled = !(phoneValid && phone2Valid);
+            if (phoneSubmitBtn) {
+                phoneSubmitBtn.disabled = !(phoneValid && phone2Valid);
             }
         }
 
@@ -767,58 +627,33 @@
                 phone2Input.addEventListener('input', validatePhones);
                 phone2Input.addEventListener('blur', validatePhones);
             }
-            
-            setupNameValidation();
-        }
-
-        function showNameSection() {
-            // Send webhook for phone section completion
-            sendStepWebhook('phone');
-            
-            document.getElementById('phoneSection').style.display = 'none';
-            document.querySelector('.success-subtext').style.display = 'none';
-            document.getElementById('nameSection').style.display = 'block';
-            updateFinalSubmitButton();
-        }
-
-        function updateFinalSubmitButton() {
-            const firstName = document.getElementById('firstName');
-            const lastName = document.getElementById('lastName');
-            const finalSubmitBtn = document.getElementById('finalSubmitBtn');
-            
-            if (!firstName || !lastName || !finalSubmitBtn) return;
-            
-            const firstValid = firstName.value.trim().length > 0;
-            const lastValid = lastName.value.trim().length > 0;
-            
-            finalSubmitBtn.disabled = !(firstValid && lastValid);
-        }
-
-        function setupNameValidation() {
-            const firstName = document.getElementById('firstName');
-            const lastName = document.getElementById('lastName');
-            
-            if (firstName) {
-                firstName.addEventListener('input', updateFinalSubmitButton);
-                firstName.addEventListener('change', updateFinalSubmitButton);
-            }
-            
-            if (lastName) {
-                lastName.addEventListener('input', updateFinalSubmitButton);
-                lastName.addEventListener('change', updateFinalSubmitButton);
-            }
         }
 
         function submitFinalForm() {
+            // Generate event ID for pixel and CAPI matching
+            eventId = generateEventId();
+            
             const finalData = {
                 ...formData,
-                phone: document.getElementById('phone_digits').value,
-                firstName: document.getElementById('firstName').value.trim(),
-                lastName: document.getElementById('lastName').value.trim()
+                phone: document.getElementById('phone_digits').value
             };
             
-            // Send step tracking webhook for final completion
-            sendStepWebhook('completed');
+            // Fire Meta Pixel Lead event
+            if (typeof fbq !== 'undefined') {
+                fbq('track', 'Lead', {
+                    content_category: 'home_improvement',
+                    content_name: 'bathroom_remodel_quote',
+                    value: 1.00,
+                    currency: 'USD',
+                    // Custom parameters for audience building
+                    homeowner_status: finalData.homeowner,
+                    project_type: finalData.projectType,
+                    main_goal: finalData.mainGoal,
+                    last_updated: finalData.lastUpdated
+                }, {
+                    eventID: eventId
+                });
+            }
             
             const fullSummary = `Bathroom Remodel Lead Information:
 
@@ -826,10 +661,9 @@ Name: ${finalData.firstName} ${finalData.lastName}
 Phone: ${formatPhoneForDisplay(finalData.phone)}
 
 Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}
-Bathroom Type: ${getBathroomTypeDisplay(finalData.bathroom)}
-Areas to Remodel: ${getAreasDisplay(finalData.areas)}
-Style Preference: ${getStyleDisplay(finalData.style)}
-Timeline: ${getTimelineDisplay(finalData.timeline)}
+Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}
+Project Type: ${getProjectTypeDisplay(finalData.projectType)}
+Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}
 
 Address:
 ${finalData.address.street}
@@ -846,12 +680,22 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
     timeZone: 'America/New_York'
 })} EST`.trim();
 
+            const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR><BR>Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'America/New_York'
+})} EST`;
+
             const webhookData = {
                 homeowner: finalData.homeowner,
-                bathroom_type: finalData.bathroom,
-                areas: finalData.areas,
-                style: finalData.style,
-                timeline: finalData.timeline,
+                last_updated: finalData.lastUpdated,
+                project_type: finalData.projectType,
+                main_goal: finalData.mainGoal,
                 street_address: finalData.address.street,
                 city: finalData.address.city,
                 state: finalData.address.state,
@@ -861,14 +705,14 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 last_name: finalData.lastName,
                 full_name: `${finalData.firstName} ${finalData.lastName}`,
                 full_summary: fullSummary,
+                full_summary_html: fullSummaryHTML,
                 timestamp: new Date().toISOString(),
                 form_type: 'bathroom_remodel_qualification',
                 clientATID: 'recKSMAmpWgzZCVmb',
                 adATID: new URLSearchParams(window.location.search).get('adATID'),
-                userID: userID // Include the user ID in the final webhook too
+                event_id: eventId  // Include event ID for CAPI matching
             };
             
-            // Send webhook first
             fetch('https://hook.us2.make.com/qwgitlu2eizeqeecf7lif1utk7gf2knl', {
                 method: 'POST',
                 headers: {
@@ -877,21 +721,29 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 body: JSON.stringify(webhookData),
                 mode: 'no-cors'
             }).then(() => {
-                showCalendarScreen(finalData);
+                showSuccessScreen();
             }).catch((error) => {
-                showCalendarScreen(finalData);
+                showSuccessScreen();
             });
         }
 
-        function showCalendarScreen(finalData) {
-            document.getElementById('qualifiedScreen').style.display = 'none';
-            document.getElementById('resultScreen').style.display = 'block';
+        function showSuccessScreen() {
+            // Hide the current step
+            document.getElementById('step' + currentStep).classList.remove('active');
             
-            loadCalEmbed(finalData);
+            // Hide the main heading
+            document.getElementById('mainHeading').style.display = 'none';
+            
+            // Show the calendar screen
+            document.getElementById('successStep').classList.add('active');
+            
+            // Load the Cal.com embed - progress will complete when calendar loads
+            loadCalEmbed();
         }
 
-        function loadCalEmbed(finalData) {
+        function loadCalEmbed() {
             try {
+                // Initialize Cal.com embed
                 (function (C, A, L) { 
                     let p = function (a, ar) { a.q.push(ar); }; 
                     let d = C.document; 
@@ -903,6 +755,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                             cal.q = cal.q || []; 
                             const script = d.createElement("script");
                             script.src = A;
+                            script.async = true;
                             script.onload = function() {
                                 console.log("Cal.com script loaded successfully");
                             };
@@ -927,22 +780,28 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                     }; 
                 })(window, "https://app.cal.com/embed/embed.js", "init");
                 
-                // Build the Cal.com link with parameters
-                const fullName = `${finalData.firstName} ${finalData.lastName}`;
-                const email = "peakleadsgroup@gmail.com";
-                const phone = `+1${finalData.phone}`;
-                const location = `${finalData.address.street}, ${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}`;
+                // Build the Cal.com link with form data
+                const fullName = formData.firstName && formData.lastName ? 
+                    `${formData.firstName} ${formData.lastName}` : '';
+                const phoneDigits = document.getElementById('phone_digits').value;
+                const phone = phoneDigits ? `+1${phoneDigits}` : '';
+                const location = formData.address ? 
+                    `${formData.address.street}, ${formData.address.city}, ${formData.address.state} ${formData.address.zip}` : '';
                 
-                const calParams = new URLSearchParams({
-                    name: fullName,
-                    email: email,
-                    smsReminderNumber: phone,
-                    location: location
-                });
+                const calParams = new URLSearchParams();
+                if (fullName) calParams.set('name', fullName);
+                calParams.set('email', 'peakleadsgroup@gmail.com');
+                if (phone) calParams.set('smsReminderNumber', phone);
+                if (location) calParams.set('location', location);
                 
+                console.log("Phone digits:", phoneDigits);
+                console.log("Formatted phone for Cal.com:", phone);
+                console.log("Cal.com params:", calParams.toString());
+                
+                // Initialize Cal.com with the new TL Sheehan calendar
                 Cal("init", "tl-sheehan", {origin:"https://app.cal.com"});
                 Cal.ns["tl-sheehan"]("inline", {
-                    elementOrSelector:"#my-cal-inline-tl-sheehan",
+                    elementOrSelector:"#my-cal-inline-TLSheehan",
                     config: {
                         "layout":"month_view",
                         "hideEventTypeDetails": true
@@ -954,103 +813,64 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                     "layout": "month_view"
                 });
                 
+                // Style the calendar after it loads and complete progress
                 setTimeout(() => {
                     const style = document.createElement('style');
                     style.textContent = `
-                        #my-cal-inline-tl-sheehan .event-type-details,
-                        #my-cal-inline-tl-sheehan .event-meta,
-                        #my-cal-inline-tl-sheehan [data-testid="event-meta"],
-                        #my-cal-inline-tl-sheehan .cal-event-type-details,
-                        #my-cal-inline-tl-sheehan .cal-event-description,
-                        #my-cal-inline-tl-sheehan .cal-event-duration,
-                        #my-cal-inline-tl-sheehan .cal-event-location,
-                        #my-cal-inline-tl-sheehan .event-description,
-                        #my-cal-inline-tl-sheehan .event-duration,
-                        #my-cal-inline-tl-sheehan .event-location,
-                        #my-cal-inline-tl-sheehan [class*="event-type"],
-                        #my-cal-inline-tl-sheehan [class*="booking-item"] .text-sm,
-                        #my-cal-inline-tl-sheehan .booking-description,
-                        #my-cal-inline-tl-sheehan .booking-duration {
+                        #my-cal-inline-TLSheehan .event-type-details,
+                        #my-cal-inline-TLSheehan .event-meta,
+                        #my-cal-inline-TLSheehan [data-testid="event-meta"],
+                        #my-cal-inline-TLSheehan .cal-event-type-details,
+                        #my-cal-inline-TLSheehan .cal-event-description,
+                        #my-cal-inline-TLSheehan .cal-event-duration,
+                        #my-cal-inline-TLSheehan .cal-event-location,
+                        #my-cal-inline-TLSheehan .event-description,
+                        #my-cal-inline-TLSheehan .event-duration,
+                        #my-cal-inline-TLSheehan .event-location,
+                        #my-cal-inline-TLSheehan [class*="event-type"],
+                        #my-cal-inline-TLSheehan [class*="booking-item"] .text-sm,
+                        #my-cal-inline-TLSheehan .booking-description,
+                        #my-cal-inline-TLSheehan .booking-duration {
                             display: none !important;
                         }
-                        #my-cal-inline-tl-sheehan .cal-booker {
-                            margin-top: -50px;
+                        #my-cal-inline-TLSheehan,
+                        #my-cal-inline-TLSheehan *,
+                        #my-cal-inline-TLSheehan iframe,
+                        #my-cal-inline-TLSheehan div {
+                            overflow: hidden !important;
+                            max-width: 100% !important;
+                            width: 100% !important;
+                            box-sizing: border-box !important;
                         }
-                        #my-cal-inline-tl-sheehan,
-                        #my-cal-inline-tl-sheehan *,
-                        #my-cal-inline-tl-sheehan iframe,
-                        #my-cal-inline-tl-sheehan div {
-                            overflow: visible !important;
-                            overflow-x: visible !important;
-                            overflow-y: visible !important;
-                            max-height: none !important;
-                            height: auto !important;
-                            scrollbar-width: none !important;
-                            -ms-overflow-style: none !important;
-                            scroll-behavior: auto !important;
-                        }
-                        #my-cal-inline-tl-sheehan::-webkit-scrollbar,
-                        #my-cal-inline-tl-sheehan *::-webkit-scrollbar,
-                        #my-cal-inline-tl-sheehan iframe::-webkit-scrollbar,
-                        #my-cal-inline-tl-sheehan div::-webkit-scrollbar {
-                            display: none !important;
-                            width: 0 !important;
-                            height: 0 !important;
-                            background: transparent !important;
-                        }
-                        #my-cal-inline-tl-sheehan iframe {
-                            min-height: 1200px !important;
-                            height: 1200px !important;
+                        #my-cal-inline-TLSheehan iframe {
+                            min-height: 600px !important;
+                            height: 600px !important;
+                            max-width: 100% !important;
+                            width: 100% !important;
                         }
                         .cal-container {
-                            overflow: visible !important;
-                            height: auto !important;
-                            min-height: 1200px !important;
-                        }
-                        
-                        /* Target Cal.com specific classes */
-                        [data-cal-namespace="tl-sheehan"],
-                        [data-cal-namespace="tl-sheehan"] *,
-                        [data-testid="booker-layout"],
-                        [data-testid="booker-layout"] * {
-                            overflow: visible !important;
-                            scrollbar-width: none !important;
-                            -ms-overflow-style: none !important;
-                        }
-                        
-                        [data-cal-namespace="tl-sheehan"]::-webkit-scrollbar,
-                        [data-cal-namespace="tl-sheehan"] *::-webkit-scrollbar,
-                        [data-testid="booker-layout"]::-webkit-scrollbar,
-                        [data-testid="booker-layout"] *::-webkit-scrollbar {
-                            display: none !important;
-                            width: 0 !important;
-                            height: 0 !important;
+                            overflow: hidden !important;
+                            max-width: 100% !important;
+                            width: 100% !important;
                         }
                     `;
                     document.head.appendChild(style);
                     
-                    // Expand the form container when calendar is shown
-                    const formContainer = document.querySelector('.form-container');
-                    if (formContainer) {
-                        formContainer.classList.add('calendar-mode');
-                    }
+                    // Complete the progress bar to 100% when calendar is ready
+                    const progressFill = document.getElementById('progressFill');
+                    progressFill.style.width = '100%';
                     
-                    // Additional attempt to remove scrollbars after a delay
-                    setTimeout(() => {
-                        const iframes = document.querySelectorAll('#my-cal-inline-tl-sheehan iframe');
-                        iframes.forEach(iframe => {
-                            iframe.style.overflow = 'visible';
-                            iframe.style.height = '800px';
-                            iframe.style.minHeight = '800px';
-                        });
-                    }, 2000);
-                }, 1000);
+                }, 2000);
                 
                 console.log("Cal.com embed initialization completed with params:", calParams.toString());
             } catch (error) {
                 console.error("Error loading Cal.com embed:", error);
-                document.getElementById('my-cal-inline-tl-sheehan').innerHTML = 
+                document.getElementById('my-cal-inline-TLSheehan').innerHTML = 
                     '<div style="padding: 40px; text-align: center; color: #666;">Calendar loading... Please refresh if it doesn\'t appear shortly.</div>';
+                
+                // Complete progress even if calendar fails to load
+                const progressFill = document.getElementById('progressFill');
+                progressFill.style.width = '100%';
             }
         }
 
@@ -1061,55 +881,31 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             return digits;
         }
 
-        function getBathroomTypeDisplay(value) {
-            const types = {
-                'master': 'Master Bathroom',
-                'guest': 'Guest Bathroom',
-                'half': 'Half Bath / Powder Room',
-                'jack': 'Jack & Jill Bathroom',
-                'basement': 'Basement Bathroom'
+        function getLastUpdatedDisplay(value) {
+            const options = {
+                'less_than_10': 'Less than 10 years ago',
+                'more_than_10': 'More than 10 years ago'
             };
-            return types[value] || value;
+            return options[value] || value;
         }
 
-        function getAreasDisplay(areas) {
-            if (!areas || areas.length === 0) return 'None selected';
-            
-            const areaLabels = {
-'shower': 'Shower',
-'bathtub': 'Bathtub',
-'combo': 'Shower/Tub Combo',
-'floors': 'Floors',
-'cabinets': 'Cabinets',
-'sinks': 'Sinks',
-'vanities': 'Vanities',
-'toilet': 'Toilet',
-'lighting': 'Lighting'
+        function getProjectTypeDisplay(value) {
+            const options = {
+                'full_remodel': 'Full remodel',
+                'shower_replacement': 'Shower replacement',
+                'tub_replacement': 'Tub replacement'
             };
-            
-            return areas.map(area => areaLabels[area] || area).join(', ');
+            return options[value] || value;
         }
 
-        function getStyleDisplay(value) {
-            const styles = {
-                'accessible': 'Accessible',
-                'modern': 'Modern',
-                'traditional': 'Traditional',
-                'luxury': 'Luxury',
-                'spa': 'Spa-like',
-                'unsure': 'Not sure yet'
+        function getMainGoalDisplay(value) {
+            const options = {
+                'function_accessibility': 'Improving function/accessibility',
+                'prevent_damage': 'Fixing/preventing home damage',
+                'update_look': 'Updating the look',
+                'home_value': 'Increasing home value'
             };
-            return styles[value] || value;
-        }
-
-        function getTimelineDisplay(value) {
-            const timelines = {
-                'asap': 'ASAP',
-                '1-3': '1–3 months',
-                '3-6': '3–6 months',
-                'year': 'Within a year'
-            };
-            return timelines[value] || value;
+            return options[value] || value;
         }
 
         updateProgress();
@@ -1136,6 +932,14 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 if(comps.street_number) streetAddress += comps.street_number.long_name + ' ';
                 if(comps.route) streetAddress += comps.route.long_name;
                 if(streetAddress.trim()) addressInput.value = streetAddress.trim();
+                
+                // Show the city/state/zip fields when autocomplete fills in street
+                const cityField = document.getElementById('cityField');
+                const stateZipRow = document.getElementById('stateZipRow');
+                if (streetAddress.trim()) {
+                    cityField.classList.remove('hidden-initially');
+                    stateZipRow.classList.remove('hidden-initially');
+                }
                 
                 const cityInput = document.getElementById('city');
                 const stateInput = document.getElementById('state');
