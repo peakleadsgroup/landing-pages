@@ -796,7 +796,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 console.log("Formatted phone for Cal.com:", phone);
                 console.log("Cal.com params:", calParams.toString());
                 
-                // Initialize Cal.com with the correct parameters
+                // Initialize Cal.com with the corrected parameters
                 Cal("init", "a1-flooring-custom-showers", {origin:"https://app.cal.com"});
                 Cal.ns["a1-flooring-custom-showers"]("inline", {
                     elementOrSelector:"#my-cal-inline-a1-flooring-custom-showers",
@@ -804,7 +804,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                         "layout":"month_view",
                         "hideEventTypeDetails": true
                     },
-                    calLink: `peakleadsgroup/a1-flooring-custom-showers-solutions?${calParams.toString()}`,
+                    calLink: `peakleadsgroup/a1-flooring-custom-showers?${calParams.toString()}`,
                 });
                 Cal.ns["a1-flooring-custom-showers"]("ui", {
                     "hideEventTypeDetails": true,
