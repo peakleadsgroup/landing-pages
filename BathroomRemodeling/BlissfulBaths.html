@@ -556,19 +556,47 @@
             if (phoneInput.value !== p1.formatted) phoneInput.value = p1.formatted;
             phoneDigits.value = p1.digits;
 
-            if(p1.digits.length === 10){
-                phoneInput.setCustomValidity('');
-            } else {
-                phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
+            // Create error element if it doesn't exist for phone starting with "1"
+            let phoneError = document.getElementById('phoneError');
+            if (!phoneError) {
+                phoneError = document.createElement('div');
+                phoneError.id = 'phoneError';
+                phoneError.style.color = 'red';
+                phoneError.style.fontSize = '12px';
+                phoneError.style.marginTop = '5px';
+                phoneError.style.display = 'none';
+                phoneError.textContent = "Your phone number shouldn't start with a 1";
+                
+                // Insert after the phone help text
+                const phoneHelp = document.getElementById('phoneHelp');
+                if (phoneHelp) {
+                    phoneHelp.parentNode.insertBefore(phoneError, phoneHelp.nextSibling);
+                }
             }
 
-            const shouldShowConfirm = p1.digits.length === 10;
+            // Check if phone starts with 1
+            if (p1.digits.length > 0 && p1.digits.charAt(0) === '1') {
+                phoneError.style.display = 'block';
+                phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
+            } else {
+                phoneError.style.display = 'none';
+                if(p1.digits.length === 10){
+                    phoneInput.setCustomValidity('');
+                } else {
+                    phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
+                }
+            }
+
+            // Show/hide confirm field based on first phone validity (and not starting with 1)
+            const shouldShowConfirm = p1.digits.length === 10 && p1.digits.charAt(0) !== '1';
             phoneConfirmWrap.style.display = shouldShowConfirm ? '' : 'none';
             if (phone2Input) phone2Input.required = shouldShowConfirm;
 
+            // Format second phone
             const p2 = formatPhone(phone2Input ? phone2Input.value : '');
             if (phone2Input && phone2Input.value !== p2.formatted) phone2Input.value = p2.formatted;
 
+            // Validate match
             if(shouldShowConfirm && phone2Input){
                 if(p2.digits.length === 0){
                     phone2Input.setCustomValidity('Please re-enter your phone number.');
@@ -578,14 +606,29 @@
                     phone2Input.setCustomValidity('');
                 }
             } else if (phone2Input) {
+                // If not showing confirm, clear validity + value to prevent stale mismatches
                 phone2Input.value = '';
                 phone2Input.setCustomValidity('');
             }
 
-            const phoneValid = p1.digits.length === 10;
+            // Always update submit button when validating phones
+            const phoneValid = p1.digits.length === 10 && p1.digits.charAt(0) !== '1';
             const phone2Valid = !shouldShowConfirm || (p2.digits.length === 10 && p2.digits === p1.digits);
+            const buttonShouldEnable = phoneValid && phone2Valid;
+            
+            console.log('Phone validation:', {
+                phone1: p1.digits,
+                phone2: p2.digits,
+                shouldShowConfirm,
+                phoneValid,
+                phone2Valid,
+                buttonShouldEnable,
+                currentStep: currentStep,
+                startsWithOne: p1.digits.charAt(0) === '1'
+            });
+            
             if (phoneSubmitBtn) {
-                phoneSubmitBtn.disabled = !(phoneValid && phone2Valid);
+                phoneSubmitBtn.disabled = !buttonShouldEnable;
             }
         }
 
@@ -729,6 +772,29 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 'home_value': 'Increasing home value'
             };
             return options[value] || value;
+        }
+
+        function selectOptionAndAdvance(element, field, value) {
+            const options = element.parentElement.querySelectorAll('.option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            element.classList.add('selected');
+            formData[field] = value;
+            
+            // Track engagement event on first question interaction
+            if (!hasTrackedEngagement) {
+                if (typeof fbq !== 'undefined') {
+                    fbq('track', 'ViewContent', {
+                        content_category: 'home_improvement',
+                        content_name: 'bathroom_remodel_quiz_start'
+                    });
+                }
+                hasTrackedEngagement = true;
+            }
+            
+            setTimeout(() => {
+                nextStep();
+            }, 200);
         }
 
         updateProgress();
