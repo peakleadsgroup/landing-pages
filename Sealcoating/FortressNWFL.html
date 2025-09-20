@@ -267,6 +267,11 @@
     "32320","32321","32322","32323","32324","32328","32329","32330","32334","32335","32351","32358","32360","32401","32402","32403","32404","32405","32406","32407","32408","32409","32410","32411","32412","32413","32417","32420","32421","32422","32424","32425","32426","32427","32428","32430","32431","32432","32433","32434","32435","32437","32438","32439","32440","32442","32443","32444","32446","32447","32448","32449","32452","32455","32456","32457","32459","32460","32461","32462","32463","32464","32465","32466","32501","32502","32503","32504","32505","32506","32507","32508","32509","32511","32512","32513","32514","32516","32520","32521","32522","32523","32524","32526","32530","32531","32533","32534","32535","32536","32537","32538","32539","32540","32541","32542","32544","32547","32548","32549","32550","32559","32560","32561","32562","32563","32564","32565","32566","32567","32568","32569","32570","32571","32572","32577","32578","32579","32580","32583","32588","32591","36483","36511","36530","36535","36536","36542","36547","36549","36555","36561","36567","36574","36576","36580"
   ]);
   
+  // Special zip codes that get Mon-Thurs only calendar
+  const monThursOnlyZips = new Set([
+    "32449","32465","32404","32410","32403","32335","32430","32456","32402","32406","32411","32412","32417","32444","32457","32401","32466","32405","32321","32424","32408","32438","32421","32409","32360","32407","32320","32328","32329","32334","32420","32428","32463","32448","32413","32437","32462","32322","32432","32447","32461","32358","32442","32330","32323","32351","32431","32324","32427"
+  ]);
+  
   const TRACKING_WEBHOOK = 'https://hook.us2.make.com/0kfn50ruqjdtfvwpw4meuagndb76whq8';
   const SUBMIT_WEBHOOK = 'https://hook.us2.make.com/5iehugsldo9icpk2cq5d1wj4puo3eviy';
   // --------------------------
@@ -805,7 +810,7 @@
       clearTimeout(timeoutId);
     }
 
-    // Build Cal.com URL (no lead email; inbox email fixed)
+    // Build Cal.com URL based on zip code
     const first = document.getElementById('first')?.value.trim() || '';
     const last  = document.getElementById('last')?.value.trim()  || '';
     const name  = `${first} ${last}`.replace(/\s+/g, ' ').trim();
@@ -828,8 +833,17 @@
 
     if (fullAddress) params.set('location', fullAddress);   // optional prefill
 
-    window.location.href =
-      `https://cal.com/peakleadsgroup/fortress-floor-coatings-of-nwfl?${params.toString()}`;
+    // Determine which calendar link to use based on zip code
+    let calendarLink;
+    if (monThursOnlyZips.has(zip)) {
+      calendarLink = 'https://cal.com/peakleadsgroup/fortress-floor-coatings-of-nwfl-mon-thurs-only';
+      console.log('Redirecting to Mon-Thurs only calendar for zip:', zip);
+    } else {
+      calendarLink = 'https://cal.com/peakleadsgroup/fortress-floor-coatings-of-nwfl';
+      console.log('Redirecting to regular calendar for zip:', zip);
+    }
+
+    window.location.href = `${calendarLink}?${params.toString()}`;
   });
 
   // Initialize
