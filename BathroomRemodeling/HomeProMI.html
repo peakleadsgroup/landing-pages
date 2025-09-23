@@ -661,10 +661,10 @@
             
             if (name) params.set('name', name);
             
-            // Use attendeePhoneNumber parameter for phone pre-fill
+            // Use smsReminderNumber parameter to match your Cal.com configuration
             const smsDigits = document.getElementById('phone_digits')?.value || '';
             if (smsDigits.length === 10) {
-                params.set('attendeePhoneNumber', `+1${smsDigits}`);
+                params.set('smsReminderNumber', `+1${smsDigits}`);
             }
             
             // Use JSON format for location (in-person attendee address)
