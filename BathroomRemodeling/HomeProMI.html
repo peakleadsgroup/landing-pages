@@ -650,7 +650,7 @@
         }
 
         function redirectToCalendar() {
-            // Build Cal.com URL with parameters similar to the provided code
+            // Build Cal.com URL with parameters similar to the roofing form
             const first = document.getElementById('firstName')?.value.trim() || '';
             const last = document.getElementById('lastName')?.value.trim() || '';
             const name = `${first} ${last}`.replace(/\s+/g, ' ').trim();
@@ -669,7 +669,7 @@
             
             if (zip) params.set('location', zip); // Use ZIP code as location
             
-            // Redirect to Cal.com with parameters
+            // Redirect to new Cal.com link
             window.location.href = `https://cal.com/peakleadsgroup/home-pro-mi?${params.toString()}`;
         }
 
@@ -724,6 +724,18 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
     timeZone: 'America/New_York'
 })} EST`.trim();
 
+            // Create HTML version for email
+            const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR><BR>Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'America/New_York'
+})} EST`;
+
             const webhookData = {
                 homeowner: finalData.homeowner,
                 last_updated: finalData.lastUpdated,
@@ -738,6 +750,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 last_name: finalData.lastName,
                 full_name: `${finalData.firstName} ${finalData.lastName}`,
                 full_summary: fullSummary,
+                full_summary_html: fullSummaryHTML,
                 timestamp: new Date().toISOString(),
                 form_type: 'bathroom_remodel_qualification',
                 clientATID: 'recUHm2a3apf53niV',
@@ -745,7 +758,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 event_id: eventId  // Include event ID for CAPI matching
             };
             
-            // Submit webhook data first, then redirect regardless of success/failure
+            // Submit webhook data first, then redirect immediately
             fetch('https://hook.us2.make.com/g5h4leaf5ibs3dncj6n2lon5d9w3yi3g', {
                 method: 'POST',
                 headers: {
@@ -754,20 +767,9 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 body: JSON.stringify(webhookData),
                 mode: 'no-cors'
             }).finally(() => {
-                // Show success screen briefly, then redirect
-                showSuccessScreenAndRedirect();
-            });
-        }
-
-        function showSuccessScreenAndRedirect() {
-            document.getElementById('step' + currentStep).classList.remove('active');
-            document.getElementById('progressBarContainer').style.display = 'none';
-            document.getElementById('successStep').classList.add('active');
-            
-            // Redirect to Cal.com after 2 seconds
-            setTimeout(() => {
+                // Redirect immediately without showing success screen
                 redirectToCalendar();
-            }, 2000);
+            });
         }
 
         function formatPhoneForDisplay(digits) {
@@ -857,4 +859,3 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
     </script>
 </body>
 </html>
-                '
