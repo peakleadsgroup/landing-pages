@@ -650,7 +650,7 @@
         }
 
         function redirectToCalendar() {
-            // Build Cal.com URL with parameters similar to the roofing form
+            // Build Cal.com URL with correct parameters for pre-filling
             const first = document.getElementById('firstName')?.value.trim() || '';
             const last = document.getElementById('lastName')?.value.trim() || '';
             const name = `${first} ${last}`.replace(/\s+/g, ' ').trim();
@@ -661,13 +661,20 @@
             
             if (name) params.set('name', name);
             
-            // Phone → smsReminderNumber (+1XXXXXXXXXX) if 10 digits present
+            // Use attendeePhoneNumber parameter for phone pre-fill
             const smsDigits = document.getElementById('phone_digits')?.value || '';
             if (smsDigits.length === 10) {
-                params.set('smsReminderNumber', `+1${smsDigits}`);
+                params.set('attendeePhoneNumber', `+1${smsDigits}`);
             }
             
-            if (zip) params.set('location', zip); // Use ZIP code as location
+            // Use JSON format for location (in-person attendee address)
+            if (zip) {
+                const locationJson = JSON.stringify({
+                    value: "inPerson",
+                    optionValue: zip
+                });
+                params.set('location', locationJson);
+            }
             
             // Redirect to new Cal.com link
             window.location.href = `https://cal.com/peakleadsgroup/home-pro-mi?${params.toString()}`;
