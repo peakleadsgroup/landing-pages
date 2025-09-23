@@ -329,7 +329,7 @@
             <div class="options">
                 <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'shower_replacement')">Shower replacement</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'tub_replacement')">Tub replacement</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'floors')">Floors</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'full remodel')">Full remodel</div>
             </div>
         </div>
 
@@ -421,7 +421,7 @@
                     <div style="color: white; font-size: 30px; font-weight: bold;">✓</div>
                 </div>
                 <div style="font-size: 24px; color: #4CAF50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
-                <div style="font-size: 16px; color: #666; line-height: 1.5;">We will give you a call as soon as possible to schedule your free quote</div>
+                <div style="font-size: 16px; color: #666; line-height: 1.5;">Redirecting you to schedule your free consultation...</div>
             </div>
         </div>
     </div>
@@ -455,7 +455,9 @@
                 hasTrackedEngagement = true;
             }
             
-            nextStep();
+            setTimeout(() => {
+                nextStep();
+            }, 200);
         }
 
         function validateAddressForm() {
@@ -647,6 +649,30 @@
             }
         }
 
+        function redirectToCalendar() {
+            // Build Cal.com URL with parameters similar to the provided code
+            const first = document.getElementById('firstName')?.value.trim() || '';
+            const last = document.getElementById('lastName')?.value.trim() || '';
+            const name = `${first} ${last}`.replace(/\s+/g, ' ').trim();
+            const zip = document.getElementById('zip')?.value.trim() || '';
+            
+            const params = new URLSearchParams();
+            params.set('email', 'peakleadsgroup@gmail.com'); // fixed inbox email
+            
+            if (name) params.set('name', name);
+            
+            // Phone → smsReminderNumber (+1XXXXXXXXXX) if 10 digits present
+            const smsDigits = document.getElementById('phone_digits')?.value || '';
+            if (smsDigits.length === 10) {
+                params.set('smsReminderNumber', `+1${smsDigits}`);
+            }
+            
+            if (zip) params.set('location', zip); // Use ZIP code as location
+            
+            // Redirect to Cal.com with parameters
+            window.location.href = `https://cal.com/peakleadsgroup/home-pro-mi?${params.toString()}`;
+        }
+
         function submitFinalForm() {
             // Generate event ID for pixel and CAPI matching
             eventId = generateEventId();
@@ -719,6 +745,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 event_id: eventId  // Include event ID for CAPI matching
             };
             
+            // Submit webhook data first, then redirect regardless of success/failure
             fetch('https://hook.us2.make.com/g5h4leaf5ibs3dncj6n2lon5d9w3yi3g', {
                 method: 'POST',
                 headers: {
@@ -726,17 +753,21 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 },
                 body: JSON.stringify(webhookData),
                 mode: 'no-cors'
-            }).then(() => {
-                showSuccessScreen();
-            }).catch((error) => {
-                showSuccessScreen();
+            }).finally(() => {
+                // Show success screen briefly, then redirect
+                showSuccessScreenAndRedirect();
             });
         }
 
-        function showSuccessScreen() {
+        function showSuccessScreenAndRedirect() {
             document.getElementById('step' + currentStep).classList.remove('active');
             document.getElementById('progressBarContainer').style.display = 'none';
             document.getElementById('successStep').classList.add('active');
+            
+            // Redirect to Cal.com after 2 seconds
+            setTimeout(() => {
+                redirectToCalendar();
+            }, 2000);
         }
 
         function formatPhoneForDisplay(digits) {
@@ -756,10 +787,9 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
 
         function getProjectTypeDisplay(value) {
             const options = {
-                'full_remodel': 'Full remodel',
-                'shower_tub': 'Shower/tub replacement',
-                'floors': 'Floors',
-                'small_updates': 'Small updates (fixtures, paint, etc)'
+                'shower_replacement': 'Shower replacement',
+                'tub_replacement': 'Tub replacement',
+                'full_remodel': 'Full remodel'
             };
             return options[value] || value;
         }
@@ -772,29 +802,6 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 'home_value': 'Increasing home value'
             };
             return options[value] || value;
-        }
-
-        function selectOptionAndAdvance(element, field, value) {
-            const options = element.parentElement.querySelectorAll('.option');
-            options.forEach(opt => opt.classList.remove('selected'));
-            
-            element.classList.add('selected');
-            formData[field] = value;
-            
-            // Track engagement event on first question interaction
-            if (!hasTrackedEngagement) {
-                if (typeof fbq !== 'undefined') {
-                    fbq('track', 'ViewContent', {
-                        content_category: 'home_improvement',
-                        content_name: 'bathroom_remodel_quiz_start'
-                    });
-                }
-                hasTrackedEngagement = true;
-            }
-            
-            setTimeout(() => {
-                nextStep();
-            }, 200);
         }
 
         updateProgress();
@@ -850,3 +857,4 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
     </script>
 </body>
 </html>
+                '
