@@ -654,7 +654,6 @@
             const first = document.getElementById('firstName')?.value.trim() || '';
             const last = document.getElementById('lastName')?.value.trim() || '';
             const name = `${first} ${last}`.replace(/\s+/g, ' ').trim();
-            const zip = document.getElementById('zip')?.value.trim() || '';
             
             const params = new URLSearchParams();
             params.set('email', 'peakleadsgroup@gmail.com'); // fixed inbox email
@@ -667,14 +666,8 @@
                 params.set('smsReminderNumber', `+1${smsDigits}`);
             }
             
-            // Use JSON format for location (in-person attendee address)
-            if (zip) {
-                const locationJson = JSON.stringify({
-                    value: "inPerson",
-                    optionValue: zip
-                });
-                params.set('location', locationJson);
-            }
+            // Use simple static address for location field
+            params.set('location', '123 Main Street, Wilmington, NC');
             
             // Redirect to new Cal.com link
             window.location.href = `https://cal.com/peakleadsgroup/home-pro-mi?${params.toString()}`;
