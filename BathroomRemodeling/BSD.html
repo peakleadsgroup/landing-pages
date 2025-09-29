@@ -337,7 +337,7 @@
 
         <!-- STEP 2: Last Updated -->
         <div class="form-step" id="step2">
-            <div class="question">When was your bathroom last updated?</div>
+            <div class="question">When was your kitchen last updated?</div>
             <div class="options">
                 <div class="option" onclick="selectOptionAndAdvance(this, 'lastUpdated', 'less_than_10')">Less than 10 years ago</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'lastUpdated', 'more_than_10')">More than 10 years ago</div>
@@ -348,8 +348,10 @@
         <div class="form-step" id="step3">
             <div class="question">Which best describes this project?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'shower_replacement')">Shower replacement</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'tub_replacement')">Tub replacement</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'Full Remodel')">Full remodel</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'Cabinets')">Cabinets</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'Countertops')">Countertops</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'Floors')">Floors</div>
             </div>
         </div>
 
@@ -888,8 +890,10 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
 
         function getProjectTypeDisplay(value) {
             const options = {
-                'shower_replacement': 'Shower replacement',
-                'tub_replacement': 'Tub replacement'
+                'Full remodel': 'Full remodel',
+                'Cabinets': 'Cabinets'
+                'Countertops': 'Countertops',
+                'Floors': 'Floors'
             };
             return options[value] || value;
         }
