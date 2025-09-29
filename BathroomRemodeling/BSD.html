@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bathroom Remodel Qualification</title>
+    <title>Kitchen Remodel Qualification</title>
     
     <!-- Meta Pixel Code -->
     <script>
@@ -439,7 +439,7 @@
         <!-- SUCCESS SCREEN -->
         <div class="form-step" id="successStep">
             <div class="calendar-text">
-                To give you an accurate quote we'll need to see your bathroom. Request a time now and we'll reach out to confirm
+                To give you an accurate quote we'll need to see your kitchen. Request a time now and we'll reach out to confirm!
             </div>
             <div class="cal-container">
                 <div style="width:100%;height:auto;overflow:hidden" id="my-cal-inline-bsd-homes"></div>
@@ -470,7 +470,7 @@
                 if (typeof fbq !== 'undefined') {
                     fbq('track', 'ViewContent', {
                         content_category: 'home_improvement',
-                        content_name: 'bathroom_remodel_quiz_start'
+                        content_name: 'Kitchen_remodel_quiz_start'
                     });
                 }
                 hasTrackedEngagement = true;
@@ -641,7 +641,7 @@
             if (typeof fbq !== 'undefined') {
                 fbq('track', 'Lead', {
                     content_category: 'home_improvement',
-                    content_name: 'bathroom_remodel_quote',
+                    content_name: 'Kitchen_remodel_quote',
                     value: 1.00,
                     currency: 'USD',
                     // Custom parameters for audience building
@@ -654,7 +654,7 @@
                 });
             }
             
-            const fullSummary = `Bathroom Remodel Lead Information:
+            const fullSummary = `Kitchen Remodel Lead Information:
 
 Name: ${finalData.firstName} ${finalData.lastName}
 Phone: ${formatPhoneForDisplay(finalData.phone)}
@@ -679,7 +679,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
     timeZone: 'America/New_York'
 })} EST`.trim();
 
-            const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR><BR>Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+            const fullSummaryHTML = `Kitchen Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR><BR>Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
     year: 'numeric', 
     month: 'long', 
@@ -706,7 +706,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 full_summary: fullSummary,
                 full_summary_html: fullSummaryHTML,
                 timestamp: new Date().toISOString(),
-                form_type: 'bathroom_remodel_qualification',
+                form_type: 'Kitchen_remodel_qualification',
                 clientATID: 'recOh883Xa4gDW4Vr',
                 adATID: new URLSearchParams(window.location.search).get('adATID'),
                 event_id: eventId  // Include event ID for CAPI matching
