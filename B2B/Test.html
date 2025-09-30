@@ -440,218 +440,212 @@
     </div>
   </footer>
 
-  <script>
-    // ------------------ State ------------------
-    const formData = {};
-    const bottomFormData = {};
-    let currentStep = 0;
-    let bottomCurrentStep = 0;
-    const totalSteps = 8; // UPDATED: added interest step
+<script>
+  // ------------------ State ------------------
+  const formData = {};
+  const bottomFormData = {};
+  let currentStep = 0;
+  let bottomCurrentStep = 0;
+  const totalSteps = 8; // added interest step
 
-    // Initialize progress
+  // Initialize progress
+  updateProgress();
+  updateBottomProgress();
+
+  // ------------------ Top form logic ------------------
+  function selectOption(el, name, value) {
+    const siblings = el.parentNode.querySelectorAll('.radio-option');
+    siblings.forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+    formData[name] = value;
+    el.querySelector('input[type="radio"]').checked = true;
+
+    // thresholds due to extra step
+    if (currentStep < 5) {
+      currentStep++;
+      goToStep(currentStep + 1);
+    } else if (currentStep === 5) {
+      showLoading();
+    }
+  }
+
+  function goToStep(step) {
+    document.querySelectorAll('#leadForm .form-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('loadingScreen').classList.remove('active');
+    document.getElementById(`step${step}`).classList.add('active');
+    currentStep = step - 1;
     updateProgress();
-    updateBottomProgress();
+  }
 
-    // ------------------ Top form logic ------------------
-    function selectOption(el, name, value) {
-      const siblings = el.parentNode.querySelectorAll('.radio-option');
-      siblings.forEach(s => s.classList.remove('selected'));
-      el.classList.add('selected');
-      formData[name] = value;
-      el.querySelector('input[type="radio"]').checked = true;
-
-      // UPDATED thresholds due to extra step
-      if (currentStep < 5) {
-        currentStep++;
-        goToStep(currentStep + 1);
-      } else if (currentStep === 5) {
-        showLoading();
-      }
+  function validateZipAndContinue() {
+    const zipInput = document.querySelector('#step3 input[name="zipcode"]');
+    const zipValue = zipInput.value.trim();
+    if (!/^\d{5}$/.test(zipValue)) {
+      alert('Please enter a valid 5-digit zip code');
+      return;
     }
+    formData.zipcode = zipValue;
+    currentStep = 2; // after step3, move to step4
+    goToStep(4);
+  }
 
-    function goToStep(step) {
-      document.querySelectorAll('#leadForm .form-step').forEach(s => s.classList.remove('active'));
+  function showLoading() {
+    document.querySelectorAll('#leadForm .form-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('loadingScreen').classList.add('active');
+    setTimeout(() => {
       document.getElementById('loadingScreen').classList.remove('active');
-      document.getElementById(`step${step}`).classList.add('active');
-      currentStep = step - 1;
+      currentStep = 6; // before step7
+      document.getElementById('step7').classList.add('active');
       updateProgress();
+    }, 5000);
+  }
+
+  function updateProgress() {
+    const progress = (currentStep / totalSteps) * 100;
+    document.getElementById('progressBar').style.width = progress + '%';
+  }
+
+  // ------------------ Bottom form logic ------------------
+  function selectBottomOption(el, name, value) {
+    const siblings = el.parentNode.querySelectorAll('.radio-option');
+    siblings.forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+    bottomFormData[name] = value;
+    el.querySelector('input[type="radio"]').checked = true;
+
+    if (bottomCurrentStep < 5) {
+      bottomCurrentStep++;
+      goToBottomStep(bottomCurrentStep + 1);
+    } else if (bottomCurrentStep === 5) {
+      showBottomLoading();
     }
+  }
 
-    function validateZipAndContinue() {
-      // UPDATED selector for new step index
-      const zipInput = document.querySelector('#step3 input[name="zipcode"]');
-      const zipValue = zipInput.value.trim();
-      if (!/^\d{5}$/.test(zipValue)) {
-        alert('Please enter a valid 5-digit zip code');
-        return;
-      }
-      formData.zipcode = zipValue;
-      currentStep = 2; // after step3, move to step4
-      goToStep(4);
+  function goToBottomStep(step) {
+    document.querySelectorAll('#bottomLeadForm .form-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('bottomLoadingScreen').classList.remove('active');
+    document.getElementById(`bottomStep${step}`).classList.add('active');
+    bottomCurrentStep = step - 1;
+    updateBottomProgress();
+  }
+
+  function validateBottomZipAndContinue() {
+    const zipInput = document.querySelector('#bottomStep3 input[name="zipcode"]');
+    const zipValue = zipInput.value.trim();
+    if (!/^\d{5}$/.test(zipValue)) {
+      alert('Please enter a valid 5-digit zip code');
+      return;
     }
+    bottomFormData.zipcode = zipValue;
+    bottomCurrentStep = 2;
+    goToBottomStep(4);
+  }
 
-    function showLoading() {
-      document.querySelectorAll('#leadForm .form-step').forEach(s => s.classList.remove('active'));
-      document.getElementById('loadingScreen').classList.add('active');
-      setTimeout(() => {
-        document.getElementById('loadingScreen').classList.remove('active');
-        currentStep = 6; // UPDATED: before step7
-        document.getElementById('step7').classList.add('active');
-        updateProgress();
-      }, 5000);
-    }
-
-    function updateProgress() {
-      const progress = (currentStep / totalSteps) * 100;
-      document.getElementById('progressBar').style.width = progress + '%';
-    }
-
-    // ------------------ Bottom form logic ------------------
-    function selectBottomOption(el, name, value) {
-      const siblings = el.parentNode.querySelectorAll('.radio-option');
-      siblings.forEach(s => s.classList.remove('selected'));
-      el.classList.add('selected');
-      bottomFormData[name] = value;
-      el.querySelector('input[type="radio"]').checked = true;
-
-      // UPDATED thresholds due to extra step
-      if (bottomCurrentStep < 5) {
-        bottomCurrentStep++;
-        goToBottomStep(bottomCurrentStep + 1);
-      } else if (bottomCurrentStep === 5) {
-        showBottomLoading();
-      }
-    }
-
-    function goToBottomStep(step) {
-      document.querySelectorAll('#bottomLeadForm .form-step').forEach(s => s.classList.remove('active'));
+  function showBottomLoading() {
+    document.querySelectorAll('#bottomLeadForm .form-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('bottomLoadingScreen').classList.add('active');
+    setTimeout(() => {
       document.getElementById('bottomLoadingScreen').classList.remove('active');
-      document.getElementById(`bottomStep${step}`).classList.add('active');
-      bottomCurrentStep = step - 1;
+      bottomCurrentStep = 6; // before bottomStep7
+      document.getElementById('bottomStep7').classList.add('active');
       updateBottomProgress();
+    }, 5000);
+  }
+
+  function updateBottomProgress() {
+    const progress = (bottomCurrentStep / totalSteps) * 100;
+    document.getElementById('bottomProgressBar').style.width = progress + '%';
+  }
+
+  // ------------------ Submit handlers ------------------
+  document.getElementById('leadForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    await handleFormSubmission(this, formData);
+  });
+
+  document.getElementById('bottomLeadForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    await handleFormSubmission(this, bottomFormData);
+  });
+
+  // ------------------ Submit w/ redirect logic ------------------
+  async function handleFormSubmission(form, data) {
+    // Collect contact fields
+    const formElements = form.elements;
+    data.business_name = formElements.business_name.value;
+    data.business_website = formElements.business_website.value;
+    data.contact_name = formElements.contact_name.value;
+    data.phone = formElements.phone.value;
+    data.email = formElements.email.value;
+    data.campaign = "$99 Bathroom Remodeling Leads w/ 51% Appointment Requests";
+
+    // Guard: ensure a revenue tier is selected
+    if (!data.monthly_revenue) {
+      alert('Please select your estimated monthly revenue to continue.');
+      return;
     }
 
-    function validateBottomZipAndContinue() {
-      // UPDATED selector for new step index
-      const zipInput = document.querySelector('#bottomStep3 input[name="zipcode"]');
-      const zipValue = zipInput.value.trim();
-      if (!/^\d{5}$/.test(zipValue)) {
-        alert('Please enter a valid 5-digit zip code');
-        return;
-      }
-      bottomFormData.zipcode = zipValue;
-      bottomCurrentStep = 2;
-      goToBottomStep(4);
-    }
-
-    function showBottomLoading() {
-      document.querySelectorAll('#bottomLeadForm .form-step').forEach(s => s.classList.remove('active'));
-      document.getElementById('bottomLoadingScreen').classList.add('active');
-      setTimeout(() => {
-        document.getElementById('bottomLoadingScreen').classList.remove('active');
-        bottomCurrentStep = 6; // UPDATED: before bottomStep7
-        document.getElementById('bottomStep7').classList.add('active');
+    function showThankYouFor(formEl) {
+      const formSteps = formEl.querySelectorAll('.form-step');
+      formSteps.forEach(s => s.classList.remove('active'));
+      if (formEl.id === 'leadForm') {
+        document.getElementById('thankYouScreen').classList.add('active');
+        currentStep = 7; // thank-you after step7
+        updateProgress();
+      } else {
+        document.getElementById('bottomThankYouScreen').classList.add('active');
+        bottomCurrentStep = 7;
         updateBottomProgress();
-      }, 5000);
+      }
+      window.scrollTo({ top: window.pageYOffset });
     }
 
-    function updateBottomProgress() {
-      const progress = (bottomCurrentStep / totalSteps) * 100;
-      document.getElementById('bottomProgressBar').style.width = progress + '%';
-    }
-
-    // ------------------ Submit handlers ------------------
-    document.getElementById('leadForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
-      await handleFormSubmission(this, formData);
-    });
-
-    document.getElementById('bottomLeadForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
-      await handleFormSubmission(this, bottomFormData);
-    });
-
-    // ------------------ Submit w/ redirect logic ------------------
-    async function handleFormSubmission(form, data) {
-      // Collect contact fields
-      const formElements = form.elements;
-      data.business_name = formElements.business_name.value;
-      data.business_website = formElements.business_website.value;
-      data.contact_name = formElements.contact_name.value;
-      data.phone = formElements.phone.value;
-      data.email = formElements.email.value;
-      data.campaign = "$99 Bathroom Remodeling Leads w/ 51% Appointment Requests";
-
-      // Guard: ensure a revenue tier is selected
-      if (!data.monthly_revenue) {
-        alert('Please select your estimated monthly revenue to continue.');
-        return;
-      }
-
-      function showThankYouFor(formEl) {
-        const formSteps = formEl.querySelectorAll('.form-step');
-        formSteps.forEach(s => s.classList.remove('active'));
-        if (formEl.id === 'leadForm') {
-          document.getElementById('thankYouScreen').classList.add('active');
-          currentStep = 7; // UPDATED: thank-you after step7
-          updateProgress();
-        } else {
-          document.getElementById('bottomThankYouScreen').classList.add('active');
-          bottomCurrentStep = 7;
-          updateBottomProgress();
-        }
-        window.scrollTo({ top: window.pageYOffset });
-      }
-
-      try {
-        // Send to webhook (includes interest_reason)
-        await fetch('https://hook.us2.make.com/coxx5m8i1pl2bhhxhm3apg47pi0mbxkw', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-
-       // Updated redirect logic based on revenue tiers
-const name = encodeURIComponent(data.contact_name || "");
-const email = encodeURIComponent(data.email || "");
-const rrUrl = `https://cal.com/team/peak-leads-group/discovery-call?name=${name}&email=${email}`;
-const danUrl = `https://cal.com/daniel-wellish-plg/30min?name=${name}&email=${email}`;
-const bennettUrl = `https://cal.com/bennett-hair-mpzude/discovery-session?name=${name}&email=${email}`;
-
-switch (data.monthly_revenue) {
-  case 'less-than-50k':
-    // Show thank-you only
-    showThankYouFor(form);
-    break;
-
-  case '50k-100k':
-    // NEW: Bennett Hair calendar
-    window.location.href = bennettUrl;
-    break;
-
-  case '100k-200k':
-  case '200k-400k':
-    // Round-robin calendar
-    window.location.href = rrUrl;
-    break;
-
-  case 'more-than-400k':
-    // Daniel's calendar only
-    window.location.href = danUrl;
-    break;
-
-  default:
-    showThankYouFor(form);
-    break;
-}
-
-    // ------------------ Zip inputs: numeric-only ------------------
-    document.querySelectorAll('input[name="zipcode"]').forEach(input => {
-      input.addEventListener('input', function () {
-        this.value = this.value.replace(/[^0-9]/g, '');
-        if (this.value.length > 5) this.value = this.value.slice(0, 5);
+    try {
+      // Send to webhook (includes interest_reason)
+      await fetch('https://hook.us2.make.com/coxx5m8i1pl2bhhxhm3apg47pi0mbxkw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
       });
+
+      // Redirect logic
+      const name = encodeURIComponent(data.contact_name || "");
+      const email = encodeURIComponent(data.email || "");
+      const rrUrl = `https://cal.com/team/peak-leads-group/discovery-call?name=${name}&email=${email}`;
+      const danUrl = `https://cal.com/daniel-wellish-plg/30min?name=${name}&email=${email}`;
+      const bennettUrl = `https://cal.com/bennett-hair-mpzude/discovery-session?name=${name}&email=${email}`;
+
+      switch (data.monthly_revenue) {
+        case 'less-than-50k':
+          showThankYouFor(form);
+          break;
+        case '50k-100k':
+          window.location.href = bennettUrl;
+          break;
+        case '100k-200k':
+        case '200k-400k':
+          window.location.href = rrUrl;
+          break;
+        case 'more-than-400k':
+          window.location.href = danUrl;
+          break;
+        default:
+          showThankYouFor(form);
+          break;
+      }
+    } catch (err) {
+      console.error('Error submitting form:', err);
+      alert('There was an error submitting your form. Please try again.');
+    }
+  } // <-- closes handleFormSubmission
+
+  // ------------------ Zip inputs: numeric-only ------------------
+  document.querySelectorAll('input[name="zipcode"]').forEach(input => {
+    input.addEventListener('input', function () {
+      this.value = this.value.replace(/[^0-9]/g, '');
+      if (this.value.length > 5) this.value = this.value.slice(0, 5);
     });
-  </script>
+  });
+</script>
 </body>
 </html>
