@@ -611,32 +611,39 @@
           body: JSON.stringify(data)
         });
 
-        const name = encodeURIComponent(data.contact_name || "");
-        const email = encodeURIComponent(data.email || "");
-        const rrUrl = `https://cal.com/team/peak-leads-group/discovery-call?name=${name}&email=${email}`;
-        const danUrl = `https://cal.com/daniel-wellish-plg/30min?name=${name}&email=${email}`;
+       // Updated redirect logic based on revenue tiers
+const name = encodeURIComponent(data.contact_name || "");
+const email = encodeURIComponent(data.email || "");
+const rrUrl = `https://cal.com/team/peak-leads-group/discovery-call?name=${name}&email=${email}`;
+const danUrl = `https://cal.com/daniel-wellish-plg/30min?name=${name}&email=${email}`;
+const bennettUrl = `https://cal.com/bennett-hair-mpzude/discovery-session?name=${name}&email=${email}`;
 
-        switch (data.monthly_revenue) {
-          case 'less-than-50k':
-          case '50k-100k':
-            showThankYouFor(form);
-            break;
-          case '100k-200k':
-          case '200k-400k':
-            window.location.href = rrUrl;
-            break;
-          case 'more-than-400k':
-            window.location.href = danUrl;
-            break;
-          default:
-            showThankYouFor(form);
-            break;
-        }
-      } catch (err) {
-        console.error('Error submitting form:', err);
-        alert('There was an error submitting your form. Please try again.');
-      }
-    }
+switch (data.monthly_revenue) {
+  case 'less-than-50k':
+    // Show thank-you only
+    showThankYouFor(form);
+    break;
+
+  case '50k-100k':
+    // NEW: Bennett Hair calendar
+    window.location.href = bennettUrl;
+    break;
+
+  case '100k-200k':
+  case '200k-400k':
+    // Round-robin calendar
+    window.location.href = rrUrl;
+    break;
+
+  case 'more-than-400k':
+    // Daniel's calendar only
+    window.location.href = danUrl;
+    break;
+
+  default:
+    showThankYouFor(form);
+    break;
+}
 
     // ------------------ Zip inputs: numeric-only ------------------
     document.querySelectorAll('input[name="zipcode"]').forEach(input => {
