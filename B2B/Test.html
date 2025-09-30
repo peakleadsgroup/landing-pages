@@ -1,0 +1,24 @@
+<!-- Step 2 -->
+          <div class="form-step" id="step2">
+            <div class="form-question">
+              <label>Why are you interested in working with us?</label>
+              <div class="radio-options">
+                <div class="radio-option" onclick="selectOption(this, 'interest_reason', 'growing-sales-team')"><input type="radio" name="interest_reason" value="growing-sales-team">Growing sales team</div>
+                <div class="radio-option" onclick="selectOption(this, 'interest_reason', 'leads-not-producing')"><input type="radio" name="interest_reason" value="leads-not-producing">Other lead sources not producing what we need</div>
+                <div class="radio-option" onclick="selectOption(this, 'interest_reason', 'expanding-markets')"><input type="radio" name="interest_reason" value="expanding-markets">Expanding into new markets</div>
+                <div class="radio-option" onclick="selectOption(this, 'interest_reason', 'reduce-referrals')"><input type="radio" name="interest_reason" value="reduce-referrals">Want to reduce reliance on referrals</div>
+                <div class="radio-option" onclick="selectOption(this, 'interest_reason', 'other')"><input type="radio" name="interest_reason" value="other">Other</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="form-step" id="step3">
+            <div class="form-question">
+              <label>What is your business' main zip code?</label>
+              <input type="text" name="zipcode" pattern="[0-9]{5}" placeholder="Enter 5-digit zip code" required maxlength="5">
+            </div>
+            <div class="form-navigation">
+              <button type="button" class="btn btn-primary" onclick="validateZipAndContinue()">Continue</button>
+            </div>
+          </div>
