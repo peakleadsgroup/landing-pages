@@ -657,13 +657,12 @@
             
             const params = new URLSearchParams();
             
-            if (first) params.set('first_name', first);
-            if (last) params.set('last_name', last);
+            if (name) params.set('full_name', name);
             
             // Use smsReminderNumber parameter to match your Cal.com configuration
             const smsDigits = document.getElementById('phone_digits')?.value || '';
             if (smsDigits.length === 10) {
-                params.set('phone', `%2B${smsDigits}`);
+                params.set('phone', `${smsDigits}`);
             }
             
             // Redirect to new Cal.com link
