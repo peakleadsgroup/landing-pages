@@ -662,7 +662,7 @@
             // Use smsReminderNumber parameter to match your Cal.com configuration
             const smsDigits = document.getElementById('phone_digits')?.value || '';
             if (smsDigits.length === 10) {
-                params.set('phone', `$1{smsDigits}`);
+                params.set('phone', `1${smsDigits}`);
             }
             
             // Redirect to new Cal.com link
