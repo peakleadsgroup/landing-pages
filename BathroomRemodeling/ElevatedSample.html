@@ -656,21 +656,18 @@
             const name = `${first} ${last}`.replace(/\s+/g, ' ').trim();
             
             const params = new URLSearchParams();
-            params.set('email', 'peakleadsgroup@gmail.com'); // fixed inbox email
             
-            if (name) params.set('name', name);
+            if (first) params.set('first_name', first);
+            if (last) params.set('last_name', last);
             
             // Use smsReminderNumber parameter to match your Cal.com configuration
             const smsDigits = document.getElementById('phone_digits')?.value || '';
             if (smsDigits.length === 10) {
-                params.set('smsReminderNumber', `+1${smsDigits}`);
+                params.set('phone', `%2B${smsDigits}`);
             }
             
-            // Use simple static address for location field
-            params.set('location', '123 Main Street, Wilmington, NC');
-            
             // Redirect to new Cal.com link
-            window.location.href = `https://cal.com/peakleadsgroup/elevated-kitchen-and-bath?${params.toString()}`;
+            window.location.href = `https://api.leadconnectorhq.com/widget/bookings/elevatedkandbg99oy4?${params.toString()}`;
         }
 
         function submitFinalForm() {
