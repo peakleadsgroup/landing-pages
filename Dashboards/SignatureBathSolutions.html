@@ -156,21 +156,27 @@
             refreshIcon.classList.add('animate-spin');
 
             try {
-                // Build filter formula based on whether we're using record ID or name
+                // Build filter formula - simpler approach that works with Airtable's limitations
                 let filterFormula;
                 if (CONFIG.useRecordId) {
-                    // When using record ID, we need to check the actual record IDs, not the display names
-                    // This requires using RECORD_ID() or checking against the ID directly
-                    filterFormula = `FIND("${CONFIG.filterValue}", ARRAYJOIN(ARRAYMAP({${CONFIG.linkedFieldName}}, value, RECORD_ID(value))))`;
+                    // For record ID filtering, we'll fetch all records and filter client-side
+                    // because Airtable's formula language doesn't support RECORD_ID in filterByFormula
+                    filterFormula = null;
                 } else {
                     // When using name, we can search the display value
                     filterFormula = `FIND("${CONFIG.filterValue}", ARRAYJOIN({${CONFIG.linkedFieldName}}))`;
                 }
                 
-                const url = `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}?filterByFormula=${encodeURIComponent(filterFormula)}`;
+                let url;
+                if (filterFormula) {
+                    url = `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}?filterByFormula=${encodeURIComponent(filterFormula)}`;
+                } else {
+                    // Fetch all records, we'll filter client-side
+                    url = `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}`;
+                }
 
                 console.log('Fetching URL:', url);
-                console.log('Filter formula:', filterFormula);
+                if (filterFormula) console.log('Filter formula:', filterFormula);
 
                 const response = await fetch(url, {
                     headers: {
@@ -181,38 +187,48 @@
                 if (!response.ok) {
                     const errorText = await response.text();
                     console.error('Response error:', errorText);
-                    throw new Error(`Failed to fetch: ${response.status} ${response.statusText} - ${errorText}`);
+                    throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
                 }
 
                 const data = await response.json();
                 console.log('Raw data received:', data);
                 allRecords = data.records || [];
                 
-                // If no records with filter, try fetching all records to debug
-                if (allRecords.length === 0) {
-                    console.log('No records found with filter. Fetching all records to debug...');
-                    const debugUrl = `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}?maxRecords=10`;
-                    const debugResponse = await fetch(debugUrl, {
-                        headers: {
-                            'Authorization': `Bearer ${CONFIG.apiKey}`
+                // If using record ID, filter client-side
+                if (CONFIG.useRecordId) {
+                    console.log('Filtering by record ID client-side...');
+                    filteredRecords = allRecords.filter(record => {
+                        const linkedField = record.fields[CONFIG.linkedFieldName];
+                        if (!linkedField) return false;
+                        
+                        // Linked fields are arrays of record IDs
+                        if (Array.isArray(linkedField)) {
+                            const match = linkedField.includes(CONFIG.filterValue);
+                            if (match) {
+                                console.log('Found match in record:', record.id, 'Linked field:', linkedField);
+                            }
+                            return match;
                         }
+                        return false;
                     });
-                    const debugData = await debugResponse.json();
-                    console.log('Sample records (first 10):', debugData.records);
-                    
-                    // Check each record's Linked Client field
-                    debugData.records.forEach((record, index) => {
-                        console.log(`Record ${index + 1} - "${CONFIG.linkedFieldName}" field:`, record.fields[CONFIG.linkedFieldName]);
-                    });
-                    
+                    console.log('Filtered to', filteredRecords.length, 'records');
+                } else {
+                    filteredRecords = [...allRecords];
+                }
+                
+                // Debug info if no records found
+                if (filteredRecords.length === 0 && allRecords.length > 0) {
                     console.log('\n=== DEBUGGING INFO ===');
+                    console.log('Total records fetched:', allRecords.length);
                     console.log('Looking for value:', CONFIG.filterValue);
                     console.log('Using record ID?:', CONFIG.useRecordId);
                     console.log('In field named:', CONFIG.linkedFieldName);
-                    console.log('Check if any of the above records contain this value');
+                    
+                    // Show sample of what's in the linked fields
+                    allRecords.slice(0, 5).forEach((record, index) => {
+                        console.log(`Record ${index + 1} - "${CONFIG.linkedFieldName}":`, record.fields[CONFIG.linkedFieldName]);
+                    });
                 }
-                
-                filteredRecords = [...allRecords];
 
                 // Hide config notice if successful
                 if (CONFIG.apiKey !== 'YOUR_API_KEY') {
