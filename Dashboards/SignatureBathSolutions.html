@@ -167,32 +167,47 @@
                     filterFormula = `FIND("${CONFIG.filterValue}", ARRAYJOIN({${CONFIG.linkedFieldName}}))`;
                 }
                 
-                let url;
-                if (filterFormula) {
-                    url = `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}?filterByFormula=${encodeURIComponent(filterFormula)}`;
-                } else {
-                    // Fetch all records, we'll filter client-side
-                    url = `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}`;
-                }
-
-                console.log('Fetching URL:', url);
-                if (filterFormula) console.log('Filter formula:', filterFormula);
-
-                const response = await fetch(url, {
-                    headers: {
-                        'Authorization': `Bearer ${CONFIG.apiKey}`
+                // Fetch all records with pagination
+                allRecords = [];
+                let offset = null;
+                let pageCount = 0;
+                
+                do {
+                    pageCount++;
+                    let url;
+                    if (filterFormula) {
+                        url = `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}?filterByFormula=${encodeURIComponent(filterFormula)}`;
+                    } else {
+                        url = `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}`;
                     }
-                });
+                    
+                    if (offset) {
+                        url += `&offset=${offset}`;
+                    }
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Response error:', errorText);
-                    throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
-                }
+                    console.log(`Fetching page ${pageCount}...`, url);
 
-                const data = await response.json();
-                console.log('Raw data received:', data);
-                allRecords = data.records || [];
+                    const response = await fetch(url, {
+                        headers: {
+                            'Authorization': `Bearer ${CONFIG.apiKey}`
+                        }
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('Response error:', errorText);
+                        throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    console.log(`Page ${pageCount} received:`, data.records.length, 'records');
+                    
+                    allRecords = allRecords.concat(data.records || []);
+                    offset = data.offset;
+                    
+                } while (offset);
+                
+                console.log('Total records fetched:', allRecords.length);
                 
                 // If using record ID, filter client-side
                 if (CONFIG.useRecordId) {
