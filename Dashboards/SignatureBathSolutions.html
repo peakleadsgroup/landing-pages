@@ -136,12 +136,12 @@
             // Columns to display (in order)
             displayColumns: [
                 'Stage',
+                'Status',
                 'Full Name',
                 'Created',
                 'Phone',
                 'Address',
                 'Price',
-                'Status',
                 'Appointment (Respective Timezone)',
                 'Notes'
             ]
@@ -304,17 +304,6 @@
 
             // Create table body with special formatting
             tableBody.innerHTML = filteredRecords.map(record => {
-                // Get status for row highlighting
-                const status = record.fields['Status'] ? String(record.fields['Status']).toLowerCase() : '';
-                let rowClass = 'hover-border';
-                if (status === 'qualified') {
-                    rowClass = 'bg-green-50 hover-border';
-                } else if (status === 'pending') {
-                    rowClass = 'bg-yellow-50 hover-border';
-                } else if (status === 'unqualified') {
-                    rowClass = 'bg-red-50 hover-border';
-                }
-                
                 // Edit button cell
                 const editCell = '<td class="px-6 py-4"><button onclick="openEditModal(\'' + record.id + '\')" class="text-blue-600 hover:text-blue-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button></td>';
                 
@@ -347,6 +336,22 @@
                             badgeColor = 'bg-red-100 text-red-800';
                         } else if (stageLower === 'close won') {
                             badgeColor = 'bg-green-100 text-green-800';
+                        }
+                        
+                        return '<td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' + badgeColor + '">' + value + '</span></td>';
+                    }
+                    
+                    // Status column with colored badge
+                    if (key === 'Status' && value) {
+                        const statusLower = value.toLowerCase();
+                        let badgeColor = 'bg-gray-100 text-gray-800';
+                        
+                        if (statusLower === 'qualified') {
+                            badgeColor = 'bg-green-100 text-green-800';
+                        } else if (statusLower === 'pending') {
+                            badgeColor = 'bg-yellow-100 text-yellow-800';
+                        } else if (statusLower === 'unqualified') {
+                            badgeColor = 'bg-red-100 text-red-800';
                         }
                         
                         return '<td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' + badgeColor + '">' + value + '</span></td>';
@@ -392,7 +397,7 @@
                     return '<td class="' + cellClass + '">' + value + '</td>';
                 }).join('');
                 
-                return '<tr class="' + rowClass + '">' + editCell + cells + '</tr>';
+                return '<tr class="hover-border">' + editCell + cells + '</tr>';
             }).join('');
         }
 
@@ -420,48 +425,44 @@
             // Clear previous content
             content.innerHTML = '';
             
-            // Get all field keys
-            const allFields = Object.keys(record.fields).sort();
-            
             // Create container
             const container = document.createElement('div');
             container.className = 'space-y-4';
             
-            allFields.forEach(fieldName => {
-                let value = record.fields[fieldName];
-                
-                // Format the value
-                if (value === null || value === undefined) {
-                    value = '';
-                } else if (Array.isArray(value)) {
-                    value = value.join(', ');
-                } else {
-                    value = String(value);
-                }
-                
-                const fieldDiv = document.createElement('div');
-                fieldDiv.className = 'border-b border-gray-200 pb-3';
-                
-                const label = document.createElement('label');
-                label.className = 'block text-sm font-medium text-gray-700 mb-1';
-                label.textContent = fieldName;
-                
-                const valueDiv = document.createElement('div');
-                valueDiv.className = 'text-sm text-gray-900';
-                
-                if (value) {
-                    valueDiv.textContent = value;
-                } else {
-                    const emptySpan = document.createElement('span');
-                    emptySpan.className = 'text-gray-400';
-                    emptySpan.textContent = 'No data';
-                    valueDiv.appendChild(emptySpan);
-                }
-                
-                fieldDiv.appendChild(label);
-                fieldDiv.appendChild(valueDiv);
-                container.appendChild(fieldDiv);
-            });
+            // Only show Full Summary field
+            const fullSummary = record.fields['Full Summary'];
+            let displayValue = '';
+            
+            if (fullSummary === null || fullSummary === undefined || fullSummary === '') {
+                displayValue = 'No data';
+            } else if (Array.isArray(fullSummary)) {
+                displayValue = fullSummary.join(', ');
+            } else {
+                displayValue = String(fullSummary);
+            }
+            
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'border-b border-gray-200 pb-3';
+            
+            const label = document.createElement('label');
+            label.className = 'block text-sm font-medium text-gray-700 mb-1';
+            label.textContent = 'Full Summary';
+            
+            const valueDiv = document.createElement('div');
+            valueDiv.className = 'text-sm text-gray-900 whitespace-pre-wrap';
+            
+            if (displayValue === 'No data') {
+                const emptySpan = document.createElement('span');
+                emptySpan.className = 'text-gray-400';
+                emptySpan.textContent = displayValue;
+                valueDiv.appendChild(emptySpan);
+            } else {
+                valueDiv.textContent = displayValue;
+            }
+            
+            fieldDiv.appendChild(label);
+            fieldDiv.appendChild(valueDiv);
+            container.appendChild(fieldDiv);
             
             content.appendChild(container);
             modal.classList.remove('hidden');
