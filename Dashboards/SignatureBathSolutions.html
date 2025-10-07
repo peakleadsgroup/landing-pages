@@ -346,77 +346,7 @@
                         const cleanValue = value.replace(/[\$,]/g, '');
                         if (!isNaN(cleanValue) && cleanValue !== '') {
                             const numValue = parseFloat(cleanValue);
-                            value = '
-        }
-
-        function filterRecords() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            
-            filteredRecords = allRecords.filter(record => {
-                return Object.values(record.fields).some(value => {
-                    if (value === null || value === undefined) return false;
-                    return String(value).toLowerCase().includes(searchTerm);
-                });
-            });
-
-            displayRecords();
-        }
-
-        // Initial load
-        fetchRecords();
-
-        // Modal functions
-        function openEditModal(recordId) {
-            const record = allRecords.find(r => r.id === recordId);
-            if (!record) return;
-
-            const modal = document.getElementById('editModal');
-            const content = document.getElementById('editModalContent');
-            
-            // Get all field keys
-            const allFields = Object.keys(record.fields).sort();
-            
-            // Build modal content
-            let html = '<div class="space-y-4">';
-            
-            allFields.forEach(fieldName => {
-                let value = record.fields[fieldName];
-                
-                // Format the value
-                if (value === null || value === undefined) {
-                    value = '';
-                } else if (Array.isArray(value)) {
-                    value = value.join(', ');
-                } else {
-                    value = String(value);
-                }
-                
-                html += '<div class="border-b border-gray-200 pb-3">';
-                html += '<label class="block text-sm font-medium text-gray-700 mb-1">' + fieldName + '</label>';
-                html += '<div class="text-sm text-gray-900">' + (value || '<span class="text-gray-400">No data</span>') + '</div>';
-                html += '</div>';
-            });
-            
-            html += '</div>';
-            
-            content.innerHTML = html;
-            modal.classList.remove('hidden');
-        }
-
-        function closeEditModal() {
-            const modal = document.getElementById('editModal');
-            modal.classList.add('hidden');
-        }
-
-        // Close modal when clicking outside
-        document.getElementById('editModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeEditModal();
-            }
-        });
-    </script>
-</body>
-</html> + numValue.toLocaleString('en-US', {
+                            value = '$' + numValue.toLocaleString('en-US', {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2
                             });
@@ -442,6 +372,76 @@
 
             displayRecords();
         }
+
+        // Modal functions
+        function openEditModal(recordId) {
+            const record = allRecords.find(r => r.id === recordId);
+            if (!record) return;
+
+            const modal = document.getElementById('editModal');
+            const content = document.getElementById('editModalContent');
+            
+            // Clear previous content
+            content.innerHTML = '';
+            
+            // Get all field keys
+            const allFields = Object.keys(record.fields).sort();
+            
+            // Create container
+            const container = document.createElement('div');
+            container.className = 'space-y-4';
+            
+            allFields.forEach(fieldName => {
+                let value = record.fields[fieldName];
+                
+                // Format the value
+                if (value === null || value === undefined) {
+                    value = '';
+                } else if (Array.isArray(value)) {
+                    value = value.join(', ');
+                } else {
+                    value = String(value);
+                }
+                
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'border-b border-gray-200 pb-3';
+                
+                const label = document.createElement('label');
+                label.className = 'block text-sm font-medium text-gray-700 mb-1';
+                label.textContent = fieldName;
+                
+                const valueDiv = document.createElement('div');
+                valueDiv.className = 'text-sm text-gray-900';
+                
+                if (value) {
+                    valueDiv.textContent = value;
+                } else {
+                    const emptySpan = document.createElement('span');
+                    emptySpan.className = 'text-gray-400';
+                    emptySpan.textContent = 'No data';
+                    valueDiv.appendChild(emptySpan);
+                }
+                
+                fieldDiv.appendChild(label);
+                fieldDiv.appendChild(valueDiv);
+                container.appendChild(fieldDiv);
+            });
+            
+            content.appendChild(container);
+            modal.classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('editModal');
+            modal.classList.add('hidden');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
 
         // Initial load
         fetchRecords();
