@@ -45,26 +45,6 @@
                 </div>
             </div>
 
-            <!-- Configuration Notice -->
-            <div id="configNotice" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                <div class="flex items-start gap-3">
-                    <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                    </svg>
-                    <div>
-                        <h3 class="font-semibold text-yellow-900 mb-2">Configuration Required</h3>
-                        <p class="text-sm text-yellow-800 mb-2">Please update the configuration in the script section with your Airtable details:</p>
-                        <ul class="text-sm text-yellow-800 space-y-1 list-disc list-inside">
-                            <li><strong>baseId:</strong> Your Airtable base ID (starts with "app")</li>
-                            <li><strong>tableName:</strong> The name of your table</li>
-                            <li><strong>apiKey:</strong> Your Airtable API key or Personal Access Token</li>
-                            <li><strong>linkedFieldName:</strong> The name of your linked record field</li>
-                            <li><strong>filterRecordId:</strong> The record ID to filter by (starts with "rec")</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
             <!-- Error Message -->
             <div id="errorMessage" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 hidden">
                 <div class="flex items-start gap-3">
@@ -152,7 +132,6 @@
             const errorMessage = document.getElementById('errorMessage');
             const recordsContainer = document.getElementById('recordsContainer');
             const noRecordsState = document.getElementById('noRecordsState');
-            const configNotice = document.getElementById('configNotice');
 
             // Hide all states
             errorMessage.classList.add('hidden');
@@ -165,14 +144,11 @@
             refreshIcon.classList.add('animate-spin');
 
             try {
-                // Build filter formula - simpler approach that works with Airtable's limitations
+                // Build filter formula
                 let filterFormula;
                 if (CONFIG.useRecordId) {
-                    // For record ID filtering, we'll fetch all records and filter client-side
-                    // because Airtable's formula language doesn't support RECORD_ID in filterByFormula
                     filterFormula = null;
                 } else {
-                    // When using name, we can search the display value
                     filterFormula = `FIND("${CONFIG.filterValue}", ARRAYJOIN({${CONFIG.linkedFieldName}}))`;
                 }
                 
@@ -194,7 +170,7 @@
                         url += `&offset=${offset}`;
                     }
 
-                    console.log(`Fetching page ${pageCount}...`, url);
+                    console.log(`Fetching page ${pageCount}...`);
 
                     const response = await fetch(url, {
                         headers: {
@@ -225,11 +201,10 @@
                         const linkedField = record.fields[CONFIG.linkedFieldName];
                         if (!linkedField) return false;
                         
-                        // Linked fields are arrays of record IDs
                         if (Array.isArray(linkedField)) {
                             const match = linkedField.includes(CONFIG.filterValue);
                             if (match) {
-                                console.log('Found match in record:', record.id, 'Linked field:', linkedField);
+                                console.log('Found match in record:', record.id);
                             }
                             return match;
                         }
@@ -242,21 +217,7 @@
                 
                 // Debug info if no records found
                 if (filteredRecords.length === 0 && allRecords.length > 0) {
-                    console.log('\n=== DEBUGGING INFO ===');
-                    console.log('Total records fetched:', allRecords.length);
-                    console.log('Looking for value:', CONFIG.filterValue);
-                    console.log('Using record ID?:', CONFIG.useRecordId);
-                    console.log('In field named:', CONFIG.linkedFieldName);
-                    
-                    // Show sample of what's in the linked fields
-                    allRecords.slice(0, 5).forEach((record, index) => {
-                        console.log(`Record ${index + 1} - "${CONFIG.linkedFieldName}":`, record.fields[CONFIG.linkedFieldName]);
-                    });
-                }
-
-                // Hide config notice if successful
-                if (CONFIG.apiKey !== 'YOUR_API_KEY') {
-                    configNotice.classList.add('hidden');
+                    console.log('No records found after filtering');
                 }
 
                 displayRecords();
@@ -293,68 +254,41 @@
             const fieldKeys = CONFIG.displayColumns;
 
             // Create table header
-            tableHead.innerHTML = `
-                <tr>
-                    ${fieldKeys.map(key => `
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            ${key}
-                        </th>
-                    `).join('')}
-                </tr>
-            `;
+            tableHead.innerHTML = '<tr>' + fieldKeys.map(key => 
+                '<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">' + key + '</th>'
+            ).join('') + '</tr>';
 
             // Create table body with special formatting
-            tableBody.innerHTML = filteredRecords.map(record => `
-                <tr class="hover:bg-gray-50 transition-colors">
-                    ${fieldKeys.map(key => {
-                        let value = record.fields[key];
-                        
-                        // Handle different value types
-                        if (value === null || value === undefined) {
-                            value = '';
-                        } else if (Array.isArray(value)) {
-                            value = value.join(', ');
-                        } else {
-                            value = String(value);
+            tableBody.innerHTML = filteredRecords.map(record => {
+                const cells = fieldKeys.map(key => {
+                    let value = record.fields[key];
+                    
+                    // Handle different value types
+                    if (value === null || value === undefined) {
+                        value = '';
+                    } else if (Array.isArray(value)) {
+                        value = value.join(', ');
+                    } else {
+                        value = String(value);
+                    }
+                    
+                    // Add dollar sign to Price column
+                    if (key === 'Price' && value && value.trim() !== '') {
+                        const cleanValue = value.replace(/[\$,]/g, '');
+                        if (!isNaN(cleanValue) && cleanValue !== '') {
+                            const numValue = parseFloat(cleanValue);
+                            value = '$' + numValue.toLocaleString('en-US', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
                         }
-                        
-                        // Add dollar sign to Price column
-                        if (key === 'Price' && value && value.trim() !== '') {
-                            // Remove any existing dollar signs and format
-                            value = value.replace(/[$,]/g, '');
-                            if (!isNaN(value) && value !== '') {
-                                value = '
-
-        function filterRecords() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            
-            filteredRecords = allRecords.filter(record => {
-                return Object.values(record.fields).some(value => {
-                    if (value === null || value === undefined) return false;
-                    return String(value).toLowerCase().includes(searchTerm);
-                });
-            });
-
-            displayRecords();
-        }
-
-        // Initial load
-        if (CONFIG.apiKey !== 'YOUR_API_KEY') {
-            fetchRecords();
-        }
-    </script>
-</body>
-</html> + parseFloat(value).toLocaleString('en-US', {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2
-                                });
-                            }
-                        }
-                        
-                        return `<td class="px-6 py-4 text-sm text-gray-900">${value}</td>`;
-                    }).join('')}
-                </tr>
-            `).join('');
+                    }
+                    
+                    return '<td class="px-6 py-4 text-sm text-gray-900">' + value + '</td>';
+                }).join('');
+                
+                return '<tr class="hover:bg-gray-50 transition-colors">' + cells + '</tr>';
+            }).join('');
         }
 
         function filterRecords() {
@@ -371,9 +305,7 @@
         }
 
         // Initial load
-        if (CONFIG.apiKey !== 'YOUR_API_KEY') {
-            fetchRecords();
-        }
+        fetchRecords();
     </script>
 </body>
 </html>
