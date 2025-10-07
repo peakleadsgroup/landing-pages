@@ -123,7 +123,14 @@
             tableName: 'B2C Leads',
             apiKey: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589',
             linkedFieldName: 'Linked Client',
-            filterRecordId: 'recOh883Xa4gDW4Vr'
+            
+            // Option 1: Use client name (what you see in Airtable)
+            // filterValue: 'Elevated Kitchen and Bath',
+            // useRecordId: false,
+            
+            // Option 2: Use record ID (recommended - more precise)
+            filterValue: 'recOh883Xa4gDW4Vr',
+            useRecordId: true
         };
 
         let allRecords = [];
@@ -149,8 +156,17 @@
             refreshIcon.classList.add('animate-spin');
 
             try {
-                // Try different filter formulas
-                const filterFormula = `FIND("${CONFIG.filterRecordId}", ARRAYJOIN({${CONFIG.linkedFieldName}}))`;
+                // Build filter formula based on whether we're using record ID or name
+                let filterFormula;
+                if (CONFIG.useRecordId) {
+                    // When using record ID, we need to check the actual record IDs, not the display names
+                    // This requires using RECORD_ID() or checking against the ID directly
+                    filterFormula = `FIND("${CONFIG.filterValue}", ARRAYJOIN(ARRAYMAP({${CONFIG.linkedFieldName}}, value, RECORD_ID(value))))`;
+                } else {
+                    // When using name, we can search the display value
+                    filterFormula = `FIND("${CONFIG.filterValue}", ARRAYJOIN({${CONFIG.linkedFieldName}}))`;
+                }
+                
                 const url = `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}?filterByFormula=${encodeURIComponent(filterFormula)}`;
 
                 console.log('Fetching URL:', url);
@@ -183,7 +199,17 @@
                     });
                     const debugData = await debugResponse.json();
                     console.log('Sample records (first 10):', debugData.records);
-                    console.log('Check the console to see the structure of your Linked Client field');
+                    
+                    // Check each record's Linked Client field
+                    debugData.records.forEach((record, index) => {
+                        console.log(`Record ${index + 1} - "${CONFIG.linkedFieldName}" field:`, record.fields[CONFIG.linkedFieldName]);
+                    });
+                    
+                    console.log('\n=== DEBUGGING INFO ===');
+                    console.log('Looking for value:', CONFIG.filterValue);
+                    console.log('Using record ID?:', CONFIG.useRecordId);
+                    console.log('In field named:', CONFIG.linkedFieldName);
+                    console.log('Check if any of the above records contain this value');
                 }
                 
                 filteredRecords = [...allRecords];
