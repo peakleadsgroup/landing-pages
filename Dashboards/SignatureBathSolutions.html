@@ -35,7 +35,6 @@
 <body class="bg-gray-50">
     <div class="min-h-screen p-6">
         <div class="max-w-7xl mx-auto">
-            <!-- Header -->
             <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
                 <div class="flex items-center justify-between mb-4">
                     <h1 class="text-2xl font-bold text-gray-900">Client Dashboard</h1>
@@ -46,23 +45,13 @@
                         Refresh
                     </button>
                 </div>
-
-                <!-- Search Bar -->
                 <div class="relative">
                     <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
-                    <input
-                        type="text"
-                        id="searchInput"
-                        placeholder="Search records..."
-                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        oninput="filterRecords()"
-                    />
+                    <input type="text" id="searchInput" placeholder="Search records..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="filterRecords()" />
                 </div>
             </div>
-
-            <!-- Error Message -->
             <div id="errorMessage" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 hidden">
                 <div class="flex items-start gap-3">
                     <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,16 +63,12 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Loading State -->
             <div id="loadingState" class="bg-white rounded-lg shadow-sm p-12 text-center hidden">
                 <svg class="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                 </svg>
                 <p class="text-gray-600">Loading records...</p>
             </div>
-
-            <!-- Records Container -->
             <div id="recordsContainer" class="hidden">
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="p-4 bg-gray-50 border-b border-gray-200 flex items-center gap-2">
@@ -92,7 +77,6 @@
                         </svg>
                         <span class="font-semibold text-gray-700" id="recordCount">0 records found</span>
                     </div>
-
                     <div class="overflow-x-auto">
                         <table class="w-full">
                             <thead class="bg-gray-50 border-b border-gray-200" id="tableHead"></thead>
@@ -101,8 +85,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- No Records State -->
             <div id="noRecordsState" class="bg-white rounded-lg shadow-sm p-12 text-center hidden">
                 <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
@@ -112,8 +94,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Edit Modal -->
     <div id="editModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
         <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
             <div class="flex items-center justify-between mb-4">
@@ -127,7 +107,7 @@
             <div id="editModalContent" class="max-h-96 overflow-y-auto"></div>
         </div>
     </div>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <script>
         const CONFIG = {
             baseId: 'appmBb0lzqRK9dI8v',
@@ -136,17 +116,7 @@
             linkedFieldName: 'Linked Client',
             filterValue: 'Signature Bath Solutions',
             useRecordId: false,
-            displayColumns: [
-                'Stage',
-                'Status',
-                'Full Name',
-                'Created',
-                'Phone',
-                'Address',
-                'Price',
-                'Appointment (Respective Timezone)',
-                'Notes'
-            ]
+            displayColumns: ['Stage', 'Status', 'Full Name', 'Created', 'Phone', 'Address', 'Price', 'Appointment (Respective Timezone)', 'Notes']
         };
 
         let allRecords = [];
@@ -168,84 +138,35 @@
             refreshIcon.classList.add('animate-spin');
 
             try {
-                let filterFormula;
-                if (CONFIG.useRecordId) {
-                    filterFormula = null;
-                } else {
-                    filterFormula = `FIND("${CONFIG.filterValue}", ARRAYJOIN({${CONFIG.linkedFieldName}}))`;
-                }
-                
+                let filterFormula = CONFIG.useRecordId ? null : `FIND("${CONFIG.filterValue}", ARRAYJOIN({${CONFIG.linkedFieldName}}))`;
                 allRecords = [];
                 let offset = null;
                 let pageCount = 0;
                 
                 do {
                     pageCount++;
-                    let url;
-                    if (filterFormula) {
-                        url = `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}?filterByFormula=${encodeURIComponent(filterFormula)}`;
-                    } else {
-                        url = `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}`;
-                    }
+                    let url = filterFormula ? 
+                        `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}?filterByFormula=${encodeURIComponent(filterFormula)}` :
+                        `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}`;
                     
-                    if (offset) {
-                        url += `&offset=${offset}`;
-                    }
-
-                    console.log(`Fetching page ${pageCount}...`);
+                    if (offset) url += `&offset=${offset}`;
 
                     const response = await fetch(url, {
-                        headers: {
-                            'Authorization': `Bearer ${CONFIG.apiKey}`
-                        }
+                        headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
                     });
 
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        console.error('Response error:', errorText);
-                        throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
-                    }
+                    if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`);
 
                     const data = await response.json();
-                    console.log(`Page ${pageCount} received:`, data.records.length, 'records');
-                    
                     allRecords = allRecords.concat(data.records || []);
                     offset = data.offset;
-                    
                 } while (offset);
                 
-                console.log('Total records fetched:', allRecords.length);
+                filteredRecords = CONFIG.useRecordId ? 
+                    allRecords.filter(r => Array.isArray(r.fields[CONFIG.linkedFieldName]) && r.fields[CONFIG.linkedFieldName].includes(CONFIG.filterValue)) :
+                    [...allRecords];
                 
-                if (CONFIG.useRecordId) {
-                    console.log('Filtering by record ID client-side...');
-                    filteredRecords = allRecords.filter(record => {
-                        const linkedField = record.fields[CONFIG.linkedFieldName];
-                        if (!linkedField) return false;
-                        
-                        if (Array.isArray(linkedField)) {
-                            const match = linkedField.includes(CONFIG.filterValue);
-                            if (match) {
-                                console.log('Found match in record:', record.id);
-                            }
-                            return match;
-                        }
-                        return false;
-                    });
-                    console.log('Filtered to', filteredRecords.length, 'records');
-                } else {
-                    filteredRecords = [...allRecords];
-                }
-                
-                filteredRecords.sort((a, b) => {
-                    const dateA = new Date(a.fields['Created'] || 0);
-                    const dateB = new Date(b.fields['Created'] || 0);
-                    return dateB - dateA;
-                });
-                
-                if (filteredRecords.length === 0 && allRecords.length > 0) {
-                    console.log('No records found after filtering');
-                }
-
+                filteredRecords.sort((a, b) => new Date(b.fields['Created'] || 0) - new Date(a.fields['Created'] || 0));
                 displayRecords();
             } catch (err) {
                 document.getElementById('errorText').textContent = err.message;
@@ -272,162 +193,102 @@
 
             recordsContainer.classList.remove('hidden');
             noRecordsState.classList.add('hidden');
-
-            recordCount.textContent = filteredRecords.length + ' record' + (filteredRecords.length !== 1 ? 's' : '') + ' found';
-
-            const fieldKeys = CONFIG.displayColumns;
+            recordCount.textContent = `${filteredRecords.length} record${filteredRecords.length !== 1 ? 's' : ''} found`;
 
             const headerRow = document.createElement('tr');
-            
             const editHeader = document.createElement('th');
             editHeader.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
             editHeader.textContent = 'Edit';
             headerRow.appendChild(editHeader);
             
-            for (let i = 0; i < fieldKeys.length; i++) {
+            CONFIG.displayColumns.forEach(col => {
                 const th = document.createElement('th');
                 th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
-                if (fieldKeys[i] === 'Notes') {
-                    th.className += ' notes-column';
-                } else if (fieldKeys[i] === 'Created') {
-                    th.className += ' created-column';
-                } else if (fieldKeys[i] === 'Appointment (Respective Timezone)') {
-                    th.className += ' appointment-column';
-                } else if (fieldKeys[i] === 'Phone') {
-                    th.className += ' phone-column';
-                }
-                th.textContent = fieldKeys[i];
+                if (col === 'Notes') th.className += ' notes-column';
+                if (col === 'Created') th.className += ' created-column';
+                if (col === 'Appointment (Respective Timezone)') th.className += ' appointment-column';
+                if (col === 'Phone') th.className += ' phone-column';
+                th.textContent = col;
                 headerRow.appendChild(th);
-            }
+            });
             
             tableHead.innerHTML = '';
             tableHead.appendChild(headerRow);
-            tableBody.innerHTML = '';
-
             tableBody.innerHTML = filteredRecords.map(record => {
-                const editCell = '<td class="px-6 py-4"><button onclick="openEditModal(\'' + record.id + '\')" class="text-blue-600 hover:text-blue-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button></td>';
+                const editCell = `<td class="px-6 py-4"><button onclick="openEditModal('${record.id}')" class="text-blue-600 hover:text-blue-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button></td>`;
                 
-                const cells = fieldKeys.map(key => {
+                const cells = CONFIG.displayColumns.map(key => {
                     let value = record.fields[key];
-                    
-                    if (value === null || value === undefined) {
-                        value = '';
-                    } else if (Array.isArray(value)) {
-                        value = value.join(', ');
-                    } else {
-                        value = String(value);
-                    }
+                    if (value == null) value = '';
+                    else if (Array.isArray(value)) value = value.join(', ');
+                    else value = String(value);
                     
                     if (key === 'Stage' && value) {
-                        const stageLower = value.toLowerCase();
-                        let badgeColor = 'bg-gray-100 text-gray-800';
-                        
-                        if (stageLower === 'uncontacted') {
-                            badgeColor = 'bg-slate-100 text-slate-800';
-                        } else if (stageLower === 'contacted') {
-                            badgeColor = 'bg-blue-100 text-blue-800';
-                        } else if (stageLower === 'no show') {
-                            badgeColor = 'bg-orange-100 text-orange-800';
-                        } else if (stageLower === 'appointment ran') {
-                            badgeColor = 'bg-purple-100 text-purple-800';
-                        } else if (stageLower === 'close lost') {
-                            badgeColor = 'bg-red-100 text-red-800';
-                        } else if (stageLower === 'close won') {
-                            badgeColor = 'bg-green-100 text-green-800';
-                        }
-                        
-                        return '<td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' + badgeColor + '">' + value + '</span></td>';
+                        const colors = {
+                            'uncontacted': 'bg-slate-100 text-slate-800',
+                            'contacted': 'bg-blue-100 text-blue-800',
+                            'no show': 'bg-orange-100 text-orange-800',
+                            'appointment ran': 'bg-purple-100 text-purple-800',
+                            'close lost': 'bg-red-100 text-red-800',
+                            'close won': 'bg-green-100 text-green-800'
+                        };
+                        const color = colors[value.toLowerCase()] || 'bg-gray-100 text-gray-800';
+                        return `<td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${color}">${value}</span></td>`;
                     }
                     
                     if (key === 'Status' && value) {
-                        const statusLower = value.toLowerCase();
-                        let badgeColor = 'bg-gray-100 text-gray-800';
-                        
-                        if (statusLower === 'qualified') {
-                            badgeColor = 'bg-green-100 text-green-800';
-                        } else if (statusLower === 'pending') {
-                            badgeColor = 'bg-yellow-100 text-yellow-800';
-                        } else if (statusLower === 'unqualified') {
-                            badgeColor = 'bg-red-100 text-red-800';
-                        }
-                        
-                        return '<td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' + badgeColor + '">' + value + '</span></td>';
+                        const colors = {
+                            'qualified': 'bg-green-100 text-green-800',
+                            'pending': 'bg-yellow-100 text-yellow-800',
+                            'unqualified': 'bg-red-100 text-red-800'
+                        };
+                        const color = colors[value.toLowerCase()] || 'bg-gray-100 text-gray-800';
+                        return `<td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${color}">${value}</span></td>`;
                     }
                     
-                    if (key === 'Phone' && value && value.trim() !== '') {
+                    if (key === 'Phone' && value) {
                         const cleaned = value.replace(/\D/g, '');
-                        if (cleaned.length === 10) {
-                            value = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
-                        }
+                        if (cleaned.length === 10) value = `(${cleaned.slice(0,3)}) ${cleaned.slice(3,6)}-${cleaned.slice(6)}`;
                     }
                     
                     if (key === 'Price') {
                         if (!value || value.trim() === '') {
                             value = '$0.00';
                         } else {
-                            const cleanValue = value.replace(/[\$,]/g, '');
-                            if (!isNaN(cleanValue) && cleanValue !== '') {
-                                const numValue = parseFloat(cleanValue);
-                                value = '$' + numValue.toLocaleString('en-US', {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2
-                                });
-                            } else {
-                                value = '$0.00';
-                            }
+                            const num = parseFloat(value.replace(/[^\d.-]/g, ''));
+                            value = isNaN(num) ? '$0.00' : ' + num.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                         }
                     }
                     
-                    if (key === 'Created' && value && value.trim() !== '') {
+                    if (key === 'Created' && value) {
                         try {
                             const date = new Date(value);
                             if (!isNaN(date.getTime())) {
-                                const timeString = date.toLocaleString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    year: 'numeric',
-                                    hour: 'numeric',
-                                    minute: '2-digit',
-                                    hour12: true
-                                });
-                                const timezone = date.toLocaleTimeString('en-US', {
-                                    timeZoneName: 'short'
-                                }).split(' ').pop();
-                                value = timeString + ' ' + timezone;
+                                const time = date.toLocaleString('en-US', {month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true});
+                                const tz = date.toLocaleTimeString('en-US', {timeZoneName: 'short'}).split(' ').pop();
+                                value = `${time} ${tz}`;
                             }
-                        } catch (e) {
-                            // Keep original value
-                        }
+                        } catch (e) {}
                     }
                     
                     let cellClass = 'px-6 py-4 text-sm text-gray-900';
-                    if (key === 'Notes') {
-                        cellClass += ' notes-column';
-                    } else if (key === 'Created') {
-                        cellClass += ' created-column';
-                    } else if (key === 'Appointment (Respective Timezone)') {
-                        cellClass += ' appointment-column';
-                    } else if (key === 'Phone') {
-                        cellClass += ' phone-column';
-                    }
+                    if (key === 'Notes') cellClass += ' notes-column';
+                    if (key === 'Created') cellClass += ' created-column';
+                    if (key === 'Appointment (Respective Timezone)') cellClass += ' appointment-column';
+                    if (key === 'Phone') cellClass += ' phone-column';
                     
-                    return '<td class="' + cellClass + '">' + value + '</td>';
+                    return `<td class="${cellClass}">${value}</td>`;
                 }).join('');
                 
-                return '<tr class="hover-border">' + editCell + cells + '</tr>';
+                return `<tr class="hover-border">${editCell}${cells}</tr>`;
             }).join('');
         }
 
         function filterRecords() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            
-            filteredRecords = allRecords.filter(record => {
-                return Object.values(record.fields).some(value => {
-                    if (value === null || value === undefined) return false;
-                    return String(value).toLowerCase().includes(searchTerm);
-                });
-            });
-
+            filteredRecords = allRecords.filter(record => 
+                Object.values(record.fields).some(value => value && String(value).toLowerCase().includes(searchTerm))
+            );
             displayRecords();
         }
 
@@ -437,63 +298,25 @@
 
             const modal = document.getElementById('editModal');
             const content = document.getElementById('editModalContent');
-            
             content.innerHTML = '';
             
             const container = document.createElement('div');
             container.className = 'space-y-4';
             
             const fullSummary = record.fields['Full Summary'];
-            let summaryDisplayValue = '';
-            
-            if (fullSummary === null || fullSummary === undefined || fullSummary === '') {
-                summaryDisplayValue = 'No data';
-            } else if (Array.isArray(fullSummary)) {
-                summaryDisplayValue = fullSummary.join(', ');
-            } else {
-                summaryDisplayValue = String(fullSummary);
-            }
+            const summaryValue = fullSummary == null || fullSummary === '' ? 'No data' : (Array.isArray(fullSummary) ? fullSummary.join(', ') : String(fullSummary));
             
             const summaryDiv = document.createElement('div');
             summaryDiv.className = 'border-b border-gray-200 pb-3';
-            
-            const summaryLabel = document.createElement('label');
-            summaryLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
-            summaryLabel.textContent = 'Full Summary';
-            
-            const summaryValueDiv = document.createElement('div');
-            summaryValueDiv.className = 'text-sm text-gray-900 whitespace-pre-wrap';
-            
-            if (summaryDisplayValue === 'No data') {
-                const emptySpan = document.createElement('span');
-                emptySpan.className = 'text-gray-400';
-                emptySpan.textContent = summaryDisplayValue;
-                summaryValueDiv.appendChild(emptySpan);
-            } else {
-                summaryValueDiv.textContent = summaryDisplayValue;
-            }
-            
-            summaryDiv.appendChild(summaryLabel);
-            summaryDiv.appendChild(summaryValueDiv);
+            summaryDiv.innerHTML = `<label class="block text-sm font-medium text-gray-700 mb-1">Full Summary</label><div class="text-sm text-gray-900 whitespace-pre-wrap">${summaryValue === 'No data' ? '<span class="text-gray-400">No data</span>' : summaryValue}</div>`;
             container.appendChild(summaryDiv);
             
             const notes = record.fields['Notes'];
-            let notesValue = '';
-            
-            if (notes !== null && notes !== undefined) {
-                if (Array.isArray(notes)) {
-                    notesValue = notes.join(', ');
-                } else {
-                    notesValue = String(notes);
-                }
-            }
+            const notesValue = notes == null ? '' : (Array.isArray(notes) ? notes.join(', ') : String(notes));
             
             const notesDiv = document.createElement('div');
             notesDiv.className = 'pb-3';
-            
-            const notesLabel = document.createElement('label');
-            notesLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
-            notesLabel.textContent = 'Notes';
+            notesDiv.innerHTML = '<label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>';
             
             const notesTextarea = document.createElement('textarea');
             notesTextarea.id = 'editNotesField';
@@ -501,44 +324,36 @@
             notesTextarea.rows = 6;
             notesTextarea.value = notesValue;
             notesTextarea.placeholder = 'Enter notes here...';
-            
-            const originalNotes = notesValue;
-            
-            const unsavedMessage = document.createElement('div');
-            unsavedMessage.id = 'unsavedMessage';
-            unsavedMessage.className = 'text-sm text-gray-400 mt-1 hidden';
-            unsavedMessage.textContent = 'Unsaved changes';
-            
-            notesDiv.appendChild(notesLabel);
             notesDiv.appendChild(notesTextarea);
-            notesDiv.appendChild(unsavedMessage);
+            
+            const unsavedMsg = document.createElement('div');
+            unsavedMsg.id = 'unsavedMessage';
+            unsavedMsg.className = 'text-sm text-gray-400 mt-1 hidden';
+            unsavedMsg.textContent = 'Unsaved changes';
+            notesDiv.appendChild(unsavedMsg);
             container.appendChild(notesDiv);
             
             const saveBtn = document.createElement('button');
             saveBtn.id = 'saveNotesBtn';
             saveBtn.className = 'px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors hidden';
             saveBtn.textContent = 'Save Notes';
-            saveBtn.onclick = function() {
-                saveNotes(recordId);
-            };
+            saveBtn.onclick = () => saveNotes(recordId);
             container.appendChild(saveBtn);
             
-            notesTextarea.addEventListener('input', function() {
-                if (notesTextarea.value !== originalNotes) {
+            notesTextarea.addEventListener('input', () => {
+                if (notesTextarea.value !== notesValue) {
                     saveBtn.classList.remove('hidden');
-                    unsavedMessage.classList.remove('hidden');
+                    unsavedMsg.classList.remove('hidden');
                 } else {
                     saveBtn.classList.add('hidden');
-                    unsavedMessage.classList.add('hidden');
+                    unsavedMsg.classList.add('hidden');
                 }
             });
             
             const reportBtn = document.createElement('button');
             reportBtn.className = 'flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors mt-4';
             reportBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path></svg>Report as Unqualified';
-            reportBtn.onclick = function() {
-                showUnqualifiedReport(recordId);
-            };
+            reportBtn.onclick = () => showUnqualifiedReport(recordId);
             container.appendChild(reportBtn);
             
             content.appendChild(container);
@@ -557,35 +372,140 @@
             const isAlreadyReported = whyUnqualified !== '';
             
             const content = document.getElementById('editModalContent');
-            content.innerHTML = '';
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Report ${fullName} as unqualified</h2>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                        <p class="text-sm text-gray-700">We provide replacements for duplicates, phone numbers that are out of service, or zip codes that are out of your area. While we understand there may be other situations where you are not able to sell a lead, we built our pricing knowing that some of these edge cases will exist, and therefor can only replace leads for the previously listed reasons. This allows us to keep costs as low as possible. We work on an extremely thin margin so replacing every single lead that is an edge case would make us unprofitable, and we too need to make some money to survive as a business and continue providing you leads.</p>
+                    </div>
+                    ${isAlreadyReported ? '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4"><p class="text-yellow-800">You have already reported this lead as unqualified</p></div>' : ''}
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Why is this lead unqualified?</label>
+                        <select id="whyUnqualifiedSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent${isAlreadyReported ? ' bg-gray-100 cursor-not-allowed' : ''}" ${isAlreadyReported ? 'disabled' : ''}>
+                            <option value="">-- Select --</option>
+                            <option value="Out of area"${whyUnqualified === 'Out of area' ? ' selected' : ''}>Out of area</option>
+                            <option value="Phone is out of service"${whyUnqualified === 'Phone is out of service' ? ' selected' : ''}>Phone is out of service</option>
+                            <option value="Duplicate lead"${whyUnqualified === 'Duplicate lead' ? ' selected' : ''}>Duplicate lead</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Leave a note for our team for when they review this request</label>
+                        <textarea id="unqualifiedReasoningField" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent${isAlreadyReported ? ' bg-gray-100 cursor-not-allowed' : ''}" rows="4" placeholder="Enter detailed reasoning..." ${isAlreadyReported ? 'disabled' : ''}>${unqualifiedReasoning}</textarea>
+                    </div>
+                    ${isAlreadyReported ? `
+                        <div class="mb-4 border-t border-gray-200 pt-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Unqualified Approval Status</label>
+                            <div class="text-sm text-gray-900 px-3 py-2 bg-gray-50 rounded-md">${approvalStatus || 'Pending review'}</div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Unqualified Approval Reasoning</label>
+                            <div class="text-sm text-gray-900 px-3 py-2 bg-gray-50 rounded-md whitespace-pre-wrap">${approvalReasoning || 'No reasoning provided yet'}</div>
+                        </div>
+                    ` : `
+                        <div class="flex items-start gap-2 mb-4">
+                            <input type="checkbox" id="confirmCheckbox" class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                            <label for="confirmCheckbox" class="text-sm text-gray-700 cursor-pointer">I understand that the only reasons leads will be replaced is if they meet one of the 3 selected criteria</label>
+                        </div>
+                        <button id="submitUnqualifiedBtn" class="px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed transition-colors" disabled>Submit</button>
+                    `}
+                </div>
+            `;
             
-            const container = document.createElement('div');
-            container.className = 'space-y-4';
-            
-            const heading = document.createElement('h2');
-            heading.className = 'text-2xl font-bold text-gray-900 mb-6';
-            heading.textContent = 'Report ' + fullName + ' as unqualified';
-            container.appendChild(heading);
-            
-            const explanationDiv = document.createElement('div');
-            explanationDiv.className = 'bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4';
-            explanationDiv.innerHTML = '<p class="text-sm text-gray-700">We provide replacements for duplicates, phone numbers that are out of service, or zip codes that are out of your area. While we understand there may be other situations where you are not able to sell a lead, we built our pricing knowing that some of these edge cases will exist, and therefor can only replace leads for the previously listed reasons. This allows us to keep costs as low as possible. We work on an extremely thin margin so replacing every single lead that is an edge case would make us unprofitable, and we too need to make some money to survive as a business and continue providing you leads.</p>';
-            container.appendChild(explanationDiv);
-            
-            if (isAlreadyReported) {
-                const alreadyReportedDiv = document.createElement('div');
-                alreadyReportedDiv.className = 'bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4';
-                alreadyReportedDiv.innerHTML = '<p class="text-yellow-800">You have already reported this lead as unqualified</p>';
-                container.appendChild(alreadyReportedDiv);
+            if (!isAlreadyReported) {
+                const whySelect = document.getElementById('whyUnqualifiedSelect');
+                const reasoningField = document.getElementById('unqualifiedReasoningField');
+                const checkbox = document.getElementById('confirmCheckbox');
+                const submitBtn = document.getElementById('submitUnqualifiedBtn');
+                
+                const checkEnabled = () => {
+                    if (whySelect.value && reasoningField.value.trim() && checkbox.checked) {
+                        submitBtn.disabled = false;
+                        submitBtn.className = 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer transition-colors';
+                    } else {
+                        submitBtn.disabled = true;
+                        submitBtn.className = 'px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed transition-colors';
+                    }
+                };
+                
+                whySelect.addEventListener('change', checkEnabled);
+                reasoningField.addEventListener('input', checkEnabled);
+                checkbox.addEventListener('change', checkEnabled);
+                submitBtn.onclick = () => submitUnqualifiedReport(recordId);
             }
+        }
+
+        async function submitUnqualifiedReport(recordId) {
+            const whyValue = document.getElementById('whyUnqualifiedSelect').value;
+            const reasoningValue = document.getElementById('unqualifiedReasoningField').value;
             
-            const whyDiv = document.createElement('div');
-            whyDiv.className = 'mb-4';
+            try {
+                const response = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${recordId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${CONFIG.apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        fields: {
+                            'Why Unqualified': whyValue,
+                            'Unqualified Reasoning': reasoningValue
+                        }
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to submit report');
+
+                const record = allRecords.find(r => r.id === recordId);
+                if (record) {
+                    record.fields['Why Unqualified'] = whyValue;
+                    record.fields['Unqualified Reasoning'] = reasoningValue;
+                }
+
+                displayRecords();
+                closeEditModal();
+                alert('Unqualified report submitted successfully!');
+            } catch (err) {
+                alert('Error submitting report: ' + err.message);
+            }
+        }
+
+        async function saveNotes(recordId) {
+            const newNotes = document.getElementById('editNotesField').value;
             
-            const whyLabel = document.createElement('label');
-            whyLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
-            whyLabel.textContent = 'Why is this lead unqualified?';
-            
-            const whySelect = document.createElement('select');
-            whySelect.id = 'whyUnqualifiedSelect';
-            whySelect.className = 'w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500
+            try {
+                const response = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${recordId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${CONFIG.apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        fields: { 'Notes': newNotes }
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to save notes');
+
+                const record = allRecords.find(r => r.id === recordId);
+                if (record) record.fields['Notes'] = newNotes;
+
+                displayRecords();
+                closeEditModal();
+                alert('Notes saved successfully!');
+            } catch (err) {
+                alert('Error saving notes: ' + err.message);
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        document.getElementById('editModal').addEventListener('click', e => {
+            if (e.target === document.getElementById('editModal')) closeEditModal();
+        });
+
+        fetchRecords();
+    </script>
+</body>
+</html>
