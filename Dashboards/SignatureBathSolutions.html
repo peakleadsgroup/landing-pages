@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen p-6">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h1 class="text-2xl font-bold text-gray-900">Client Dashboard</h1>
+                    <button onclick="fetchRecords()" id="refreshBtn" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <svg id="refreshIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="relative">
+                    <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Search records..."
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        oninput="filterRecords()"
+                    />
+                </div>
+            </div>
+
+            <!-- Configuration Notice -->
+            <div id="configNotice" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <div>
+                        <h3 class="font-semibold text-yellow-900 mb-2">Configuration Required</h3>
+                        <p class="text-sm text-yellow-800 mb-2">Please update the configuration in the script section with your Airtable details:</p>
+                        <ul class="text-sm text-yellow-800 space-y-1 list-disc list-inside">
+                            <li><strong>baseId:</strong> Your Airtable base ID (starts with "app")</li>
+                            <li><strong>tableName:</strong> The name of your table</li>
+                            <li><strong>apiKey:</strong> Your Airtable API key or Personal Access Token</li>
+                            <li><strong>linkedFieldName:</strong> The name of your linked record field</li>
+                            <li><strong>filterRecordId:</strong> The record ID to filter by (starts with "rec")</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 hidden">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <div>
+                        <h3 class="font-semibold text-red-900 mb-1">Error Loading Records</h3>
+                        <p class="text-sm text-red-800" id="errorText"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="bg-white rounded-lg shadow-sm p-12 text-center hidden">
+                <svg class="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                <p class="text-gray-600">Loading records...</p>
+            </div>
+
+            <!-- Records Container -->
+            <div id="recordsContainer" class="hidden">
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="p-4 bg-gray-50 border-b border-gray-200 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                        </svg>
+                        <span class="font-semibold text-gray-700" id="recordCount">0 records found</span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 border-b border-gray-200" id="tableHead"></thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="tableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No Records State -->
+            <div id="noRecordsState" class="bg-white rounded-lg shadow-sm p-12 text-center hidden">
+                <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                </svg>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">No Records Found</h3>
+                <p class="text-gray-600">No records match the specified filter criteria.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - Replace these with your actual values
+        const CONFIG = {
+            baseId: 'YOUR_BASE_ID',
+            tableName: 'YOUR_TABLE_NAME',
+            apiKey: 'YOUR_API_KEY',
+            linkedFieldName: 'YOUR_LINKED_FIELD_NAME',
+            filterRecordId: 'YOUR_FILTER_RECORD_ID'
+        };
+
+        let allRecords = [];
+        let filteredRecords = [];
+
+        async function fetchRecords() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            const refreshIcon = document.getElementById('refreshIcon');
+            const loadingState = document.getElementById('loadingState');
+            const errorMessage = document.getElementById('errorMessage');
+            const recordsContainer = document.getElementById('recordsContainer');
+            const noRecordsState = document.getElementById('noRecordsState');
+            const configNotice = document.getElementById('configNotice');
+
+            // Hide all states
+            errorMessage.classList.add('hidden');
+            recordsContainer.classList.add('hidden');
+            noRecordsState.classList.add('hidden');
+            
+            // Show loading
+            loadingState.classList.remove('hidden');
+            refreshBtn.disabled = true;
+            refreshIcon.classList.add('animate-spin');
+
+            try {
+                const filterFormula = `SEARCH("${CONFIG.filterRecordId}", ARRAYJOIN({${CONFIG.linkedFieldName}}))`;
+                const url = `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}?filterByFormula=${encodeURIComponent(filterFormula)}`;
+
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${CONFIG.apiKey}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                allRecords = data.records || [];
+                filteredRecords = [...allRecords];
+
+                // Hide config notice if successful
+                if (CONFIG.apiKey !== 'YOUR_API_KEY') {
+                    configNotice.classList.add('hidden');
+                }
+
+                displayRecords();
+            } catch (err) {
+                document.getElementById('errorText').textContent = err.message;
+                errorMessage.classList.remove('hidden');
+            } finally {
+                loadingState.classList.add('hidden');
+                refreshBtn.disabled = false;
+                refreshIcon.classList.remove('animate-spin');
+            }
+        }
+
+        function displayRecords() {
+            const recordsContainer = document.getElementById('recordsContainer');
+            const noRecordsState = document.getElementById('noRecordsState');
+            const tableHead = document.getElementById('tableHead');
+            const tableBody = document.getElementById('tableBody');
+            const recordCount = document.getElementById('recordCount');
+
+            if (filteredRecords.length === 0) {
+                recordsContainer.classList.add('hidden');
+                noRecordsState.classList.remove('hidden');
+                return;
+            }
+
+            recordsContainer.classList.remove('hidden');
+            noRecordsState.classList.add('hidden');
+
+            // Update count
+            recordCount.textContent = `${filteredRecords.length} record${filteredRecords.length !== 1 ? 's' : ''} found`;
+
+            // Get field keys from first record
+            const fieldKeys = Object.keys(filteredRecords[0].fields);
+
+            // Create table header
+            tableHead.innerHTML = `
+                <tr>
+                    ${fieldKeys.map(key => `
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            ${key}
+                        </th>
+                    `).join('')}
+                </tr>
+            `;
+
+            // Create table body
+            tableBody.innerHTML = filteredRecords.map(record => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    ${fieldKeys.map(key => {
+                        let value = record.fields[key];
+                        if (Array.isArray(value)) {
+                            value = value.join(', ');
+                        } else if (value === null || value === undefined) {
+                            value = '';
+                        } else {
+                            value = String(value);
+                        }
+                        return `<td class="px-6 py-4 text-sm text-gray-900">${value}</td>`;
+                    }).join('')}
+                </tr>
+            `).join('');
+        }
+
+        function filterRecords() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            filteredRecords = allRecords.filter(record => {
+                return Object.values(record.fields).some(value => {
+                    if (value === null || value === undefined) return false;
+                    return String(value).toLowerCase().includes(searchTerm);
+                });
+            });
+
+            displayRecords();
+        }
+
+        // Initial load
+        if (CONFIG.apiKey !== 'YOUR_API_KEY') {
+            fetchRecords();
+        }
+    </script>
+</body>
+</html>
