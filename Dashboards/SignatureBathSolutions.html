@@ -246,6 +246,13 @@
                     filteredRecords = [...allRecords];
                 }
                 
+                // Sort by Created date (newest first)
+                filteredRecords.sort((a, b) => {
+                    const dateA = new Date(a.fields['Created'] || 0);
+                    const dateB = new Date(b.fields['Created'] || 0);
+                    return dateB - dateA;
+                });
+                
                 // Debug info if no records found
                 if (filteredRecords.length === 0 && allRecords.length > 0) {
                     console.log('No records found after filtering');
@@ -570,6 +577,9 @@
             const fullName = record.fields['Full Name'] || 'Unknown';
             const whyUnqualified = record.fields['Why Unqualified'] || '';
             const unqualifiedReasoning = record.fields['Unqualified Reasoning'] || '';
+            const approvalStatus = record.fields['Unqualified Approval Status'] || '';
+            const approvalReasoning = record.fields['Unqualified Approval Reasoning'] || '';
+            const isAlreadyReported = whyUnqualified !== '';
             
             const content = document.getElementById('editModalContent');
             content.innerHTML = '';
@@ -590,7 +600,7 @@
             container.appendChild(explanationDiv);
             
             // Check if already reported
-            if (whyUnqualified) {
+            if (isAlreadyReported) {
                 const alreadyReportedDiv = document.createElement('div');
                 alreadyReportedDiv.className = 'bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4';
                 alreadyReportedDiv.innerHTML = '<p class="text-yellow-800">You\'ve already reported this lead as unqualified</p>';
@@ -608,6 +618,10 @@
             const whySelect = document.createElement('select');
             whySelect.id = 'whyUnqualifiedSelect';
             whySelect.className = 'w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+            if (isAlreadyReported) {
+                whySelect.className += ' bg-gray-100 cursor-not-allowed';
+                whySelect.disabled = true;
+            }
             
             const options = ['', 'Out of area', 'Phone is out of service', 'Duplicate lead'];
             options.forEach(opt => {
@@ -635,6 +649,10 @@
             const reasoningTextarea = document.createElement('textarea');
             reasoningTextarea.id = 'unqualifiedReasoningField';
             reasoningTextarea.className = 'w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+            if (isAlreadyReported) {
+                reasoningTextarea.className += ' bg-gray-100 cursor-not-allowed';
+                reasoningTextarea.disabled = true;
+            }
             reasoningTextarea.rows = 4;
             reasoningTextarea.value = unqualifiedReasoning;
             reasoningTextarea.placeholder = 'Enter detailed reasoning...';
@@ -643,36 +661,73 @@
             reasoningDiv.appendChild(reasoningTextarea);
             container.appendChild(reasoningDiv);
             
-            // Submit button (initially hidden)
-            const submitBtn = document.createElement('button');
-            submitBtn.id = 'submitUnqualifiedBtn';
-            submitBtn.className = 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors hidden';
-            submitBtn.textContent = 'Submit';
-            submitBtn.onclick = function() {
-                submitUnqualifiedReport(recordId);
-            };
-            container.appendChild(submitBtn);
+            // Show approval status and reasoning if already reported
+            if (isAlreadyReported) {
+                // Approval Status
+                const approvalStatusDiv = document.createElement('div');
+                approvalStatusDiv.className = 'mb-4 border-t border-gray-200 pt-4';
+                
+                const approvalStatusLabel = document.createElement('label');
+                approvalStatusLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
+                approvalStatusLabel.textContent = 'Unqualified Approval Status';
+                
+                const approvalStatusValue = document.createElement('div');
+                approvalStatusValue.className = 'text-sm text-gray-900 px-3 py-2 bg-gray-50 rounded-md';
+                approvalStatusValue.textContent = approvalStatus || 'Pending review';
+                
+                approvalStatusDiv.appendChild(approvalStatusLabel);
+                approvalStatusDiv.appendChild(approvalStatusValue);
+                container.appendChild(approvalStatusDiv);
+                
+                // Approval Reasoning
+                const approvalReasoningDiv = document.createElement('div');
+                approvalReasoningDiv.className = 'mb-4';
+                
+                const approvalReasoningLabel = document.createElement('label');
+                approvalReasoningLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
+                approvalReasoningLabel.textContent = 'Unqualified Approval Reasoning';
+                
+                const approvalReasoningValue = document.createElement('div');
+                approvalReasoningValue.className = 'text-sm text-gray-900 px-3 py-2 bg-gray-50 rounded-md whitespace-pre-wrap';
+                approvalReasoningValue.textContent = approvalReasoning || 'No reasoning provided yet';
+                
+                approvalReasoningDiv.appendChild(approvalReasoningLabel);
+                approvalReasoningDiv.appendChild(approvalReasoningValue);
+                container.appendChild(approvalReasoningDiv);
+            }
             
-            // Store original values
-            const originalWhy = whyUnqualified;
-            const originalReasoning = unqualifiedReasoning;
-            
-            // Add event listeners to detect changes
-            whySelect.addEventListener('change', function() {
-                if (whySelect.value !== originalWhy || reasoningTextarea.value !== originalReasoning) {
-                    submitBtn.classList.remove('hidden');
-                } else {
-                    submitBtn.classList.add('hidden');
-                }
-            });
-            
-            reasoningTextarea.addEventListener('input', function() {
-                if (whySelect.value !== originalWhy || reasoningTextarea.value !== originalReasoning) {
-                    submitBtn.classList.remove('hidden');
-                } else {
-                    submitBtn.classList.add('hidden');
-                }
-            });
+            // Submit button (initially hidden, not shown if already reported)
+            if (!isAlreadyReported) {
+                const submitBtn = document.createElement('button');
+                submitBtn.id = 'submitUnqualifiedBtn';
+                submitBtn.className = 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors hidden';
+                submitBtn.textContent = 'Submit';
+                submitBtn.onclick = function() {
+                    submitUnqualifiedReport(recordId);
+                };
+                container.appendChild(submitBtn);
+                
+                // Store original values
+                const originalWhy = whyUnqualified;
+                const originalReasoning = unqualifiedReasoning;
+                
+                // Add event listeners to detect changes
+                whySelect.addEventListener('change', function() {
+                    if (whySelect.value !== originalWhy || reasoningTextarea.value !== originalReasoning) {
+                        submitBtn.classList.remove('hidden');
+                    } else {
+                        submitBtn.classList.add('hidden');
+                    }
+                });
+                
+                reasoningTextarea.addEventListener('input', function() {
+                    if (whySelect.value !== originalWhy || reasoningTextarea.value !== originalReasoning) {
+                        submitBtn.classList.remove('hidden');
+                    } else {
+                        submitBtn.classList.add('hidden');
+                    }
+                });
+            }
             
             content.appendChild(container);
         }
