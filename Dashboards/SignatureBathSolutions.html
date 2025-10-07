@@ -384,7 +384,7 @@
                         try {
                             const date = new Date(value);
                             if (!isNaN(date.getTime())) {
-                                value = date.toLocaleString('en-US', {
+                                const timeString = date.toLocaleString('en-US', {
                                     month: 'short',
                                     day: 'numeric',
                                     year: 'numeric',
@@ -392,6 +392,10 @@
                                     minute: '2-digit',
                                     hour12: true
                                 });
+                                const timezone = date.toLocaleTimeString('en-US', {
+                                    timeZoneName: 'short'
+                                }).split(' ').pop();
+                                value = timeString + ' ' + timezone;
                             }
                         } catch (e) {
                             // Keep original value if parsing fails
@@ -504,21 +508,71 @@
             notesTextarea.value = notesValue;
             notesTextarea.placeholder = 'Enter notes here...';
             
+            // Store original value for comparison
+            const originalNotes = notesValue;
+            
+            const unsavedMessage = document.createElement('div');
+            unsavedMessage.id = 'unsavedMessage';
+            unsavedMessage.className = 'text-sm text-gray-400 mt-1 hidden';
+            unsavedMessage.textContent = 'Unsaved changes';
+            
             notesDiv.appendChild(notesLabel);
             notesDiv.appendChild(notesTextarea);
+            notesDiv.appendChild(unsavedMessage);
             container.appendChild(notesDiv);
             
-            // Add save button
+            // Add save button (initially hidden)
             const saveBtn = document.createElement('button');
-            saveBtn.className = 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors';
+            saveBtn.id = 'saveNotesBtn';
+            saveBtn.className = 'px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors hidden';
             saveBtn.textContent = 'Save Notes';
             saveBtn.onclick = function() {
                 saveNotes(recordId);
             };
             container.appendChild(saveBtn);
             
+            // Add event listener to detect changes
+            notesTextarea.addEventListener('input', function() {
+                if (notesTextarea.value !== originalNotes) {
+                    saveBtn.classList.remove('hidden');
+                    unsavedMessage.classList.remove('hidden');
+                } else {
+                    saveBtn.classList.add('hidden');
+                    unsavedMessage.classList.add('hidden');
+                }
+            });
+            
+            // Add Report as Unqualified button
+            const reportBtn = document.createElement('button');
+            reportBtn.className = 'flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors mt-4';
+            reportBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path></svg>Report as Unqualified';
+            reportBtn.onclick = function() {
+                showUnqualifiedReport(recordId);
+            };
+            container.appendChild(reportBtn);
+            
             content.appendChild(container);
             modal.classList.remove('hidden');
+        }
+
+        function showUnqualifiedReport(recordId) {
+            const record = allRecords.find(r => r.id === recordId);
+            if (!record) return;
+            
+            const fullName = record.fields['Full Name'] || 'Unknown';
+            
+            const content = document.getElementById('editModalContent');
+            content.innerHTML = '';
+            
+            const container = document.createElement('div');
+            container.className = 'space-y-4';
+            
+            const heading = document.createElement('h2');
+            heading.className = 'text-2xl font-bold text-gray-900 mb-6';
+            heading.textContent = `Report ${fullName} as unqualified`;
+            
+            container.appendChild(heading);
+            content.appendChild(container);
         }
 
         async function saveNotes(recordId) {
