@@ -13,6 +13,14 @@
         .animate-spin {
             animation: spin 1s linear infinite;
         }
+        .hover-border:hover {
+            outline: 2px solid #e5e7eb;
+            outline-offset: -2px;
+        }
+        .notes-column {
+            min-width: 300px;
+            max-width: 400px;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -134,7 +142,7 @@
                 'Address',
                 'Price',
                 'Status',
-                'Appointment',
+                'Appointment (Respective Timezone)',
                 'Notes'
             ]
         };
@@ -281,6 +289,9 @@
             for (let i = 0; i < fieldKeys.length; i++) {
                 const th = document.createElement('th');
                 th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+                if (fieldKeys[i] === 'Notes') {
+                    th.className += ' notes-column';
+                }
                 th.textContent = fieldKeys[i];
                 headerRow.appendChild(th);
             }
@@ -295,13 +306,13 @@
             tableBody.innerHTML = filteredRecords.map(record => {
                 // Get status for row highlighting
                 const status = record.fields['Status'] ? String(record.fields['Status']).toLowerCase() : '';
-                let rowClass = 'hover:bg-gray-50 transition-colors';
+                let rowClass = 'hover-border';
                 if (status === 'qualified') {
-                    rowClass = 'bg-green-50 hover:bg-green-100 transition-colors';
+                    rowClass = 'bg-green-50 hover-border';
                 } else if (status === 'pending') {
-                    rowClass = 'bg-yellow-50 hover:bg-yellow-100 transition-colors';
+                    rowClass = 'bg-yellow-50 hover-border';
                 } else if (status === 'unqualified') {
-                    rowClass = 'bg-red-50 hover:bg-red-100 transition-colors';
+                    rowClass = 'bg-red-50 hover-border';
                 }
                 
                 // Edit button cell
@@ -353,7 +364,32 @@
                         }
                     }
                     
-                    return '<td class="px-6 py-4 text-sm text-gray-900">' + value + '</td>';
+                    // Format Created date to user's timezone
+                    if (key === 'Created' && value && value.trim() !== '') {
+                        try {
+                            const date = new Date(value);
+                            if (!isNaN(date.getTime())) {
+                                value = date.toLocaleString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric',
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    hour12: true
+                                });
+                            }
+                        } catch (e) {
+                            // Keep original value if parsing fails
+                        }
+                    }
+                    
+                    // Add notes-column class to Notes cells
+                    let cellClass = 'px-6 py-4 text-sm text-gray-900';
+                    if (key === 'Notes') {
+                        cellClass += ' notes-column';
+                    }
+                    
+                    return '<td class="' + cellClass + '">' + value + '</td>';
                 }).join('');
                 
                 return '<tr class="' + rowClass + '">' + editCell + cells + '</tr>';
