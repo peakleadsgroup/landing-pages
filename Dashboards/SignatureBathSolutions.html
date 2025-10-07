@@ -149,8 +149,12 @@
             refreshIcon.classList.add('animate-spin');
 
             try {
-                const filterFormula = `SEARCH("${CONFIG.filterRecordId}", ARRAYJOIN({${CONFIG.linkedFieldName}}))`;
+                // Try different filter formulas
+                const filterFormula = `FIND("${CONFIG.filterRecordId}", ARRAYJOIN({${CONFIG.linkedFieldName}}))`;
                 const url = `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}?filterByFormula=${encodeURIComponent(filterFormula)}`;
+
+                console.log('Fetching URL:', url);
+                console.log('Filter formula:', filterFormula);
 
                 const response = await fetch(url, {
                     headers: {
@@ -159,11 +163,29 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+                    const errorText = await response.text();
+                    console.error('Response error:', errorText);
+                    throw new Error(`Failed to fetch: ${response.status} ${response.statusText} - ${errorText}`);
                 }
 
                 const data = await response.json();
+                console.log('Raw data received:', data);
                 allRecords = data.records || [];
+                
+                // If no records with filter, try fetching all records to debug
+                if (allRecords.length === 0) {
+                    console.log('No records found with filter. Fetching all records to debug...');
+                    const debugUrl = `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}?maxRecords=10`;
+                    const debugResponse = await fetch(debugUrl, {
+                        headers: {
+                            'Authorization': `Bearer ${CONFIG.apiKey}`
+                        }
+                    });
+                    const debugData = await debugResponse.json();
+                    console.log('Sample records (first 10):', debugData.records);
+                    console.log('Check the console to see the structure of your Linked Client field');
+                }
+                
                 filteredRecords = [...allRecords];
 
                 // Hide config notice if successful
