@@ -124,13 +124,9 @@
             apiKey: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589',
             linkedFieldName: 'Linked Client',
             
-            // Option 1: Use client name (what you see in Airtable)
-            // filterValue: 'Elevated Kitchen and Bath',
-            // useRecordId: false,
-            
-            // Option 2: Use record ID (recommended - more precise)
-            filterValue: 'recOh883Xa4gDW4Vr',
-            useRecordId: true
+            // Using client name for efficient server-side filtering
+            filterValue: 'Signature Bath Solutions',
+            useRecordId: false
         };
 
         let allRecords = [];
