@@ -126,7 +126,20 @@
             
             // Using client name for efficient server-side filtering
             filterValue: 'Signature Bath Solutions',
-            useRecordId: false
+            useRecordId: false,
+            
+            // Columns to display (in order)
+            displayColumns: [
+                'Full Name',
+                'Created',
+                'Phone',
+                'Address',
+                'Price',
+                'Status',
+                'Appointment',
+                'Stage',
+                'Notes'
+            ]
         };
 
         let allRecords = [];
@@ -276,8 +289,8 @@
             // Update count
             recordCount.textContent = `${filteredRecords.length} record${filteredRecords.length !== 1 ? 's' : ''} found`;
 
-            // Get field keys from first record
-            const fieldKeys = Object.keys(filteredRecords[0].fields);
+            // Use configured display columns
+            const fieldKeys = CONFIG.displayColumns;
 
             // Create table header
             tableHead.innerHTML = `
@@ -290,18 +303,54 @@
                 </tr>
             `;
 
-            // Create table body
+            // Create table body with special formatting
             tableBody.innerHTML = filteredRecords.map(record => `
                 <tr class="hover:bg-gray-50 transition-colors">
                     ${fieldKeys.map(key => {
                         let value = record.fields[key];
-                        if (Array.isArray(value)) {
-                            value = value.join(', ');
-                        } else if (value === null || value === undefined) {
+                        
+                        // Handle different value types
+                        if (value === null || value === undefined) {
                             value = '';
+                        } else if (Array.isArray(value)) {
+                            value = value.join(', ');
                         } else {
                             value = String(value);
                         }
+                        
+                        // Add dollar sign to Price column
+                        if (key === 'Price' && value && value.trim() !== '') {
+                            // Remove any existing dollar signs and format
+                            value = value.replace(/[$,]/g, '');
+                            if (!isNaN(value) && value !== '') {
+                                value = '
+
+        function filterRecords() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            filteredRecords = allRecords.filter(record => {
+                return Object.values(record.fields).some(value => {
+                    if (value === null || value === undefined) return false;
+                    return String(value).toLowerCase().includes(searchTerm);
+                });
+            });
+
+            displayRecords();
+        }
+
+        // Initial load
+        if (CONFIG.apiKey !== 'YOUR_API_KEY') {
+            fetchRecords();
+        }
+    </script>
+</body>
+</html> + parseFloat(value).toLocaleString('en-US', {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2
+                                });
+                            }
+                        }
+                        
                         return `<td class="px-6 py-4 text-sm text-gray-900">${value}</td>`;
                     }).join('')}
                 </tr>
