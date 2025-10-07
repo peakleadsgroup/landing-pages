@@ -96,6 +96,23 @@
         </div>
     </div>
 
+    <!-- Edit Modal -->
+    <div id="editModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">Edit Record</h3>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="editModalContent" class="max-h-96 overflow-y-auto">
+                <!-- Content will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
     <script>
         // Configuration - Replace these with your actual values
         const CONFIG = {
@@ -110,6 +127,7 @@
             
             // Columns to display (in order)
             displayColumns: [
+                'Stage',
                 'Full Name',
                 'Created',
                 'Phone',
@@ -117,7 +135,6 @@
                 'Price',
                 'Status',
                 'Appointment',
-                'Stage',
                 'Notes'
             ]
         };
@@ -248,18 +265,48 @@
             noRecordsState.classList.add('hidden');
 
             // Update count
-            recordCount.textContent = `${filteredRecords.length} record${filteredRecords.length !== 1 ? 's' : ''} found`;
+            recordCount.textContent = filteredRecords.length + ' record' + (filteredRecords.length !== 1 ? 's' : '') + ' found';
 
             // Use configured display columns
             const fieldKeys = CONFIG.displayColumns;
 
             // Create table header
-            tableHead.innerHTML = '<tr>' + fieldKeys.map(key => 
-                '<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">' + key + '</th>'
-            ).join('') + '</tr>';
+            const headerRow = document.createElement('tr');
+            
+            const editHeader = document.createElement('th');
+            editHeader.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+            editHeader.textContent = 'Edit';
+            headerRow.appendChild(editHeader);
+            
+            for (let i = 0; i < fieldKeys.length; i++) {
+                const th = document.createElement('th');
+                th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+                th.textContent = fieldKeys[i];
+                headerRow.appendChild(th);
+            }
+            
+            tableHead.innerHTML = '';
+            tableHead.appendChild(headerRow);
+            
+            // Clear table body
+            tableBody.innerHTML = '';
 
             // Create table body with special formatting
             tableBody.innerHTML = filteredRecords.map(record => {
+                // Get status for row highlighting
+                const status = record.fields['Status'] ? String(record.fields['Status']).toLowerCase() : '';
+                let rowClass = 'hover:bg-gray-50 transition-colors';
+                if (status === 'qualified') {
+                    rowClass = 'bg-green-50 hover:bg-green-100 transition-colors';
+                } else if (status === 'pending') {
+                    rowClass = 'bg-yellow-50 hover:bg-yellow-100 transition-colors';
+                } else if (status === 'unqualified') {
+                    rowClass = 'bg-red-50 hover:bg-red-100 transition-colors';
+                }
+                
+                // Edit button cell
+                const editCell = '<td class="px-6 py-4"><button onclick="openEditModal(\'' + record.id + '\')" class="text-blue-600 hover:text-blue-800"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button></td>';
+                
                 const cells = fieldKeys.map(key => {
                     let value = record.fields[key];
                     
@@ -272,12 +319,104 @@
                         value = String(value);
                     }
                     
+                    // Stage column with colored badge
+                    if (key === 'Stage' && value) {
+                        const stageLower = value.toLowerCase();
+                        let badgeColor = 'bg-gray-100 text-gray-800';
+                        
+                        if (stageLower === 'uncontacted') {
+                            badgeColor = 'bg-slate-100 text-slate-800';
+                        } else if (stageLower === 'contacted') {
+                            badgeColor = 'bg-blue-100 text-blue-800';
+                        } else if (stageLower === 'no show') {
+                            badgeColor = 'bg-orange-100 text-orange-800';
+                        } else if (stageLower === 'appointment ran') {
+                            badgeColor = 'bg-purple-100 text-purple-800';
+                        } else if (stageLower === 'close lost') {
+                            badgeColor = 'bg-red-100 text-red-800';
+                        } else if (stageLower === 'close won') {
+                            badgeColor = 'bg-green-100 text-green-800';
+                        }
+                        
+                        return '<td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' + badgeColor + '">' + value + '</span></td>';
+                    }
+                    
                     // Add dollar sign to Price column
                     if (key === 'Price' && value && value.trim() !== '') {
                         const cleanValue = value.replace(/[\$,]/g, '');
                         if (!isNaN(cleanValue) && cleanValue !== '') {
                             const numValue = parseFloat(cleanValue);
-                            value = '$' + numValue.toLocaleString('en-US', {
+                            value = '
+        }
+
+        function filterRecords() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            filteredRecords = allRecords.filter(record => {
+                return Object.values(record.fields).some(value => {
+                    if (value === null || value === undefined) return false;
+                    return String(value).toLowerCase().includes(searchTerm);
+                });
+            });
+
+            displayRecords();
+        }
+
+        // Initial load
+        fetchRecords();
+
+        // Modal functions
+        function openEditModal(recordId) {
+            const record = allRecords.find(r => r.id === recordId);
+            if (!record) return;
+
+            const modal = document.getElementById('editModal');
+            const content = document.getElementById('editModalContent');
+            
+            // Get all field keys
+            const allFields = Object.keys(record.fields).sort();
+            
+            // Build modal content
+            let html = '<div class="space-y-4">';
+            
+            allFields.forEach(fieldName => {
+                let value = record.fields[fieldName];
+                
+                // Format the value
+                if (value === null || value === undefined) {
+                    value = '';
+                } else if (Array.isArray(value)) {
+                    value = value.join(', ');
+                } else {
+                    value = String(value);
+                }
+                
+                html += '<div class="border-b border-gray-200 pb-3">';
+                html += '<label class="block text-sm font-medium text-gray-700 mb-1">' + fieldName + '</label>';
+                html += '<div class="text-sm text-gray-900">' + (value || '<span class="text-gray-400">No data</span>') + '</div>';
+                html += '</div>';
+            });
+            
+            html += '</div>';
+            
+            content.innerHTML = html;
+            modal.classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('editModal');
+            modal.classList.add('hidden');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+    </script>
+</body>
+</html> + numValue.toLocaleString('en-US', {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2
                             });
@@ -287,7 +426,7 @@
                     return '<td class="px-6 py-4 text-sm text-gray-900">' + value + '</td>';
                 }).join('');
                 
-                return '<tr class="hover:bg-gray-50 transition-colors">' + cells + '</tr>';
+                return '<tr class="' + rowClass + '">' + editCell + cells + '</tr>';
             }).join('');
         }
 
