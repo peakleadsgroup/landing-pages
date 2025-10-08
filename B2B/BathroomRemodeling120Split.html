@@ -237,10 +237,10 @@
             <div class="form-question">
               <label>What is your estimated yearly revenue?</label>
               <div class="radio-options">
-                <div class="radio-option" onclick="selectOption(this, 'yearly_revenue', 'Less than $1 million')"><input type="radio" name="yearly_revenue" value="less-than-50k">Less than $1 million</div>
-                <div class="radio-option" onclick="selectOption(this, 'yearly_revenue', '$1-2 million')"><input type="radio" name="yearly_revenue" value="50k-100k">$1-2 million</div>
-                <div class="radio-option" onclick="selectOption(this, 'yearly_revenue', '$2-4 million')"><input type="radio" name="yearly_revenue" value="100k-200k">$2-4 million</div>
-                <div class="radio-option" onclick="selectOption(this, 'yearly_revenue', 'More than $4 million')"><input type="radio" name="yearly_revenue" value="200k-400k">More than $4 million</div>
+                <div class="radio-option" onclick="selectOption(this, 'yearly_revenue', 'Less than $1 million')"><input type="radio" name="yearly_revenue" value="Less than $1 million">Less than $1 million</div>
+                <div class="radio-option" onclick="selectOption(this, 'yearly_revenue', '$1-2 million')"><input type="radio" name="yearly_revenue" value="$1-2 million">$1-2 million</div>
+                <div class="radio-option" onclick="selectOption(this, 'yearly_revenue', '$2-4 million')"><input type="radio" name="yearly_revenue" value="$2-4 million">$2-4 million</div>
+                <div class="radio-option" onclick="selectOption(this, 'yearly_revenue', 'More than $4 million')"><input type="radio" name="yearly_revenue" value="More than $4 million">More than $4 million</div>
               </div>
             </div>
           </div>
@@ -398,7 +398,7 @@
           <!-- Step 6 (was 5): Revenue -->
           <div class="form-step" id="bottomStep6">
             <div class="form-question">
-              <label>What is your estimated monthly revenue?</label>
+              <label>What is your estimated yearly revenue?</label>
               <div class="radio-options">
                 <div class="radio-option" onclick="selectBottomOption(this, 'yearly_revenue', 'less-than-50k')"><input type="radio" name="yearly_revenue" value="less-than-50k">Less than $50,000</div>
                 <div class="radio-option" onclick="selectBottomOption(this, 'yearly_revenue', '50k-100k')"><input type="radio" name="yearly_revenue" value="50k-100k">$50,000-$100,000</div>
@@ -614,17 +614,16 @@
       const bennettUrl = `https://cal.com/bennett-hair-mpzude/discovery-session?name=${name}&email=${email}`;
 
       switch (data.yearly_revenue) {
-        case 'less-than-50k':
+        case 'Less than $1 million':
           showThankYouFor(form);
           break;
-        case '50k-100k':
+        case '$1-2 million':
           window.location.href = rrUrl;
           break;
-        case '100k-200k':
-        case '200k-400k':
+        case '$2-4 million':
           window.location.href = rrUrl;
           break;
-        case 'more-than-400k':
+        case 'More than $4 million':
           window.location.href = danUrl;
           break;
         default:
