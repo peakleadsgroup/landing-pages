@@ -126,7 +126,7 @@
             clientsTableName: 'Clients',
             apiKey: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589',
             linkedFieldName: 'Linked Client',
-            clientNameField: 'Client Name', // Adjust this to match your actual field name in Clients table
+            clientNameField: 'Name', // Field name in Clients table
             // Using client name for efficient server-side filtering
             filterValue: null, // Will be populated from URL parameter
             useRecordId: false,
@@ -165,7 +165,23 @@
                 }
 
                 const data = await response.json();
-                return data.fields[CONFIG.clientNameField];
+                
+                // Debug: Log all fields to console
+                console.log('Client record fields:', data.fields);
+                console.log('Looking for field:', CONFIG.clientNameField);
+                
+                // Try common field name variations
+                const clientName = data.fields[CONFIG.clientNameField] 
+                    || data.fields['Name'] 
+                    || data.fields['Client'] 
+                    || data.fields['Company Name']
+                    || data.fields['Company'];
+                
+                if (!clientName) {
+                    throw new Error(`Client name field not found. Available fields: ${Object.keys(data.fields).join(', ')}`);
+                }
+                
+                return clientName;
             } catch (err) {
                 throw new Error(`Could not fetch client name: ${err.message}`);
             }
