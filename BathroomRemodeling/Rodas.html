@@ -263,6 +263,48 @@
             background: #fff;
         }
 
+        .checkmark-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #4CAF50;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        .checkmark {
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+        }
+
+        .success-title {
+            font-size: 28px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .success-message {
+            font-size: 18px;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
         @media (max-width: 600px) {
             .form-container {
                 padding: 25px;
@@ -417,11 +459,11 @@
         <!-- SUCCESS SCREEN -->
         <div class="form-step" id="successStep">
             <div style="text-align: center; padding: 40px 0;">
-                <div style="width: 80px; height: 80px; border-radius: 50%; background: #4CAF50; margin: 0 auto 30px; display: flex; align-items: center; justify-content: center;">
-                    <div style="color: white; font-size: 30px; font-weight: bold;">✓</div>
+                <div class="checkmark-circle">
+                    <div class="checkmark">✓</div>
                 </div>
-                <div style="font-size: 24px; color: #4CAF50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
-                <div style="font-size: 16px; color: #666; line-height: 1.5;">Redirecting you to schedule your free consultation...</div>
+                <div class="success-title">Thank you!</div>
+                <div class="success-message">We will give you a call soon.</div>
             </div>
         </div>
     </div>
@@ -432,7 +474,6 @@
         let eventId = null;
         let hasTrackedEngagement = false;
 
-        // Generate unique event ID for pixel and CAPI matching
         function generateEventId() {
             return 'event_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
@@ -444,7 +485,6 @@
             element.classList.add('selected');
             formData[field] = value;
             
-            // Track engagement event on first question interaction
             if (!hasTrackedEngagement) {
                 if (typeof fbq !== 'undefined') {
                     fbq('track', 'ViewContent', {
@@ -468,14 +508,12 @@
             const cityField = document.getElementById('cityField');
             const stateZipRow = document.getElementById('stateZipRow');
             
-            // Show city/state/zip fields if street has content
             if (street.length > 0) {
                 cityField.classList.remove('hidden-initially');
                 stateZipRow.classList.remove('hidden-initially');
             } else {
                 cityField.classList.add('hidden-initially');
                 stateZipRow.classList.add('hidden-initially');
-                // Clear the hidden fields when street is empty
                 document.getElementById('city').value = '';
                 document.getElementById('state').value = '';
                 document.getElementById('zip').value = '';
@@ -558,7 +596,6 @@
             if (phoneInput.value !== p1.formatted) phoneInput.value = p1.formatted;
             phoneDigits.value = p1.digits;
 
-            // Create error element if it doesn't exist for phone starting with "1"
             let phoneError = document.getElementById('phoneError');
             if (!phoneError) {
                 phoneError = document.createElement('div');
@@ -569,14 +606,12 @@
                 phoneError.style.display = 'none';
                 phoneError.textContent = "Your phone number shouldn't start with a 1";
                 
-                // Insert after the phone help text
                 const phoneHelp = document.getElementById('phoneHelp');
                 if (phoneHelp) {
                     phoneHelp.parentNode.insertBefore(phoneError, phoneHelp.nextSibling);
                 }
             }
 
-            // Check if phone starts with 1
             if (p1.digits.length > 0 && p1.digits.charAt(0) === '1') {
                 phoneError.style.display = 'block';
                 phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
@@ -589,16 +624,13 @@
                 }
             }
 
-            // Show/hide confirm field based on first phone validity (and not starting with 1)
             const shouldShowConfirm = p1.digits.length === 10 && p1.digits.charAt(0) !== '1';
             phoneConfirmWrap.style.display = shouldShowConfirm ? '' : 'none';
             if (phone2Input) phone2Input.required = shouldShowConfirm;
 
-            // Format second phone
             const p2 = formatPhone(phone2Input ? phone2Input.value : '');
             if (phone2Input && phone2Input.value !== p2.formatted) phone2Input.value = p2.formatted;
 
-            // Validate match
             if(shouldShowConfirm && phone2Input){
                 if(p2.digits.length === 0){
                     phone2Input.setCustomValidity('Please re-enter your phone number.');
@@ -608,26 +640,13 @@
                     phone2Input.setCustomValidity('');
                 }
             } else if (phone2Input) {
-                // If not showing confirm, clear validity + value to prevent stale mismatches
                 phone2Input.value = '';
                 phone2Input.setCustomValidity('');
             }
 
-            // Always update submit button when validating phones
             const phoneValid = p1.digits.length === 10 && p1.digits.charAt(0) !== '1';
             const phone2Valid = !shouldShowConfirm || (p2.digits.length === 10 && p2.digits === p1.digits);
             const buttonShouldEnable = phoneValid && phone2Valid;
-            
-            console.log('Phone validation:', {
-                phone1: p1.digits,
-                phone2: p2.digits,
-                shouldShowConfirm,
-                phoneValid,
-                phone2Valid,
-                buttonShouldEnable,
-                currentStep: currentStep,
-                startsWithOne: p1.digits.charAt(0) === '1'
-            });
             
             if (phoneSubmitBtn) {
                 phoneSubmitBtn.disabled = !buttonShouldEnable;
@@ -649,32 +668,7 @@
             }
         }
 
-        function redirectToCalendar() {
-            // Build Cal.com URL with correct parameters for pre-filling
-            const first = document.getElementById('firstName')?.value.trim() || '';
-            const last = document.getElementById('lastName')?.value.trim() || '';
-            const name = `${first} ${last}`.replace(/\s+/g, ' ').trim();
-            
-            const params = new URLSearchParams();
-            params.set('email', 'peakleadsgroup@gmail.com'); // fixed inbox email
-            
-            if (name) params.set('name', name);
-            
-            // Use smsReminderNumber parameter to match your Cal.com configuration
-            const smsDigits = document.getElementById('phone_digits')?.value || '';
-            if (smsDigits.length === 10) {
-                params.set('smsReminderNumber', `+1${smsDigits}`);
-            }
-            
-            // Use simple static address for location field
-            params.set('location', '123 Main Street, Wilmington, NC');
-            
-            // Redirect to new Cal.com link
-            window.location.href = `https://cal.com/peakleadsgroup/rodas-construction-llc?${params.toString()}`;
-        }
-
         function submitFinalForm() {
-            // Generate event ID for pixel and CAPI matching
             eventId = generateEventId();
             
             const finalData = {
@@ -682,14 +676,12 @@
                 phone: document.getElementById('phone_digits').value
             };
             
-            // Fire Meta Pixel Lead event
             if (typeof fbq !== 'undefined') {
                 fbq('track', 'Lead', {
                     content_category: 'home_improvement',
                     content_name: 'bathroom_remodel_quote',
                     value: 1.00,
                     currency: 'USD',
-                    // Custom parameters for audience building
                     homeowner_status: finalData.homeowner,
                     project_type: finalData.projectType,
                     main_goal: finalData.mainGoal,
@@ -724,7 +716,6 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
     timeZone: 'America/New_York'
 })} EST`.trim();
 
-            // Create HTML version for email
             const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR><BR>Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
     year: 'numeric', 
@@ -755,10 +746,9 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 form_type: 'bathroom_remodel_qualification',
                 clientATID: 'recAKesJ409csiMV8',
                 adATID: new URLSearchParams(window.location.search).get('adATID'),
-                event_id: eventId  // Include event ID for CAPI matching
+                event_id: eventId
             };
             
-            // Submit webhook data first, then redirect immediately
             fetch('https://hook.us2.make.com/g5h4leaf5ibs3dncj6n2lon5d9w3yi3g', {
                 method: 'POST',
                 headers: {
@@ -766,10 +756,13 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 },
                 body: JSON.stringify(webhookData),
                 mode: 'no-cors'
-            }).finally(() => {
-                // Redirect immediately without showing success screen
-                redirectToCalendar();
             });
+
+            // Show success screen
+            document.getElementById('step' + currentStep).classList.remove('active');
+            document.getElementById('successStep').classList.add('active');
+            document.getElementById('progressBarContainer').style.display = 'none';
+            document.getElementById('mainHeading').style.display = 'none';
         }
 
         function formatPhoneForDisplay(digits) {
@@ -831,7 +824,6 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 if(comps.route) streetAddress += comps.route.long_name;
                 if(streetAddress.trim()) addressInput.value = streetAddress.trim();
                 
-                // Show the city/state/zip fields when autocomplete fills in street
                 const cityField = document.getElementById('cityField');
                 const stateZipRow = document.getElementById('stateZipRow');
                 if (streetAddress.trim()) {
