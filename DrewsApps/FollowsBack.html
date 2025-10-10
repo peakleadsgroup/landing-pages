@@ -1,0 +1,185 @@
+import React, { useState } from 'react';
+import { Upload, Users, UserMinus } from 'lucide-react';
+
+export default function FollowerChecker() {
+  const [followers, setFollowers] = useState([]);
+  const [following, setFollowing] = useState([]);
+  const [notFollowingBack, setNotFollowingBack] = useState([]);
+  const [stats, setStats] = useState(null);
+
+  const parseFollowersFile = (jsonData) => {
+    try {
+      const data = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+      return data.map(item => {
+        const username = item.string_list_data?.[0]?.value || '';
+        return username.toLowerCase();
+      }).filter(u => u);
+    } catch (e) {
+      alert('Error parsing followers file. Please check the format.');
+      return [];
+    }
+  };
+
+  const parseFollowingFile = (jsonData) => {
+    try {
+      const data = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+      const followingList = data.relationships_following || data;
+      return followingList.map(item => {
+        const username = item.title || '';
+        return username.toLowerCase();
+      }).filter(u => u);
+    } catch (e) {
+      alert('Error parsing following file. Please check the format.');
+      return [];
+    }
+  };
+
+  const handleFileUpload = (e, type) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const jsonData = event.target.result;
+      
+      if (type === 'followers') {
+        const parsed = parseFollowersFile(jsonData);
+        setFollowers(parsed);
+      } else {
+        const parsed = parseFollowingFile(jsonData);
+        setFollowing(parsed);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const analyzeFollowers = () => {
+    if (followers.length === 0 || following.length === 0) {
+      alert('Please upload both files first.');
+      return;
+    }
+
+    const followersSet = new Set(followers);
+    const notFollowingBackList = following.filter(username => !followersSet.has(username));
+    
+    setNotFollowingBack(notFollowingBackList);
+    setStats({
+      totalFollowers: followers.length,
+      totalFollowing: following.length,
+      notFollowingBack: notFollowingBackList.length
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">Instagram Follow Back Checker</h1>
+          <p className="text-gray-600">Upload your Instagram data to see who doesn't follow you back</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="flex items-center mb-4">
+              <Users className="w-6 h-6 text-purple-600 mr-2" />
+              <h2 className="text-xl font-semibold text-gray-800">Followers</h2>
+            </div>
+            <label className="block">
+              <div className="border-2 border-dashed border-purple-300 rounded-lg p-8 text-center hover:border-purple-500 transition cursor-pointer">
+                <Upload className="w-12 h-12 text-purple-400 mx-auto mb-2" />
+                <p className="text-gray-600 mb-2">Drop followers JSON file</p>
+                <p className="text-sm text-gray-400">or click to browse</p>
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={(e) => handleFileUpload(e, 'followers')}
+                  className="hidden"
+                />
+              </div>
+            </label>
+            {followers.length > 0 && (
+              <p className="mt-3 text-green-600 font-medium">✓ {followers.length} followers loaded</p>
+            )}
+          </div>
+
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="flex items-center mb-4">
+              <Users className="w-6 h-6 text-pink-600 mr-2" />
+              <h2 className="text-xl font-semibold text-gray-800">Following</h2>
+            </div>
+            <label className="block">
+              <div className="border-2 border-dashed border-pink-300 rounded-lg p-8 text-center hover:border-pink-500 transition cursor-pointer">
+                <Upload className="w-12 h-12 text-pink-400 mx-auto mb-2" />
+                <p className="text-gray-600 mb-2">Drop following JSON file</p>
+                <p className="text-sm text-gray-400">or click to browse</p>
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={(e) => handleFileUpload(e, 'following')}
+                  className="hidden"
+                />
+              </div>
+            </label>
+            {following.length > 0 && (
+              <p className="mt-3 text-green-600 font-medium">✓ {following.length} following loaded</p>
+            )}
+          </div>
+        </div>
+
+        <div className="text-center mb-8">
+          <button
+            onClick={analyzeFollowers}
+            disabled={followers.length === 0 || following.length === 0}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Analyze Followers
+          </button>
+        </div>
+
+        {stats && (
+          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Results</h2>
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <p className="text-3xl font-bold text-purple-600">{stats.totalFollowers}</p>
+                <p className="text-gray-600">Followers</p>
+              </div>
+              <div className="text-center p-4 bg-pink-50 rounded-lg">
+                <p className="text-3xl font-bold text-pink-600">{stats.totalFollowing}</p>
+                <p className="text-gray-600">Following</p>
+              </div>
+              <div className="text-center p-4 bg-red-50 rounded-lg">
+                <p className="text-3xl font-bold text-red-600">{stats.notFollowingBack}</p>
+                <p className="text-gray-600">Not Following Back</p>
+              </div>
+            </div>
+
+            {notFollowingBack.length > 0 && (
+              <div>
+                <div className="flex items-center mb-3">
+                  <UserMinus className="w-5 h-5 text-red-600 mr-2" />
+                  <h3 className="text-lg font-semibold text-gray-800">Users Not Following You Back</h3>
+                </div>
+                <div className="max-h-96 overflow-y-auto bg-gray-50 rounded-lg p-4">
+                  {notFollowingBack.map((username, index) => (
+                    <div key={index} className="flex items-center justify-between py-2 px-3 mb-2 bg-white rounded shadow-sm hover:shadow-md transition">
+                      <span className="text-gray-800">{username}</span>
+                      <a
+                        href={`https://www.instagram.com/${username}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-purple-600 hover:text-purple-800 text-sm font-medium"
+                      >
+                        View Profile →
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
