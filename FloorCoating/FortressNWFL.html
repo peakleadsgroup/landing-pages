@@ -832,12 +832,6 @@ Lead generated on: ${timestamp}`;
       longitude: longitudeInput.value
     });
 
-    // Log coordinates being sent (for debugging)
-    console.log('Submitting with coordinates:', {
-      latitude: latitudeInput.value,
-      longitude: longitudeInput.value
-    });
-
     // Send to submit webhook with longer timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
