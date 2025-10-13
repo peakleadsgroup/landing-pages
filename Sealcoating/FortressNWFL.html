@@ -290,7 +290,6 @@
 
   // Function to send tracking data
   async function sendTracking(buttonText, buttonValue, stepName) {
-    // Collect all form field values
     const formValues = {};
     const form = document.getElementById('quiz');
     const inputs = form.querySelectorAll('input[type="text"], input[type="tel"], input[type="email"], textarea, select');
@@ -300,7 +299,6 @@
       }
     });
     
-    // Also collect hidden field values (for selected choices)
     const hiddenInputs = form.querySelectorAll('input[type="hidden"]');
     hiddenInputs.forEach(input => {
       if (input.name && input.value) {
@@ -323,9 +321,7 @@
     try {
       await fetch(TRACKING_WEBHOOK, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(trackingData),
         mode: 'no-cors'
       });
@@ -340,30 +336,21 @@
     const pct = ((idx)/(steps.length-1))*100;
     bar.style.width = pct + '%';
     updateNextEnabled();
-    
-    // If we're on the final name step, also update submit button
-    if (idx === 5) {
-      updateSubmitEnabled();
-    }
+    if (idx === 5) updateSubmitEnabled();
   }
 
-  // Track navigation button clicks
   document.querySelectorAll('[data-next]').forEach(btn=>{
     btn.addEventListener('click', (e) => {
-      // Special check for address step - prevent navigation if not in service area
       if (idx === 3 && !inArea) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('Blocked navigation - not in service area');
         return false;
       }
       
       let stepName = `step_${idx + 1}`;
       let buttonText = 'Next';
       
-      console.log('Navigation click debug:', {currentStep: idx, stepName, buttonText});
-      
-      if (idx === 3) { // Step 4 is address
+      if (idx === 3) {
         stepName = 'Address';
         const addr = document.getElementById('address')?.value.trim() || '';
         const city = document.getElementById('city')?.value.trim() || '';
@@ -372,24 +359,12 @@
         const fullAddress = [addr, city && `${city},`, state, zip]
           .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
         if (fullAddress) buttonText = fullAddress;
-        else buttonText = 'Next';
-      }
-      else if (idx === 4) { // Step 5 is phone
+      } else if (idx === 4) {
         stepName = 'Phone';
         const phoneValue = document.getElementById('phone')?.value.trim() || '';
         if (phoneValue) buttonText = phoneValue;
-        else buttonText = 'Next';
-      }
-      else if (idx === 5) { // Step 6 is name (this should never execute since step 6 has submit button)
-        stepName = 'Name';
-        const firstName = document.getElementById('first')?.value.trim() || '';
-        const lastName = document.getElementById('last')?.value.trim() || '';
-        const fullName = `${firstName} ${lastName}`.trim();
-        if (fullName && fullName !== ' ') buttonText = fullName;
-        else buttonText = 'Next';
       }
       
-      console.log('Final tracking data:', {stepName, buttonText, idx});
       sendTracking(buttonText, 'next', stepName);
       show(idx+1);
     });
@@ -398,15 +373,14 @@
   document.querySelectorAll('[data-prev]').forEach(btn=>{
     btn.addEventListener('click', () => {
       let stepName = `step_${idx + 1}`;
-      if (idx === 3) stepName = 'Address'; // Step 4 is address
-      if (idx === 4) stepName = 'Phone';   // Step 5 is phone
-      if (idx === 5) stepName = 'Name';    // Step 6 is name
+      if (idx === 3) stepName = 'Address';
+      if (idx === 4) stepName = 'Phone';
+      if (idx === 5) stepName = 'Name';
       sendTracking('Back', 'back', stepName);
       show(idx-1);
     });
   });
 
-  // Multiple-choice auto-advance with tracking
   document.querySelectorAll('.choice').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const name = btn.dataset.name;
@@ -414,7 +388,6 @@
       const buttonText = btn.textContent.trim();
       const group = btn.closest('.choices');
       
-      // Send tracking data
       sendTracking(buttonText, value, name);
       
       group.querySelectorAll('.choice').forEach(c=>c.classList.remove('selected'));
@@ -435,7 +408,6 @@
     });
   });
 
-  // ZIP Gate + Google Places Autocomplete
   let inArea = false;
   const addressInput = document.getElementById('address');
   const cityInput = document.getElementById('city');
@@ -448,16 +420,11 @@
   const submitBtn = document.getElementById('submitBtn');
 
   function updateSubmitEnabled(){
-    // Always check if we're on the final name step (Step 6, idx 5)
     if (idx !== 5) return;
-    
     const firstName = document.getElementById('first')?.value.trim() || '';
     const lastName = document.getElementById('last')?.value.trim() || '';
     const nameValid = firstName.length > 0 && lastName.length > 0;
-    
     submitBtn.disabled = !nameValid;
-    
-    // Force visual styling update
     if (nameValid) {
       submitBtn.classList.remove('force-disabled');
       submitBtn.style.opacity = '1';
@@ -467,28 +434,16 @@
       submitBtn.style.opacity = '0.5';
       submitBtn.style.cursor = 'not-allowed';
     }
-    
-    console.log('Submit validation:', {
-      firstName,
-      lastName,
-      nameValid,
-      currentStep: idx,
-      buttonDisabled: submitBtn.disabled
-    });
   }
 
-  // Enable/disable Next button only when step is valid
   function updateNextEnabled(){
     const active = steps[idx];
     const nextBtn = active.querySelector('[data-next]');
     if(!nextBtn) return;
-    
-    // Special handling for address step (now Step 4, idx 3)
     if (idx === 3) {
       updateAddressStepButton();
       return;
     }
-    
     const required = Array.from(active.querySelectorAll('input[required]'));
     const ok = required.every(el => el.value.trim().length>0 && el.checkValidity());
     nextBtn.disabled = !ok;
@@ -497,18 +452,13 @@
   function updateAddressStepButton() {
     const nextBtn = document.querySelector('#addressStep [data-next]');
     if (!nextBtn) return;
-    
     const addrOk = addressInput.value.trim().length > 3;
     const cityOk = cityInput.value.trim().length > 1;
     const stateOk = /^[A-Za-z]{2}$/.test(stateInput.value.trim());
     const zipOk = /^\d{5}$/.test(zipInput.value.trim());
     const allFieldsValid = addrOk && cityOk && stateOk && zipOk;
-    
-    // Button is only enabled if ALL fields are valid AND in service area
     const shouldEnable = allFieldsValid && inArea;
     nextBtn.disabled = !shouldEnable;
-    
-    // Add visual styling for out of area
     if (!inArea && zipOk) {
       nextBtn.style.opacity = '0.3';
       nextBtn.style.cursor = 'not-allowed';
@@ -519,18 +469,9 @@
       nextBtn.style.opacity = '0.5';
       nextBtn.style.cursor = 'not-allowed';
     }
-    
-    console.log('Address step validation:', {
-      addrOk, cityOk, stateOk, zipOk, 
-      allFieldsValid, inArea, shouldEnable,
-      buttonDisabled: nextBtn.disabled,
-      currentStep: idx
-    });
   }
 
   function applyZipGate(zip){
-    console.log('ZIP Gate called with:', zip);
-    
     if(!zip || !/^\d{5}$/.test(zip)){
       msgBad.style.display = 'none';
       msgGood.style.display = 'none';
@@ -538,34 +479,27 @@
       updateAddressStepButton();
       return;
     }
-    
     if(serviceZips.has(zip)){
       msgGood.style.display = 'block';
       msgBad.style.display = 'none';
       inArea = true;
       sendTracking(zip, 'zip_validation_success', 'zip_validation_success');
-      console.log('ZIP validation: IN AREA');
     } else {
       msgBad.style.display = 'block';
       msgGood.style.display = 'none';
       inArea = false;
       sendTracking(zip, 'zip_validation_failure', 'zip_validation_failure');
-      console.log('ZIP validation: OUT OF AREA');
     }
-    
     updateAddressStepButton();
   }
 
-  // Watch inputs on all steps to toggle Next
   document.querySelectorAll('input').forEach(inp=>{
     inp.addEventListener('input', updateNextEnabled);
     inp.addEventListener('change', updateNextEnabled);
   });
 
-  // Specifically watch name fields for submit button
   const firstNameInput = document.getElementById('first');
   const lastNameInput = document.getElementById('last');
-  
   [firstNameInput, lastNameInput].forEach(input => {
     input.addEventListener('input', updateSubmitEnabled);
     input.addEventListener('change', updateSubmitEnabled);
@@ -573,29 +507,21 @@
   });
 
   zipInput.addEventListener('input', e=>{
-    const zipValue = e.target.value.trim();
-    applyZipGate(zipValue);
+    applyZipGate(e.target.value.trim());
     updateAddressStepButton();
   });
 
   [addressInput, cityInput, stateInput].forEach(el=>{
     el.addEventListener('input', () => {
-      if (idx === 3) { // Address step is now idx 3
-        updateAddressStepButton();
-      } else {
-        updateSubmitEnabled();
-      }
+      if (idx === 3) updateAddressStepButton();
+      else updateSubmitEnabled();
     });
     el.addEventListener('change', () => {
-      if (idx === 3) {
-        updateAddressStepButton();
-      } else {
-        updateSubmitEnabled();
-      }
+      if (idx === 3) updateAddressStepButton();
+      else updateSubmitEnabled();
     });
   });
 
-  // Phone formatting + strict 10-digit validation + confirmation match
   const phoneInput = document.getElementById('phone');
   const phone2Input = document.getElementById('phone2');
   const phoneConfirmWrap = document.getElementById('phoneConfirmWrap');
@@ -614,24 +540,16 @@
     const p1 = formatPhone(phoneInput.value);
     if (phoneInput.value !== p1.formatted) phoneInput.value = p1.formatted;
     phoneDigits.value = p1.digits;
-
-    // validity for first phone
     if(p1.digits.length === 10){
       phoneInput.setCustomValidity('');
     } else {
       phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
     }
-
-    // Show/hide confirm field based on first phone validity
     const shouldShowConfirm = p1.digits.length === 10;
     phoneConfirmWrap.style.display = shouldShowConfirm ? '' : 'none';
     phone2Input.required = shouldShowConfirm;
-
-    // Format second phone
     const p2 = formatPhone(phone2Input.value);
     if (phone2Input.value !== p2.formatted) phone2Input.value = p2.formatted;
-
-    // Validate match
     if(shouldShowConfirm){
       if(p2.digits.length === 0){
         phone2Input.setCustomValidity('Please re-enter your phone number.');
@@ -641,29 +559,10 @@
         phone2Input.setCustomValidity('');
       }
     } else {
-      // If not showing confirm, clear validity + value to prevent stale mismatches
       phone2Input.value = '';
       phone2Input.setCustomValidity('');
     }
-
-    // Always update submit button when validating phones
     updateSubmitEnabled();
-    
-    // Also directly update the button here as backup
-    const phoneValid = p1.digits.length === 10;
-    const phone2Valid = !shouldShowConfirm || (p2.digits.length === 10 && p2.digits === p1.digits);
-    const buttonShouldEnable = phoneValid && phone2Valid;
-    
-    console.log('Phone validation:', {
-      phone1: p1.digits,
-      phone2: p2.digits,
-      shouldShowConfirm,
-      phoneValid,
-      phone2Valid,
-      buttonShouldEnable,
-      currentStep: idx
-    });
-    
     updateNextEnabled();
   }
 
@@ -672,28 +571,21 @@
   phone2Input.addEventListener('input', validatePhones);
   phone2Input.addEventListener('blur', validatePhones);
 
-  // Function to geocode address if coordinates not available from Places API
   async function geocodeAddress(address) {
     if (!window.google || !google.maps) return null;
-    
     return new Promise((resolve) => {
       const geocoder = new google.maps.Geocoder();
       geocoder.geocode({ address: address }, (results, status) => {
         if (status === 'OK' && results[0]) {
           const location = results[0].geometry.location;
-          resolve({
-            lat: location.lat(),
-            lng: location.lng()
-          });
+          resolve({ lat: location.lat(), lng: location.lng() });
         } else {
-          console.log('Geocoding failed:', status);
           resolve(null);
         }
       });
     });
   }
 
-  // Autocomplete hookup after Google script loads
   window.__attachPlaces = function(){
     if(!window.google || !google.maps || !google.maps.places) return;
     const ac = new google.maps.places.Autocomplete(addressInput, {
@@ -704,92 +596,89 @@
     ac.addListener('place_changed', ()=>{
       const place = ac.getPlace();
       if(!place || !place.address_components) return;
-
       const comps = Object.fromEntries(place.address_components.flatMap(c => c.types.map(t => [t, c])));
-      
-      // Build street address from components (street number + street name only)
       let streetAddress = '';
       if(comps.street_number) streetAddress += comps.street_number.long_name + ' ';
       if(comps.route) streetAddress += comps.route.long_name;
       if(streetAddress.trim()) addressInput.value = streetAddress.trim();
-      
       if(comps.locality) cityInput.value = comps.locality.long_name;
       else if(comps.sublocality) cityInput.value = comps.sublocality.long_name;
       if(comps.administrative_area_level_1) stateInput.value = comps.administrative_area_level_1.short_name;
       if(comps.postal_code) zipInput.value = comps.postal_code.long_name;
-
-      // Extract coordinates from place geometry
       if (place.geometry && place.geometry.location) {
-        const lat = place.geometry.location.lat();
-        const lng = place.geometry.location.lng();
-        latitudeInput.value = lat.toString();
-        longitudeInput.value = lng.toString();
-        console.log('Coordinates from Places API:', { lat, lng });
+        latitudeInput.value = place.geometry.location.lat().toString();
+        longitudeInput.value = place.geometry.location.lng().toString();
       }
-
       applyZipGate(zipInput.value.trim());
     });
   };
 
-  // Final submit guard + webhook + redirect
   document.getElementById('quiz').addEventListener('submit', async (e)=>{
     e.preventDefault();
-
     const form = e.target;
-
-    if (!form.reportValidity()) {
-      return;
-    }
-
-    // Try to get coordinates if not already available
-    if (!latitudeInput.value || !longitudeInput.value) {
-      const addr = addressInput.value.trim();
-      const city = cityInput.value.trim();
-      const state = stateInput.value.trim();
-      const zip = zipInput.value.trim();
-      const fullAddress = [addr, city && `${city},`, state, zip]
-        .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
-      
-      if (fullAddress) {
-        console.log('Attempting to geocode address:', fullAddress);
-        const coords = await geocodeAddress(fullAddress);
-        if (coords) {
-          latitudeInput.value = coords.lat.toString();
-          longitudeInput.value = coords.lng.toString();
-          console.log('Coordinates from geocoding:', coords);
-        } else {
-          console.log('Geocoding failed, submitting without coordinates');
-        }
-      }
-    }
-
-    // Track submit button click with name
-    const firstName = document.getElementById('first')?.value.trim() || '';
-    const lastName = document.getElementById('last')?.value.trim() || '';
-    const fullName = `${firstName} ${lastName}`.trim();
-    const nameValue = fullName || 'Upgrade my space →';
-    sendTracking(nameValue, 'submit', 'Name');
+    if (!form.reportValidity()) return;
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
 
     const data = new FormData(form);
-    
-    // Add clientATID to form data
     data.append('clientATID', clientATID);
+    if (adATID) data.append('adATID', adATID);
+
+    const firstName = document.getElementById('first')?.value.trim() || '';
+    const lastName = document.getElementById('last')?.value.trim() || '';
+    const fullName = `${firstName} ${lastName}`.trim();
+    const phone = document.getElementById('phone')?.value.trim() || '';
+    const locationType = data.get('location_type') || '';
+    const projectType = data.get('project_type') || '';
+    const timeline = data.get('timeline') || '';
+    const address = document.getElementById('address')?.value.trim() || '';
+    const city = document.getElementById('city')?.value.trim() || '';
+    const state = document.getElementById('state')?.value.trim() || '';
+    const zip = document.getElementById('zip')?.value.trim() || '';
+    const fullAddress = [address, city && `${city},`, state, zip]
+      .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
     
-    // Add adATID to form data if it exists
-    if (adATID) {
-      data.append('adATID', adATID);
+    if (!latitudeInput.value || !longitudeInput.value) {
+      if (fullAddress) {
+        const coords = await geocodeAddress(fullAddress);
+        if (coords) {
+          latitudeInput.value = coords.lat.toString();
+          longitudeInput.value = coords.lng.toString();
+        }
+      }
     }
+    
+    const nameValue = fullName || 'Upgrade my space →';
+    sendTracking(nameValue, 'submit', 'Name');
+    
+    const now = new Date();
+    const estOptions = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric', 
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'America/New_York',
+      timeZoneName: 'short'
+    };
+    const timestamp = now.toLocaleString('en-US', estOptions);
+    
+    const fullSummary = `Sealcoating Lead Information:
 
-    // Log coordinates being sent (for debugging)
-    console.log('Submitting with coordinates:', {
-      latitude: latitudeInput.value,
-      longitude: longitudeInput.value
-    });
+Name: ${fullName}
+Phone: ${phone}
+Location Type: ${locationType}
+Project Type: ${projectType}
+Timeline: ${timeline}
+Address: ${fullAddress}
 
-    // Send to submit webhook with longer timeout
+Lead generated on: ${timestamp}`;
+
+    data.append('full_summary', fullSummary);
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
     
@@ -800,62 +689,36 @@
         mode: 'no-cors',
         signal: controller.signal
       });
-      
-      // Add a small delay to ensure webhook is sent
       await new Promise(resolve => setTimeout(resolve, 500));
-      
     } catch (e2) {
-      /* ignore and continue */
+      /* ignore */
     } finally {
       clearTimeout(timeoutId);
     }
 
-    // Build Cal.com URL based on zip code
-    const first = document.getElementById('first')?.value.trim() || '';
-    const last  = document.getElementById('last')?.value.trim()  || '';
-    const name  = `${first} ${last}`.replace(/\s+/g, ' ').trim();
-
-    const addr  = document.getElementById('address')?.value.trim() || '';
-    const city  = document.getElementById('city')?.value.trim()    || '';
-    const state = document.getElementById('state')?.value.trim()   || '';
-    const zip   = document.getElementById('zip')?.value.trim()     || '';
-    const fullAddress = [addr, city && `${city},`, state, zip]
-      .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
-
     const params = new URLSearchParams();
-    params.set('email', 'peakleadsgroup@gmail.com');        // fixed inbox
-    if (name) params.set('name', name);
-
-    // Phone → smsReminderNumber (+1XXXXXXXXXX) if 10 digits present
+    params.set('email', 'peakleadsgroup@gmail.com');
+    if (fullName) params.set('name', fullName);
     const smsDigits = document.getElementById('phone_digits')?.value
                    || document.getElementById('phone')?.value.replace(/\D/g,'') || '';
     if (smsDigits.length === 10) params.set('smsReminderNumber', `+1${smsDigits}`);
+    if (fullAddress) params.set('location', fullAddress);
 
-    if (fullAddress) params.set('location', fullAddress);   // optional prefill
-
-    // Determine which calendar link to use based on zip code
     let calendarLink;
     if (monThursOnlyZips.has(zip)) {
       calendarLink = 'https://cal.com/peakleadsgroup/fortress-floor-coatings-of-nwfl-mon-thurs-only';
-      console.log('Redirecting to Mon-Thurs only calendar for zip:', zip);
     } else {
       calendarLink = 'https://cal.com/peakleadsgroup/fortress-floor-coatings-of-nwfl';
-      console.log('Redirecting to regular calendar for zip:', zip);
     }
-
     window.location.href = `${calendarLink}?${params.toString()}`;
   });
 
-  // Initialize
   show(0);
   validatePhones();
-  
-  // Send tracking webhook when form loads
   sendTracking('Form loaded', 'page_load', 'form_initialization');
 })();
 </script>
 
-<!-- Load Google Places (async/defer) -->
 <script async defer
   src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&libraries=places&callback=__attachPlaces">
 </script>
