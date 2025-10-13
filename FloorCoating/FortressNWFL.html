@@ -778,10 +778,59 @@
     // Add clientATID to form data
     data.append('clientATID', clientATID);
     
-    // Add adATID to form data if it exists
+// Add adATID to form data if it exists
     if (adATID) {
       data.append('adATID', adATID);
     }
+
+    // Generate Full Summary
+    const firstName = document.getElementById('first')?.value.trim() || '';
+    const lastName = document.getElementById('last')?.value.trim() || '';
+    const fullName = `${firstName} ${lastName}`.trim();
+    const phone = document.getElementById('phone')?.value.trim() || '';
+    const homeowner = data.get('homeowner') || '';
+    const projectType = data.get('project_type') || '';
+    const timeline = data.get('timeline') || '';
+    const address = document.getElementById('address')?.value.trim() || '';
+    const city = document.getElementById('city')?.value.trim() || '';
+    const state = document.getElementById('state')?.value.trim() || '';
+    const zip = document.getElementById('zip')?.value.trim() || '';
+    const fullAddress = [address, city && `${city},`, state, zip]
+      .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+    
+    // Generate timestamp in EST
+    const now = new Date();
+    const estOptions = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric', 
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'America/New_York',
+      timeZoneName: 'short'
+    };
+    const timestamp = now.toLocaleString('en-US', estOptions);
+    
+    const fullSummary = `Floor Coating Lead Information:
+
+Name: ${fullName}
+Phone: ${phone}
+Homeowner: ${homeowner}
+Timeline: ${timeline}
+Project Type: ${projectType}
+Address: ${fullAddress}
+
+Lead generated on: ${timestamp}`;
+
+    data.append('full_summary', fullSummary);
+
+    // Log coordinates being sent (for debugging)
+    console.log('Submitting with coordinates:', {
+      latitude: latitudeInput.value,
+      longitude: longitudeInput.value
+    });
 
     // Log coordinates being sent (for debugging)
     console.log('Submitting with coordinates:', {
