@@ -741,35 +741,6 @@
       return;
     }
 
-    // Try to get coordinates if not already available
-    if (!latitudeInput.value || !longitudeInput.value) {
-      const addr = addressInput.value.trim();
-      const city = cityInput.value.trim();
-      const state = stateInput.value.trim();
-      const zip = zipInput.value.trim();
-      const fullAddress = [addr, city && `${city},`, state, zip]
-        .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
-      
-      if (fullAddress) {
-        console.log('Attempting to geocode address:', fullAddress);
-        const coords = await geocodeAddress(fullAddress);
-        if (coords) {
-          latitudeInput.value = coords.lat.toString();
-          longitudeInput.value = coords.lng.toString();
-          console.log('Coordinates from geocoding:', coords);
-        } else {
-          console.log('Geocoding failed, submitting without coordinates');
-        }
-      }
-    }
-
-    // Track submit button click with name
-    const firstName = document.getElementById('first')?.value.trim() || '';
-    const lastName = document.getElementById('last')?.value.trim() || '';
-    const fullName = `${firstName} ${lastName}`.trim();
-    const nameValue = fullName || 'Upgrade my floors →';
-    sendTracking(nameValue, 'submit', 'Name');
-
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
 
@@ -778,12 +749,12 @@
     // Add clientATID to form data
     data.append('clientATID', clientATID);
     
-// Add adATID to form data if it exists
+    // Add adATID to form data if it exists
     if (adATID) {
       data.append('adATID', adATID);
     }
 
-    // Generate Full Summary
+    // Collect all form values once
     const firstName = document.getElementById('first')?.value.trim() || '';
     const lastName = document.getElementById('last')?.value.trim() || '';
     const fullName = `${firstName} ${lastName}`.trim();
@@ -797,6 +768,25 @@
     const zip = document.getElementById('zip')?.value.trim() || '';
     const fullAddress = [address, city && `${city},`, state, zip]
       .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+    
+    // Try to get coordinates if not already available
+    if (!latitudeInput.value || !longitudeInput.value) {
+      if (fullAddress) {
+        console.log('Attempting to geocode address:', fullAddress);
+        const coords = await geocodeAddress(fullAddress);
+        if (coords) {
+          latitudeInput.value = coords.lat.toString();
+          longitudeInput.value = coords.lng.toString();
+          console.log('Coordinates from geocoding:', coords);
+        } else {
+          console.log('Geocoding failed, submitting without coordinates');
+        }
+      }
+    }
+    
+    // Track submit button click with name
+    const nameValue = fullName || 'Upgrade my floors →';
+    sendTracking(nameValue, 'submit', 'Name');
     
     // Generate timestamp in EST
     const now = new Date();
@@ -813,6 +803,7 @@
     };
     const timestamp = now.toLocaleString('en-US', estOptions);
     
+    // Generate Full Summary
     const fullSummary = `Floor Coating Lead Information:
 
 Name: ${fullName}
@@ -854,20 +845,9 @@ Lead generated on: ${timestamp}`;
     }
 
     // Build Cal.com URL (no lead email; inbox email fixed)
-    const first = document.getElementById('first')?.value.trim() || '';
-    const last  = document.getElementById('last')?.value.trim()  || '';
-    const name  = `${first} ${last}`.replace(/\s+/g, ' ').trim();
-
-    const addr  = document.getElementById('address')?.value.trim() || '';
-    const city  = document.getElementById('city')?.value.trim()    || '';
-    const state = document.getElementById('state')?.value.trim()   || '';
-    const zip   = document.getElementById('zip')?.value.trim()     || '';
-    const fullAddress = [addr, city && `${city},`, state, zip]
-      .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
-
     const params = new URLSearchParams();
     params.set('email', 'peakleadsgroup@gmail.com');        // fixed inbox
-    if (name) params.set('name', name);
+    if (fullName) params.set('name', fullName);
 
     // Phone → smsReminderNumber (+1XXXXXXXXXX) if 10 digits present
     const smsDigits = document.getElementById('phone_digits')?.value
