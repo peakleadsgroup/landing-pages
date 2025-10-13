@@ -543,6 +543,60 @@
             summaryDiv.appendChild(summaryValueDiv);
             container.appendChild(summaryDiv);
 
+            // Show Stage field (editable dropdown)
+            const stage = record.fields['Stage'];
+            let stageValue = '';
+
+            if (stage !== null && stage !== undefined) {
+                if (Array.isArray(stage)) {
+                    stageValue = stage.join(', ');
+                } else {
+                    stageValue = String(stage);
+                }
+            }
+
+            const stageDiv = document.createElement('div');
+            stageDiv.className = 'border-b border-gray-200 pb-3';
+
+            const stageLabel = document.createElement('label');
+            stageLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
+            stageLabel.textContent = 'Stage';
+
+            const stageSelect = document.createElement('select');
+            stageSelect.id = 'editStageField';
+            stageSelect.className = 'w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+
+            const stageOptions = ['Uncontacted', 'Contacted', 'No show', 'Appointment ran', 'Close lost', 'Close won'];
+            
+            // Add empty option
+            const emptyOption = document.createElement('option');
+            emptyOption.value = '';
+            emptyOption.textContent = '-- Select Stage --';
+            if (stageValue === '') emptyOption.selected = true;
+            stageSelect.appendChild(emptyOption);
+
+            // Add all stage options
+            stageOptions.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt;
+                if (opt === stageValue) option.selected = true;
+                stageSelect.appendChild(option);
+            });
+
+            // Store original value for comparison
+            const originalStage = stageValue;
+
+            const stageUnsavedMessage = document.createElement('div');
+            stageUnsavedMessage.id = 'stageUnsavedMessage';
+            stageUnsavedMessage.className = 'text-sm text-gray-400 mt-1 hidden';
+            stageUnsavedMessage.textContent = 'Unsaved changes';
+
+            stageDiv.appendChild(stageLabel);
+            stageDiv.appendChild(stageSelect);
+            stageDiv.appendChild(stageUnsavedMessage);
+            container.appendChild(stageDiv);
+
             // Show Notes field (editable)
             const notes = record.fields['Notes'];
             let notesValue = '';
@@ -584,22 +638,35 @@
 
             // Add save button (initially hidden)
             const saveBtn = document.createElement('button');
-            saveBtn.id = 'saveNotesBtn';
+            saveBtn.id = 'saveChangesBtn';
             saveBtn.className = 'px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors hidden';
-            saveBtn.textContent = 'Save Notes';
-            saveBtn.onclick = function() { saveNotes(recordId); };
+            saveBtn.textContent = 'Save Changes';
+            saveBtn.onclick = function() { saveChanges(recordId); };
             container.appendChild(saveBtn);
 
-            // Add event listener to detect changes
+            // Add event listeners to detect changes
+            stageSelect.addEventListener('change', function() {
+                checkForChanges();
+            });
+
             notesTextarea.addEventListener('input', function() {
-                if (notesTextarea.value !== originalNotes) {
+                checkForChanges();
+            });
+
+            function checkForChanges() {
+                const stageChanged = stageSelect.value !== originalStage;
+                const notesChanged = notesTextarea.value !== originalNotes;
+
+                if (stageChanged || notesChanged) {
                     saveBtn.classList.remove('hidden');
-                    unsavedMessage.classList.remove('hidden');
+                    if (stageChanged) stageUnsavedMessage.classList.remove('hidden');
+                    if (notesChanged) unsavedMessage.classList.remove('hidden');
                 } else {
                     saveBtn.classList.add('hidden');
+                    stageUnsavedMessage.classList.add('hidden');
                     unsavedMessage.classList.add('hidden');
                 }
-            });
+            }
 
             // Add Report as Unqualified button
             const reportBtn = document.createElement('button');
@@ -821,8 +888,10 @@
             }
         }
 
-        async function saveNotes(recordId) {
+        async function saveChanges(recordId) {
+            const stageField = document.getElementById('editStageField');
             const notesField = document.getElementById('editNotesField');
+            const newStage = stageField.value;
             const newNotes = notesField.value;
 
             try {
@@ -832,16 +901,24 @@
                         'Authorization': `Bearer ${CONFIG.apiKey}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ fields: { 'Notes': newNotes } })
+                    body: JSON.stringify({ 
+                        fields: { 
+                            'Stage': newStage,
+                            'Notes': newNotes 
+                        } 
+                    })
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to save notes');
+                    throw new Error('Failed to save changes');
                 }
 
                 // Update the record in our local array
                 const record = allRecords.find(r => r.id === recordId);
-                if (record) { record.fields['Notes'] = newNotes; }
+                if (record) { 
+                    record.fields['Stage'] = newStage;
+                    record.fields['Notes'] = newNotes;
+                }
 
                 // Refresh the display
                 displayRecords();
@@ -849,9 +926,9 @@
                 // Close modal
                 closeEditModal();
 
-                alert('Notes saved successfully!');
+                alert('Changes saved successfully!');
             } catch (err) {
-                alert('Error saving notes: ' + err.message);
+                alert('Error saving changes: ' + err.message);
             }
         }
 
