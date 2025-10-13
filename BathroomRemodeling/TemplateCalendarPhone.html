@@ -474,11 +474,8 @@
         <!-- PHONE/TEXT CONTACT SCREEN -->
         <div class="form-step" id="contactStep">
             <div style="text-align: center;">
-                <div style="width: 80px; height: 80px; border-radius: 50%; background: #4CAF50; margin: 0 auto 30px; display: flex; align-items: center; justify-content: center;">
-                    <div style="color: white; font-size: 30px; font-weight: bold;">✓</div>
-                </div>
-                <div style="font-size: 24px; color: #4CAF50; margin-bottom: 10px; font-weight: bold;">Thank you!</div>
-                <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Tap the button below to contact us</div>
+                <div style="font-size: 24px; color: #4CAF50; margin-bottom: 20px; font-weight: bold;">Schedule your free quote now!</div>
+                <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Use the buttons below to call or text us. If you don't, we'll contact you as soon as possible to schedule a time.</div>
                 
                 <a href="tel:+19193634740" class="contact-button call-button">
                     <svg class="phone-icon" fill="currentColor" viewBox="0 0 24 24">
@@ -503,7 +500,8 @@
         // ============================================
         // CONFIGURATION - Change this to switch behavior
         // ============================================
-        const REDIRECT_MODE = 'phone'; // Options: 'calendar' or 'phone'
+        const REDIRECT_MODE = 'calendar'; // Options: 'calendar' or 'phone'
+        const CLIENT_PHONE = '+19191234567'; // Client phone number for call/text buttons
         // ============================================
 
         let currentStep = 1;
@@ -726,9 +724,47 @@
         }
 
         function showContactScreen() {
+            // Get lead's name
+            const firstName = document.getElementById('firstName')?.value.trim() || '';
+            
+            // Format phone number for display
+            const phoneForDisplay = formatClientPhoneForDisplay(CLIENT_PHONE);
+            
+            // Build the SMS body with lead's name
+            const smsBody = encodeURIComponent(
+                `Hey, this is ${firstName}! I just saw your video on social media and would like to schedule an appointment to get my free, no obligation quote. Please send me some days/times that you're available!`
+            );
+            
+            // Update the contact buttons and phone display
+            const callButton = document.querySelector('.call-button');
+            const textButton = document.querySelector('.text-button');
+            const phoneDisplay = document.querySelector('.phone-number-display');
+            
+            if (callButton) callButton.href = `tel:${CLIENT_PHONE}`;
+            if (textButton) textButton.href = `sms:${CLIENT_PHONE}?&body=${smsBody}`;
+            if (phoneDisplay) phoneDisplay.textContent = phoneForDisplay;
+            
+            // Show the contact screen
             document.getElementById('step7').classList.remove('active');
             document.getElementById('contactStep').classList.add('active');
             document.getElementById('progressBarContainer').style.display = 'none';
+        }
+
+        function formatClientPhoneForDisplay(phoneNumber) {
+            // Remove all non-digit characters
+            const digits = phoneNumber.replace(/\D/g, '');
+            
+            // Format as (XXX) XXX-XXXX
+            if (digits.length === 11 && digits.startsWith('1')) {
+                // Remove leading 1 for display
+                const without1 = digits.substring(1);
+                return `(${without1.slice(0,3)}) ${without1.slice(3,6)}-${without1.slice(6)}`;
+            } else if (digits.length === 10) {
+                return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+            }
+            
+            // Return original if format doesn't match
+            return phoneNumber;
         }
 
         function submitFinalForm() {
@@ -812,7 +848,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 event_id: eventId
             };
             
-            fetch('https://hook.us2.make.com/53pm5q58kvfo9iitu6sonth9hzjczq8d', {
+            fetch('https://hook.us2.make.com/g5h4leaf5ibs3dncj6n2lon5d9w3yi3g', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
