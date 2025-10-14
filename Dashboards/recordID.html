@@ -28,11 +28,19 @@
                         <img src="https://github.com/peakleadsgroup/landing-pages/blob/main/Images/Peak%20Leads%20Flattened%20Logo.png?raw=true" alt="Peak Leads Logo" class="h-10 w-auto">
                         <h1 class="text-2xl font-bold text-gray-900">Client Dashboard</h1>
                     </div>
-                    <button onclick="fetchRecords()" id="refreshBtn" class="flex items-center justify-center p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                        <svg id="refreshIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                        </svg>
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openBillingModal()" id="billingBtn" class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Billing
+                        </button>
+                        <button onclick="fetchRecords()" id="refreshBtn" class="flex items-center justify-center p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <svg id="refreshIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Search Bar -->
@@ -118,15 +126,34 @@
         </div>
     </div>
 
+    <!-- Billing Modal -->
+    <div id="billingModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">Billing Information</h3>
+                <button onclick="closeBillingModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="billingModalContent">
+                <!-- Content will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
     <script>
         // Configuration - Replace these with your actual values (do NOT expose real keys in production)
         const CONFIG = {
             baseId: 'appmBb0lzqRK9dI8v',
             tableName: 'B2C Leads',
             clientsTableName: 'Clients',
+            stripeCustomersTableName: 'Stripe Customers',
             apiKey: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589',
             linkedFieldName: 'Linked Client',
             clientNameField: 'Name', // Field name in Clients table
+            stripeCustomerLinkedField: 'Stripe Customer', // Field name in Clients table that links to Stripe Customers
             // Using client name for efficient server-side filtering
             filterValue: null, // Will be populated from URL parameter
             useRecordId: false,
@@ -146,6 +173,7 @@
 
         let allRecords = [];
         let filteredRecords = [];
+        let currentClientRecordId = null; // Store the client record ID
 
         // Get URL parameter
         function getURLParameter(name) {
@@ -196,6 +224,9 @@
                 document.getElementById('errorMessage').classList.remove('hidden');
                 return;
             }
+
+            // Store the client record ID
+            currentClientRecordId = atid;
 
             try {
                 // Fetch the client name using the record ID
@@ -940,6 +971,99 @@
         // Close modal when clicking outside
         document.getElementById('editModal').addEventListener('click', function(e) {
             if (e.target === this) { closeEditModal(); }
+        });
+
+        // Billing Modal Functions
+        async function openBillingModal() {
+            const modal = document.getElementById('billingModal');
+            const content = document.getElementById('billingModalContent');
+
+            // Show loading state
+            content.innerHTML = '<div class="text-center py-8"><svg class="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg><p class="text-gray-600">Loading billing information...</p></div>';
+            modal.classList.remove('hidden');
+
+            try {
+                // Fetch the client record to get the Stripe Customer link
+                const clientResponse = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.clientsTableName)}/${currentClientRecordId}`, {
+                    headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
+                });
+
+                if (!clientResponse.ok) {
+                    throw new Error(`Failed to fetch client: ${clientResponse.status}`);
+                }
+
+                const clientData = await clientResponse.json();
+                const stripeCustomerLinks = clientData.fields[CONFIG.stripeCustomerLinkedField];
+
+                if (!stripeCustomerLinks || stripeCustomerLinks.length === 0) {
+                    content.innerHTML = '<div class="text-center py-8"><svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><h3 class="text-lg font-semibold text-gray-900 mb-2">No Billing Information</h3><p class="text-gray-600">No Stripe customer is linked to this client.</p></div>';
+                    return;
+                }
+
+                // Get the first Stripe Customer record ID
+                const stripeCustomerRecordId = stripeCustomerLinks[0];
+
+                // Fetch the Stripe Customer record
+                const stripeResponse = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.stripeCustomersTableName)}/${stripeCustomerRecordId}`, {
+                    headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
+                });
+
+                if (!stripeResponse.ok) {
+                    throw new Error(`Failed to fetch Stripe customer: ${stripeResponse.status}`);
+                }
+
+                const stripeData = await stripeResponse.json();
+                const customerName = stripeData.fields['Name'] || 'Unknown Customer';
+                const amountCharged = stripeData.fields['Amount Charged'];
+
+                // Format amount charged
+                let formattedAmount = '$0.00';
+                if (amountCharged !== null && amountCharged !== undefined) {
+                    const num = Number(amountCharged);
+                    formattedAmount = Number.isFinite(num)
+                        ? `${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        : '$0.00';
+                }
+
+                // Display billing information
+                content.innerHTML = `
+                    <div class="space-y-6">
+                        <div class="text-center pb-4 border-b border-gray-200">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <h2 class="text-2xl font-bold text-gray-900">${customerName}</h2>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <div class="text-sm text-gray-600 mb-1">Total Amount Charged</div>
+                            <div class="text-3xl font-bold text-gray-900">${formattedAmount}</div>
+                        </div>
+                    </div>
+                `;
+
+            } catch (err) {
+                content.innerHTML = `
+                    <div class="text-center py-8">
+                        <svg class="w-12 h-12 text-red-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Error Loading Billing</h3>
+                        <p class="text-gray-600">${err.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function closeBillingModal() {
+            const modal = document.getElementById('billingModal');
+            modal.classList.add('hidden');
+        }
+
+        // Close billing modal when clicking outside
+        document.getElementById('billingModal').addEventListener('click', function(e) {
+            if (e.target === this) { closeBillingModal(); }
         });
 
         // Initial load
