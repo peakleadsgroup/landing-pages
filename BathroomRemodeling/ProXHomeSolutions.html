@@ -263,6 +263,63 @@
             background: #fff;
         }
 
+        /* Phone/Text Button Styles */
+        .contact-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: white;
+            text-decoration: none;
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .call-button {
+            background: #10b981;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+        
+        .call-button:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+        }
+        
+        .text-button {
+            background: #3b82f6;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+        
+        .text-button:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+        }
+        
+        .contact-button:active {
+            transform: translateY(0);
+        }
+        
+        .phone-icon,
+        .message-icon {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .phone-number-display {
+            color: #4CAF50;
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 20px;
+            letter-spacing: 1px;
+        }
+
         @media (max-width: 600px) {
             .form-container {
                 padding: 25px;
@@ -414,25 +471,44 @@
             </div>
         </div>
 
-        <!-- SUCCESS SCREEN -->
-        <div class="form-step" id="successStep">
-            <div style="text-align: center; padding: 40px 0;">
-                <div style="width: 80px; height: 80px; border-radius: 50%; background: #4CAF50; margin: 0 auto 30px; display: flex; align-items: center; justify-content: center;">
-                    <div style="color: white; font-size: 30px; font-weight: bold;">✓</div>
-                </div>
-                <div style="font-size: 24px; color: #4CAF50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
-                <div style="font-size: 16px; color: #666; line-height: 1.5;">Redirecting you to schedule your free consultation...</div>
+        <!-- PHONE/TEXT CONTACT SCREEN -->
+        <div class="form-step" id="contactStep">
+            <div style="text-align: center;">
+                <div style="font-size: 24px; color: #4CAF50; margin-bottom: 20px; font-weight: bold;">Schedule your free quote now!</div>
+                <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Use the buttons below to call or text us. If you don't, we'll contact you as soon as possible to schedule a time.</div>
+                
+                <a href="tel:+19193634740" class="contact-button call-button">
+                    <svg class="phone-icon" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
+                    </svg>
+                    Call
+                </a>
+                
+                <a href="sms:+19193634740?&body=Hey%2C%20this%20is%20Drew%21%20I%20just%20saw%20your%20video%20on%20social%20media%20and%20would%20like%20to%20schedule%20an%20appointment%20to%20get%20my%20free%2C%20no%20obligation%20quote.%20Please%20send%20me%20some%20days%2Ftimes%20that%20you%27re%20available%21" class="contact-button text-button">
+                    <svg class="message-icon" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 11H7V9h2v2zm4 0h-2V9h2v2zm4 0h-2V9h2v2z"/>
+                    </svg>
+                    Text
+                </a>
+                
+                <div class="phone-number-display">(919) 363-4740</div>
             </div>
         </div>
     </div>
 
     <script>
+        // ============================================
+        // CONFIGURATION - Change this to switch behavior
+        // ============================================
+        const REDIRECT_MODE = 'phone'; // Options: 'calendar' or 'phone'
+        const CLIENT_PHONE = '+19191234567'; // Client phone number for call/text buttons
+        // ============================================
+
         let currentStep = 1;
         let formData = {};
         let eventId = null;
         let hasTrackedEngagement = false;
 
-        // Generate unique event ID for pixel and CAPI matching
         function generateEventId() {
             return 'event_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
@@ -444,7 +520,6 @@
             element.classList.add('selected');
             formData[field] = value;
             
-            // Track engagement event on first question interaction
             if (!hasTrackedEngagement) {
                 if (typeof fbq !== 'undefined') {
                     fbq('track', 'ViewContent', {
@@ -468,14 +543,12 @@
             const cityField = document.getElementById('cityField');
             const stateZipRow = document.getElementById('stateZipRow');
             
-            // Show city/state/zip fields if street has content
             if (street.length > 0) {
                 cityField.classList.remove('hidden-initially');
                 stateZipRow.classList.remove('hidden-initially');
             } else {
                 cityField.classList.add('hidden-initially');
                 stateZipRow.classList.add('hidden-initially');
-                // Clear the hidden fields when street is empty
                 document.getElementById('city').value = '';
                 document.getElementById('state').value = '';
                 document.getElementById('zip').value = '';
@@ -558,7 +631,6 @@
             if (phoneInput.value !== p1.formatted) phoneInput.value = p1.formatted;
             phoneDigits.value = p1.digits;
 
-            // Create error element if it doesn't exist for phone starting with "1"
             let phoneError = document.getElementById('phoneError');
             if (!phoneError) {
                 phoneError = document.createElement('div');
@@ -569,14 +641,12 @@
                 phoneError.style.display = 'none';
                 phoneError.textContent = "Your phone number shouldn't start with a 1";
                 
-                // Insert after the phone help text
                 const phoneHelp = document.getElementById('phoneHelp');
                 if (phoneHelp) {
                     phoneHelp.parentNode.insertBefore(phoneError, phoneHelp.nextSibling);
                 }
             }
 
-            // Check if phone starts with 1
             if (p1.digits.length > 0 && p1.digits.charAt(0) === '1') {
                 phoneError.style.display = 'block';
                 phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
@@ -589,16 +659,13 @@
                 }
             }
 
-            // Show/hide confirm field based on first phone validity (and not starting with 1)
             const shouldShowConfirm = p1.digits.length === 10 && p1.digits.charAt(0) !== '1';
             phoneConfirmWrap.style.display = shouldShowConfirm ? '' : 'none';
             if (phone2Input) phone2Input.required = shouldShowConfirm;
 
-            // Format second phone
             const p2 = formatPhone(phone2Input ? phone2Input.value : '');
             if (phone2Input && phone2Input.value !== p2.formatted) phone2Input.value = p2.formatted;
 
-            // Validate match
             if(shouldShowConfirm && phone2Input){
                 if(p2.digits.length === 0){
                     phone2Input.setCustomValidity('Please re-enter your phone number.');
@@ -608,26 +675,13 @@
                     phone2Input.setCustomValidity('');
                 }
             } else if (phone2Input) {
-                // If not showing confirm, clear validity + value to prevent stale mismatches
                 phone2Input.value = '';
                 phone2Input.setCustomValidity('');
             }
 
-            // Always update submit button when validating phones
             const phoneValid = p1.digits.length === 10 && p1.digits.charAt(0) !== '1';
             const phone2Valid = !shouldShowConfirm || (p2.digits.length === 10 && p2.digits === p1.digits);
             const buttonShouldEnable = phoneValid && phone2Valid;
-            
-            console.log('Phone validation:', {
-                phone1: p1.digits,
-                phone2: p2.digits,
-                shouldShowConfirm,
-                phoneValid,
-                phone2Valid,
-                buttonShouldEnable,
-                currentStep: currentStep,
-                startsWithOne: p1.digits.charAt(0) === '1'
-            });
             
             if (phoneSubmitBtn) {
                 phoneSubmitBtn.disabled = !buttonShouldEnable;
@@ -650,31 +704,70 @@
         }
 
         function redirectToCalendar() {
-            // Build Cal.com URL with correct parameters for pre-filling
             const first = document.getElementById('firstName')?.value.trim() || '';
             const last = document.getElementById('lastName')?.value.trim() || '';
             const name = `${first} ${last}`.replace(/\s+/g, ' ').trim();
             
             const params = new URLSearchParams();
-            params.set('email', 'peakleadsgroup@gmail.com'); // fixed inbox email
+            params.set('email', 'peakleadsgroup@gmail.com');
             
             if (name) params.set('name', name);
             
-            // Use smsReminderNumber parameter to match your Cal.com configuration
             const smsDigits = document.getElementById('phone_digits')?.value || '';
             if (smsDigits.length === 10) {
                 params.set('smsReminderNumber', `+1${smsDigits}`);
             }
             
-            // Use simple static address for location field
             params.set('location', '123 Main Street, Wilmington, NC');
             
-            // Redirect to new Cal.com link
             window.location.href = `https://cal.com/peakleadsgroup/pro-x-home-solutions?${params.toString()}`;
         }
 
+        function showContactScreen() {
+            // Get lead's name
+            const firstName = document.getElementById('firstName')?.value.trim() || '';
+            
+            // Format phone number for display
+            const phoneForDisplay = formatClientPhoneForDisplay(CLIENT_PHONE);
+            
+            // Build the SMS body with lead's name
+            const smsBody = encodeURIComponent(
+                `Hey, this is ${firstName}! I just saw your video on social media and would like to schedule an appointment to get my free, no obligation quote. Please send me some days/times that you're available!`
+            );
+            
+            // Update the contact buttons and phone display
+            const callButton = document.querySelector('.call-button');
+            const textButton = document.querySelector('.text-button');
+            const phoneDisplay = document.querySelector('.phone-number-display');
+            
+            if (callButton) callButton.href = `tel:${CLIENT_PHONE}`;
+            if (textButton) textButton.href = `sms:${CLIENT_PHONE}?&body=${smsBody}`;
+            if (phoneDisplay) phoneDisplay.textContent = phoneForDisplay;
+            
+            // Show the contact screen
+            document.getElementById('step7').classList.remove('active');
+            document.getElementById('contactStep').classList.add('active');
+            document.getElementById('progressBarContainer').style.display = 'none';
+        }
+
+        function formatClientPhoneForDisplay(phoneNumber) {
+            // Remove all non-digit characters
+            const digits = phoneNumber.replace(/\D/g, '');
+            
+            // Format as (XXX) XXX-XXXX
+            if (digits.length === 11 && digits.startsWith('1')) {
+                // Remove leading 1 for display
+                const without1 = digits.substring(1);
+                return `(${without1.slice(0,3)}) ${without1.slice(3,6)}-${without1.slice(6)}`;
+            } else if (digits.length === 10) {
+                return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+            }
+            
+            // Return original if format doesn't match
+            return phoneNumber;
+        }
+
         function submitFinalForm() {
-            // Generate event ID for pixel and CAPI matching
             eventId = generateEventId();
             
             const finalData = {
@@ -682,14 +775,12 @@
                 phone: document.getElementById('phone_digits').value
             };
             
-            // Fire Meta Pixel Lead event
             if (typeof fbq !== 'undefined') {
                 fbq('track', 'Lead', {
                     content_category: 'home_improvement',
                     content_name: 'bathroom_remodel_quote',
                     value: 1.00,
                     currency: 'USD',
-                    // Custom parameters for audience building
                     homeowner_status: finalData.homeowner,
                     project_type: finalData.projectType,
                     main_goal: finalData.mainGoal,
@@ -724,7 +815,6 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
     timeZone: 'America/New_York'
 })} EST`.trim();
 
-            // Create HTML version for email
             const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR><BR>Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
     year: 'numeric', 
@@ -755,11 +845,10 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 form_type: 'bathroom_remodel_qualification',
                 clientATID: 'recudaGNyi4cCPLVf',
                 adATID: new URLSearchParams(window.location.search).get('adATID'),
-                event_id: eventId  // Include event ID for CAPI matching
+                event_id: eventId
             };
             
-            // Submit webhook data first, then redirect immediately
-            fetch('https://hook.us2.make.com/g5h4leaf5ibs3dncj6n2lon5d9w3yi3g', {
+            fetch('https://hook.us2.make.com/53pm5q58kvfo9iitu6sonth9hzjczq8d', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -767,8 +856,12 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 body: JSON.stringify(webhookData),
                 mode: 'no-cors'
             }).finally(() => {
-                // Redirect immediately without showing success screen
-                redirectToCalendar();
+                // Route based on REDIRECT_MODE configuration
+                if (REDIRECT_MODE === 'phone') {
+                    showContactScreen();
+                } else {
+                    redirectToCalendar();
+                }
             });
         }
 
@@ -831,7 +924,6 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 if(comps.route) streetAddress += comps.route.long_name;
                 if(streetAddress.trim()) addressInput.value = streetAddress.trim();
                 
-                // Show the city/state/zip fields when autocomplete fills in street
                 const cityField = document.getElementById('cityField');
                 const stateZipRow = document.getElementById('stateZipRow');
                 if (streetAddress.trim()) {
@@ -853,7 +945,6 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
         };
     </script>
 
-    <!-- Load Google Places (async/defer) -->
     <script async defer
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&libraries=places&callback=__attachPlaces">
     </script>
