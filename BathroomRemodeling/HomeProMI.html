@@ -344,32 +344,48 @@
             </div>
         </div>
 
-        <!-- STEP 5: Address -->
+        <!-- STEP 5: Address/Zip -->
         <div class="form-step" id="step5">
-            <div class="question">What is the location of this project?</div>
-            <div class="sub-heading">Please make sure your address is full and correct so we can confirm you are within our service area</div>
-            <div class="address-grid">
-                <div class="address-field">
-                    <label class="address-label" for="street">Street Address</label>
-                    <input type="text" class="address-input" id="street" placeholder="Street Address" oninput="validateAddressForm()">
-                </div>
-                
-                <div id="cityField" class="address-field hidden-initially">
-                    <label class="address-label" for="city">City</label>
-                    <input type="text" class="address-input" id="city" placeholder="City" oninput="validateAddressForm()">
-                </div>
-                
-                <div class="address-row hidden-initially" id="stateZipRow">
+            <!-- Full Address Mode -->
+            <div id="fullAddressMode">
+                <div class="question">What is the location of this project?</div>
+                <div class="sub-heading">Please make sure your address is full and correct so we can confirm you are within our service area</div>
+                <div class="address-grid">
                     <div class="address-field">
-                        <label class="address-label" for="state">State</label>
-                        <input type="text" class="address-input" id="state" placeholder="State" oninput="validateAddressForm()">
+                        <label class="address-label" for="street">Street Address</label>
+                        <input type="text" class="address-input" id="street" placeholder="Street Address" oninput="validateAddressForm()">
                     </div>
-                    <div class="address-field">
-                        <label class="address-label" for="zip">Zip Code</label>
-                        <input type="text" class="address-input" id="zip" placeholder="Zip Code" oninput="validateAddressForm()" maxlength="5">
+                    
+                    <div id="cityField" class="address-field hidden-initially">
+                        <label class="address-label" for="city">City</label>
+                        <input type="text" class="address-input" id="city" placeholder="City" oninput="validateAddressForm()">
+                    </div>
+                    
+                    <div class="address-row hidden-initially" id="stateZipRow">
+                        <div class="address-field">
+                            <label class="address-label" for="state">State</label>
+                            <input type="text" class="address-input" id="state" placeholder="State" oninput="validateAddressForm()">
+                        </div>
+                        <div class="address-field">
+                            <label class="address-label" for="zip">Zip Code</label>
+                            <input type="text" class="address-input" id="zip" placeholder="Zip Code" oninput="validateAddressForm()" maxlength="5">
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Zip Only Mode -->
+            <div id="zipOnlyMode" style="display: none;">
+                <div class="question">What's your zip code?</div>
+                <div class="sub-heading">We'll use this to confirm you're in our service area</div>
+                <div class="address-grid">
+                    <div class="address-field">
+                        <label class="address-label" for="zipOnly">Zip Code</label>
+                        <input type="text" class="address-input" id="zipOnly" placeholder="Enter 5-digit zip code" oninput="validateZipOnly()" maxlength="5">
+                    </div>
+                </div>
+            </div>
+
             <div class="nav-buttons">
                 <button class="nav-btn" onclick="goToStep6()" id="submitFormBtn" disabled>Next</button>
             </div>
@@ -427,12 +443,34 @@
     </div>
 
     <script>
+        // ===== CONFIGURATION TOGGLE =====
+        // Set to true for full address collection, false for zip code only
+        const COLLECT_FULL_ADDRESS = true;
+        // ================================
+
         let currentStep = 1;
         let formData = {};
         let eventId = null;
         let hasTrackedEngagement = false;
 
-        // Generate unique event ID for pixel and CAPI matching
+        // Initialize address mode on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            initializeAddressMode();
+        });
+
+        function initializeAddressMode() {
+            const fullAddressMode = document.getElementById('fullAddressMode');
+            const zipOnlyMode = document.getElementById('zipOnlyMode');
+            
+            if (COLLECT_FULL_ADDRESS) {
+                fullAddressMode.style.display = 'block';
+                zipOnlyMode.style.display = 'none';
+            } else {
+                fullAddressMode.style.display = 'none';
+                zipOnlyMode.style.display = 'block';
+            }
+        }
+
         function generateEventId() {
             return 'event_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
@@ -444,7 +482,6 @@
             element.classList.add('selected');
             formData[field] = value;
             
-            // Track engagement event on first question interaction
             if (!hasTrackedEngagement) {
                 if (typeof fbq !== 'undefined') {
                     fbq('track', 'ViewContent', {
@@ -460,6 +497,27 @@
             }, 200);
         }
 
+        function validateZipOnly() {
+            const zipOnly = document.getElementById('zipOnly').value.trim();
+            const submitBtn = document.getElementById('submitFormBtn');
+            
+            // Validate that it's exactly 5 digits
+            const isValid = /^\d{5}$/.test(zipOnly);
+            
+            if (submitBtn) {
+                submitBtn.disabled = !isValid;
+            }
+            
+            if (isValid) {
+                formData.address = { 
+                    zip: zipOnly,
+                    street: '',
+                    city: '',
+                    state: ''
+                };
+            }
+        }
+
         function validateAddressForm() {
             const street = document.getElementById('street').value.trim();
             const city = document.getElementById('city').value.trim();
@@ -468,14 +526,12 @@
             const cityField = document.getElementById('cityField');
             const stateZipRow = document.getElementById('stateZipRow');
             
-            // Show city/state/zip fields if street has content
             if (street.length > 0) {
                 cityField.classList.remove('hidden-initially');
                 stateZipRow.classList.remove('hidden-initially');
             } else {
                 cityField.classList.add('hidden-initially');
                 stateZipRow.classList.add('hidden-initially');
-                // Clear the hidden fields when street is empty
                 document.getElementById('city').value = '';
                 document.getElementById('state').value = '';
                 document.getElementById('zip').value = '';
@@ -507,7 +563,12 @@
         }
 
         function goToStep6() {
-            validateAddressForm();
+            if (COLLECT_FULL_ADDRESS) {
+                validateAddressForm();
+            } else {
+                validateZipOnly();
+            }
+            
             if (formData.address) {
                 nextStep();
             }
@@ -558,7 +619,6 @@
             if (phoneInput.value !== p1.formatted) phoneInput.value = p1.formatted;
             phoneDigits.value = p1.digits;
 
-            // Create error element if it doesn't exist for phone starting with "1"
             let phoneError = document.getElementById('phoneError');
             if (!phoneError) {
                 phoneError = document.createElement('div');
@@ -569,14 +629,12 @@
                 phoneError.style.display = 'none';
                 phoneError.textContent = "Your phone number shouldn't start with a 1";
                 
-                // Insert after the phone help text
                 const phoneHelp = document.getElementById('phoneHelp');
                 if (phoneHelp) {
                     phoneHelp.parentNode.insertBefore(phoneError, phoneHelp.nextSibling);
                 }
             }
 
-            // Check if phone starts with 1
             if (p1.digits.length > 0 && p1.digits.charAt(0) === '1') {
                 phoneError.style.display = 'block';
                 phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
@@ -589,16 +647,13 @@
                 }
             }
 
-            // Show/hide confirm field based on first phone validity (and not starting with 1)
             const shouldShowConfirm = p1.digits.length === 10 && p1.digits.charAt(0) !== '1';
             phoneConfirmWrap.style.display = shouldShowConfirm ? '' : 'none';
             if (phone2Input) phone2Input.required = shouldShowConfirm;
 
-            // Format second phone
             const p2 = formatPhone(phone2Input ? phone2Input.value : '');
             if (phone2Input && phone2Input.value !== p2.formatted) phone2Input.value = p2.formatted;
 
-            // Validate match
             if(shouldShowConfirm && phone2Input){
                 if(p2.digits.length === 0){
                     phone2Input.setCustomValidity('Please re-enter your phone number.');
@@ -608,26 +663,13 @@
                     phone2Input.setCustomValidity('');
                 }
             } else if (phone2Input) {
-                // If not showing confirm, clear validity + value to prevent stale mismatches
                 phone2Input.value = '';
                 phone2Input.setCustomValidity('');
             }
 
-            // Always update submit button when validating phones
             const phoneValid = p1.digits.length === 10 && p1.digits.charAt(0) !== '1';
             const phone2Valid = !shouldShowConfirm || (p2.digits.length === 10 && p2.digits === p1.digits);
             const buttonShouldEnable = phoneValid && phone2Valid;
-            
-            console.log('Phone validation:', {
-                phone1: p1.digits,
-                phone2: p2.digits,
-                shouldShowConfirm,
-                phoneValid,
-                phone2Valid,
-                buttonShouldEnable,
-                currentStep: currentStep,
-                startsWithOne: p1.digits.charAt(0) === '1'
-            });
             
             if (phoneSubmitBtn) {
                 phoneSubmitBtn.disabled = !buttonShouldEnable;
@@ -650,31 +692,26 @@
         }
 
         function redirectToCalendar() {
-            // Build Cal.com URL with correct parameters for pre-filling
             const first = document.getElementById('firstName')?.value.trim() || '';
             const last = document.getElementById('lastName')?.value.trim() || '';
             const name = `${first} ${last}`.replace(/\s+/g, ' ').trim();
             
             const params = new URLSearchParams();
-            params.set('email', 'peakleadsgroup@gmail.com'); // fixed inbox email
+            params.set('email', 'peakleadsgroup@gmail.com');
             
             if (name) params.set('name', name);
             
-            // Use smsReminderNumber parameter to match your Cal.com configuration
             const smsDigits = document.getElementById('phone_digits')?.value || '';
             if (smsDigits.length === 10) {
                 params.set('smsReminderNumber', `+1${smsDigits}`);
             }
             
-            // Use simple static address for location field
             params.set('location', '123 Main Street, Wilmington, NC');
             
-            // Redirect to new Cal.com link
             window.location.href = `https://cal.com/peakleadsgroup/home-pro-mi?${params.toString()}`;
         }
 
         function submitFinalForm() {
-            // Generate event ID for pixel and CAPI matching
             eventId = generateEventId();
             
             const finalData = {
@@ -682,14 +719,12 @@
                 phone: document.getElementById('phone_digits').value
             };
             
-            // Fire Meta Pixel Lead event
             if (typeof fbq !== 'undefined') {
                 fbq('track', 'Lead', {
                     content_category: 'home_improvement',
                     content_name: 'bathroom_remodel_quote',
                     value: 1.00,
                     currency: 'USD',
-                    // Custom parameters for audience building
                     homeowner_status: finalData.homeowner,
                     project_type: finalData.projectType,
                     main_goal: finalData.mainGoal,
@@ -699,6 +734,10 @@
                 });
             }
             
+            const addressSection = COLLECT_FULL_ADDRESS 
+                ? `Address:\n${finalData.address.street}\n${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}`
+                : `Zip Code: ${finalData.address.zip}`;
+
             const fullSummary = `Bathroom Remodel Lead Information:
 
 Name: ${finalData.firstName} ${finalData.lastName}
@@ -709,9 +748,7 @@ Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}
 Project Type: ${getProjectTypeDisplay(finalData.projectType)}
 Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}
 
-Address:
-${finalData.address.street}
-${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}
+${addressSection}
 
 Lead generated on: ${new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
@@ -724,8 +761,11 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
     timeZone: 'America/New_York'
 })} EST`.trim();
 
-            // Create HTML version for email
-            const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR><BR>Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+            const addressSectionHTML = COLLECT_FULL_ADDRESS 
+                ? `Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}`
+                : `Zip Code: ${finalData.address.zip}`;
+
+            const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR><BR>Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}<BR><BR>${addressSectionHTML}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
     year: 'numeric', 
     month: 'long', 
@@ -755,10 +795,9 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 form_type: 'bathroom_remodel_qualification',
                 clientATID: 'recUHm2a3apf53niV',
                 adATID: new URLSearchParams(window.location.search).get('adATID'),
-                event_id: eventId  // Include event ID for CAPI matching
+                event_id: eventId
             };
             
-            // Submit webhook data first, then redirect immediately
             fetch('https://hook.us2.make.com/g5h4leaf5ibs3dncj6n2lon5d9w3yi3g', {
                 method: 'POST',
                 headers: {
@@ -767,7 +806,6 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 body: JSON.stringify(webhookData),
                 mode: 'no-cors'
             }).finally(() => {
-                // Redirect immediately without showing success screen
                 redirectToCalendar();
             });
         }
@@ -809,6 +847,9 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
         updateProgress();
 
         window.__attachPlaces = function(){
+            // Only attach Google Places if in full address mode
+            if (!COLLECT_FULL_ADDRESS) return;
+            
             if(!window.google || !google.maps || !google.maps.places) return;
             
             const addressInput = document.getElementById('street');
@@ -831,7 +872,6 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 if(comps.route) streetAddress += comps.route.long_name;
                 if(streetAddress.trim()) addressInput.value = streetAddress.trim();
                 
-                // Show the city/state/zip fields when autocomplete fills in street
                 const cityField = document.getElementById('cityField');
                 const stateZipRow = document.getElementById('stateZipRow');
                 if (streetAddress.trim()) {
@@ -853,9 +893,15 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
         };
     </script>
 
-    <!-- Load Google Places (async/defer) -->
-    <script async defer
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&libraries=places&callback=__attachPlaces">
+    <!-- Load Google Places only if in full address mode -->
+    <script>
+        if (COLLECT_FULL_ADDRESS) {
+            const script = document.createElement('script');
+            script.async = true;
+            script.defer = true;
+            script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&libraries=places&callback=__attachPlaces';
+            document.head.appendChild(script);
+        }
     </script>
 </body>
 </html>
