@@ -446,22 +446,17 @@
         let circles = [];
         let isMapReady = false;
         let activeTab = 'circles';
-        let allUSZipCodes = []; // Will store all US zip codes
+        let allUSZipCodes = []; // Will be populated from external script
         const colors = ['#FF5252', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#FF9800', '#00BCD4', '#E91E63'];
         
-        // Load all US zip codes from JSON file
-        async function loadAllUSZipCodes() {
-            try {
-                const response = await fetch('zipcodes_github.json');
-                const data = await response.json();
-                // Convert to array of formatted zip code strings with leading zeros
-                allUSZipCodes = data.map(item => {
-                    const zipStr = String(item.zip_code).padStart(5, '0');
-                    return zipStr;
-                });
+        // Load all US zip codes from external script
+        function loadAllUSZipCodes() {
+            // Check if the external script loaded the data
+            if (typeof ALL_US_ZIP_CODES !== 'undefined') {
+                allUSZipCodes = ALL_US_ZIP_CODES;
                 console.log(`Loaded ${allUSZipCodes.length} US zip codes`);
-            } catch (error) {
-                console.error('Error loading US zip codes:', error);
+            } else {
+                console.error('US zip codes data not loaded');
                 alert('Warning: Could not load US zip codes database. Exclude feature may not work properly.');
             }
         }
@@ -1313,6 +1308,7 @@
         }
     </script>
     
+    <script src="us_zipcodes.js"></script>
     <script async defer
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&callback=initMap">
     </script>
