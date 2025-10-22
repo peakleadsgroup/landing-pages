@@ -354,7 +354,7 @@
             
             <div class="tabs">
                 <div class="tab active" onclick="switchTab('circles')">Circles</div>
-                <div class="tab" onclick="switchTab('all-zips')">All Zip Codes</div>
+                <div class="tab" onclick="switchTab('all-zips')">Zip Codes</div>
             </div>
             
             <div id="circles-tab" class="tab-content active">
@@ -367,11 +367,27 @@
             
             <div id="all-zips-tab" class="tab-content">
                 <div class="all-zips-container">
-                    <div class="all-zips-header">Combined Zip Codes</div>
-                    <div class="all-zips-count" id="all-zips-count">0 unique zip codes</div>
-                    <button class="copy-all-btn" onclick="copyAllZipCodes()">Copy All Zip Codes</button>
-                    <div class="zip-tags" id="all-zips-list">
+                    <div class="all-zips-header">Target</div>
+                    <div class="all-zips-count" id="target-count">0 unique zip codes</div>
+                    <button class="copy-all-btn" onclick="copyTargetZipCodes()">Copy Target Zip Codes</button>
+                    <div class="zip-tags" id="target-list">
                         <div class="no-zips">No zip codes yet</div>
+                    </div>
+                </div>
+                
+                <div class="all-zips-container">
+                    <div class="all-zips-header">Expanded Zips</div>
+                    <div class="input-group">
+                        <label for="expand-miles">Expand Radius By (Miles)</label>
+                        <div class="input-row">
+                            <input type="number" id="expand-miles" placeholder="Enter miles to expand" value="0" min="0" step="0.5">
+                            <button onclick="calculateExpandedZips()" style="width: auto; padding: 0.625rem 1rem;">Calculate</button>
+                        </div>
+                    </div>
+                    <div class="all-zips-count" id="expanded-count">0 unique zip codes</div>
+                    <button class="copy-all-btn" onclick="copyExpandedZipCodes()">Copy Expanded Zip Codes</button>
+                    <div class="zip-tags" id="expanded-list">
+                        <div class="no-zips">Enter expansion miles and click Calculate</div>
                     </div>
                 </div>
             </div>
@@ -808,6 +824,7 @@
         
         // Update all zip codes tab
         function updateAllZipCodes() {
+            // Update Target section
             const allZips = new Set();
             
             circles.forEach(circleData => {
@@ -820,10 +837,10 @@
             
             const sortedZips = Array.from(allZips).sort();
             
-            document.getElementById('all-zips-count').textContent = 
+            document.getElementById('target-count').textContent = 
                 `${sortedZips.length} unique zip code${sortedZips.length !== 1 ? 's' : ''}`;
             
-            const listContainer = document.getElementById('all-zips-list');
+            const listContainer = document.getElementById('target-list');
             
             if (sortedZips.length === 0) {
                 listContainer.innerHTML = '<div class="no-zips">No zip codes yet</div>';
@@ -834,8 +851,91 @@
             }
         }
         
-        // Copy all zip codes to clipboard
-        function copyAllZipCodes() {
+        // Calculate expanded zip codes
+        async function calculateExpandedZips() {
+            const expandMiles = parseFloat(document.getElementById('expand-miles').value);
+            
+            if (isNaN(expandMiles) || expandMiles < 0) {
+                alert('Please enter a valid number of miles');
+                return;
+            }
+            
+            if (circles.length === 0) {
+                alert('Please add at least one circle first');
+                return;
+            }
+            
+            // Show loading state
+            document.getElementById('expanded-list').innerHTML = '<div class="no-zips">Calculating expanded zip codes...</div>';
+            document.getElementById('expanded-count').textContent = 'Calculating...';
+            
+            const expandedZips = new Set();
+            
+            // For each circle, calculate zip codes with expanded radius
+            for (const circleData of circles) {
+                const expandedRadiusInMeters = circleData.radiusInMeters + (expandMiles * 1609.34);
+                
+                const centerLat = circleData.center.lat;
+                const centerLng = circleData.center.lng;
+                
+                const radiusInDegrees = expandedRadiusInMeters / 111320;
+                const gridSize = Math.max(4, Math.min(12, Math.ceil(expandedRadiusInMeters / 3000)));
+                const step = (radiusInDegrees * 2) / gridSize;
+                
+                const promises = [];
+                
+                // Sample grid points within the expanded circle
+                for (let latOffset = -radiusInDegrees; latOffset <= radiusInDegrees; latOffset += step) {
+                    for (let lngOffset = -radiusInDegrees; lngOffset <= radiusInDegrees; lngOffset += step) {
+                        const lat = centerLat + latOffset;
+                        const lng = centerLng + lngOffset;
+                        
+                        const distance = getDistanceInMeters(centerLat, centerLng, lat, lng);
+                        if (distance <= expandedRadiusInMeters) {
+                            promises.push(
+                                reverseGeocode(lat, lng).then(zip => {
+                                    if (zip) expandedZips.add(zip);
+                                }).catch(() => {})
+                            );
+                        }
+                    }
+                }
+                
+                // Check perimeter points
+                const perimeterPoints = 16;
+                for (let i = 0; i < perimeterPoints; i++) {
+                    const angle = (i / perimeterPoints) * 2 * Math.PI;
+                    const lat = centerLat + (radiusInDegrees * Math.sin(angle));
+                    const lng = centerLng + (radiusInDegrees * Math.cos(angle));
+                    
+                    promises.push(
+                        reverseGeocode(lat, lng).then(zip => {
+                            if (zip) expandedZips.add(zip);
+                        }).catch(() => {})
+                    );
+                }
+                
+                await Promise.all(promises);
+            }
+            
+            const sortedExpandedZips = Array.from(expandedZips).sort();
+            
+            document.getElementById('expanded-count').textContent = 
+                `${sortedExpandedZips.length} unique zip code${sortedExpandedZips.length !== 1 ? 's' : ''}`;
+            
+            const expandedListContainer = document.getElementById('expanded-list');
+            
+            if (sortedExpandedZips.length === 0) {
+                expandedListContainer.innerHTML = '<div class="no-zips">No zip codes found</div>';
+            } else {
+                expandedListContainer.innerHTML = sortedExpandedZips.map(zip => 
+                    `<span class="zip-tag">${zip}</span>`
+                ).join('');
+            }
+        }
+        
+        // Copy target zip codes to clipboard
+        function copyTargetZipCodes() {
             const allZips = new Set();
             
             circles.forEach(circleData => {
@@ -856,7 +956,35 @@
             const zipString = sortedZips.join(', ');
             
             navigator.clipboard.writeText(zipString).then(() => {
-                const button = document.querySelector('.copy-all-btn');
+                const buttons = document.querySelectorAll('.copy-all-btn');
+                const button = buttons[0];
+                const originalText = button.textContent;
+                button.textContent = '✓ Copied!';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                alert('Could not copy to clipboard. Zip codes: ' + zipString);
+            });
+        }
+        
+        // Copy expanded zip codes to clipboard
+        function copyExpandedZipCodes() {
+            const expandedListContainer = document.getElementById('expanded-list');
+            const zipTags = expandedListContainer.querySelectorAll('.zip-tag');
+            
+            if (zipTags.length === 0) {
+                alert('No expanded zip codes to copy. Click Calculate first.');
+                return;
+            }
+            
+            const zips = Array.from(zipTags).map(tag => tag.textContent);
+            const zipString = zips.join(', ');
+            
+            navigator.clipboard.writeText(zipString).then(() => {
+                const buttons = document.querySelectorAll('.copy-all-btn');
+                const button = buttons[1];
                 const originalText = button.textContent;
                 button.textContent = '✓ Copied!';
                 
