@@ -349,7 +349,7 @@
                 </div>
                 
                 <button onclick="addCircle()">Add Circle to Map</button>
-                <div class="hint-text">💡 Drag circles to move • Drag edges to resize</div>
+                <div class="hint-text">💡 Click map to add 10mi radius • Drag circles to move • Drag edges to resize</div>
             </div>
             
             <div class="tabs">
@@ -411,6 +411,11 @@
             geocoder = new google.maps.Geocoder();
             isMapReady = true;
             
+            // Add click listener to map
+            map.addListener('click', function(event) {
+                addCircleAtLocation(event.latLng);
+            });
+            
             // Load circles from URL if present
             loadFromURL();
             
@@ -426,6 +431,70 @@
                     addCircle();
                 }
             });
+        }
+        
+        // Add a circle at a specific location (for map clicks)
+        async function addCircleAtLocation(location) {
+            const radiusInput = 10; // Default 10 miles
+            const unit = 'miles';
+            const radiusInMeters = radiusInput * 1609.34;
+            
+            // Reverse geocode to get address
+            let address = 'Unknown Location';
+            try {
+                const results = await new Promise((resolve, reject) => {
+                    geocoder.geocode({ location: location }, (results, status) => {
+                        if (status === 'OK' && results[0]) {
+                            resolve(results);
+                        } else {
+                            reject(status);
+                        }
+                    });
+                });
+                address = results[0].formatted_address;
+            } catch (error) {
+                console.error('Could not reverse geocode location', error);
+            }
+            
+            // Create circle
+            const color = colors[circles.length % colors.length];
+            const circle = new google.maps.Circle({
+                map: map,
+                center: location,
+                radius: radiusInMeters,
+                fillColor: color,
+                fillOpacity: 0.15,
+                strokeColor: color,
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                editable: true,
+                draggable: true
+            });
+            
+            // Store circle data
+            const circleData = {
+                id: Date.now(),
+                address: address,
+                center: { lat: location.lat(), lng: location.lng() },
+                radius: radiusInput,
+                unit: unit,
+                radiusInMeters: radiusInMeters,
+                color: color,
+                circle: circle,
+                zipCodes: []
+            };
+            
+            circles.push(circleData);
+            
+            // Add event listeners for drag and radius change
+            setupCircleListeners(circleData);
+            
+            // Find zip codes
+            findZipCodesInCircle(circleData);
+            
+            // Update UI
+            updateCirclesList();
+            updateURL();
         }
         
         // Switch between tabs
@@ -732,15 +801,6 @@
                             </div>
                         </div>
                         <button class="remove-btn" onclick="removeCircle(${circleData.id})">Remove</button>
-                    </div>
-                    <div class="zip-codes">
-                        <div class="zip-codes-title">Zip Codes (${circleData.zipCodes.length}):</div>
-                        ${circleData.zipCodes.length > 0 ? 
-                            `<div class="zip-tags">${circleData.zipCodes.map(zip => 
-                                `<span class="zip-tag">${zip}</span>`
-                            ).join('')}</div>` : 
-                            '<div class="no-zips">No zip codes found</div>'
-                        }
                     </div>
                 </div>
             `).join('');
