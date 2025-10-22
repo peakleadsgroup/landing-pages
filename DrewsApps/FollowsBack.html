@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Instagram Follow Back Checker</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-8">
     <div class="max-w-4xl mx-auto">
@@ -79,6 +80,16 @@
                 </div>
             </div>
 
+            <div class="text-center mb-6">
+                <button id="exportBtn"
+                    class="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:bg-green-700 transition inline-flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Export to Excel
+                </button>
+            </div>
+
             <div id="userListContainer" class="hidden">
                 <div class="flex items-center mb-3">
                     <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,6 +105,7 @@
     <script>
         let followersData = [];
         let followingData = [];
+        let notFollowingBackList = [];
 
         function parseFollowersFile(jsonData) {
             try {
@@ -156,17 +168,17 @@
             }
 
             const followersSet = new Set(followersData);
-            const notFollowingBack = followingData.filter(username => !followersSet.has(username));
+            notFollowingBackList = followingData.filter(username => !followersSet.has(username));
             
             document.getElementById('totalFollowers').textContent = followersData.length;
             document.getElementById('totalFollowing').textContent = followingData.length;
-            document.getElementById('notFollowingBackCount').textContent = notFollowingBack.length;
+            document.getElementById('notFollowingBackCount').textContent = notFollowingBackList.length;
 
             const userList = document.getElementById('userList');
             userList.innerHTML = '';
 
-            if (notFollowingBack.length > 0) {
-                notFollowingBack.forEach(username => {
+            if (notFollowingBackList.length > 0) {
+                notFollowingBackList.forEach(username => {
                     const div = document.createElement('div');
                     div.className = 'flex items-center justify-between py-2 px-3 mb-2 bg-white rounded shadow-sm hover:shadow-md transition';
                     div.innerHTML = `
@@ -184,9 +196,71 @@
             document.getElementById('results').classList.remove('hidden');
         }
 
+        function exportToExcel() {
+            // Create workbook
+            const wb = XLSX.utils.book_new();
+
+            // Summary sheet
+            const summaryData = [
+                ['Instagram Follow Back Analysis'],
+                ['Generated on', new Date().toLocaleString()],
+                [],
+                ['Metric', 'Count'],
+                ['Total Followers', followersData.length],
+                ['Total Following', followingData.length],
+                ['Not Following Back', notFollowingBackList.length],
+                ['Follow Back Rate', `${((followersData.length / followingData.length) * 100).toFixed(2)}%`]
+            ];
+            const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+            
+            // Set column widths
+            summarySheet['!cols'] = [{ wch: 25 }, { wch: 15 }];
+            XLSX.utils.book_append_sheet(wb, summarySheet, 'Summary');
+
+            // Not Following Back sheet
+            if (notFollowingBackList.length > 0) {
+                const notFollowingData = [
+                    ['Username', 'Instagram Link'],
+                    ...notFollowingBackList.map(username => [
+                        username,
+                        `https://www.instagram.com/${username}`
+                    ])
+                ];
+                const notFollowingSheet = XLSX.utils.aoa_to_sheet(notFollowingData);
+                notFollowingSheet['!cols'] = [{ wch: 30 }, { wch: 50 }];
+                XLSX.utils.book_append_sheet(wb, notFollowingSheet, 'Not Following Back');
+            }
+
+            // All Followers sheet
+            const followersListData = [
+                ['Username'],
+                ...followersData.map(username => [username])
+            ];
+            const followersSheet = XLSX.utils.aoa_to_sheet(followersListData);
+            followersSheet['!cols'] = [{ wch: 30 }];
+            XLSX.utils.book_append_sheet(wb, followersSheet, 'All Followers');
+
+            // All Following sheet
+            const followingListData = [
+                ['Username'],
+                ...followingData.map(username => [username])
+            ];
+            const followingSheet = XLSX.utils.aoa_to_sheet(followingListData);
+            followingSheet['!cols'] = [{ wch: 30 }];
+            XLSX.utils.book_append_sheet(wb, followingSheet, 'All Following');
+
+            // Generate filename with timestamp
+            const timestamp = new Date().toISOString().split('T')[0];
+            const filename = `instagram_follower_analysis_${timestamp}.xlsx`;
+
+            // Save file
+            XLSX.writeFile(wb, filename);
+        }
+
         document.getElementById('followersFile').addEventListener('change', (e) => handleFileUpload(e, 'followers'));
         document.getElementById('followingFile').addEventListener('change', (e) => handleFileUpload(e, 'following'));
         document.getElementById('analyzeBtn').addEventListener('click', analyzeFollowers);
+        document.getElementById('exportBtn').addEventListener('click', exportToExcel);
     </script>
 </body>
 </html>
