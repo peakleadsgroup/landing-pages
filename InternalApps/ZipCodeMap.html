@@ -384,7 +384,11 @@
                 </div>
                 
                 <button onclick="addCircle()">Add Circle to Map</button>
-                <div class="hint-text">💡 Click map to add 10mi radius • Drag circles to move • Drag edges to resize</div>
+                
+                <div id="total-population-display" style="margin-top: 1rem; padding: 0.75rem; background: #e8f0fe; border-radius: 4px; text-align: center;">
+                    <div style="font-size: 0.75rem; color: #5f6368; margin-bottom: 0.25rem;">Total Est. Population</div>
+                    <div id="total-population" style="font-size: 1.25rem; font-weight: 600; color: #1a73e8;">0</div>
+                </div>
             </div>
             
             <div class="tabs">
@@ -894,10 +898,10 @@
             
             listContainer.innerHTML = circles.map(circleData => `
                 <div class="circle-item">
-                    <div class="circle-header">
-                        <div class="circle-info">
-                            <div class="circle-address">${circleData.address}</div>
-                            <div class="circle-radius">${circleData.radius.toFixed(1)} ${circleData.unit} radius</div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.75rem;">
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 500; color: #202124; font-size: 0.875rem; margin-bottom: 0.25rem; word-break: break-word;">${circleData.address}</div>
+                            <div style="color: #5f6368; font-size: 0.75rem;">${circleData.radius.toFixed(1)} ${circleData.unit} radius</div>
                         </div>
                         <button class="remove-btn" onclick="removeCircle(${circleData.id})">Remove</button>
                     </div>
@@ -935,6 +939,9 @@
             const targetPopulation = calculatePopulation(sortedZips);
             document.getElementById('target-population').textContent = 
                 `Est. Population: ${formatNumber(targetPopulation)}`;
+            
+            // Update total population display in controls section
+            document.getElementById('total-population').textContent = formatNumber(targetPopulation);
             
             const listContainer = document.getElementById('target-list');
             const showAllBtn = document.getElementById('target-show-all');
