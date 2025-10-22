@@ -402,6 +402,7 @@
                 <div class="all-zips-container">
                     <div class="all-zips-header">Target</div>
                     <div class="all-zips-count" id="target-count">0 unique zip codes</div>
+                    <div class="all-zips-count" id="target-population" style="color: #1a73e8; font-weight: 500;">Est. Population: 0</div>
                     <button class="copy-all-btn" onclick="copyTargetZipCodes()">Copy Target Zip Codes</button>
                     <div class="zip-tags collapsed" id="target-list">
                         <div class="no-zips">No zip codes yet</div>
@@ -419,6 +420,7 @@
                         </div>
                     </div>
                     <div class="all-zips-count" id="expanded-count">0 unique zip codes</div>
+                    <div class="all-zips-count" id="expanded-population" style="color: #1a73e8; font-weight: 500;">Est. Population: 0</div>
                     <button class="copy-all-btn" onclick="copyExpandedZipCodes()">Copy Expanded Zip Codes</button>
                     <div class="zip-tags collapsed" id="expanded-list">
                         <div class="no-zips">Enter expansion miles and click Calculate</div>
@@ -429,6 +431,7 @@
                 <div class="all-zips-container">
                     <div class="all-zips-header">Exclude</div>
                     <div class="all-zips-count" id="exclude-count">Click Calculate to generate</div>
+                    <div class="all-zips-count" id="exclude-population" style="color: #1a73e8; font-weight: 500;">Est. Population: 0</div>
                     <button class="copy-all-btn" onclick="calculateExcludedZips()" style="background: #1a73e8;">Calculate Excluded Zips</button>
                     <button class="copy-all-btn" onclick="copyExcludedZipCodes()">Copy Excluded Zip Codes</button>
                     <div class="zip-tags collapsed" id="exclude-list">
@@ -452,19 +455,43 @@
         let circles = [];
         let isMapReady = false;
         let activeTab = 'circles';
-        let allUSZipCodes = []; // Will be populated from external script
+        let allUSZipCodes = []; // Will be populated from combined data
+        let zipPopulationData = {}; // Will be populated from combined data
         const colors = ['#FF5252', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#FF9800', '#00BCD4', '#E91E63'];
         
-        // Load all US zip codes from external script
+        // Load all US zip codes and population data from combined external script
         function loadAllUSZipCodes() {
             // Check if the external script loaded the data
-            if (typeof ALL_US_ZIP_CODES !== 'undefined') {
-                allUSZipCodes = ALL_US_ZIP_CODES;
-                console.log(`Loaded ${allUSZipCodes.length} US zip codes`);
+            if (typeof US_ZIP_DATA !== 'undefined') {
+                allUSZipCodes = Object.keys(US_ZIP_DATA);
+                zipPopulationData = {};
+                
+                // Extract population data
+                Object.keys(US_ZIP_DATA).forEach(zip => {
+                    zipPopulationData[zip] = US_ZIP_DATA[zip].population;
+                });
+                
+                console.log(`Loaded ${allUSZipCodes.length} US zip codes with population data`);
             } else {
                 console.error('US zip codes data not loaded');
-                alert('Warning: Could not load US zip codes database. Exclude feature may not work properly.');
+                alert('Warning: Could not load US zip codes database. Some features may not work properly.');
             }
+        }
+        
+        // Calculate total population for a set of zip codes
+        function calculatePopulation(zipCodes) {
+            let total = 0;
+            zipCodes.forEach(zip => {
+                if (zipPopulationData[zip]) {
+                    total += zipPopulationData[zip];
+                }
+            });
+            return total;
+        }
+        
+        // Format number with commas
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         }
         
         // Initialize the map
@@ -902,6 +929,11 @@
             document.getElementById('target-count').textContent = 
                 `${sortedZips.length} unique zip code${sortedZips.length !== 1 ? 's' : ''}`;
             
+            // Calculate and display population
+            const targetPopulation = calculatePopulation(sortedZips);
+            document.getElementById('target-population').textContent = 
+                `Est. Population: ${formatNumber(targetPopulation)}`;
+            
             const listContainer = document.getElementById('target-list');
             const showAllBtn = document.getElementById('target-show-all');
             
@@ -1011,6 +1043,11 @@
             
             document.getElementById('expanded-count').textContent = 
                 `${sortedExpandedZips.length} unique zip code${sortedExpandedZips.length !== 1 ? 's' : ''}`;
+            
+            // Calculate and display population
+            const expandedPopulation = calculatePopulation(sortedExpandedZips);
+            document.getElementById('expanded-population').textContent = 
+                `Est. Population: ${formatNumber(expandedPopulation)}`;
             
             const expandedListContainer = document.getElementById('expanded-list');
             const expandedShowAllBtn = document.getElementById('expanded-show-all');
@@ -1130,6 +1167,11 @@
             
             document.getElementById('exclude-count').textContent = 
                 `${excludedZips.length} zip codes (excluding ${targetZips.size} target zips)`;
+            
+            // Calculate and display population
+            const excludedPopulation = calculatePopulation(excludedZips);
+            document.getElementById('exclude-population').textContent = 
+                `Est. Population: ${formatNumber(excludedPopulation)}`;
             
             const excludeListContainer = document.getElementById('exclude-list');
             const excludeShowAllBtn = document.getElementById('exclude-show-all');
@@ -1314,7 +1356,7 @@
         }
     </script>
     
-    <script src="us_zipcodes.js"></script>
+    <script src="us_zip_data.js"></script>
     <script async defer
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&callback=initMap">
     </script>
