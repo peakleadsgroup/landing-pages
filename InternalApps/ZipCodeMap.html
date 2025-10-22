@@ -191,7 +191,9 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            margin-top: 0.5rem;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #e8eaed;
         }
         
         .radius-edit input {
@@ -867,16 +869,16 @@
                         <div class="circle-info">
                             <div class="circle-address">${circleData.address}</div>
                             <div class="circle-radius">${circleData.radius.toFixed(1)} ${circleData.unit} radius</div>
-                            <div class="radius-edit">
-                                <input type="number" id="radius-input-${circleData.id}" value="${circleData.radius.toFixed(1)}" min="0.1" step="0.1">
-                                <select id="unit-select-${circleData.id}">
-                                    <option value="miles" ${circleData.unit === 'miles' ? 'selected' : ''}>Miles</option>
-                                    <option value="km" ${circleData.unit === 'km' ? 'selected' : ''}>KM</option>
-                                </select>
-                                <button onclick="updateCircleRadius(${circleData.id})">Update</button>
-                            </div>
                         </div>
                         <button class="remove-btn" onclick="removeCircle(${circleData.id})">Remove</button>
+                    </div>
+                    <div class="radius-edit">
+                        <input type="number" id="radius-input-${circleData.id}" value="${circleData.radius.toFixed(1)}" min="0.1" step="0.1">
+                        <select id="unit-select-${circleData.id}">
+                            <option value="miles" ${circleData.unit === 'miles' ? 'selected' : ''}>Miles</option>
+                            <option value="km" ${circleData.unit === 'km' ? 'selected' : ''}>KM</option>
+                        </select>
+                        <button onclick="updateCircleRadius(${circleData.id})">Update</button>
                     </div>
                 </div>
             `).join('');
