@@ -311,6 +311,33 @@
             margin-bottom: 1rem;
         }
         
+        .show-all-btn {
+            background: #5f6368;
+            margin-top: 0.75rem;
+            font-size: 0.75rem;
+            padding: 0.5rem;
+        }
+        
+        .show-all-btn:hover {
+            background: #4a4f54;
+        }
+        
+        .zip-tags.collapsed {
+            max-height: 100px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .zip-tags.collapsed::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: linear-gradient(to bottom, transparent, white);
+        }
+        
         .copy-all-btn {
             background: #1a73e8;
             margin-bottom: 1rem;
@@ -370,9 +397,10 @@
                     <div class="all-zips-header">Target</div>
                     <div class="all-zips-count" id="target-count">0 unique zip codes</div>
                     <button class="copy-all-btn" onclick="copyTargetZipCodes()">Copy Target Zip Codes</button>
-                    <div class="zip-tags" id="target-list">
+                    <div class="zip-tags collapsed" id="target-list">
                         <div class="no-zips">No zip codes yet</div>
                     </div>
+                    <button class="show-all-btn" id="target-show-all" onclick="toggleShowAll('target')" style="display: none;">Show All</button>
                 </div>
                 
                 <div class="all-zips-container">
@@ -386,9 +414,21 @@
                     </div>
                     <div class="all-zips-count" id="expanded-count">0 unique zip codes</div>
                     <button class="copy-all-btn" onclick="copyExpandedZipCodes()">Copy Expanded Zip Codes</button>
-                    <div class="zip-tags" id="expanded-list">
+                    <div class="zip-tags collapsed" id="expanded-list">
                         <div class="no-zips">Enter expansion miles and click Calculate</div>
                     </div>
+                    <button class="show-all-btn" id="expanded-show-all" onclick="toggleShowAll('expanded')" style="display: none;">Show All</button>
+                </div>
+                
+                <div class="all-zips-container">
+                    <div class="all-zips-header">Exclude</div>
+                    <div class="all-zips-count" id="exclude-count">Click Calculate to generate</div>
+                    <button class="copy-all-btn" onclick="calculateExcludedZips()" style="background: #1a73e8;">Calculate Excluded Zips</button>
+                    <button class="copy-all-btn" onclick="copyExcludedZipCodes()">Copy Excluded Zip Codes</button>
+                    <div class="zip-tags collapsed" id="exclude-list">
+                        <div class="no-zips">Click Calculate to see all US zip codes excluding your targets</div>
+                    </div>
+                    <button class="show-all-btn" id="exclude-show-all" onclick="toggleShowAll('exclude')" style="display: none;">Show All</button>
                 </div>
             </div>
             
@@ -406,7 +446,25 @@
         let circles = [];
         let isMapReady = false;
         let activeTab = 'circles';
+        let allUSZipCodes = []; // Will store all US zip codes
         const colors = ['#FF5252', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#FF9800', '#00BCD4', '#E91E63'];
+        
+        // Load all US zip codes from JSON file
+        async function loadAllUSZipCodes() {
+            try {
+                const response = await fetch('zipcodes_github.json');
+                const data = await response.json();
+                // Convert to array of formatted zip code strings with leading zeros
+                allUSZipCodes = data.map(item => {
+                    const zipStr = String(item.zip_code).padStart(5, '0');
+                    return zipStr;
+                });
+                console.log(`Loaded ${allUSZipCodes.length} US zip codes`);
+            } catch (error) {
+                console.error('Error loading US zip codes:', error);
+                alert('Warning: Could not load US zip codes database. Exclude feature may not work properly.');
+            }
+        }
         
         // Initialize the map
         function initMap() {
@@ -426,6 +484,9 @@
             
             geocoder = new google.maps.Geocoder();
             isMapReady = true;
+            
+            // Load US zip codes database
+            loadAllUSZipCodes();
             
             // Add click listener to map
             map.addListener('click', function(event) {
@@ -841,13 +902,40 @@
                 `${sortedZips.length} unique zip code${sortedZips.length !== 1 ? 's' : ''}`;
             
             const listContainer = document.getElementById('target-list');
+            const showAllBtn = document.getElementById('target-show-all');
             
             if (sortedZips.length === 0) {
                 listContainer.innerHTML = '<div class="no-zips">No zip codes yet</div>';
+                listContainer.classList.remove('collapsed');
+                showAllBtn.style.display = 'none';
             } else {
                 listContainer.innerHTML = sortedZips.map(zip => 
                     `<span class="zip-tag">${zip}</span>`
                 ).join('');
+                
+                // Show "Show All" button if there are many zip codes
+                if (sortedZips.length > 20) {
+                    listContainer.classList.add('collapsed');
+                    showAllBtn.style.display = 'block';
+                    showAllBtn.textContent = 'Show All';
+                } else {
+                    listContainer.classList.remove('collapsed');
+                    showAllBtn.style.display = 'none';
+                }
+            }
+        }
+        
+        // Toggle show all zip codes
+        function toggleShowAll(section) {
+            const listContainer = document.getElementById(`${section}-list`);
+            const showAllBtn = document.getElementById(`${section}-show-all`);
+            
+            if (listContainer.classList.contains('collapsed')) {
+                listContainer.classList.remove('collapsed');
+                showAllBtn.textContent = 'Show Less';
+            } else {
+                listContainer.classList.add('collapsed');
+                showAllBtn.textContent = 'Show All';
             }
         }
         
@@ -924,13 +1012,26 @@
                 `${sortedExpandedZips.length} unique zip code${sortedExpandedZips.length !== 1 ? 's' : ''}`;
             
             const expandedListContainer = document.getElementById('expanded-list');
+            const expandedShowAllBtn = document.getElementById('expanded-show-all');
             
             if (sortedExpandedZips.length === 0) {
                 expandedListContainer.innerHTML = '<div class="no-zips">No zip codes found</div>';
+                expandedListContainer.classList.remove('collapsed');
+                expandedShowAllBtn.style.display = 'none';
             } else {
                 expandedListContainer.innerHTML = sortedExpandedZips.map(zip => 
                     `<span class="zip-tag">${zip}</span>`
                 ).join('');
+                
+                // Show "Show All" button if there are many zip codes
+                if (sortedExpandedZips.length > 20) {
+                    expandedListContainer.classList.add('collapsed');
+                    expandedShowAllBtn.style.display = 'block';
+                    expandedShowAllBtn.textContent = 'Show All';
+                } else {
+                    expandedListContainer.classList.remove('collapsed');
+                    expandedShowAllBtn.style.display = 'none';
+                }
             }
         }
         
@@ -993,6 +1094,86 @@
                 }, 2000);
             }).catch(err => {
                 alert('Could not copy to clipboard. Zip codes: ' + zipString);
+            });
+        }
+        
+        // Calculate excluded zip codes (all US zips minus target zips)
+        function calculateExcludedZips() {
+            if (allUSZipCodes.length === 0) {
+                alert('US zip codes database is still loading. Please wait a moment and try again.');
+                return;
+            }
+            
+            if (circles.length === 0) {
+                alert('Please add at least one circle first to have target zip codes.');
+                return;
+            }
+            
+            // Get all target zip codes
+            const targetZips = new Set();
+            circles.forEach(circleData => {
+                circleData.zipCodes.forEach(zip => {
+                    if (zip !== 'Searching...') {
+                        targetZips.add(zip);
+                    }
+                });
+            });
+            
+            if (targetZips.size === 0) {
+                alert('No target zip codes found yet. Please wait for zip codes to load.');
+                return;
+            }
+            
+            // Filter out target zips from all US zips
+            const excludedZips = allUSZipCodes.filter(zip => !targetZips.has(zip));
+            
+            document.getElementById('exclude-count').textContent = 
+                `${excludedZips.length} zip codes (excluding ${targetZips.size} target zips)`;
+            
+            const excludeListContainer = document.getElementById('exclude-list');
+            const excludeShowAllBtn = document.getElementById('exclude-show-all');
+            
+            if (excludedZips.length === 0) {
+                excludeListContainer.innerHTML = '<div class="no-zips">No excluded zip codes</div>';
+                excludeListContainer.classList.remove('collapsed');
+                excludeShowAllBtn.style.display = 'none';
+            } else {
+                excludeListContainer.innerHTML = excludedZips.map(zip => 
+                    `<span class="zip-tag">${zip}</span>`
+                ).join('');
+                
+                // Always show "Show All" button for excluded zips since there will be many
+                excludeListContainer.classList.add('collapsed');
+                excludeShowAllBtn.style.display = 'block';
+                excludeShowAllBtn.textContent = 'Show All';
+            }
+        }
+        
+        // Copy excluded zip codes to clipboard
+        function copyExcludedZipCodes() {
+            const excludeListContainer = document.getElementById('exclude-list');
+            const zipTags = excludeListContainer.querySelectorAll('.zip-tag');
+            
+            if (zipTags.length === 0) {
+                alert('No excluded zip codes to copy. Click Calculate Excluded Zips first.');
+                return;
+            }
+            
+            const zips = Array.from(zipTags).map(tag => tag.textContent);
+            const zipString = zips.join(', ');
+            
+            navigator.clipboard.writeText(zipString).then(() => {
+                const buttons = document.querySelectorAll('.copy-all-btn');
+                const button = buttons[3]; // Fourth copy button
+                const originalText = button.textContent;
+                button.textContent = '✓ Copied!';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                // For very large lists, show a download option instead
+                alert('The excluded zip codes list is too large for clipboard. Try using "Show All" and copying a smaller portion, or contact support for a download option.');
             });
         }
         
