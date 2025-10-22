@@ -898,12 +898,12 @@
             
             listContainer.innerHTML = circles.map(circleData => `
                 <div class="circle-item">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.75rem;">
-                        <div style="flex: 1; min-width: 0;">
-                            <div style="font-weight: 500; color: #202124; font-size: 0.875rem; margin-bottom: 0.25rem; word-break: break-word;">${circleData.address}</div>
+                    <div style="display: flex !important; justify-content: space-between !important; align-items: flex-start !important; gap: 0.75rem !important; margin-bottom: 0.75rem !important; flex-wrap: nowrap !important;">
+                        <div style="flex: 1 1 auto !important; min-width: 0 !important; max-width: 70% !important;">
+                            <div style="font-weight: 500; color: #202124; font-size: 0.875rem; margin-bottom: 0.25rem; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">${circleData.address}</div>
                             <div style="color: #5f6368; font-size: 0.75rem;">${circleData.radius.toFixed(1)} ${circleData.unit} radius</div>
                         </div>
-                        <button class="remove-btn" onclick="removeCircle(${circleData.id})">Remove</button>
+                        <button class="remove-btn" onclick="removeCircle(${circleData.id})" style="flex-shrink: 0 !important; width: auto !important; display: inline-block !important;">Remove</button>
                     </div>
                     <div class="radius-edit">
                         <input type="number" id="radius-input-${circleData.id}" value="${circleData.radius.toFixed(1)}" min="0.1" step="0.1">
