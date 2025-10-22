@@ -502,6 +502,13 @@
         // ============================================
         const REDIRECT_MODE = 'REDIRECTMODE'; // Options: 'calendar' or 'phone'
         const CLIENT_PHONE = '+19191234567'; // Client phone number for call/text buttons
+        
+        // Project Type Options - Set to true to show, false to hide
+        const PROJECT_TYPE_OPTIONS = {
+            full_remodel: true,         // "Full remodel"
+            shower_replacement: true,   // "Shower replacement"
+            tub_replacement: true       // "Tub replacement"
+        };
         // ============================================
 
         let currentStep = 1;
@@ -900,6 +907,41 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
         }
 
         updateProgress();
+
+        // Initialize project type options based on configuration
+        function initializeProjectTypeOptions() {
+            const step3 = document.getElementById('step3');
+            if (!step3) return;
+            
+            const optionsContainer = step3.querySelector('.options');
+            if (!optionsContainer) return;
+            
+            // Get all option elements
+            const options = optionsContainer.querySelectorAll('.option');
+            
+            // Map data-value to option elements
+            options.forEach(option => {
+                const onclickAttr = option.getAttribute('onclick');
+                
+                // Extract the value from onclick attribute
+                if (onclickAttr.includes("'full_remodel'")) {
+                    if (!PROJECT_TYPE_OPTIONS.full_remodel) {
+                        option.style.display = 'none';
+                    }
+                } else if (onclickAttr.includes("'shower_replacement'")) {
+                    if (!PROJECT_TYPE_OPTIONS.shower_replacement) {
+                        option.style.display = 'none';
+                    }
+                } else if (onclickAttr.includes("'tub_replacement'")) {
+                    if (!PROJECT_TYPE_OPTIONS.tub_replacement) {
+                        option.style.display = 'none';
+                    }
+                }
+            });
+        }
+        
+        // Call initialization when DOM is ready
+        initializeProjectTypeOptions();
 
         window.__attachPlaces = function(){
             if(!window.google || !google.maps || !google.maps.places) return;
