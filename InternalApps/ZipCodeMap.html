@@ -208,21 +208,6 @@
             position: relative;
         }
         
-        .api-key-notice {
-            background: #fef7e0;
-            border: 1px solid #f9ab00;
-            border-radius: 4px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            font-size: 0.875rem;
-            color: #7f4e00;
-        }
-        
-        .api-key-notice strong {
-            display: block;
-            margin-bottom: 0.25rem;
-        }
-        
         .loading {
             color: #5f6368;
             font-size: 0.75rem;
@@ -297,7 +282,6 @@
         let map;
         let geocoder;
         let circles = [];
-        let zipCodeBoundaries = null;
         let isMapReady = false;
         const colors = ['#FF5252', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#FF9800', '#00BCD4', '#E91E63'];
         
@@ -320,9 +304,6 @@
             geocoder = new google.maps.Geocoder();
             isMapReady = true;
             
-            // Load zip code boundaries
-            loadZipCodeBoundaries();
-            
             // Load circles from URL if present
             loadFromURL();
             
@@ -338,19 +319,6 @@
                     addCircle();
                 }
             });
-        }
-        
-        // Load zip code boundary data
-        async function loadZipCodeBoundaries() {
-            try {
-                // Using a publicly available zip code GeoJSON dataset
-                const response = await fetch('https://raw.githubusercontent.com/OpenDataDE/State-zip-code-GeoJSON/master/all_us_zipcodes.json');
-                zipCodeBoundaries = await response.json();
-                console.log('Zip code boundaries loaded:', zipCodeBoundaries.features.length);
-            } catch (error) {
-                console.error('Error loading zip code boundaries:', error);
-                alert('Warning: Could not load zip code boundary data. Zip code detection may not work properly.');
-            }
         }
         
         // Add a new circle to the map
@@ -442,61 +410,86 @@
             });
         }
         
-        // Find zip codes within a circle
-        function findZipCodesInCircle(circleData) {
-            if (!zipCodeBoundaries) {
-                circleData.zipCodes = ['Loading...'];
-                return;
-            }
+        // Find zip codes within a circle using grid-based reverse geocoding
+        async function findZipCodesInCircle(circleData) {
+            circleData.zipCodes = ['Searching...'];
+            updateCirclesList();
             
             const zipCodes = new Set();
             const centerLat = circleData.center.lat;
             const centerLng = circleData.center.lng;
             const radiusInMeters = circleData.radiusInMeters;
             
-            // Check each zip code boundary
-            zipCodeBoundaries.features.forEach(feature => {
-                const zipCode = feature.properties.ZCTA5CE10 || feature.properties.GEOID10;
-                
-                if (!zipCode) return;
-                
-                // Check if any part of the zip code polygon intersects with the circle
-                if (feature.geometry.type === 'Polygon') {
-                    if (polygonIntersectsCircle(feature.geometry.coordinates, centerLat, centerLng, radiusInMeters)) {
-                        zipCodes.add(zipCode);
+            // Create a grid of points within the circle
+            // Adaptive grid based on radius size
+            const radiusInDegrees = radiusInMeters / 111320; // Rough conversion: 1 degree ≈ 111km
+            const gridSize = Math.max(4, Math.min(12, Math.ceil(radiusInMeters / 3000))); // Adaptive grid
+            const step = (radiusInDegrees * 2) / gridSize;
+            
+            const promises = [];
+            
+            // Sample grid points within the circle
+            for (let latOffset = -radiusInDegrees; latOffset <= radiusInDegrees; latOffset += step) {
+                for (let lngOffset = -radiusInDegrees; lngOffset <= radiusInDegrees; lngOffset += step) {
+                    const lat = centerLat + latOffset;
+                    const lng = centerLng + lngOffset;
+                    
+                    // Check if this point is within the circle
+                    const distance = getDistanceInMeters(centerLat, centerLng, lat, lng);
+                    if (distance <= radiusInMeters) {
+                        promises.push(
+                            reverseGeocode(lat, lng).then(zip => {
+                                if (zip) zipCodes.add(zip);
+                            }).catch(() => {}) // Ignore errors for individual points
+                        );
                     }
-                } else if (feature.geometry.type === 'MultiPolygon') {
-                    feature.geometry.coordinates.forEach(polygon => {
-                        if (polygonIntersectsCircle(polygon, centerLat, centerLng, radiusInMeters)) {
-                            zipCodes.add(zipCode);
-                        }
-                    });
                 }
-            });
+            }
+            
+            // Also check points around the perimeter for edge cases
+            const perimeterPoints = 16;
+            for (let i = 0; i < perimeterPoints; i++) {
+                const angle = (i / perimeterPoints) * 2 * Math.PI;
+                const lat = centerLat + (radiusInDegrees * Math.sin(angle));
+                const lng = centerLng + (radiusInDegrees * Math.cos(angle));
+                
+                promises.push(
+                    reverseGeocode(lat, lng).then(zip => {
+                        if (zip) zipCodes.add(zip);
+                    }).catch(() => {})
+                );
+            }
+            
+            // Wait for all geocoding requests to complete
+            await Promise.all(promises);
             
             circleData.zipCodes = Array.from(zipCodes).sort();
+            updateCirclesList();
         }
         
-        // Check if a polygon intersects with a circle
-        function polygonIntersectsCircle(coordinates, centerLat, centerLng, radiusInMeters) {
-            // Check the outer ring (first array in coordinates)
-            const ring = coordinates[0];
-            
-            for (let i = 0; i < ring.length; i++) {
-                const [lng, lat] = ring[i];
-                const distance = getDistanceInMeters(centerLat, centerLng, lat, lng);
-                
-                if (distance <= radiusInMeters) {
-                    return true;
-                }
-            }
-            
-            // Also check if the circle center is inside the polygon
-            if (isPointInPolygon(centerLat, centerLng, ring)) {
-                return true;
-            }
-            
-            return false;
+        // Reverse geocode a point to get its zip code
+        async function reverseGeocode(lat, lng) {
+            return new Promise((resolve, reject) => {
+                geocoder.geocode(
+                    { location: { lat, lng } },
+                    (results, status) => {
+                        if (status === 'OK' && results[0]) {
+                            // Find the postal code component
+                            for (let result of results) {
+                                for (let component of result.address_components) {
+                                    if (component.types.includes('postal_code')) {
+                                        resolve(component.long_name);
+                                        return;
+                                    }
+                                }
+                            }
+                            resolve(null);
+                        } else {
+                            reject(status);
+                        }
+                    }
+                );
+            });
         }
         
         // Calculate distance between two points using Haversine formula
@@ -515,23 +508,6 @@
         
         function toRadians(degrees) {
             return degrees * (Math.PI / 180);
-        }
-        
-        // Check if a point is inside a polygon (ray casting algorithm)
-        function isPointInPolygon(lat, lng, ring) {
-            let inside = false;
-            
-            for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-                const [xi, yi] = ring[i];
-                const [xj, yj] = ring[j];
-                
-                const intersect = ((yi > lat) !== (yj > lat)) &&
-                                 (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi);
-                
-                if (intersect) inside = !inside;
-            }
-            
-            return inside;
         }
         
         // Update the circles list UI
@@ -672,27 +648,12 @@
                 };
                 
                 circles.push(circleData);
-                
-                // Wait a bit for zip code data to load
-                if (zipCodeBoundaries) {
-                    findZipCodesInCircle(circleData);
-                }
+                findZipCodesInCircle(circleData);
             }
             
             if (circles.length > 0) {
                 updateCirclesList();
                 fitMapToCircles();
-                
-                // If zip codes haven't loaded yet, update when they do
-                if (!zipCodeBoundaries) {
-                    const checkInterval = setInterval(() => {
-                        if (zipCodeBoundaries) {
-                            circles.forEach(findZipCodesInCircle);
-                            updateCirclesList();
-                            clearInterval(checkInterval);
-                        }
-                    }, 500);
-                }
             }
         }
         
