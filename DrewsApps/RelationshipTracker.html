@@ -439,7 +439,7 @@
             window.scrollTo(0, 0);
         }
 
-        function submitEntry() {
+        async function submitEntry() {
             responses.notes = document.getElementById('notes').value;
             
             // Save to localStorage
@@ -452,8 +452,47 @@
             entries.push(entry);
             localStorage.setItem('relationshipEntries', JSON.stringify(entries));
 
+            // Send to Google Sheets
+            await sendToGoogleSheets(entry);
+
             // Show summary
             showSummary(entry);
+        }
+
+        async function sendToGoogleSheets(entry) {
+            // Replace with your Google Apps Script Web App URL
+            const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJ7UqTsnaubPHlkmb3qKBoWWkM6XsJ4okkQq_9M4wW8ksgXNQt7W_pUkKhgsWtaanf1g/exec';
+            
+            const date = new Date(entry.date);
+            const formattedDate = date.toLocaleDateString('en-US');
+            const formattedTime = date.toLocaleTimeString('en-US');
+            
+            const data = {
+                date: formattedDate,
+                time: formattedTime,
+                name: entry.responses.name,
+                q1: entry.responses.q1,
+                q2: entry.responses.q2,
+                q3: entry.responses.q3,
+                q4: entry.responses.q4,
+                q5: entry.responses.q5,
+                notes: entry.responses.notes
+            };
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                console.log('Data sent to Google Sheets');
+            } catch (error) {
+                console.error('Error sending to Google Sheets:', error);
+                // Continue anyway - data is still saved locally
+            }
         }
 
         function showSummary(entry) {
