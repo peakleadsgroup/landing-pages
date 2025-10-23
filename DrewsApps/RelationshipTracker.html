@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relationship Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #e0e0e0;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+
+        .page {
+            display: none;
+            padding: 40px 30px;
+            min-height: 500px;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .question-number {
+            color: #764ba2;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        h2 {
+            color: #2d3748;
+            font-size: 24px;
+            margin-bottom: 40px;
+            line-height: 1.4;
+        }
+
+        .rating-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            gap: 10px;
+        }
+
+        .rating-btn {
+            flex: 1;
+            height: 60px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 600;
+            color: #718096;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rating-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .rating-btn.selected {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: transparent;
+            transform: scale(1.05);
+        }
+
+        .rating-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .notes-section {
+            margin-bottom: 30px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.2s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 2px solid #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #edf2f7;
+        }
+
+        .summary-page {
+            text-align: center;
+        }
+
+        .summary-content {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: left;
+        }
+
+        .summary-item {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .summary-question {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .summary-rating {
+            font-size: 24px;
+            font-weight: 700;
+            color: #764ba2;
+        }
+
+        .summary-notes {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .date-display {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .heart-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div style="padding: 20px 30px 0; text-align: center;">
+            <div style="font-size: 14px; color: #764ba2; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;" id="userNameDisplay"></div>
+        </div>
+
+        <!-- Question 1 -->
+        <div class="page active" id="page1">
+            <div class="question-number">Question 1 of 5</div>
+            <h2>How connected did I feel to my partner today?</h2>
+            <div class="rating-container" id="rating1">
+                <button class="rating-btn" data-value="1">1</button>
+                <button class="rating-btn" data-value="2">2</button>
+                <button class="rating-btn" data-value="3">3</button>
+                <button class="rating-btn" data-value="4">4</button>
+                <button class="rating-btn" data-value="5">5</button>
+            </div>
+            <div class="rating-labels">
+                <span>Not connected</span>
+                <span>Very connected</span>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="nextPage(1)" id="next1" disabled>Next</button>
+            </div>
+        </div>
+
+        <!-- Question 2 -->
+        <div class="page" id="page2">
+            <div class="question-number">Question 2 of 5</div>
+            <h2>Do I feel like I was able to balance my partner and my own needs?</h2>
+            <div class="rating-container" id="rating2">
+                <button class="rating-btn" data-value="1">1</button>
+                <button class="rating-btn" data-value="2">2</button>
+                <button class="rating-btn" data-value="3">3</button>
+                <button class="rating-btn" data-value="4">4</button>
+                <button class="rating-btn" data-value="5">5</button>
+            </div>
+            <div class="rating-labels">
+                <span>Not balanced</span>
+                <span>Well balanced</span>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevPage(2)">Back</button>
+                <button class="btn-primary" onclick="nextPage(2)" id="next2" disabled>Next</button>
+            </div>
+        </div>
+
+        <!-- Question 3 -->
+        <div class="page" id="page3">
+            <div class="question-number">Question 3 of 5</div>
+            <h2>Do I feel like my partner initiated/answered enough bids for connection?</h2>
+            <div class="rating-container" id="rating3">
+                <button class="rating-btn" data-value="1">1</button>
+                <button class="rating-btn" data-value="2">2</button>
+                <button class="rating-btn" data-value="3">3</button>
+                <button class="rating-btn" data-value="4">4</button>
+                <button class="rating-btn" data-value="5">5</button>
+            </div>
+            <div class="rating-labels">
+                <span>Not enough</span>
+                <span>More than enough</span>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevPage(3)">Back</button>
+                <button class="btn-primary" onclick="nextPage(3)" id="next3" disabled>Next</button>
+            </div>
+        </div>
+
+        <!-- Question 4 -->
+        <div class="page" id="page4">
+            <div class="question-number">Question 4 of 5</div>
+            <h2>How did my partner impact my happiness today?</h2>
+            <div class="rating-container" id="rating4">
+                <button class="rating-btn" data-value="1">1</button>
+                <button class="rating-btn" data-value="2">2</button>
+                <button class="rating-btn" data-value="3">3</button>
+                <button class="rating-btn" data-value="4">4</button>
+                <button class="rating-btn" data-value="5">5</button>
+            </div>
+            <div class="rating-labels">
+                <span>Taking away</span>
+                <span>Added a lot</span>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevPage(4)">Back</button>
+                <button class="btn-primary" onclick="nextPage(4)" id="next4" disabled>Next</button>
+            </div>
+        </div>
+
+        <!-- Question 5 -->
+        <div class="page" id="page5">
+            <div class="question-number">Question 5 of 5</div>
+            <h2>How do I feel about the future of our relationship?</h2>
+            <div class="rating-container" id="rating5">
+                <button class="rating-btn" data-value="1">1</button>
+                <button class="rating-btn" data-value="2">2</button>
+                <button class="rating-btn" data-value="3">3</button>
+                <button class="rating-btn" data-value="4">4</button>
+                <button class="rating-btn" data-value="5">5</button>
+            </div>
+            <div class="rating-labels">
+                <span>Not good</span>
+                <span style="text-align: center;">Neutral</span>
+                <span>Very optimistic</span>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevPage(5)">Back</button>
+                <button class="btn-primary" onclick="nextPage(5)" id="next5" disabled>Next</button>
+            </div>
+        </div>
+
+        <!-- Notes Page -->
+        <div class="page" id="page6">
+            <div class="question-number">Final Step</div>
+            <h2>Additional Notes</h2>
+            <div class="notes-section">
+                <textarea id="notes" placeholder="Add any thoughts, feelings, or observations about today..."></textarea>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevPage(6)">Back</button>
+                <button class="btn-primary" onclick="submitEntry()">Submit Entry</button>
+            </div>
+        </div>
+
+        <!-- Summary Page -->
+        <div class="page" id="summary">
+            <div class="summary-page">
+                <div class="heart-icon">💜</div>
+                <h2>Entry Saved!</h2>
+                <div class="date-display" id="entryDate"></div>
+                <div class="summary-content" id="summaryContent"></div>
+                <button class="btn-primary" onclick="resetForm()" style="width: 100%;">Start New Entry</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get name from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const userName = urlParams.get('name') || 'You';
+
+        const responses = {
+            name: userName,
+            q1: null,
+            q2: null,
+            q3: null,
+            q4: null,
+            q5: null,
+            notes: ''
+        };
+
+        const questions = [
+            "How connected did I feel to my partner today?",
+            "Do I feel like I was able to balance my partner and my own needs?",
+            "Do I feel like my partner initiated/answered enough bids for connection?",
+            "How did my partner impact my happiness today?",
+            "How do I feel about the future of our relationship?"
+        ];
+
+        // Setup rating buttons
+        for (let i = 1; i <= 5; i++) {
+            const ratingContainer = document.getElementById(`rating${i}`);
+            ratingContainer.querySelectorAll('.rating-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    ratingContainer.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
+                    this.classList.add('selected');
+                    responses[`q${i}`] = parseInt(this.dataset.value);
+                    document.getElementById(`next${i}`).disabled = false;
+                });
+            });
+        }
+
+        function updateProgress(page) {
+            const progress = (page / 7) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function nextPage(current) {
+            document.getElementById(`page${current}`).classList.remove('active');
+            const next = current + 1;
+            document.getElementById(`page${next}`).classList.add('active');
+            updateProgress(next);
+            window.scrollTo(0, 0);
+        }
+
+        function prevPage(current) {
+            document.getElementById(`page${current}`).classList.remove('active');
+            const prev = current - 1;
+            document.getElementById(`page${prev}`).classList.add('active');
+            updateProgress(prev);
+            window.scrollTo(0, 0);
+        }
+
+        function submitEntry() {
+            responses.notes = document.getElementById('notes').value;
+            
+            // Save to localStorage
+            const entry = {
+                date: new Date().toISOString(),
+                responses: responses
+            };
+            
+            let entries = JSON.parse(localStorage.getItem('relationshipEntries') || '[]');
+            entries.push(entry);
+            localStorage.setItem('relationshipEntries', JSON.stringify(entries));
+
+            // Show summary
+            showSummary(entry);
+        }
+
+        function showSummary(entry) {
+            const date = new Date(entry.date);
+            document.getElementById('entryDate').textContent = `${entry.responses.name} • ${date.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            })}`;
+
+            let summaryHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                summaryHTML += `
+                    <div class="summary-item">
+                        <div class="summary-question">${questions[i-1]}</div>
+                        <div class="summary-rating">${entry.responses[`q${i}`]} / 5</div>
+                    </div>
+                `;
+            }
+
+            if (entry.responses.notes) {
+                summaryHTML += `
+                    <div class="summary-item">
+                        <div class="summary-question">Notes</div>
+                        <div class="summary-notes">${entry.responses.notes}</div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('summaryContent').innerHTML = summaryHTML;
+            document.getElementById('page6').classList.remove('active');
+            document.getElementById('summary').classList.add('active');
+            updateProgress(7);
+            window.scrollTo(0, 0);
+        }
+
+        function resetForm() {
+            // Reset responses
+            for (let key in responses) {
+                responses[key] = null;
+            }
+            responses.notes = '';
+
+            // Reset UI
+            for (let i = 1; i <= 5; i++) {
+                document.querySelectorAll(`#rating${i} .rating-btn`).forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                document.getElementById(`next${i}`).disabled = true;
+            }
+            document.getElementById('notes').value = '';
+
+            // Go to first page
+            document.getElementById('summary').classList.remove('active');
+            document.getElementById('page1').classList.add('active');
+            updateProgress(1);
+            window.scrollTo(0, 0);
+        }
+
+        // Initialize progress
+        updateProgress(1);
+
+        // Display user name
+        document.getElementById('userNameDisplay').textContent = `${userName}'s Entry`;
+    </script>
+</body>
+</html>
