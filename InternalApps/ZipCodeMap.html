@@ -469,33 +469,23 @@
         // Load all US zip codes with complete data
         async function loadAllUSZipCodes() {
             try {
-                // Try to load from external script first
-                if (typeof US_ZIP_COMPLETE !== 'undefined') {
-                    zipCompleteData = US_ZIP_COMPLETE;
-                    allUSZipCodes = Object.keys(US_ZIP_COMPLETE);
-                    dataLoaded = true;
-                    console.log(`Loaded ${allUSZipCodes.length} US zip codes with complete data (lat/lng/population)`);
-                    return;
+                console.log('Loading US zip codes data...');
+                
+                // Fetch the JSON data file
+                const response = await fetch('us_zip_complete.json');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
-                // If external script didn't load, try fetching it
-                const response = await fetch('us_zip_complete.js');
-                const text = await response.text();
+                zipCompleteData = await response.json();
+                allUSZipCodes = Object.keys(zipCompleteData);
+                dataLoaded = true;
                 
-                // Execute the script content
-                eval(text);
-                
-                if (typeof US_ZIP_COMPLETE !== 'undefined') {
-                    zipCompleteData = US_ZIP_COMPLETE;
-                    allUSZipCodes = Object.keys(US_ZIP_COMPLETE);
-                    dataLoaded = true;
-                    console.log(`Loaded ${allUSZipCodes.length} US zip codes with complete data (lat/lng/population)`);
-                } else {
-                    throw new Error('Data variable not found after loading');
-                }
+                console.log(`✓ Loaded ${allUSZipCodes.length} US zip codes with complete data (lat/lng/population)`);
             } catch (error) {
                 console.error('Error loading US zip codes data:', error);
-                alert('Warning: Could not load US zip codes database. Some features may not work properly. Please check that us_zip_complete.js is in the same directory as this HTML file.');
+                alert('Warning: Could not load US zip codes database. Please check that us_zip_complete.json is in the same directory as this HTML file.\n\nError: ' + error.message);
                 dataLoaded = false;
             }
         }
