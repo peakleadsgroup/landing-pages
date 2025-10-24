@@ -461,23 +461,18 @@
         let circles = [];
         let isMapReady = false;
         let activeTab = 'circles';
-        let allUSZipCodes = []; // Will be populated from combined data
-        let zipPopulationData = {}; // Will be populated from combined data
+        let allUSZipCodes = []; // Will be populated from complete data
+        let zipCompleteData = {}; // Complete data with lat/lng/population
         const colors = ['#FF5252', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#FF9800', '#00BCD4', '#E91E63'];
         
-        // Load all US zip codes and population data from combined external script
+        // Load all US zip codes with complete data from external script
         function loadAllUSZipCodes() {
             // Check if the external script loaded the data
-            if (typeof US_ZIP_DATA !== 'undefined') {
-                allUSZipCodes = Object.keys(US_ZIP_DATA);
-                zipPopulationData = {};
+            if (typeof US_ZIP_COMPLETE !== 'undefined') {
+                zipCompleteData = US_ZIP_COMPLETE;
+                allUSZipCodes = Object.keys(US_ZIP_COMPLETE);
                 
-                // Extract population data
-                Object.keys(US_ZIP_DATA).forEach(zip => {
-                    zipPopulationData[zip] = US_ZIP_DATA[zip].population;
-                });
-                
-                console.log(`Loaded ${allUSZipCodes.length} US zip codes with population data`);
+                console.log(`Loaded ${allUSZipCodes.length} US zip codes with complete data (lat/lng/population)`);
             } else {
                 console.error('US zip codes data not loaded');
                 alert('Warning: Could not load US zip codes database. Some features may not work properly.');
@@ -488,8 +483,8 @@
         function calculatePopulation(zipCodes) {
             let total = 0;
             zipCodes.forEach(zip => {
-                if (zipPopulationData[zip]) {
-                    total += zipPopulationData[zip];
+                if (zipCompleteData[zip] && zipCompleteData[zip].pop) {
+                    total += zipCompleteData[zip].pop;
                 }
             });
             return total;
@@ -790,59 +785,33 @@
             });
         }
         
-        // Find zip codes within a circle using grid-based reverse geocoding
-        async function findZipCodesInCircle(circleData) {
-            circleData.zipCodes = ['Searching...'];
+        // Find zip codes within a circle using LOCAL calculation (NO API CALLS!)
+        function findZipCodesInCircle(circleData) {
+            circleData.zipCodes = ['Calculating...'];
             updateCirclesList();
             
-            const zipCodes = new Set();
-            const centerLat = circleData.center.lat;
-            const centerLng = circleData.center.lng;
-            const radiusInMeters = circleData.radiusInMeters;
-            
-            // Create a grid of points within the circle
-            const radiusInDegrees = radiusInMeters / 111320;
-            const gridSize = Math.max(4, Math.min(12, Math.ceil(radiusInMeters / 3000)));
-            const step = (radiusInDegrees * 2) / gridSize;
-            
-            const promises = [];
-            
-            // Sample grid points within the circle
-            for (let latOffset = -radiusInDegrees; latOffset <= radiusInDegrees; latOffset += step) {
-                for (let lngOffset = -radiusInDegrees; lngOffset <= radiusInDegrees; lngOffset += step) {
-                    const lat = centerLat + latOffset;
-                    const lng = centerLng + lngOffset;
-                    
-                    const distance = getDistanceInMeters(centerLat, centerLng, lat, lng);
-                    if (distance <= radiusInMeters) {
-                        promises.push(
-                            reverseGeocode(lat, lng).then(zip => {
-                                if (zip) zipCodes.add(zip);
-                            }).catch(() => {})
-                        );
-                    }
-                }
-            }
-            
-            // Check perimeter points
-            const perimeterPoints = 16;
-            for (let i = 0; i < perimeterPoints; i++) {
-                const angle = (i / perimeterPoints) * 2 * Math.PI;
-                const lat = centerLat + (radiusInDegrees * Math.sin(angle));
-                const lng = centerLng + (radiusInDegrees * Math.cos(angle));
+            // Use setTimeout to prevent UI blocking
+            setTimeout(() => {
+                const zipCodes = new Set();
+                const centerLat = circleData.center.lat;
+                const centerLng = circleData.center.lng;
+                const radiusInMeters = circleData.radiusInMeters;
                 
-                promises.push(
-                    reverseGeocode(lat, lng).then(zip => {
-                        if (zip) zipCodes.add(zip);
-                    }).catch(() => {})
-                );
-            }
-            
-            await Promise.all(promises);
-            
-            circleData.zipCodes = Array.from(zipCodes).sort();
-            updateCirclesList();
-            updateAllZipCodes();
+                // Check each zip code's center point against the circle
+                Object.keys(zipCompleteData).forEach(zip => {
+                    const zipData = zipCompleteData[zip];
+                    if (zipData.lat && zipData.lng) {
+                        const distance = getDistanceInMeters(centerLat, centerLng, zipData.lat, zipData.lng);
+                        if (distance <= radiusInMeters) {
+                            zipCodes.add(zip);
+                        }
+                    }
+                });
+                
+                circleData.zipCodes = Array.from(zipCodes).sort();
+                updateCirclesList();
+                updateAllZipCodes();
+            }, 10);
         }
         
         // Reverse geocode a point to get its zip code
@@ -981,8 +950,8 @@
             }
         }
         
-        // Calculate expanded zip codes
-        async function calculateExpandedZips() {
+        // Calculate expanded zip codes using LOCAL calculation (NO API CALLS!)
+        function calculateExpandedZips() {
             const expandMiles = parseFloat(document.getElementById('expand-miles').value);
             
             if (isNaN(expandMiles) || expandMiles < 0) {
@@ -999,87 +968,61 @@
             document.getElementById('expanded-list').innerHTML = '<div class="no-zips">Calculating expanded zip codes...</div>';
             document.getElementById('expanded-count').textContent = 'Calculating...';
             
-            const expandedZips = new Set();
-            
-            // For each circle, calculate zip codes with expanded radius
-            for (const circleData of circles) {
-                const expandedRadiusInMeters = circleData.radiusInMeters + (expandMiles * 1609.34);
+            // Use setTimeout to prevent UI blocking
+            setTimeout(() => {
+                const expandedZips = new Set();
                 
-                const centerLat = circleData.center.lat;
-                const centerLng = circleData.center.lng;
-                
-                const radiusInDegrees = expandedRadiusInMeters / 111320;
-                const gridSize = Math.max(4, Math.min(12, Math.ceil(expandedRadiusInMeters / 3000)));
-                const step = (radiusInDegrees * 2) / gridSize;
-                
-                const promises = [];
-                
-                // Sample grid points within the expanded circle
-                for (let latOffset = -radiusInDegrees; latOffset <= radiusInDegrees; latOffset += step) {
-                    for (let lngOffset = -radiusInDegrees; lngOffset <= radiusInDegrees; lngOffset += step) {
-                        const lat = centerLat + latOffset;
-                        const lng = centerLng + lngOffset;
-                        
-                        const distance = getDistanceInMeters(centerLat, centerLng, lat, lng);
-                        if (distance <= expandedRadiusInMeters) {
-                            promises.push(
-                                reverseGeocode(lat, lng).then(zip => {
-                                    if (zip) expandedZips.add(zip);
-                                }).catch(() => {})
-                            );
-                        }
-                    }
-                }
-                
-                // Check perimeter points
-                const perimeterPoints = 16;
-                for (let i = 0; i < perimeterPoints; i++) {
-                    const angle = (i / perimeterPoints) * 2 * Math.PI;
-                    const lat = centerLat + (radiusInDegrees * Math.sin(angle));
-                    const lng = centerLng + (radiusInDegrees * Math.cos(angle));
+                // For each circle, calculate zip codes with expanded radius
+                circles.forEach(circleData => {
+                    const expandedRadiusInMeters = circleData.radiusInMeters + (expandMiles * 1609.34);
+                    const centerLat = circleData.center.lat;
+                    const centerLng = circleData.center.lng;
                     
-                    promises.push(
-                        reverseGeocode(lat, lng).then(zip => {
-                            if (zip) expandedZips.add(zip);
-                        }).catch(() => {})
-                    );
-                }
+                    // Check each zip code's center point against the expanded circle
+                    Object.keys(zipCompleteData).forEach(zip => {
+                        const zipData = zipCompleteData[zip];
+                        if (zipData.lat && zipData.lng) {
+                            const distance = getDistanceInMeters(centerLat, centerLng, zipData.lat, zipData.lng);
+                            if (distance <= expandedRadiusInMeters) {
+                                expandedZips.add(zip);
+                            }
+                        }
+                    });
+                });
                 
-                await Promise.all(promises);
-            }
-            
-            const sortedExpandedZips = Array.from(expandedZips).sort();
-            
-            document.getElementById('expanded-count').textContent = 
-                `${sortedExpandedZips.length} unique zip code${sortedExpandedZips.length !== 1 ? 's' : ''}`;
-            
-            // Calculate and display population
-            const expandedPopulation = calculatePopulation(sortedExpandedZips);
-            document.getElementById('expanded-population').textContent = 
-                `Est. Population: ${formatNumber(expandedPopulation)}`;
-            
-            const expandedListContainer = document.getElementById('expanded-list');
-            const expandedShowAllBtn = document.getElementById('expanded-show-all');
-            
-            if (sortedExpandedZips.length === 0) {
-                expandedListContainer.innerHTML = '<div class="no-zips">No zip codes found</div>';
-                expandedListContainer.classList.remove('collapsed');
-                expandedShowAllBtn.style.display = 'none';
-            } else {
-                expandedListContainer.innerHTML = sortedExpandedZips.map(zip => 
-                    `<span class="zip-tag">${zip}</span>`
-                ).join('');
+                const sortedExpandedZips = Array.from(expandedZips).sort();
                 
-                // Show "Show All" button if there are many zip codes
-                if (sortedExpandedZips.length > 20) {
-                    expandedListContainer.classList.add('collapsed');
-                    expandedShowAllBtn.style.display = 'block';
-                    expandedShowAllBtn.textContent = 'Show All';
-                } else {
+                document.getElementById('expanded-count').textContent = 
+                    `${sortedExpandedZips.length} unique zip code${sortedExpandedZips.length !== 1 ? 's' : ''}`;
+                
+                // Calculate and display population
+                const expandedPopulation = calculatePopulation(sortedExpandedZips);
+                document.getElementById('expanded-population').textContent = 
+                    `Est. Population: ${formatNumber(expandedPopulation)}`;
+                
+                const expandedListContainer = document.getElementById('expanded-list');
+                const expandedShowAllBtn = document.getElementById('expanded-show-all');
+                
+                if (sortedExpandedZips.length === 0) {
+                    expandedListContainer.innerHTML = '<div class="no-zips">No zip codes found</div>';
                     expandedListContainer.classList.remove('collapsed');
                     expandedShowAllBtn.style.display = 'none';
+                } else {
+                    expandedListContainer.innerHTML = sortedExpandedZips.map(zip => 
+                        `<span class="zip-tag">${zip}</span>`
+                    ).join('');
+                    
+                    // Show "Show All" button if there are many zip codes
+                    if (sortedExpandedZips.length > 20) {
+                        expandedListContainer.classList.add('collapsed');
+                        expandedShowAllBtn.style.display = 'block';
+                        expandedShowAllBtn.textContent = 'Show All';
+                    } else {
+                        expandedListContainer.classList.remove('collapsed');
+                        expandedShowAllBtn.style.display = 'none';
+                    }
                 }
-            }
+            }, 10);
         }
         
         // Copy target zip codes to clipboard
@@ -1365,7 +1308,7 @@
         }
     </script>
     
-    <script src="us_zip_data.js"></script>
+    <script src="us_zip_complete.js"></script>
     <script async defer
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&callback=initMap">
     </script>
