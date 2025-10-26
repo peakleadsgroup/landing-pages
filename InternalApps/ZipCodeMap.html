@@ -19,15 +19,24 @@
         }
         
         #header {
-            background: #1a73e8;
-            color: white;
+            background: white;
+            color: #1a73e8;
             padding: 1rem 1.5rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        #header-logo {
+            height: 40px;
+            width: auto;
         }
         
         #header h1 {
             font-size: 1.5rem;
             font-weight: 500;
+            margin: 0;
         }
         
         #container {
@@ -361,6 +370,7 @@
 </head>
 <body>
     <div id="header">
+        <img id="header-logo" src="https://github.com/peakleadsgroup/landing-pages/blob/main/Images/Peak%20Leads%20Flattened%20Logo.png?raw=true" alt="Peak Leads Logo">
         <h1>Zip Code Radius Mapper</h1>
     </div>
     
