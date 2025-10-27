@@ -140,7 +140,8 @@
             BASE_ID: 'appmBb0lzqRK9dI8v',           // Your Airtable base ID
             STAFF_TABLE: 'Staff',                   // Exact table name from Airtable
             ADS_TABLE: 'B2C Ads',                   // Exact table name from Airtable
-            API_KEY: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589'  // Your Airtable Personal Access Token
+            API_KEY: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589',  // Your Airtable Personal Access Token
+            UPLOAD_FOLDER_LINK: 'https://drive.google.com/drive/folders/1hlXBtDpoKTOUhZtFp0kfu2ONRcktBwBL?usp=sharing'  // Google Drive upload folder
         };
 
         // Validate configuration on load
@@ -483,61 +484,33 @@
                         <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">${script}</p>
                     </div>
 
-                    <!-- File Upload Section -->
-                    <div class="bg-white border-2 border-dashed border-gray-300 rounded-lg p-6" id="uploadSection-${adId}">
-                        <div class="text-center">
-                            <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                            </svg>
-                            <h4 class="text-sm font-semibold text-gray-700 mb-1">Upload Completed Video</h4>
-                            <p class="text-xs text-gray-500 mb-4">Drag and drop your video file here, or click to browse</p>
-                            <input 
-                                type="file" 
-                                id="fileInput-${adId}" 
-                                accept="video/*,.mp4,.mov,.avi,.mkv,.wmv,.flv,.webm"
-                                class="hidden"
-                                onchange="handleFileSelect('${adId}', event)"
-                            />
-                            <button 
-                                onclick="document.getElementById('fileInput-${adId}').click()"
-                                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                            >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    <!-- Upload Instructions -->
+                    <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0">
+                                <svg class="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                                 </svg>
-                                Select File
-                            </button>
-                        </div>
-                        
-                        <!-- Upload Progress -->
-                        <div id="uploadProgress-${adId}" class="hidden mt-4">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm font-medium text-gray-700" id="fileName-${adId}"></span>
-                                <span class="text-sm text-gray-500" id="fileSize-${adId}"></span>
                             </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div id="progressBar-${adId}" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
-                            </div>
-                            <p class="text-xs text-gray-500 mt-2 text-center" id="uploadStatus-${adId}">Uploading...</p>
-                        </div>
-
-                        <!-- Upload Success -->
-                        <div id="uploadSuccess-${adId}" class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                            <div class="flex items-center gap-2 text-green-700">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <span class="text-sm font-medium">Video uploaded successfully!</span>
-                            </div>
-                        </div>
-
-                        <!-- Upload Error -->
-                        <div id="uploadError-${adId}" class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                            <div class="flex items-center gap-2 text-red-700">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <span class="text-sm font-medium" id="errorMessage-${adId}">Upload failed. Please try again.</span>
+                            <div class="flex-1">
+                                <h4 class="text-lg font-semibold text-gray-900 mb-2">Upload Your Completed Video</h4>
+                                <div class="space-y-3 text-sm text-gray-700 mb-4">
+                                    <p><strong>Instructions:</strong></p>
+                                    <ol class="list-decimal list-inside space-y-2 ml-2">
+                                        <li>Click the "Open Upload Folder" button below</li>
+                                        <li>Drag and drop your completed video into the folder</li>
+                                        <li><strong>Important:</strong> Name your file: <code class="bg-white px-2 py-1 rounded text-blue-600 font-mono text-xs">${scriptId}.mp4</code> (or .mov, etc.)</li>
+                                    </ol>
+                                </div>
+                                <a href="${CONFIG.UPLOAD_FOLDER_LINK}" target="_blank" class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                                    </svg>
+                                    Open Upload Folder
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                    </svg>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -559,9 +532,6 @@
             `;
 
             modal.classList.remove('hidden');
-            
-            // Setup drag and drop functionality after modal is rendered
-            setTimeout(() => setupDragAndDrop(adId), 100);
         }
 
         // Submit ad for approval by changing status to "Pending Approval"
@@ -637,146 +607,6 @@
                     `;
                 }, 2000);
             }
-        }
-
-        // Handle file selection
-        function handleFileSelect(adId, event) {
-            const file = event.target.files[0];
-            if (file) {
-                uploadFile(adId, file);
-            }
-        }
-
-        // Format file size
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-        }
-
-        // Upload file to Airtable via Make.com webhook
-        async function uploadFile(adId, file) {
-            const uploadSection = document.getElementById(`uploadSection-${adId}`);
-            const uploadProgress = document.getElementById(`uploadProgress-${adId}`);
-            const uploadSuccess = document.getElementById(`uploadSuccess-${adId}`);
-            const uploadError = document.getElementById(`uploadError-${adId}`);
-            const fileName = document.getElementById(`fileName-${adId}`);
-            const fileSize = document.getElementById(`fileSize-${adId}`);
-            const progressBar = document.getElementById(`progressBar-${adId}`);
-            const uploadStatus = document.getElementById(`uploadStatus-${adId}`);
-
-            // Hide previous states
-            uploadSuccess.classList.add('hidden');
-            uploadError.classList.add('hidden');
-
-            // Show progress
-            uploadProgress.classList.remove('hidden');
-            fileName.textContent = file.name;
-            fileSize.textContent = formatFileSize(file.size);
-            progressBar.style.width = '0%';
-            uploadStatus.textContent = 'Preparing upload...';
-
-            try {
-                // Convert file to base64
-                uploadStatus.textContent = 'Reading file...';
-                progressBar.style.width = '30%';
-                
-                const base64 = await new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result.split(',')[1]);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(file);
-                });
-
-                uploadStatus.textContent = 'Uploading to Make.com...';
-                progressBar.style.width = '60%';
-
-                // Send to Make.com webhook
-                const webhookUrl = 'https://hook.us2.make.com/91jy3v7e3l06k7ilzg1q7yvme2lpwn2g';
-                
-                const payload = {
-                    recordId: adId,
-                    fileName: file.name,
-                    fileSize: file.size,
-                    fileType: file.type,
-                    base64Data: base64
-                };
-
-                console.log('Sending to Make.com:', {
-                    recordId: adId,
-                    fileName: file.name,
-                    fileSize: file.size,
-                    fileType: file.type,
-                    base64DataLength: base64.length
-                });
-
-                const response = await fetch(webhookUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Upload failed: ${response.status}`);
-                }
-
-                const result = await response.json();
-                console.log('Make.com response:', result);
-
-                // Success!
-                progressBar.style.width = '100%';
-                uploadStatus.textContent = 'Upload complete!';
-                
-                setTimeout(() => {
-                    uploadProgress.classList.add('hidden');
-                    uploadSuccess.classList.remove('hidden');
-                }, 500);
-
-            } catch (error) {
-                console.error('Upload error:', error);
-                uploadProgress.classList.add('hidden');
-                uploadError.classList.remove('hidden');
-                document.getElementById(`errorMessage-${adId}`).textContent = error.message || 'Upload failed. Please try again.';
-            }
-        }
-
-        // Setup drag and drop for upload section
-        function setupDragAndDrop(adId) {
-            const uploadSection = document.getElementById(`uploadSection-${adId}`);
-            if (!uploadSection) return;
-
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                uploadSection.addEventListener(eventName, preventDefaults, false);
-            });
-
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-
-            ['dragenter', 'dragover'].forEach(eventName => {
-                uploadSection.addEventListener(eventName, () => {
-                    uploadSection.classList.add('border-blue-500', 'bg-blue-50');
-                }, false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                uploadSection.addEventListener(eventName, () => {
-                    uploadSection.classList.remove('border-blue-500', 'bg-blue-50');
-                }, false);
-            });
-
-            uploadSection.addEventListener('drop', (e) => {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-                if (files.length > 0) {
-                    uploadFile(adId, files[0]);
-                }
-            }, false);
         }
 
         function closeAdDetailModal() {
