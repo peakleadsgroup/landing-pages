@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video Editing Dashboard</title>
+    <link rel="icon" type="image/png" href="https://github.com/peakleadsgroup/landing-pages/blob/main/Images/PLG%20Main%20Favicon.png?raw=true">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @keyframes spin {
@@ -36,19 +37,19 @@
 
                 <!-- Resource Buttons -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6 pt-6 border-t border-gray-200">
-                    <a href="https://docs.google.com/document/d/1eAa8jUsa5bMR4Fo7QAd3bnTROTlzUNrMQnTZlTqvAnc/edit?usp=drive_link" target="_blank" class="flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">
+                    <a href="https://docs.google.com/document/d/1eAa8jUsa5bMR4Fo7QAd3bnTROTlzUNrMQnTZlTqvAnc/edit?usp=drive_link" target="_blank" class="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
                         General Rules
                     </a>
-                    <a href="https://drive.google.com/drive/folders/1qavETrh88s1vrcMvZDC1RSa7TKCy035n?usp=drive_link" target="_blank" class="flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                    <a href="https://drive.google.com/drive/folders/1qavETrh88s1vrcMvZDC1RSa7TKCy035n?usp=drive_link" target="_blank" class="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                         </svg>
                         Stock Footage
                     </a>
-                    <a href="https://drive.google.com/drive/folders/1tWmXim0FDrX-tcsU8Z3LT1ODI16nnhWj?usp=drive_link" target="_blank" class="flex items-center justify-center gap-2 px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium">
+                    <a href="https://drive.google.com/drive/folders/1tWmXim0FDrX-tcsU8Z3LT1ODI16nnhWj?usp=drive_link" target="_blank" class="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -315,7 +316,7 @@
                 const fields = ad.fields;
                 const scriptId = fields['scriptATID'] || 'No ID';
                 const niche = fields['Niche'] || 'No Niche';
-                const script = fields['Script'] || '';
+                const script = fields['Linked Script'] || '';
                 const driveUrl = fields['ElevenLabs Drive URL'] || '';
                 const created = fields['Created'] || null;
 
@@ -410,7 +411,7 @@
 
             const scriptId = fields['scriptATID'] || 'No ID';
             const niche = fields['Niche'] || 'Not specified';
-            const script = fields['Script'] || 'No script provided';
+            const script = fields['Linked Script'] || 'No script provided';
             const driveUrl = fields['ElevenLabs Drive URL'] || '';
             const created = fields['Created'] || null;
 
@@ -481,10 +482,99 @@
                         </h4>
                         <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">${script}</p>
                     </div>
+
+                    <!-- Submit for Approval Button -->
+                    <div class="flex justify-end pt-4 border-t">
+                        <button 
+                            onclick="submitForApproval('${adId}')" 
+                            id="submitBtn-${adId}"
+                            class="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Submit for Approval
+                        </button>
+                    </div>
                 </div>
             `;
 
             modal.classList.remove('hidden');
+        }
+
+        // Submit ad for approval by changing status to "Pending Approval"
+        async function submitForApproval(adId) {
+            const submitBtn = document.getElementById(`submitBtn-${adId}`);
+            
+            // Disable button and show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Submitting...
+            `;
+
+            try {
+                const encodedAdsTable = encodeURIComponent(CONFIG.ADS_TABLE);
+                const response = await fetch(
+                    `https://api.airtable.com/v0/${CONFIG.BASE_ID}/${encodedAdsTable}/${adId}`,
+                    {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': `Bearer ${CONFIG.API_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            fields: {
+                                'Status': 'Pending Approval'
+                            }
+                        })
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(`Failed to update status: ${response.status}`);
+                }
+
+                // Success! Update button to show success state
+                submitBtn.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Submitted Successfully!
+                `;
+                submitBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                submitBtn.classList.add('bg-gray-400');
+
+                // Close modal after 1.5 seconds and refresh
+                setTimeout(() => {
+                    closeAdDetailModal();
+                    fetchAds(); // Refresh to remove the ad from the list (it's no longer "In Progress")
+                }, 1500);
+
+            } catch (error) {
+                console.error('Error submitting for approval:', error);
+                
+                // Show error state
+                submitBtn.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Failed - Try Again
+                `;
+                submitBtn.disabled = false;
+                
+                // Reset button after 2 seconds
+                setTimeout(() => {
+                    submitBtn.innerHTML = `
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Submit for Approval
+                    `;
+                }, 2000);
+            }
         }
 
         function closeAdDetailModal() {
