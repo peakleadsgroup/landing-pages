@@ -108,13 +108,25 @@
     </div>
 
     <script>
-        // Configuration
+        // Configuration - UPDATE THESE VALUES
         const CONFIG = {
-            BASE_ID: 'YOUR_BASE_ID',
-            STAFF_TABLE: 'Staff',
-            ADS_TABLE: 'B2C Ads',
-            API_KEY: 'YOUR_API_KEY'
+            BASE_ID: 'appmBb0lzqRK9dI8v',           // Your Airtable base ID
+            STAFF_TABLE: 'Staff',                   // Exact table name from Airtable
+            ADS_TABLE: 'B2C Ads',                   // Exact table name from Airtable
+            API_KEY: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589'  // Your Airtable Personal Access Token
         };
+
+        // Validate configuration on load
+        function validateConfig() {
+            const issues = [];
+            if (CONFIG.BASE_ID === 'YOUR_BASE_ID' || !CONFIG.BASE_ID.startsWith('app')) {
+                issues.push('BASE_ID needs to be set (should start with "app")');
+            }
+            if (CONFIG.API_KEY === 'YOUR_API_KEY' || CONFIG.API_KEY.length < 10) {
+                issues.push('API_KEY needs to be set (Personal Access Token from Airtable)');
+            }
+            return issues;
+        }
 
         let currentStaffId = null;
         let staffRecord = null;
@@ -152,20 +164,32 @@
             }
 
             try {
-                const response = await fetch(
-                    `https://api.airtable.com/v0/${CONFIG.BASE_ID}/${CONFIG.STAFF_TABLE}/${currentStaffId}`,
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${CONFIG.API_KEY}`
-                        }
+                // URL encode the table name in case it has spaces
+                const encodedTableName = encodeURIComponent(CONFIG.STAFF_TABLE);
+                const url = `https://api.airtable.com/v0/${CONFIG.BASE_ID}/${encodedTableName}/${currentStaffId}`;
+                
+                console.log('Fetching staff record from:', url);
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${CONFIG.API_KEY}`
                     }
-                );
+                });
 
                 if (!response.ok) {
-                    throw new Error(`Failed to fetch staff record: ${response.statusText}`);
+                    const errorBody = await response.text();
+                    console.error('API Response:', response.status, errorBody);
+                    
+                    if (response.status === 404) {
+                        throw new Error(`Staff record not found. Please check:\n1. Staff ID in URL is correct\n2. BASE_ID is correct\n3. Staff table name is correct\n4. Record exists in Airtable`);
+                    } else if (response.status === 401 || response.status === 403) {
+                        throw new Error(`Authentication failed. Please check:\n1. API_KEY is correct\n2. API key has access to this base\n3. Using Personal Access Token (not API key)`);
+                    }
+                    throw new Error(`Failed to fetch staff record: ${response.status} ${response.statusText}`);
                 }
 
                 const data = await response.json();
+                console.log('Staff record loaded:', data);
                 return data;
             } catch (error) {
                 console.error('Error fetching staff record:', error);
@@ -193,7 +217,9 @@
                 document.getElementById('staffName').textContent = `Welcome, ${staffName}`;
 
                 // Get linked ad IDs from staff record
+                // The field in Staff table that links to B2C Ads table
                 const linkedAdIds = staffRecord.fields['B2C Ads'] || [];
+                console.log('Linked ad IDs:', linkedAdIds);
 
                 if (linkedAdIds.length === 0) {
                     showState('noAdsState');
@@ -202,16 +228,24 @@
                 }
 
                 // Fetch all ads assigned to this staff member
+                const encodedAdsTable = encodeURIComponent(CONFIG.ADS_TABLE);
                 const adPromises = linkedAdIds.map(adId =>
-                    fetch(`https://api.airtable.com/v0/${CONFIG.BASE_ID}/${CONFIG.ADS_TABLE}/${adId}`, {
+                    fetch(`https://api.airtable.com/v0/${CONFIG.BASE_ID}/${encodedAdsTable}/${adId}`, {
                         headers: {
                             'Authorization': `Bearer ${CONFIG.API_KEY}`
                         }
-                    }).then(res => res.json())
+                    }).then(res => {
+                        if (!res.ok) {
+                            console.error(`Failed to fetch ad ${adId}:`, res.status);
+                            return null;
+                        }
+                        return res.json();
+                    })
                 );
 
                 const adsData = await Promise.all(adPromises);
                 allAds = adsData.filter(ad => ad && ad.id);
+                console.log('Loaded ads:', allAds);
 
                 displayAds(allAds);
                 showState('adsContainer');
