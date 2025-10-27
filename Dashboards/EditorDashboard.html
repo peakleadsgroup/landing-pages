@@ -140,8 +140,7 @@
             BASE_ID: 'appmBb0lzqRK9dI8v',           // Your Airtable base ID
             STAFF_TABLE: 'Staff',                   // Exact table name from Airtable
             ADS_TABLE: 'B2C Ads',                   // Exact table name from Airtable
-            API_KEY: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589',  // Your Airtable Personal Access Token
-            UPLOAD_FOLDER_LINK: 'https://drive.google.com/drive/folders/1hlXBtDpoKTOUhZtFp0kfu2ONRcktBwBL?usp=sharing'  // Google Drive upload folder
+            API_KEY: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589'  // Your Airtable Personal Access Token
         };
 
         // Validate configuration on load
@@ -414,6 +413,7 @@
             const niche = fields['Niche'] || 'Not specified';
             const script = fields['Linked Script'] || 'No script provided';
             const driveUrl = fields['ElevenLabs Drive URL'] || '';
+            const finishedVideoFolder = fields['Finished Video'] || '';
             const created = fields['Created'] || null;
 
             // Format created date
@@ -485,6 +485,7 @@
                     </div>
 
                     <!-- Upload Instructions -->
+                    ${finishedVideoFolder ? `
                     <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
                         <div class="flex items-start gap-4">
                             <div class="flex-shrink-0">
@@ -502,7 +503,7 @@
                                         <li><strong>Important:</strong> Name your file: <code class="bg-white px-2 py-1 rounded text-blue-600 font-mono text-xs">${scriptId}.mp4</code> (or .mov, etc.)</li>
                                     </ol>
                                 </div>
-                                <a href="${CONFIG.UPLOAD_FOLDER_LINK}" target="_blank" class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                                <a href="${finishedVideoFolder}" target="_blank" class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
                                     </svg>
@@ -514,6 +515,19 @@
                             </div>
                         </div>
                     </div>
+                    ` : `
+                    <div class="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6">
+                        <div class="flex items-start gap-4">
+                            <svg class="w-6 h-6 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-900 mb-1">Upload Folder Not Ready</h4>
+                                <p class="text-sm text-gray-700">The upload folder for this ad hasn't been created yet. Please contact your manager.</p>
+                            </div>
+                        </div>
+                    </div>
+                    `}
 
                     <!-- Submit for Approval Button -->
                     <div class="flex justify-end pt-4 border-t">
