@@ -332,125 +332,126 @@
     </div>
 
     <script>
-        // Get URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const fullBalance = urlParams.get('amount') || urlParams.get('fullBalance') || '0';
-        const services = urlParams.get('services') || '';
-        const eventDate = urlParams.get('eventDate') || '';
-        const clientName = urlParams.get('clientName') || '';
-        const clientPhone = urlParams.get('clientPhone') || '';
-        const clientAddress = urlParams.get('clientAddress') || '';
-        const venueName = urlParams.get('venueName') || '';
-        const venueAddress = urlParams.get('venueAddress') || '';
-        const options = urlParams.get('options') || '';
-        
-        // Pre-fill and lock fields from URL parameters
-        document.getElementById('totalFee').textContent = '$' + parseFloat(fullBalance).toFixed(2);
-        
-        if (services) {
-            const servicesField = document.getElementById('services');
-            servicesField.value = decodeURIComponent(services);
-            servicesField.readOnly = true;
-        }
-        
-        if (eventDate) {
-            const eventDateField = document.getElementById('eventDate');
-            eventDateField.value = eventDate;
-            eventDateField.readOnly = true;
-        }
-        
-        if (clientName) {
-            const clientNameField = document.getElementById('clientName');
-            clientNameField.value = decodeURIComponent(clientName);
-            clientNameField.readOnly = true;
-        }
-        
-        if (clientPhone) {
-            const clientPhoneField = document.getElementById('clientPhone');
-            clientPhoneField.value = decodeURIComponent(clientPhone);
-            clientPhoneField.readOnly = true;
-        }
-        
-        if (clientAddress) {
-            const clientAddressField = document.getElementById('clientAddress');
-            clientAddressField.value = decodeURIComponent(clientAddress);
-            clientAddressField.readOnly = true;
-        }
-        
-        if (venueName) {
-            const venueNameField = document.getElementById('venueName');
-            venueNameField.value = decodeURIComponent(venueName);
-            venueNameField.readOnly = true;
-        }
-        
-        if (venueAddress) {
-            const venueAddressField = document.getElementById('venueAddress');
-            venueAddressField.value = decodeURIComponent(venueAddress);
-            venueAddressField.readOnly = true;
-        }
-        
-        if (options) {
-            const optionsField = document.getElementById('options');
-            optionsField.value = decodeURIComponent(options);
-            optionsField.readOnly = true;
-        }
-
-        // Set today's date as default for signature date
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('signatureDate').value = today;
-
-        // Form submission
-        document.getElementById('contractForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const fullBalance = urlParams.get('amount') || urlParams.get('fullBalance') || '0';
+            const services = urlParams.get('services') || '';
+            const eventDate = urlParams.get('eventDate') || '';
+            const clientName = urlParams.get('clientName') || '';
+            const clientPhone = urlParams.get('clientPhone') || '';
+            const clientAddress = urlParams.get('clientAddress') || '';
+            const venueName = urlParams.get('venueName') || '';
+            const venueAddress = urlParams.get('venueAddress') || '';
+            const options = urlParams.get('options') || '';
             
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Submitting...';
-
-            // Gather all form data
-            const formData = {
-                eventDate: document.getElementById('eventDate').value,
-                clientName: document.getElementById('clientName').value,
-                clientPhone: document.getElementById('clientPhone').value,
-                clientAddress: document.getElementById('clientAddress').value,
-                venueName: document.getElementById('venueName').value,
-                venueAddress: document.getElementById('venueAddress').value,
-                services: document.getElementById('services').value,
-                options: document.getElementById('options').value,
-                fullBalance: fullBalance,
-                signature: document.getElementById('signature').value,
-                signatureDate: document.getElementById('signatureDate').value,
-                agreedToTerms: true,
-                submittedAt: new Date().toISOString()
-            };
-
-            try {
-                // Send to webhook
-                const response = await fetch('https://hook.us2.make.com/sk7c9bsc3i9mq1969mks2dxghmjwymvp', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                if (response.ok) {
-                    // Show success message
-                    document.getElementById('successMessage').classList.add('show');
-                    document.getElementById('contractForm').style.display = 'none';
-                    
-                    // Scroll to top
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                } else {
-                    throw new Error('Submission failed');
-                }
-            } catch (error) {
-                alert('There was an error submitting the contract. Please try again or contact us directly.');
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Sign Contract';
+            // Pre-fill and lock fields from URL parameters
+            document.getElementById('totalFee').textContent = '$' + parseFloat(fullBalance).toFixed(2);
+            
+            if (services) {
+                const servicesField = document.getElementById('services');
+                servicesField.value = decodeURIComponent(services);
+                servicesField.readOnly = true;
             }
-        });
+            
+            if (eventDate) {
+                const eventDateField = document.getElementById('eventDate');
+                eventDateField.value = eventDate;
+                eventDateField.readOnly = true;
+            }
+            
+            if (clientName) {
+                const clientNameField = document.getElementById('clientName');
+                clientNameField.value = decodeURIComponent(clientName);
+                clientNameField.readOnly = true;
+            }
+            
+            if (clientPhone) {
+                const clientPhoneField = document.getElementById('clientPhone');
+                clientPhoneField.value = decodeURIComponent(clientPhone);
+                clientPhoneField.readOnly = true;
+            }
+            
+            if (clientAddress) {
+                const clientAddressField = document.getElementById('clientAddress');
+                clientAddressField.value = decodeURIComponent(clientAddress);
+                clientAddressField.readOnly = true;
+            }
+            
+            if (venueName) {
+                const venueNameField = document.getElementById('venueName');
+                venueNameField.value = decodeURIComponent(venueName);
+                venueNameField.readOnly = true;
+            }
+            
+            if (venueAddress) {
+                const venueAddressField = document.getElementById('venueAddress');
+                venueAddressField.value = decodeURIComponent(venueAddress);
+                venueAddressField.readOnly = true;
+            }
+            
+            if (options) {
+                const optionsField = document.getElementById('options');
+                optionsField.value = decodeURIComponent(options);
+                optionsField.readOnly = true;
+            }
 
-        // Form submission
+            // Set today's date as default for signature date
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('signatureDate').value = today;
+
+            // Form submission
+            document.getElementById('contractForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Submitting...';
+
+                // Gather all form data
+                const formData = {
+                    eventDate: document.getElementById('eventDate').value,
+                    clientName: document.getElementById('clientName').value,
+                    clientPhone: document.getElementById('clientPhone').value,
+                    clientAddress: document.getElementById('clientAddress').value,
+                    venueName: document.getElementById('venueName').value,
+                    venueAddress: document.getElementById('venueAddress').value,
+                    services: document.getElementById('services').value,
+                    options: document.getElementById('options').value,
+                    fullBalance: fullBalance,
+                    signature: document.getElementById('signature').value,
+                    signatureDate: document.getElementById('signatureDate').value,
+                    agreedToTerms: true,
+                    submittedAt: new Date().toISOString()
+                };
+
+                try {
+                    // Send to webhook
+                    const response = await fetch('https://hook.us2.make.com/sk7c9bsc3i9mq1969mks2dxghmjwymvp', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    if (response.ok) {
+                        // Show success message
+                        document.getElementById('successMessage').classList.add('show');
+                        document.getElementById('contractForm').style.display = 'none';
+                        
+                        // Scroll to top
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else {
+                        throw new Error('Submission failed');
+                    }
+                } catch (error) {
+                    alert('There was an error submitting the contract. Please try again or contact us directly.');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Sign Contract';
+                }
+            });
+        });
+    </script>
 </body>
 </html>
