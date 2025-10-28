@@ -53,22 +53,31 @@
             };
 
             const processData = (rawData) => {
-                // Skip header row and process data
-                const processed = rawData.slice(1).map(row => {
+                // Process data (no header row in this format)
+                const processed = rawData.map(row => {
+                    if (!row || row.length === 0) return null;
+                    
                     const date = row[1]; // Column B: Date
                     const client = row[2] || 'Unknown'; // Column C: Client
                     const spend = parseCurrency(row[3]); // Column D: Spend
                     const cpl = parseCurrency(row[4]); // Column E: CPL
-                    const leads = row[9] ? parseInt(row[9]) : 0; // Column J: Leads
+                    let leads = row[8] ? parseFloat(row[8]) : 0; // Column I: Leads (index 8)
+                    
+                    // If we have explicit lead count, use it
+                    // Otherwise if CPL exists and is > 0, calculate from spend/CPL
+                    if (leads === 0 && cpl > 0 && spend > 0) {
+                        leads = Math.round(spend / cpl);
+                    }
+                    // If CPL is 0 or null, leads remain 0 (spend with no leads)
                     
                     return {
                         date: date,
                         client: client,
                         spend: spend,
-                        cpl: cpl,
+                        cpl: cpl || 0,
                         leads: leads
                     };
-                }).filter(item => item.date);
+                }).filter(item => item && item.date);
 
                 // Sort by date
                 processed.sort((a, b) => new Date(a.date) - new Date(b.date));
