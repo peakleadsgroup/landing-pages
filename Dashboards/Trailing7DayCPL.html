@@ -123,14 +123,32 @@
                     leadMap.set(key, leadMap.get(key) + 1);
                 });
 
-                // Combine spend and leads
+                // Combine spend and leads - include all dates from both datasets
                 const combined = [];
-                spendMap.forEach((value, key) => {
+                const allKeys = new Set([...spendMap.keys(), ...Array.from(leadMap.keys()).map(key => {
+                    // leadMap keys are just "date_client", need to find matching spend entries
+                    return key;
+                })]);
+
+                // Get all unique date-client combinations
+                const dateClientSet = new Set();
+                spendData.forEach(item => {
+                    dateClientSet.add(`${item.date}_${item.client}`);
+                });
+                leadData.forEach(item => {
+                    dateClientSet.add(`${item.date}_${item.client}`);
+                });
+
+                dateClientSet.forEach(key => {
+                    const [date, client] = key.split('_');
+                    const spendEntry = spendMap.get(key);
                     const leads = leadMap.get(key) || 0;
+                    const spend = spendEntry ? spendEntry.spend : 0;
+                    
                     combined.push({
-                        date: value.date,
-                        client: value.client,
-                        spend: value.spend,
+                        date: date,
+                        client: client,
+                        spend: spend,
                         leads: leads
                     });
                 });
@@ -142,10 +160,12 @@
                 const uniqueClients = [...new Set(combined.map(item => item.client))].sort();
                 setClients(uniqueClients);
 
-                // Set date range
+                // Set date range to the actual data range
                 if (combined.length > 0) {
-                    setStartDate(combined[0].date);
-                    setEndDate(combined[combined.length - 1].date);
+                    const minDate = combined[0].date;
+                    const maxDate = combined[combined.length - 1].date;
+                    setStartDate(minDate);
+                    setEndDate(maxDate);
                 }
 
                 setCombinedData(combined);
@@ -472,7 +492,10 @@
                                                     <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
-                                                    <span className="text-sm font-semibold text-green-800">Leads: {leadFileName}</span>
+                                                    <div>
+                                                        <span className="text-sm font-semibold text-green-800">{leadFileName}</span>
+                                                        <p className="text-xs text-green-600">{leadData.length} qualified leads</p>
+                                                    </div>
                                                 </div>
                                                 <button
                                                     onClick={() => {
@@ -491,7 +514,10 @@
                                                     <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
-                                                    <span className="text-sm font-semibold text-blue-800">Spend: {spendFileName}</span>
+                                                    <div>
+                                                        <span className="text-sm font-semibold text-blue-800">{spendFileName}</span>
+                                                        <p className="text-xs text-blue-600">{spendData.length} spend records</p>
+                                                    </div>
                                                 </div>
                                                 <button
                                                     onClick={() => {
@@ -505,6 +531,19 @@
                                             </div>
                                         </div>
                                     </div>
+
+                                    {combinedData.length > 0 && (
+                                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+                                            <div className="flex items-center">
+                                                <svg className="w-5 h-5 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                <span className="text-sm text-purple-800">
+                                                    Data combined: {startDate} to {endDate} ({combinedData.length} date-client combinations)
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                                         <div>
