@@ -263,6 +263,61 @@
             background: #fff;
         }
 
+        .success-checkmark {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #4CAF50;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        .success-checkmark svg {
+            width: 50px;
+            height: 50px;
+            stroke: white;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            animation: drawCheck 0.5s ease-out 0.3s forwards;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes drawCheck {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        .success-title {
+            font-size: 28px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .success-message {
+            font-size: 18px;
+            color: #666;
+            line-height: 1.6;
+        }
+
         @media (max-width: 600px) {
             .form-container {
                 padding: 25px;
@@ -302,7 +357,7 @@
         </div>
 
         <div class="progress-bar" id="progressBarContainer">
-            <div class="progress-fill" id="progressFill" style="width: 14.3%"></div>
+            <div class="progress-fill" id="progressFill" style="width: 10%"></div>
         </div>
 
         <!-- STEP 1: Homeowner -->
@@ -314,8 +369,35 @@
             </div>
         </div>
 
-        <!-- STEP 2: Last Updated -->
+        <!-- STEP 2: Live in Home or Rental -->
         <div class="form-step" id="step2">
+            <div class="question">Do you live in the home or is it a rental property?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'residenceType', 'live_in')">I live in the home</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'residenceType', 'rental')">It's a rental property</div>
+            </div>
+        </div>
+
+        <!-- STEP 3: Mobile Home Community -->
+        <div class="form-step" id="step3">
+            <div class="question">Do you live in a mobile home community?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mobileHome', 'yes')">Yes</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mobileHome', 'no')">No</div>
+            </div>
+        </div>
+
+        <!-- STEP 4: New Construction -->
+        <div class="form-step" id="step4">
+            <div class="question">Is this a new construction or already built home?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'newConstruction', 'new_construction')">New construction</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'newConstruction', 'already_built')">Already built home</div>
+            </div>
+        </div>
+
+        <!-- STEP 5: Last Updated -->
+        <div class="form-step" id="step5">
             <div class="question">When was your bathroom last updated?</div>
             <div class="options">
                 <div class="option" onclick="selectOptionAndAdvance(this, 'lastUpdated', 'less_than_10')">Less than 10 years ago</div>
@@ -323,8 +405,8 @@
             </div>
         </div>
 
-        <!-- STEP 3: Project Type -->
-        <div class="form-step" id="step3">
+        <!-- STEP 6: Project Type -->
+        <div class="form-step" id="step6">
             <div class="question">Which best describes this project?</div>
             <div class="options">
                 <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'shower_replacement')">Shower replacement</div>
@@ -333,8 +415,8 @@
             </div>
         </div>
 
-        <!-- STEP 4: Main Goal -->
-        <div class="form-step" id="step4">
+        <!-- STEP 7: Main Goal -->
+        <div class="form-step" id="step7">
             <div class="question">What do you want most in your remodel?</div>
             <div class="options">
                 <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'function_accessibility')">Improving function/accessibility</div>
@@ -344,8 +426,8 @@
             </div>
         </div>
 
-        <!-- STEP 5: Address/Zip -->
-        <div class="form-step" id="step5">
+        <!-- STEP 8: Address/Zip -->
+        <div class="form-step" id="step8">
             <!-- Full Address Mode -->
             <div id="fullAddressMode">
                 <div class="question">What is the location of this project?</div>
@@ -387,12 +469,12 @@
             </div>
 
             <div class="nav-buttons">
-                <button class="nav-btn" onclick="goToStep6()" id="submitFormBtn" disabled>Next</button>
+                <button class="nav-btn" onclick="goToStep9()" id="submitFormBtn" disabled>Next</button>
             </div>
         </div>
 
-        <!-- STEP 6: NAME -->
-        <div class="form-step" id="step6">
+        <!-- STEP 9: NAME -->
+        <div class="form-step" id="step9">
             <div class="question">Who will we be making this quote out to?</div>
             <div class="name-grid">
                 <div>
@@ -405,12 +487,12 @@
                 </div>
             </div>
             <div class="nav-buttons">
-                <button class="nav-btn" onclick="goToStep7()" id="nameNextBtn" disabled>Next</button>
+                <button class="nav-btn" onclick="goToStep10()" id="nameNextBtn" disabled>Next</button>
             </div>
         </div>
 
-        <!-- STEP 7: PHONE -->
-        <div class="form-step" id="step7">
+        <!-- STEP 10: PHONE -->
+        <div class="form-step" id="step10">
             <div class="question">Where can we reach you with your quote?</div>
             <div class="row">
                 <div id="phoneWrap">
@@ -433,11 +515,13 @@
         <!-- SUCCESS SCREEN -->
         <div class="form-step" id="successStep">
             <div style="text-align: center; padding: 40px 0;">
-                <div style="width: 80px; height: 80px; border-radius: 50%; background: #4CAF50; margin: 0 auto 30px; display: flex; align-items: center; justify-content: center;">
-                    <div style="color: white; font-size: 30px; font-weight: bold;">✓</div>
+                <div class="success-checkmark">
+                    <svg viewBox="0 0 52 52">
+                        <polyline points="14 27 22 35 38 19"/>
+                    </svg>
                 </div>
-                <div style="font-size: 24px; color: #4CAF50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
-                <div style="font-size: 16px; color: #666; line-height: 1.5;">Redirecting you to schedule your free consultation...</div>
+                <div class="success-title">Thank you!</div>
+                <div class="success-message">We will be in touch soon to schedule your free estimate!</div>
             </div>
         </div>
     </div>
@@ -449,6 +533,7 @@
         // ================================
 
         let currentStep = 1;
+        const totalSteps = 10;
         let formData = {};
         let eventId = null;
         let hasTrackedEngagement = false;
@@ -549,12 +634,12 @@
 
         function updateProgress() {
             const progressFill = document.getElementById('progressFill');
-            const percentage = (currentStep / 7) * 100;
+            const percentage = (currentStep / totalSteps) * 100;
             progressFill.style.width = percentage + '%';
         }
 
         function nextStep() {
-            if (currentStep < 7) {
+            if (currentStep < totalSteps) {
                 document.getElementById('step' + currentStep).classList.remove('active');
                 currentStep++;
                 document.getElementById('step' + currentStep).classList.add('active');
@@ -562,7 +647,7 @@
             }
         }
 
-        function goToStep6() {
+        function goToStep9() {
             if (COLLECT_FULL_ADDRESS) {
                 validateAddressForm();
             } else {
@@ -589,7 +674,7 @@
             }
         }
 
-        function goToStep7() {
+        function goToStep10() {
             validateNameForm();
             if (formData.firstName && formData.lastName) {
                 nextStep();
@@ -691,24 +776,11 @@
             }
         }
 
-        function redirectToCalendar() {
-            const first = document.getElementById('firstName')?.value.trim() || '';
-            const last = document.getElementById('lastName')?.value.trim() || '';
-            const name = `${first} ${last}`.replace(/\s+/g, ' ').trim();
-            
-            const params = new URLSearchParams();
-            params.set('email', 'peakleadsgroup@gmail.com');
-            
-            if (name) params.set('name', name);
-            
-            const smsDigits = document.getElementById('phone_digits')?.value || '';
-            if (smsDigits.length === 10) {
-                params.set('smsReminderNumber', `+1${smsDigits}`);
-            }
-            
-            params.set('location', '123 Main Street, Wilmington, NC');
-            
-            window.location.href = `https://cal.com/peakleadsgroup/home-pro-mi?${params.toString()}`;
+        function showSuccessScreen() {
+            document.getElementById('step' + currentStep).classList.remove('active');
+            document.getElementById('successStep').classList.add('active');
+            document.getElementById('progressBarContainer').style.display = 'none';
+            document.getElementById('mainHeading').style.display = 'none';
         }
 
         function submitFinalForm() {
@@ -726,6 +798,9 @@
                     value: 1.00,
                     currency: 'USD',
                     homeowner_status: finalData.homeowner,
+                    residence_type: finalData.residenceType,
+                    mobile_home: finalData.mobileHome,
+                    new_construction: finalData.newConstruction,
                     project_type: finalData.projectType,
                     main_goal: finalData.mainGoal,
                     last_updated: finalData.lastUpdated
@@ -744,6 +819,9 @@ Name: ${finalData.firstName} ${finalData.lastName}
 Phone: ${formatPhoneForDisplay(finalData.phone)}
 
 Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}
+Residence Type: ${getResidenceTypeDisplay(finalData.residenceType)}
+Mobile Home Community: ${finalData.mobileHome === 'yes' ? 'Yes' : 'No'}
+New Construction: ${getNewConstructionDisplay(finalData.newConstruction)}
 Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}
 Project Type: ${getProjectTypeDisplay(finalData.projectType)}
 Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}
@@ -765,7 +843,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 ? `Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}`
                 : `Zip Code: ${finalData.address.zip}`;
 
-            const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR><BR>Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}<BR><BR>${addressSectionHTML}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+            const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR><BR>Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Residence Type: ${getResidenceTypeDisplay(finalData.residenceType)}<BR>Mobile Home Community: ${finalData.mobileHome === 'yes' ? 'Yes' : 'No'}<BR>New Construction: ${getNewConstructionDisplay(finalData.newConstruction)}<BR>Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}<BR><BR>${addressSectionHTML}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
     year: 'numeric', 
     month: 'long', 
@@ -778,6 +856,9 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
 
             const webhookData = {
                 homeowner: finalData.homeowner,
+                residence_type: finalData.residenceType,
+                mobile_home: finalData.mobileHome,
+                new_construction: finalData.newConstruction,
                 last_updated: finalData.lastUpdated,
                 project_type: finalData.projectType,
                 main_goal: finalData.mainGoal,
@@ -806,7 +887,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 body: JSON.stringify(webhookData),
                 mode: 'no-cors'
             }).finally(() => {
-                redirectToCalendar();
+                showSuccessScreen();
             });
         }
 
@@ -815,6 +896,14 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
             }
             return digits;
+        }
+
+        function getResidenceTypeDisplay(value) {
+            const options = {
+                'live_in': 'I live in the home',
+                'rental': "It's a rental property"
+            };
+            return options[value] || value;
         }
 
         function getLastUpdatedDisplay(value) {
@@ -840,6 +929,14 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 'prevent_damage': 'Fixing/preventing home damage',
                 'update_look': 'Updating the look',
                 'home_value': 'Increasing home value'
+            };
+            return options[value] || value;
+        }
+
+        function getNewConstructionDisplay(value) {
+            const options = {
+                'new_construction': 'New construction',
+                'already_built': 'Already built home'
             };
             return options[value] || value;
         }
