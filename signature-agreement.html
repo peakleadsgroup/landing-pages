@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signature Sound & Lighting - Service Agreement</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #4db8a8;
+        }
+
+        .logo {
+            max-width: 400px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+
+        .company-info {
+            color: #666;
+            font-size: 14px;
+        }
+
+        h1 {
+            color: #000;
+            font-size: 24px;
+            margin: 20px 0;
+        }
+
+        .form-section {
+            margin: 25px 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        input[type="date"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="tel"]:focus,
+        input[type="date"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #4db8a8;
+        }
+
+        input[readonly],
+        textarea[readonly] {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+            color: #666;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .terms-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 25px 0;
+            font-size: 13px;
+            color: #555;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .terms-section h3 {
+            color: #000;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .terms-section p {
+            margin-bottom: 12px;
+        }
+
+        .signature-section {
+            margin-top: 30px;
+            padding: 25px;
+            background-color: #f0fffe;
+            border: 2px solid #4db8a8;
+            border-radius: 4px;
+        }
+
+        .signature-line {
+            margin: 20px 0;
+        }
+
+        .signature-line input {
+            border: none;
+            border-bottom: 2px solid #333;
+            border-radius: 0;
+            font-family: 'Brush Script MT', cursive;
+            font-size: 20px;
+            padding: 5px;
+        }
+
+        .submit-btn {
+            background-color: #4db8a8;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+        .submit-btn:hover {
+            background-color: #3da393;
+        }
+
+        .submit-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .price-display {
+            background-color: #4db8a8;
+            color: white;
+            padding: 20px;
+            border-radius: 4px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .price-display h2 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .price-display p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .success-message {
+            display: none;
+            background-color: #d4edda;
+            color: #155724;
+            padding: 20px;
+            border-radius: 4px;
+            text-align: center;
+            margin: 20px 0;
+            border: 1px solid #c3e6cb;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .row {
+                grid-template-columns: 1fr;
+            }
+
+            .logo {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://images.squarespace-cdn.com/content/v1/64909a307fc0025a2064d878/9b8fde02-b8f9-402b-be4c-366cb48134eb/Transparent+PNG+File.png" 
+                 alt="Signature Sound & Lighting" 
+                 class="logo">
+            <div class="company-info">
+                105 Buckhaven Ct, Apex, NC 27502
+            </div>
+        </div>
+
+        <h1>Service Agreement</h1>
+
+        <div class="success-message" id="successMessage">
+            <h2>✓ Contract Signed Successfully!</h2>
+            <p>Thank you for your business. We'll be in touch shortly.</p>
+        </div>
+
+        <form id="contractForm">
+            <div class="form-section">
+                <div class="form-group">
+                    <label for="eventDate">Event Date *</label>
+                    <input type="date" id="eventDate" name="eventDate" required>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label for="clientName">Client Name *</label>
+                        <input type="text" id="clientName" name="clientName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="clientPhone">Client Phone *</label>
+                        <input type="tel" id="clientPhone" name="clientPhone" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="clientAddress">Client Address *</label>
+                    <input type="text" id="clientAddress" name="clientAddress" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="venueName">Venue Name *</label>
+                    <input type="text" id="venueName" name="venueName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="venueAddress">Venue Address *</label>
+                    <input type="text" id="venueAddress" name="venueAddress" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="services">Services *</label>
+                    <textarea id="services" name="services" rows="3" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="options">Additional Options (if any)</label>
+                    <textarea id="options" name="options" rows="2" placeholder="Any additional options or special requests"></textarea>
+                </div>
+            </div>
+
+            <div class="price-display">
+                <h2 id="totalFee">$0.00</h2>
+                <p>Total Fee</p>
+            </div>
+
+            <div class="terms-section">
+                <h3>Terms & Conditions</h3>
+                
+                <p><strong>Venue Requirements:</strong> The Client shall ensure that the venue can supply: 1) an area within 50 feet of a 110-volt 3 prong outlet; 2) facility is open within one hour prior to scheduled start time and will remain open at least 30 minutes after the event ends; 3) facility meets all government safety regulations and has appropriate music licenses/permits.</p>
+
+                <p><strong>1. Payment:</strong> Payment in full shall take place on or before the event date, unless otherwise agreed upon by both parties in writing. Any additional performance time requested by Client not specified within this Agreement will be at the discretion of the DJ. All fees paid for additional performance time shall be paid to the DJ at that time in cash or check and any gratuity given to DJ at the event are at the sole discretion of the Client.</p>
+
+                <p><strong>2. Contract Modifications:</strong> This contract reflects any prior verbal Agreement, and includes all terms and conditions agreed prior to its execution. Client acknowledges that it has had the opportunity to review this contract in full prior to its execution. Neither Client nor DJ may make any alterations to this contract, without prior written approval by the other party.</p>
+
+                <p><strong>3. Cancellation by Client:</strong> In the event of the Client wishes to cancel this contract for any reason, any advance payment made will be forfeited unless otherwise agreed by DJ. If Client decided to cancel the event more than 14 days from the day of the event then Client does not owe DJ the balance due pursuant to the contract. If Client decides to cancel the event less than 14 days from the date of event, the Client is responsible to pay the total fee set forth above.</p>
+
+                <p><strong>4. Cancellation by DJ:</strong> In the unlikely event of the DJ having to cancel the contract due to injury or illness, accident or other legitimate condition outside the DJ's control, the DJ will make every reasonable effort to find a qualified replacement at the agreed upon fee. If the DJ is unable to find a replacement, Client will receive a full refund including the first installment.</p>
+
+                <p><strong>5. Force Majeure:</strong> In the event that the event is cancelled due to act of God or other action constituting force majeure, DJ shall retain the deposit paid.</p>
+
+                <p><strong>6. Liability:</strong> The DJ shall be in no way liable for breach of any contract executed between Client and the venue. DJ shall not be held liable for any loss, damages, injuries, or illness sustained during his performance. Client explicitly agrees to indemnify DJ for any loss or injury occurring to any guest or attendee of the event.</p>
+
+                <p><strong>7. Security & Equipment:</strong> Client will provide adequate security and supervision of its guests, customers and staff at the venue and will be liable for any loss or damage to the DJ's equipment, vehicles or personal belongings caused by guests, customers and/or staff. Any mistreatment or abuse of the DJ will result in the immediate discontinuation of services and the full balance shall be due and payable to DJ.</p>
+
+                <p><strong>8. Safety:</strong> The DJ reserves the right to discontinue performance if there exists a risk of injury or if the working environment constitutes a health and safety risk. If applicable, Client agrees to furnish a facility that completely covers the DJ's equipment from direct sunlight, rain and wind.</p>
+
+                <p><strong>9. Governing Law:</strong> This Agreement shall be governed by the laws of the State of North Carolina. Client is responsible for repayment of any fees plus interest incurred by DJ in an attempt to collect payment. Client agrees that images, reviews and communications acquired during the course of this Agreement are usable for marketing.</p>
+            </div>
+
+            <div class="signature-section">
+                <h3>Electronic Signature</h3>
+                
+                <p style="margin-bottom: 20px; color: #555;">By signing below, I acknowledge that I have read and understood the above terms and conditions, and I agree to be bound by this Agreement.</p>
+
+                <div class="signature-line">
+                    <label for="signature">Client Signature (Type Your Full Name) *</label>
+                    <input type="text" id="signature" name="signature" required placeholder="Type your full name">
+                </div>
+
+                <div class="form-group">
+                    <label for="signatureDate">Date *</label>
+                    <input type="date" id="signatureDate" name="signatureDate" required>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    Sign Contract
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const fullBalance = urlParams.get('amount') || urlParams.get('fullBalance') || '0';
+        const services = urlParams.get('services') || '';
+        const eventDate = urlParams.get('eventDate') || '';
+        const clientName = urlParams.get('clientName') || '';
+        const clientPhone = urlParams.get('clientPhone') || '';
+        const clientAddress = urlParams.get('clientAddress') || '';
+        const venueName = urlParams.get('venueName') || '';
+        const venueAddress = urlParams.get('venueAddress') || '';
+        const options = urlParams.get('options') || '';
+        
+        // Pre-fill and lock fields from URL parameters
+        document.getElementById('totalFee').textContent = '$' + parseFloat(fullBalance).toFixed(2);
+        
+        if (services) {
+            const servicesField = document.getElementById('services');
+            servicesField.value = decodeURIComponent(services);
+            servicesField.readOnly = true;
+        }
+        
+        if (eventDate) {
+            const eventDateField = document.getElementById('eventDate');
+            eventDateField.value = eventDate;
+            eventDateField.readOnly = true;
+        }
+        
+        if (clientName) {
+            const clientNameField = document.getElementById('clientName');
+            clientNameField.value = decodeURIComponent(clientName);
+            clientNameField.readOnly = true;
+        }
+        
+        if (clientPhone) {
+            const clientPhoneField = document.getElementById('clientPhone');
+            clientPhoneField.value = decodeURIComponent(clientPhone);
+            clientPhoneField.readOnly = true;
+        }
+        
+        if (clientAddress) {
+            const clientAddressField = document.getElementById('clientAddress');
+            clientAddressField.value = decodeURIComponent(clientAddress);
+            clientAddressField.readOnly = true;
+        }
+        
+        if (venueName) {
+            const venueNameField = document.getElementById('venueName');
+            venueNameField.value = decodeURIComponent(venueName);
+            venueNameField.readOnly = true;
+        }
+        
+        if (venueAddress) {
+            const venueAddressField = document.getElementById('venueAddress');
+            venueAddressField.value = decodeURIComponent(venueAddress);
+            venueAddressField.readOnly = true;
+        }
+        
+        if (options) {
+            const optionsField = document.getElementById('options');
+            optionsField.value = decodeURIComponent(options);
+            optionsField.readOnly = true;
+        }
+
+        // Set today's date as default for signature date
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('signatureDate').value = today;
+
+        // Form submission
+        document.getElementById('contractForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            // Gather all form data
+            const formData = {
+                eventDate: document.getElementById('eventDate').value,
+                clientName: document.getElementById('clientName').value,
+                clientPhone: document.getElementById('clientPhone').value,
+                clientAddress: document.getElementById('clientAddress').value,
+                venueName: document.getElementById('venueName').value,
+                venueAddress: document.getElementById('venueAddress').value,
+                services: document.getElementById('services').value,
+                options: document.getElementById('options').value,
+                fullBalance: fullBalance,
+                signature: document.getElementById('signature').value,
+                signatureDate: document.getElementById('signatureDate').value,
+                agreedToTerms: true,
+                submittedAt: new Date().toISOString()
+            };
+
+            try {
+                // Send to webhook
+                const response = await fetch('https://hook.us2.make.com/sk7c9bsc3i9mq1969mks2dxghmjwymvp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    // Show success message
+                    document.getElementById('successMessage').classList.add('show');
+                    document.getElementById('contractForm').style.display = 'none';
+                    
+                    // Scroll to top
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    throw new Error('Submission failed');
+                }
+            } catch (error) {
+                alert('There was an error submitting the contract. Please try again or contact us directly.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign Contract';
+            }
+        });
+
+        // Form submission
+</body>
+</html>
