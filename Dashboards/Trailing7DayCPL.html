@@ -227,11 +227,11 @@
                     filtered = filtered.filter(item => item.client === selectedClient);
                 }
 
-                // Filter by date range
-                if (startDate) {
+                // Filter by date range only if valid dates are set
+                if (startDate && startDate !== '' && new Date(startDate).getFullYear() > 2000) {
                     filtered = filtered.filter(item => item.date >= startDate);
                 }
-                if (endDate) {
+                if (endDate && endDate !== '' && new Date(endDate).getFullYear() > 2000) {
                     filtered = filtered.filter(item => item.date <= endDate);
                 }
 
