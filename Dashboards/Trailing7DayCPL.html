@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPL Analyzer - Dual File Import</title>
+    <title>CPL Analyzer - Qualified Leads</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
@@ -18,36 +18,27 @@
         const { useState, useEffect, useRef } = React;
 
         function CPLAnalyzer() {
-            const [spendData, setSpendData] = useState([]);
-            const [leadData, setLeadData] = useState([]);
-            const [combinedData, setCombinedData] = useState([]);
-            const [filteredData, setFilteredData] = useState([]);
+            const [dailyData, setDailyData] = useState([]);
             const [clients, setClients] = useState([]);
             const [selectedClient, setSelectedClient] = useState('all');
             const [startDate, setStartDate] = useState('');
             const [endDate, setEndDate] = useState('');
-            const [dateRange, setDateRange] = useState({ min: '', max: '' });
+            const [minDate, setMinDate] = useState('');
+            const [maxDate, setMaxDate] = useState('');
             const [spendFileName, setSpendFileName] = useState('');
             const [leadFileName, setLeadFileName] = useState('');
             const chartRef = useRef(null);
             const chartInstance = useRef(null);
 
-            const parseExcelFile = (file, isLeadFile) => {
+            const readExcelFile = (file, callback) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
                         const data = new Uint8Array(e.target.result);
                         const workbook = XLSX.read(data, { type: 'array' });
                         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-                        
-                        if (isLeadFile) {
-                            processLeadData(jsonData);
-                            setLeadFileName(file.name);
-                        } else {
-                            processSpendData(jsonData);
-                            setSpendFileName(file.name);
-                        }
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, raw: false });
+                        callback(jsonData);
                     } catch (error) {
                         alert('Error reading file: ' + error.message);
                     }
@@ -55,193 +46,226 @@
                 reader.readAsArrayBuffer(file);
             };
 
-            const parseCurrency = (value) => {
-                if (!value) return 0;
-                const str = String(value).replace(/[$,]/g, '');
-                return parseFloat(str) || 0;
+            const formatDate = (dateValue) => {
+                if (!dateValue) return null;
+                try {
+                    const date = new Date(dateValue);
+                    if (isNaN(date.getTime())) return null;
+                    return date.toISOString().split('T')[0];
+                } catch {
+                    return null;
+                }
             };
 
-            const formatDate = (date) => {
-                if (!date) return null;
-                const d = new Date(date);
-                return d.toISOString().split('T')[0]; // YYYY-MM-DD
+            const handleLeadFileUpload = (file) => {
+                readExcelFile(file, (data) => {
+                    setLeadFileName(file.name);
+                    processFiles(data, 'leads');
+                });
             };
 
-            const processSpendData = (rawData) => {
-                // Spend file structure: Column A: ID, Column B: Date, Column C: Client, Column D: Spend
-                const processed = rawData.map(row => {
-                    if (!row || row.length === 0 || !row[1]) return null;
-                    
-                    return {
-                        date: formatDate(row[1]),
-                        client: row[2] || 'Unknown',
-                        spend: parseCurrency(row[3])
-                    };
-                }).filter(item => item && item.date);
-
-                setSpendData(processed);
+            const handleSpendFileUpload = (file) => {
+                readExcelFile(file, (data) => {
+                    setSpendFileName(file.name);
+                    processFiles(data, 'spend');
+                });
             };
 
-            const processLeadData = (rawData) => {
-                // Lead file structure: Column A: Client, Column B: Status, Column C: Date/Time
-                const processed = rawData.map(row => {
-                    if (!row || row.length === 0 || !row[2]) return null;
-                    
+            const processFiles = (newData, type) => {
+                // Store the raw data temporarily
+                window.rawLeadData = type === 'leads' ? newData : (window.rawLeadData || []);
+                window.rawSpendData = type === 'spend' ? newData : (window.rawSpendData || []);
+
+                // Only process if both files are loaded
+                if (!window.rawLeadData || !window.rawSpendData || 
+                    window.rawLeadData.length === 0 || window.rawSpendData.length === 0) {
+                    return;
+                }
+
+                combineAndProcess();
+            };
+
+            const combineAndProcess = () => {
+                // Process lead data: Column A: Client, Column B: Status, Column C: Date
+                const leadsByDateClient = {};
+                window.rawLeadData.forEach(row => {
+                    if (!row || row.length < 3) return;
                     const status = row[1];
-                    // Only count qualified leads
-                    if (status !== 'Qualified') return null;
+                    if (status !== 'Qualified') return;
                     
-                    return {
-                        date: formatDate(row[2]),
-                        client: row[0] || 'Unknown',
-                        status: status
-                    };
-                }).filter(item => item && item.date);
-
-                setLeadData(processed);
-            };
-
-            const combineData = () => {
-                if (spendData.length === 0 || leadData.length === 0) return;
-
-                // Group spend by date and client
-                const spendMap = new Map();
-                spendData.forEach(item => {
-                    const key = `${item.date}_${item.client}`;
-                    if (!spendMap.has(key)) {
-                        spendMap.set(key, { date: item.date, client: item.client, spend: 0 });
-                    }
-                    spendMap.get(key).spend += item.spend;
+                    const date = formatDate(row[2]);
+                    const client = row[0] || 'Unknown';
+                    if (!date) return;
+                    
+                    const key = `${date}|${client}`;
+                    leadsByDateClient[key] = (leadsByDateClient[key] || 0) + 1;
                 });
 
-                // Group qualified leads by date and client
-                const leadMap = new Map();
-                leadData.forEach(item => {
-                    const key = `${item.date}_${item.client}`;
-                    if (!leadMap.has(key)) {
-                        leadMap.set(key, 0);
-                    }
-                    leadMap.set(key, leadMap.get(key) + 1);
+                // Process spend data: Column A: ID, Column B: Date, Column C: Client, Column D: Spend
+                const spendByDateClient = {};
+                window.rawSpendData.forEach(row => {
+                    if (!row || row.length < 4) return;
+                    const date = formatDate(row[1]);
+                    const client = row[2] || 'Unknown';
+                    const spend = parseFloat(String(row[3]).replace(/[$,]/g, '')) || 0;
+                    if (!date) return;
+                    
+                    const key = `${date}|${client}`;
+                    spendByDateClient[key] = (spendByDateClient[key] || 0) + spend;
                 });
 
-                // Combine spend and leads - include all dates from both datasets
+                // Combine all unique date-client combinations
+                const allKeys = new Set([...Object.keys(leadsByDateClient), ...Object.keys(spendByDateClient)]);
                 const combined = [];
-                const allKeys = new Set([...spendMap.keys(), ...Array.from(leadMap.keys()).map(key => {
-                    // leadMap keys are just "date_client", need to find matching spend entries
-                    return key;
-                })]);
-
-                // Get all unique date-client combinations
-                const dateClientSet = new Set();
-                spendData.forEach(item => {
-                    dateClientSet.add(`${item.date}_${item.client}`);
-                });
-                leadData.forEach(item => {
-                    dateClientSet.add(`${item.date}_${item.client}`);
-                });
-
-                dateClientSet.forEach(key => {
-                    const [date, client] = key.split('_');
-                    const spendEntry = spendMap.get(key);
-                    const leads = leadMap.get(key) || 0;
-                    const spend = spendEntry ? spendEntry.spend : 0;
-                    
+                
+                allKeys.forEach(key => {
+                    const [date, client] = key.split('|');
                     combined.push({
                         date: date,
                         client: client,
-                        spend: spend,
-                        leads: leads
+                        spend: spendByDateClient[key] || 0,
+                        leads: leadsByDateClient[key] || 0
                     });
                 });
 
                 // Sort by date
-                combined.sort((a, b) => new Date(a.date) - new Date(b.date));
+                combined.sort((a, b) => a.date.localeCompare(b.date));
+
+                // Get date range
+                if (combined.length > 0) {
+                    const allDates = combined.map(d => d.date).sort();
+                    const min = allDates[0];
+                    const max = allDates[allDates.length - 1];
+                    setMinDate(min);
+                    setMaxDate(max);
+                    setStartDate(min);
+                    setEndDate(max);
+                }
 
                 // Get unique clients
                 const uniqueClients = [...new Set(combined.map(item => item.client))].sort();
                 setClients(uniqueClients);
 
-                setCombinedData(combined);
-            };
-
-            useEffect(() => {
-                combineData();
-            }, [spendData, leadData]);
-
-            // Set dates when combined data is ready
-            useEffect(() => {
-                if (combinedData.length > 0 && !startDate && !endDate) {
-                    const dates = combinedData.map(d => d.date).sort();
-                    const minDate = dates[0];
-                    const maxDate = dates[dates.length - 1];
-                    setStartDate(minDate);
-                    setEndDate(maxDate);
-                    setDateRange({ min: minDate, max: maxDate });
-                }
-            }, [combinedData]);
-
-            const calculateTrailing7DayCPL = (data) => {
-                const dateMap = new Map();
-                
-                // Group by date and calculate daily totals
-                data.forEach(item => {
-                    const dateKey = item.date;
-                    if (!dateMap.has(dateKey)) {
-                        dateMap.set(dateKey, { spend: 0, leads: 0, date: item.date });
+                // Aggregate by date for daily totals
+                const dailyMap = {};
+                combined.forEach(item => {
+                    if (!dailyMap[item.date]) {
+                        dailyMap[item.date] = { date: item.date, spend: 0, leads: 0 };
                     }
-                    const entry = dateMap.get(dateKey);
-                    entry.spend += item.spend;
-                    entry.leads += item.leads;
+                    dailyMap[item.date].spend += item.spend;
+                    dailyMap[item.date].leads += item.leads;
                 });
 
-                // Convert to array and sort
-                const dailyData = Array.from(dateMap.values()).sort((a, b) => 
-                    new Date(a.date) - new Date(b.date)
-                );
+                const daily = Object.values(dailyMap).sort((a, b) => a.date.localeCompare(b.date));
 
                 // Calculate trailing 7-day CPL
-                return dailyData.map((day, index) => {
+                const withTrailing = daily.map((day, index) => {
                     const startIdx = Math.max(0, index - 6);
-                    const trailing7Days = dailyData.slice(startIdx, index + 1);
+                    const window = daily.slice(startIdx, index + 1);
                     
-                    const totalSpend = trailing7Days.reduce((sum, d) => sum + d.spend, 0);
-                    const totalLeads = trailing7Days.reduce((sum, d) => sum + d.leads, 0);
+                    const totalSpend = window.reduce((sum, d) => sum + d.spend, 0);
+                    const totalLeads = window.reduce((sum, d) => sum + d.leads, 0);
                     const trailing7DayCPL = totalLeads > 0 ? totalSpend / totalLeads : 0;
+                    const dailyCPL = day.leads > 0 ? day.spend / day.leads : 0;
 
                     return {
                         date: day.date,
                         spend: day.spend,
                         leads: day.leads,
-                        dailyCPL: day.leads > 0 ? day.spend / day.leads : 0,
+                        dailyCPL: dailyCPL,
                         trailing7DayCPL: trailing7DayCPL,
-                        daysInWindow: trailing7Days.length
+                        daysInWindow: window.length
                     };
+                });
+
+                setDailyData(withTrailing);
+            };
+
+            // Calculate filtered data based on client and date selections
+            const getFilteredData = () => {
+                if (dailyData.length === 0) return [];
+
+                // First, filter the raw combined data if we have client filter
+                if (selectedClient !== 'all') {
+                    // Need to recalculate from raw data with client filter
+                    const leadsByDate = {};
+                    const spendByDate = {};
+
+                    // Re-aggregate with client filter
+                    if (window.rawLeadData && window.rawSpendData) {
+                        window.rawLeadData.forEach(row => {
+                            if (!row || row.length < 3) return;
+                            const status = row[1];
+                            if (status !== 'Qualified') return;
+                            const client = row[0] || 'Unknown';
+                            if (client !== selectedClient) return;
+                            
+                            const date = formatDate(row[2]);
+                            if (!date) return;
+                            
+                            leadsByDate[date] = (leadsByDate[date] || 0) + 1;
+                        });
+
+                        window.rawSpendData.forEach(row => {
+                            if (!row || row.length < 4) return;
+                            const client = row[2] || 'Unknown';
+                            if (client !== selectedClient) return;
+                            const date = formatDate(row[1]);
+                            const spend = parseFloat(String(row[3]).replace(/[$,]/g, '')) || 0;
+                            if (!date) return;
+                            
+                            spendByDate[date] = (spendByDate[date] || 0) + spend;
+                        });
+
+                        // Get all dates
+                        const allDates = new Set([...Object.keys(leadsByDate), ...Object.keys(spendByDate)]);
+                        const daily = Array.from(allDates).map(date => ({
+                            date: date,
+                            spend: spendByDate[date] || 0,
+                            leads: leadsByDate[date] || 0
+                        })).sort((a, b) => a.date.localeCompare(b.date));
+
+                        // Calculate trailing 7-day
+                        const withTrailing = daily.map((day, index) => {
+                            const startIdx = Math.max(0, index - 6);
+                            const window = daily.slice(startIdx, index + 1);
+                            
+                            const totalSpend = window.reduce((sum, d) => sum + d.spend, 0);
+                            const totalLeads = window.reduce((sum, d) => sum + d.leads, 0);
+                            const trailing7DayCPL = totalLeads > 0 ? totalSpend / totalLeads : 0;
+                            const dailyCPL = day.leads > 0 ? day.spend / day.leads : 0;
+
+                            return {
+                                date: day.date,
+                                spend: day.spend,
+                                leads: day.leads,
+                                dailyCPL: dailyCPL,
+                                trailing7DayCPL: trailing7DayCPL,
+                                daysInWindow: window.length
+                            };
+                        });
+
+                        // Apply date filter
+                        return withTrailing.filter(item => {
+                            if (startDate && item.date < startDate) return false;
+                            if (endDate && item.date > endDate) return false;
+                            return true;
+                        });
+                    }
+                }
+
+                // No client filter, just apply date filter
+                return dailyData.filter(item => {
+                    if (startDate && item.date < startDate) return false;
+                    if (endDate && item.date > endDate) return false;
+                    return true;
                 });
             };
 
-            useEffect(() => {
-                let filtered = combinedData;
-
-                // Filter by client
-                if (selectedClient !== 'all') {
-                    filtered = filtered.filter(item => item.client === selectedClient);
-                }
-
-                // Filter by date range only if valid dates are set
-                if (startDate && startDate !== '' && new Date(startDate).getFullYear() > 2000) {
-                    filtered = filtered.filter(item => item.date >= startDate);
-                }
-                if (endDate && endDate !== '' && new Date(endDate).getFullYear() > 2000) {
-                    filtered = filtered.filter(item => item.date <= endDate);
-                }
-
-                const calculated = calculateTrailing7DayCPL(filtered);
-                setFilteredData(calculated);
-            }, [combinedData, selectedClient, startDate, endDate]);
+            const filteredData = getFilteredData();
 
             useEffect(() => {
                 if (filteredData.length > 0 && chartRef.current) {
-                    // Destroy previous chart
                     if (chartInstance.current) {
                         chartInstance.current.destroy();
                     }
@@ -261,7 +285,7 @@
                                     borderWidth: 3,
                                     tension: 0.3,
                                     fill: true,
-                                    pointRadius: 4,
+                                    pointRadius: 3,
                                     pointHoverRadius: 6
                                 },
                                 {
@@ -290,10 +314,7 @@
                                     labels: {
                                         usePointStyle: true,
                                         padding: 15,
-                                        font: {
-                                            size: 12,
-                                            weight: 'bold'
-                                        }
+                                        font: { size: 12, weight: 'bold' }
                                     }
                                 },
                                 tooltip: {
@@ -307,7 +328,7 @@
                                             if (context.datasetIndex === 0) {
                                                 return [
                                                     `Trailing 7-Day CPL: $${dataPoint.trailing7DayCPL.toFixed(2)}`,
-                                                    `Days in window: ${dataPoint.daysInWindow}`
+                                                    `Window: ${dataPoint.daysInWindow} days`
                                                 ];
                                             } else {
                                                 return [
@@ -328,18 +349,11 @@
                                             return '$' + value.toFixed(0);
                                         }
                                     },
-                                    grid: {
-                                        color: 'rgba(0, 0, 0, 0.05)'
-                                    }
+                                    grid: { color: 'rgba(0, 0, 0, 0.05)' }
                                 },
                                 x: {
-                                    grid: {
-                                        display: false
-                                    },
-                                    ticks: {
-                                        maxRotation: 45,
-                                        minRotation: 45
-                                    }
+                                    grid: { display: false },
+                                    ticks: { maxRotation: 45, minRotation: 45 }
                                 }
                             }
                         }
@@ -374,46 +388,28 @@
                 a.click();
             };
 
-            const handleFileUpload = (e, isLeadFile) => {
-                const file = e.target.files[0];
-                if (file) {
-                    parseExcelFile(file, isLeadFile);
-                }
-            };
-
-            const handleDrop = (e, isLeadFile) => {
-                e.preventDefault();
-                const file = e.dataTransfer.files[0];
-                if (file) {
-                    parseExcelFile(file, isLeadFile);
-                }
-            };
-
-            const handleDragOver = (e) => {
-                e.preventDefault();
-            };
-
-            const hasData = spendData.length > 0 && leadData.length > 0;
+            const hasData = dailyData.length > 0;
 
             return (
                 <div className="min-h-screen p-6">
                     <div className="max-w-7xl mx-auto">
                         <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
-                            <h1 className="text-3xl font-bold text-gray-800 mb-2">CPL Analyzer - Qualified Leads</h1>
-                            <p className="text-gray-600 mb-6">Analyze trailing 7-day Cost Per Lead for qualified leads only</p>
+                            <h1 className="text-3xl font-bold text-gray-800 mb-2">CPL Analyzer</h1>
+                            <p className="text-gray-600 mb-6">Trailing 7-Day Cost Per Lead for Qualified Leads</p>
 
                             {!hasData ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Lead Data Upload */}
                                     <div>
-                                        <h3 className="text-lg font-semibold mb-3 text-gray-700">
-                                            1. Upload Lead Data
-                                        </h3>
+                                        <h3 className="text-lg font-semibold mb-3 text-gray-700">1. Upload Lead Data</h3>
                                         <div 
                                             className="border-4 border-dashed border-green-300 rounded-lg p-8 text-center bg-green-50 hover:bg-green-100 transition-colors cursor-pointer"
-                                            onDrop={(e) => handleDrop(e, true)}
-                                            onDragOver={handleDragOver}
-                                            onClick={() => document.getElementById('lead-file-input').click()}
+                                            onDrop={(e) => {
+                                                e.preventDefault();
+                                                const file = e.dataTransfer.files[0];
+                                                if (file) handleLeadFileUpload(file);
+                                            }}
+                                            onDragOver={(e) => e.preventDefault()}
+                                            onClick={() => document.getElementById('lead-file').click()}
                                         >
                                             {leadFileName ? (
                                                 <>
@@ -421,41 +417,40 @@
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
                                                     <p className="text-sm font-semibold text-green-800">{leadFileName}</p>
-                                                    <p className="text-xs text-green-600 mt-1">{leadData.length} qualified leads</p>
                                                 </>
                                             ) : (
                                                 <>
                                                     <svg className="w-12 h-12 mx-auto mb-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                                     </svg>
-                                                    <p className="font-semibold text-gray-700 mb-1">
-                                                        Drop lead file here
-                                                    </p>
-                                                    <p className="text-xs text-gray-500">
-                                                        Client, Status, Date
-                                                    </p>
+                                                    <p className="font-semibold text-gray-700 mb-1">Lead File</p>
+                                                    <p className="text-xs text-gray-500">Client, Status, Date</p>
                                                 </>
                                             )}
                                             <input 
-                                                id="lead-file-input"
+                                                id="lead-file"
                                                 type="file" 
                                                 accept=".xlsx,.xls"
-                                                onChange={(e) => handleFileUpload(e, true)}
+                                                onChange={(e) => {
+                                                    const file = e.target.files[0];
+                                                    if (file) handleLeadFileUpload(file);
+                                                }}
                                                 className="hidden"
                                             />
                                         </div>
                                     </div>
 
-                                    {/* Spend Data Upload */}
                                     <div>
-                                        <h3 className="text-lg font-semibold mb-3 text-gray-700">
-                                            2. Upload Spend Data
-                                        </h3>
+                                        <h3 className="text-lg font-semibold mb-3 text-gray-700">2. Upload Spend Data</h3>
                                         <div 
                                             className="border-4 border-dashed border-blue-300 rounded-lg p-8 text-center bg-blue-50 hover:bg-blue-100 transition-colors cursor-pointer"
-                                            onDrop={(e) => handleDrop(e, false)}
-                                            onDragOver={handleDragOver}
-                                            onClick={() => document.getElementById('spend-file-input').click()}
+                                            onDrop={(e) => {
+                                                e.preventDefault();
+                                                const file = e.dataTransfer.files[0];
+                                                if (file) handleSpendFileUpload(file);
+                                            }}
+                                            onDragOver={(e) => e.preventDefault()}
+                                            onClick={() => document.getElementById('spend-file').click()}
                                         >
                                             {spendFileName ? (
                                                 <>
@@ -463,26 +458,24 @@
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
                                                     <p className="text-sm font-semibold text-blue-800">{spendFileName}</p>
-                                                    <p className="text-xs text-blue-600 mt-1">{spendData.length} spend records</p>
                                                 </>
                                             ) : (
                                                 <>
                                                     <svg className="w-12 h-12 mx-auto mb-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
-                                                    <p className="font-semibold text-gray-700 mb-1">
-                                                        Drop spend file here
-                                                    </p>
-                                                    <p className="text-xs text-gray-500">
-                                                        Date, Client, Spend
-                                                    </p>
+                                                    <p className="font-semibold text-gray-700 mb-1">Spend File</p>
+                                                    <p className="text-xs text-gray-500">Date, Client, Spend</p>
                                                 </>
                                             )}
                                             <input 
-                                                id="spend-file-input"
+                                                id="spend-file"
                                                 type="file" 
                                                 accept=".xlsx,.xls"
-                                                onChange={(e) => handleFileUpload(e, false)}
+                                                onChange={(e) => {
+                                                    const file = e.target.files[0];
+                                                    if (file) handleSpendFileUpload(file);
+                                                }}
                                                 className="hidden"
                                             />
                                         </div>
@@ -490,75 +483,33 @@
                                 </div>
                             ) : (
                                 <>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center">
-                                                    <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
-                                                    <div>
-                                                        <span className="text-sm font-semibold text-green-800">{leadFileName}</span>
-                                                        <p className="text-xs text-green-600">{leadData.length} qualified leads</p>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    onClick={() => {
-                                                        setLeadData([]);
-                                                        setLeadFileName('');
-                                                    }}
-                                                    className="text-xs text-red-600 hover:text-red-800 font-medium"
-                                                >
-                                                    Remove
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center">
-                                                    <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
-                                                    <div>
-                                                        <span className="text-sm font-semibold text-blue-800">{spendFileName}</span>
-                                                        <p className="text-xs text-blue-600">{spendData.length} spend records</p>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    onClick={() => {
-                                                        setSpendData([]);
-                                                        setSpendFileName('');
-                                                    }}
-                                                    className="text-xs text-red-600 hover:text-red-800 font-medium"
-                                                >
-                                                    Remove
-                                                </button>
-                                            </div>
+                                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-6">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm text-purple-800">
+                                                📊 Data Range: {minDate} to {maxDate} ({dailyData.length} days)
+                                            </span>
+                                            <button
+                                                onClick={() => {
+                                                    setDailyData([]);
+                                                    setLeadFileName('');
+                                                    setSpendFileName('');
+                                                    window.rawLeadData = null;
+                                                    window.rawSpendData = null;
+                                                }}
+                                                className="text-sm text-red-600 hover:text-red-800 font-medium"
+                                            >
+                                                Clear All
+                                            </button>
                                         </div>
                                     </div>
 
-                                    {combinedData.length > 0 && (
-                                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
-                                            <div className="flex items-center">
-                                                <svg className="w-5 h-5 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                                <span className="text-sm text-purple-800">
-                                                    Data combined: {dateRange.min} to {dateRange.max} ({combinedData.length} date-client combinations)
-                                                </span>
-                                            </div>
-                                        </div>
-                                    )}
-
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                                         <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                Client
-                                            </label>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">Client</label>
                                             <select
                                                 value={selectedClient}
                                                 onChange={(e) => setSelectedClient(e.target.value)}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                             >
                                                 <option value="all">All Clients</option>
                                                 {clients.map(client => (
@@ -567,29 +518,25 @@
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                Start Date
-                                            </label>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">Start Date</label>
                                             <input
                                                 type="date"
                                                 value={startDate}
-                                                min={dateRange.min}
-                                                max={dateRange.max}
+                                                min={minDate}
+                                                max={maxDate}
                                                 onChange={(e) => setStartDate(e.target.value)}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                End Date
-                                            </label>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">End Date</label>
                                             <input
                                                 type="date"
                                                 value={endDate}
-                                                min={dateRange.min}
-                                                max={dateRange.max}
+                                                min={minDate}
+                                                max={maxDate}
                                                 onChange={(e) => setEndDate(e.target.value)}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                             />
                                         </div>
                                     </div>
@@ -645,7 +592,7 @@
                                                         <tr>
                                                             <th className="px-4 py-3 text-left font-semibold">Date</th>
                                                             <th className="px-4 py-3 text-right font-semibold">Spend</th>
-                                                            <th className="px-4 py-3 text-right font-semibold">Qualified Leads</th>
+                                                            <th className="px-4 py-3 text-right font-semibold">Leads</th>
                                                             <th className="px-4 py-3 text-right font-semibold">Daily CPL</th>
                                                             <th className="px-4 py-3 text-right font-semibold">7-Day CPL</th>
                                                             <th className="px-4 py-3 text-right font-semibold">Window</th>
