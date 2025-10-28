@@ -161,22 +161,24 @@
                 const uniqueClients = [...new Set(combined.map(item => item.client))].sort();
                 setClients(uniqueClients);
 
-                // Set date range to the actual data range
-                if (combined.length > 0) {
-                    const minDate = combined[0].date;
-                    const maxDate = combined[combined.length - 1].date;
-                    setDateRange({ min: minDate, max: maxDate });
-                    // Only set the date inputs if they're currently empty
-                    setStartDate(prev => prev || minDate);
-                    setEndDate(prev => prev || maxDate);
-                }
-
                 setCombinedData(combined);
             };
 
             useEffect(() => {
                 combineData();
             }, [spendData, leadData]);
+
+            // Set dates when combined data is ready
+            useEffect(() => {
+                if (combinedData.length > 0 && !startDate && !endDate) {
+                    const dates = combinedData.map(d => d.date).sort();
+                    const minDate = dates[0];
+                    const maxDate = dates[dates.length - 1];
+                    setStartDate(minDate);
+                    setEndDate(maxDate);
+                    setDateRange({ min: minDate, max: maxDate });
+                }
+            }, [combinedData]);
 
             const calculateTrailing7DayCPL = (data) => {
                 const dateMap = new Map();
