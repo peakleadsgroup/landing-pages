@@ -26,6 +26,7 @@
             const [selectedClient, setSelectedClient] = useState('all');
             const [startDate, setStartDate] = useState('');
             const [endDate, setEndDate] = useState('');
+            const [dateRange, setDateRange] = useState({ min: '', max: '' });
             const [spendFileName, setSpendFileName] = useState('');
             const [leadFileName, setLeadFileName] = useState('');
             const chartRef = useRef(null);
@@ -164,8 +165,10 @@
                 if (combined.length > 0) {
                     const minDate = combined[0].date;
                     const maxDate = combined[combined.length - 1].date;
-                    setStartDate(minDate);
-                    setEndDate(maxDate);
+                    setDateRange({ min: minDate, max: maxDate });
+                    // Only set the date inputs if they're currently empty
+                    setStartDate(prev => prev || minDate);
+                    setEndDate(prev => prev || maxDate);
                 }
 
                 setCombinedData(combined);
@@ -539,7 +542,7 @@
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
                                                 <span className="text-sm text-purple-800">
-                                                    Data combined: {startDate} to {endDate} ({combinedData.length} date-client combinations)
+                                                    Data combined: {dateRange.min} to {dateRange.max} ({combinedData.length} date-client combinations)
                                                 </span>
                                             </div>
                                         </div>
@@ -568,6 +571,8 @@
                                             <input
                                                 type="date"
                                                 value={startDate}
+                                                min={dateRange.min}
+                                                max={dateRange.max}
                                                 onChange={(e) => setStartDate(e.target.value)}
                                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             />
@@ -579,6 +584,8 @@
                                             <input
                                                 type="date"
                                                 value={endDate}
+                                                min={dateRange.min}
+                                                max={dateRange.max}
                                                 onChange={(e) => setEndDate(e.target.value)}
                                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             />
