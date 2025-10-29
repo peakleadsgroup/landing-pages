@@ -532,6 +532,11 @@ body {
     align-items: center;
 }
 
+/* Confirm modal tweaks */
+#confirmModal .modal-content {
+    max-width: 420px;
+}
+
 .nav-btn {
     background: #1a9e8e;
     color: white;
