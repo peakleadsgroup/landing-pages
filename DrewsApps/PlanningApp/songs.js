@@ -22,10 +22,10 @@ async function searchSongs() {
     resultsContainer.innerHTML = '<div class="search-loading">Searching...</div>';
     
     try {
-        // Use CORS proxy to avoid CORS issues
+        // Use the correct iTunes API endpoint
         const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=25`);
         
-        // Check if response is OK
+        // Check if response is ok
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -33,7 +33,7 @@ async function searchSongs() {
         // Check if response is JSON
         const contentType = response.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
-            throw new Error("Response is not JSON");
+            throw new Error("Response was not JSON");
         }
         
         const data = await response.json();
@@ -46,7 +46,7 @@ async function searchSongs() {
                 resultItem.onclick = () => selectSong(song);
                 
                 resultItem.innerHTML = `
-                    <img src="${song.artworkUrl60}" alt="${song.trackName}" class="search-result-artwork">
+                    <img src="${song.artworkUrl60}" alt="${song.trackName}" class="search-result-artwork" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22%3E%3Crect fill=%22%23ddd%22 width=%2260%22 height=%2260%22/%3E%3C/svg%3E'">
                     <div class="search-result-info">
                         <div class="search-result-track">${song.trackName}</div>
                         <div class="search-result-artist">${song.artistName}</div>
@@ -61,12 +61,7 @@ async function searchSongs() {
         }
     } catch (error) {
         console.error('Search error:', error);
-        resultsContainer.innerHTML = `
-            <div class="search-no-results">
-                <p>Unable to search at this time.</p>
-                <p style="font-size: 12px; margin-top: 8px;">You can use the "Link" button to paste a Spotify or Apple Music URL instead.</p>
-            </div>
-        `;
+        resultsContainer.innerHTML = '<div class="search-no-results">Error searching. The iTunes API may be temporarily unavailable. You can use the "Link" button to paste a song URL instead.</div>';
     }
 }
 
