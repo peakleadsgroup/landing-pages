@@ -1,119 +1,89 @@
-// Conditional section toggle functions
-function toggleWeddingPartySection() {
-    const selected = document.querySelector('input[name="introduceParty"]:checked');
-    const section = document.getElementById('weddingPartySection');
-    if (section) {
-        section.style.display = selected && selected.value === 'yes' ? 'block' : 'none';
-    }
-    saveEventDetails(currentEventId);
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signature Sound & Lighting - Wedding Planner</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="header">
+    <img src="https://images.squarespace-cdn.com/content/v1/64909a307fc0025a2064d878/9b8fde02-b8f9-402b-be4c-366cb48134eb/Transparent+PNG+File.png" alt="Signature Sound & Lighting">
+    <div class="couple-name">John &amp; Sarah</div>
+  </div>
 
-function toggleSpecialActivityDetails() {
-    const selected = document.querySelector('input[name="hasSpecialActivity"]:checked');
-    const section = document.getElementById('specialActivityDetails');
-    if (section) {
-        section.style.display = selected && selected.value === 'yes' ? 'block' : 'none';
-    }
-    saveEventDetails(currentEventId);
-}
+  <div class="general-info-section">
+    <h2 class="section-title">General Info</h2>
+    <div class="general-info-card" onclick="openGeneralInfo()">
+      <div style="font-size:18px;font-weight:600;color:#000;">Event Details</div>
+      <div style="font-size:14px;color:#666;margin-top:4px;">Click to add general info</div>
+    </div>
+  </div>
 
-function toggleSpecialActivitySongEntry() {
-    const selected = document.querySelector('input[name="specialActivitySong"]:checked');
-    const section = document.getElementById('specialActivitySongEntry');
-    if (section) {
-        section.style.display = selected && selected.value === 'yes' ? 'block' : 'none';
-    }
-    saveEventDetails(currentEventId);
-}
+  <h2 class="section-title">Event Timeline</h2>
+  <div class="event-list" id="eventList"></div>
 
-function toggleBuffetRelease() {
-    const selected = document.querySelector('input[name="dinnerStyle"]:checked');
-    const section = document.getElementById('buffetReleaseSection');
-    if (section) {
-        section.style.display = selected && selected.value === 'buffet' ? 'block' : 'none';
-    }
-    saveEventDetails(currentEventId);
-}
+  <button class="add-event-btn" onclick="addCustomEvent()">+</button>
+  <div class="save-indicator" id="saveIndicator">Changes saved ✓</div>
 
-function togglePhotoDashOther() {
-    const selected = document.querySelector('input[name="photoDashStyle"]:checked');
-    const section = document.getElementById('photoDashOther');
-    if (section) {
-        section.style.display = selected && selected.value === 'other' ? 'block' : 'none';
-    }
-    saveEventDetails(currentEventId);
-}
+  <!-- Event Modal -->
+  <div class="modal" id="eventModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Event Details</h2>
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
 
-function toggleLineDanceOther() {
-    const checkbox = document.querySelector('input[name="lineDanceOther"]');
-    const section = document.getElementById('lineDanceOtherText');
-    if (section) {
-        section.style.display = checkbox && checkbox.checked ? 'block' : 'none';
-    }
-    saveEventDetails(currentEventId);
-}
+  <!-- Add Event Modal -->
+  <div class="add-event-modal" id="addEventModal">
+    <div class="add-event-modal-content">
+      <h2>Add New Event</h2>
+      <div class="add-event-options" id="addEventOptions">
+        <div class="add-event-option" onclick="showStandardEvents()">
+          <h3>Standard Event</h3>
+          <p>Choose from our pre-built event templates</p>
+        </div>
+        <div class="add-event-option" onclick="createCustomEvent()">
+          <h3>Custom Event</h3>
+          <p>Create a completely custom event</p>
+        </div>
+      </div>
+      <div class="standard-events-list" id="standardEventsList">
+        <button class="back-btn" onclick="backToAddOptions()">← Back</button>
+        <div id="standardEventsContainer"></div>
+      </div>
+    </div>
+  </div>
 
-function handleSpecialDanceType(eventId) {
-    const selected = document.querySelector(`input[name="danceType_${eventId}"]:checked`);
-    const container = document.getElementById(`otherDanceTypeContainer_${eventId}`);
-    if (container) {
-        container.style.display = selected && selected.value === 'other' ? 'block' : 'none';
-    }
-    updateSpecialDanceName(eventId);
-    saveEventDetails(eventId);
-}
+  <!-- Song Search Modal -->
+  <div class="song-search-modal" id="songSearchModal">
+    <div class="song-search-content">
+      <div class="song-search-header">
+        <h3>Search for a Song</h3>
+        <button class="close-btn" onclick="closeSongSearch()">&times;</button>
+      </div>
+      <div class="song-search-body">
+        <div class="search-input-wrapper">
+          <input type="text" id="songSearchInput" placeholder="Search by song title or artist..." />
+          <button onclick="searchSongs()">Search</button>
+        </div>
+        <div id="songSearchResults"></div>
+      </div>
+    </div>
+  </div>
 
-function updateSpecialDanceName(eventId) {
-    const event = events.find(e => e.id === eventId);
-    if (!event) return;
-
-    const selected = document.querySelector(`input[name="danceType_${eventId}"]:checked`);
-    if (!selected) return;
-
-    let newName = event.name;
-    if (selected.value === 'father-daughter') {
-        newName = 'Father Daughter Dance';
-    } else if (selected.value === 'mother-son') {
-        newName = 'Mother Son Dance';
-    } else if (selected.value === 'other') {
-        const otherInput = document.getElementById(`otherDanceType_${eventId}`);
-        if (otherInput && otherInput.value.trim()) {
-            newName = otherInput.value.trim();
-        } else {
-            newName = 'Special Dance';
-        }
-    }
-
-    if (newName !== event.name) {
-        event.name = newName;
-        document.getElementById('eventNameDisplay').textContent = newName;
-        renderEvents();
-        setupDragAndDrop();
-        showSaveIndicator();
-    }
-}
-
-function addCustomEvent() {
-    document.getElementById('addEventModal').classList.add('active');
-    document.getElementById('addEventOptions').style.display = 'flex';
-    document.getElementById('standardEventsList').classList.remove('active');
-}
-
-function showStandardEvents() {
-    document.getElementById('addEventOptions').style.display = 'none';
-    document.getElementById('standardEventsList').classList.add('active');
-    
-    const container = document.getElementById('standardEventsContainer');
-    container.innerHTML = '';
-    
-    standardEventTemplates.forEach(template => {
-        const item = document.createElement('div');
-        item.className = 'standard-event-item';
-        item.textContent = template.name;
-        item.onclick = () => addStandardEvent(template);
-        container.appendChild(item);
-    });
-}
-
-function backToAddOptions() {
-    document.getElementById('addEventOptions').style.display
+  <!-- Load scripts in order (per README) -->
+  <script src="data.js"></script>
+  <script src="helpers.js"></script>
+  <script src="ui.js"></script>
+  <script src="modalContent.js"></script>
+  <script src="modal.js"></script>
+  <script src="drag.js"></script>
+  <script src="songs.js"></script>
+  <script src="events.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
