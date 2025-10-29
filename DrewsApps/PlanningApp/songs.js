@@ -115,6 +115,16 @@ function jsonpRequest(urlBase) {
   });
 }
 
+// Optional proxy fetch: if window.ITUNES_PROXY_URL is defined, route request through it
+async function fetchViaProxy(paramsQueryString) {
+  const base = (typeof window !== 'undefined' && window.ITUNES_PROXY_URL) ? window.ITUNES_PROXY_URL : null;
+  if (!base) throw new Error('No proxy configured');
+  const url = `${base}?${paramsQueryString}`;
+  const res = await fetch(url, { mode: 'cors', headers: { 'Accept': 'application/json' } });
+  if (!res.ok) throw new Error(`Proxy HTTP ${res.status}`);
+  return await res.json();
+}
+
 // Main search with preview rendering. Exported as searchSongsWithPreview and aliased from searchSongs.
 async function searchSongsWithPreview() {
   const searchInput = document.getElementById('songSearchInput');
@@ -181,6 +191,16 @@ async function searchSongsWithPreview() {
         const jsonpParams = mkParams({ entity: 'song', callback: '' });
         const urlBase = `https://itunes.apple.com/search?${jsonpParams}`;
         data = await jsonpRequest(urlBase);
+      } catch (e) {
+        lastError = e;
+      }
+    }
+
+    // Final fallback: user-configurable proxy
+    if (!data && (typeof window !== 'undefined') && window.ITUNES_PROXY_URL) {
+      try {
+        const proxyParams = mkParams({ entity: 'song' });
+        data = await fetchViaProxy(proxyParams);
       } catch (e) {
         lastError = e;
       }
