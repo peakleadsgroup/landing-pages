@@ -68,14 +68,30 @@ function setupDragAndDrop() {
             e.stopPropagation();
             e.preventDefault();
             
+            const rect = card.getBoundingClientRect();
             touchStartY = e.touches[0].clientY;
-            initialCardTop = card.getBoundingClientRect().top;
+            initialCardTop = rect.top;
+            // Calculate offset inside the card so the finger stays anchored
+            const offsetWithinCard = touchStartY - rect.top;
+            card.__offsetWithinCard = offsetWithinCard;
             
             // Start long press timer (300ms)
             longPressTimer = setTimeout(() => {
                 isDragging = true;
                 draggedCard = card;
                 card.classList.add('drag-ready');
+                // Create placeholder to preserve layout
+                placeholder = document.createElement('div');
+                placeholder.style.height = rect.height + 'px';
+                placeholder.style.marginBottom = getComputedStyle(card).marginBottom;
+                placeholder.className = 'event-card-placeholder';
+                card.parentNode.insertBefore(placeholder, card.nextSibling);
+                // Elevate card and make it follow the finger
+                card.style.position = 'fixed';
+                card.style.width = rect.width + 'px';
+                card.style.left = rect.left + 'px';
+                card.style.top = (touchStartY - card.__offsetWithinCard) + 'px';
+                card.style.zIndex = '1000';
                 
                 // Vibrate if supported
                 if (navigator.vibrate) {
@@ -93,20 +109,24 @@ function setupDragAndDrop() {
 
             e.preventDefault();
             currentTouchY = e.touches[0].clientY;
-            
-            // Calculate movement from initial touch point
-            const deltaY = currentTouchY - touchStartY;
-            
-            // Apply transform to move the card
-            card.style.transform = `translateY(${deltaY}px)`;
+            // Move the card to follow the finger
+            card.style.top = (currentTouchY - (card.__offsetWithinCard || 0)) + 'px';
             card.classList.add('dragging');
 
             // Find where to insert based on current touch position
             const afterElement = getDragAfterElement(container, currentTouchY);
             if (afterElement == null) {
-                container.appendChild(card);
+                container.appendChild(placeholder);
             } else {
-                container.insertBefore(card, afterElement);
+                container.insertBefore(placeholder, afterElement);
+            }
+
+            // Auto-scroll when near viewport edges
+            const edge = 60; // px
+            if (currentTouchY > window.innerHeight - edge) {
+                window.scrollBy(0, 12);
+            } else if (currentTouchY < edge) {
+                window.scrollBy(0, -12);
             }
         }, { passive: false });
 
@@ -117,9 +137,24 @@ function setupDragAndDrop() {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                card.style.transform = '';
+                // Drop: place card at placeholder position
+                if (placeholder && placeholder.parentNode) {
+                    placeholder.parentNode.insertBefore(card, placeholder);
+                }
+                // Clear drag styles
+                card.style.position = '';
+                card.style.width = '';
+                card.style.left = '';
+                card.style.top = '';
+                card.style.zIndex = '';
                 card.classList.remove('drag-ready', 'dragging');
-                
+                // Remove placeholder
+                if (placeholder && placeholder.parentNode) {
+                    placeholder.parentNode.removeChild(placeholder);
+                }
+                placeholder = null;
+                card.__offsetWithinCard = null;
+
                 updateEventOrder();
                 showSaveIndicator();
                 
@@ -131,9 +166,18 @@ function setupDragAndDrop() {
         dragHandle.addEventListener('touchcancel', () => {
             clearTimeout(longPressTimer);
             if (draggedCard) {
-                draggedCard.style.transform = '';
+                // Revert styles
+                draggedCard.style.position = '';
+                draggedCard.style.width = '';
+                draggedCard.style.left = '';
+                draggedCard.style.top = '';
+                draggedCard.style.zIndex = '';
                 draggedCard.classList.remove('drag-ready', 'dragging');
             }
+            if (placeholder && placeholder.parentNode) {
+                placeholder.parentNode.removeChild(placeholder);
+            }
+            placeholder = null;
             isDragging = false;
             draggedCard = null;
         });
