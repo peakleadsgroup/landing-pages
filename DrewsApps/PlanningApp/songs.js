@@ -9,6 +9,10 @@ function openSongSearch(inputId) {
   document.getElementById('songSearchInput').focus();
 }
 
+// Single shared audio element for previews
+let previewAudio = null;
+let currentPreviewBtn = null;
+
 function closeSongSearch() {
   document.getElementById('songSearchModal').classList.remove('active');
   currentSongInputId = null;
@@ -80,16 +84,32 @@ async function searchSongs() {
       data.results.forEach(song => {
         const resultItem = document.createElement('div');
         resultItem.className = 'search-result-item';
-        resultItem.onclick = () => selectSong(song);
+        // Build inner layout with a preview button
+        const hasPreview = Boolean(song.previewUrl);
         resultItem.innerHTML = `
           <img src="${song.artworkUrl60}" alt="${song.trackName}" class="search-result-artwork"
                onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22%3E%3Crect fill=%22%23ddd%22 width=%2260%22 height=%2260%22/%3E%3C/svg%3E'">
-          <div class="search-result-info">
-            <div class="search-result-track">${song.trackName}</div>
-            <div class="search-result-artist">${song.artistName}</div>
-            <div class="search-result-album">${song.collectionName}</div>
+          <div class="search-result-info" style="display:flex;gap:12px;align-items:center;">
+            <div style="flex:1;min-width:0;cursor:pointer;" class="search-result-click">
+              <div class="search-result-track">${song.trackName}</div>
+              <div class="search-result-artist">${song.artistName}</div>
+              <div class="search-result-album">${song.collectionName}</div>
+            </div>
+            <button class="preview-btn" ${hasPreview ? '' : 'disabled'} data-url="${hasPreview ? song.previewUrl : ''}" style="padding:8px 12px;border:none;border-radius:8px;background:#1a9e8e;color:#fff;font-weight:600;cursor:${hasPreview ? 'pointer' : 'not-allowed'};white-space:nowrap;">
+              ${hasPreview ? 'Preview' : 'No Preview'}
+            </button>
           </div>
         `;
+        // Click on text area selects the song
+        resultItem.querySelector('.search-result-click').onclick = () => selectSong(song);
+        // Preview button
+        const previewBtn = resultItem.querySelector('.preview-btn');
+        if (hasPreview) {
+          previewBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            previewSong(previewBtn.getAttribute('data-url'), previewBtn);
+          });
+        }
         resultsContainer.appendChild(resultItem);
       });
     } else {
@@ -115,6 +135,31 @@ function selectSong(song) {
     }
   }
   closeSongSearch();
+}
+
+// Play/pause 30s preview. Only one preview plays at a time.
+function previewSong(url, btn) {
+  if (!url) return;
+  // If clicking the same button while playing, toggle pause
+  if (previewAudio && !previewAudio.paused && currentPreviewBtn === btn) {
+    previewAudio.pause();
+    btn.textContent = 'Preview';
+    return;
+  }
+  // Stop previous
+  if (previewAudio) {
+    try { previewAudio.pause(); } catch(_) {}
+    if (currentPreviewBtn) currentPreviewBtn.textContent = 'Preview';
+  }
+  previewAudio = new Audio(url);
+  currentPreviewBtn = btn;
+  btn.textContent = 'Pause';
+  previewAudio.play().catch(() => {
+    btn.textContent = 'Preview';
+  });
+  previewAudio.onended = () => {
+    if (currentPreviewBtn) currentPreviewBtn.textContent = 'Preview';
+  };
 }
 
 // “Link” button flow (paste Spotify / Apple link)
