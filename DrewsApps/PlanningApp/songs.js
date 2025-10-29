@@ -13,7 +13,36 @@ function openSongSearch(inputId) {
 let previewAudio = null;
 let currentPreviewBtn = null;
 
+// Helper functions to get play/pause icon SVG
+function getPlayIcon() {
+  return `<svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 5v14l11-7z"/>
+  </svg>`;
+}
+
+function getPauseIcon() {
+  return `<svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+  </svg>`;
+}
+
+// Stop any playing preview
+function stopPreview() {
+  if (previewAudio) {
+    try {
+      previewAudio.pause();
+      previewAudio.currentTime = 0;
+    } catch(e) {}
+    previewAudio = null;
+  }
+  if (currentPreviewBtn) {
+    currentPreviewBtn.innerHTML = getPlayIcon();
+    currentPreviewBtn = null;
+  }
+}
+
 function closeSongSearch() {
+  stopPreview();
   document.getElementById('songSearchModal').classList.remove('active');
   currentSongInputId = null;
 }
@@ -96,9 +125,9 @@ async function searchSongsWithPreview() {
               <div class="search-result-artist">${song.artistName}</div>
               <div class="search-result-album">${song.collectionName}</div>
             </div>
-            <button class="preview-btn" ${hasPreview ? '' : 'disabled'} data-url="${hasPreview ? song.previewUrl : ''}" style="padding:8px 12px;border:none;border-radius:8px;background:#1a9e8e;color:#fff;font-weight:600;cursor:${hasPreview ? 'pointer' : 'not-allowed'};white-space:nowrap;">
-              ${hasPreview ? 'Preview' : 'No Preview'}
-            </button>
+            ${hasPreview ? `<button class="preview-btn" data-url="${song.previewUrl}" title="Play preview" style="width:40px;height:40px;border:none;border-radius:50%;background:#1a9e8e;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+              ${getPlayIcon()}
+            </button>` : ''}
           </div>
         `;
         // Click on text area selects the song
@@ -124,6 +153,7 @@ async function searchSongsWithPreview() {
 }
 
 function selectSong(song) {
+  stopPreview(); // Stop any playing preview when song is selected
   if (currentSongInputId) {
     const input = document.getElementById(currentSongInputId);
     const display = document.getElementById(`${currentSongInputId}_display`);
@@ -144,22 +174,24 @@ function previewSong(url, btn) {
   // If clicking the same button while playing, toggle pause
   if (previewAudio && !previewAudio.paused && currentPreviewBtn === btn) {
     previewAudio.pause();
-    btn.textContent = 'Preview';
+    btn.innerHTML = getPlayIcon();
     return;
   }
   // Stop previous
   if (previewAudio) {
     try { previewAudio.pause(); } catch(_) {}
-    if (currentPreviewBtn) currentPreviewBtn.textContent = 'Preview';
+    if (currentPreviewBtn) currentPreviewBtn.innerHTML = getPlayIcon();
   }
   previewAudio = new Audio(url);
   currentPreviewBtn = btn;
-  btn.textContent = 'Pause';
+  btn.innerHTML = getPauseIcon();
   previewAudio.play().catch(() => {
-    btn.textContent = 'Preview';
+    btn.innerHTML = getPlayIcon();
   });
   previewAudio.onended = () => {
-    if (currentPreviewBtn) currentPreviewBtn.textContent = 'Preview';
+    if (currentPreviewBtn) currentPreviewBtn.innerHTML = getPlayIcon();
+    previewAudio = null;
+    currentPreviewBtn = null;
   };
 }
 
