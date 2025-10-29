@@ -30,21 +30,57 @@ function getPauseIcon() {
 function stopPreview() {
   if (previewAudio) {
     try {
+      // More aggressive stopping
       previewAudio.pause();
+      previewAudio.volume = 0;
       previewAudio.currentTime = 0;
-    } catch(e) {}
+      previewAudio.src = '';
+      previewAudio.load(); // Reset the audio element
+      // Remove event listeners to prevent callbacks
+      previewAudio.onended = null;
+      previewAudio.onerror = null;
+      previewAudio.onplay = null;
+      previewAudio.onpause = null;
+    } catch(e) {
+      console.error('Error stopping preview:', e);
+    }
     previewAudio = null;
   }
   if (currentPreviewBtn) {
-    currentPreviewBtn.innerHTML = getPlayIcon();
+    try {
+      currentPreviewBtn.innerHTML = getPlayIcon();
+    } catch(e) {
+      // Button might be removed from DOM
+    }
     currentPreviewBtn = null;
   }
 }
 
 function closeSongSearch() {
   stopPreview();
-  document.getElementById('songSearchModal').classList.remove('active');
+  const modal = document.getElementById('songSearchModal');
+  if (modal) {
+    modal.classList.remove('active');
+  }
   currentSongInputId = null;
+}
+
+// Also stop preview when modal is hidden (in case closed another way)
+function stopPreviewOnModalClose() {
+  const modal = document.getElementById('songSearchModal');
+  if (modal) {
+    // Use MutationObserver to detect when modal is closed
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          if (!modal.classList.contains('active')) {
+            stopPreview();
+          }
+        }
+      });
+    });
+    observer.observe(modal, { attributes: true });
+  }
 }
 
 // Main search with preview rendering. Exported as searchSongsWithPreview and aliased from searchSongs.
@@ -221,8 +257,12 @@ function openSongLink(inputId) {
     modal.addEventListener('click', (e) => {
       if (e.target.id === 'songSearchModal') closeSongSearch();
     });
+    // Also stop preview when modal visibility changes
+    stopPreviewOnModalClose();
   }
   // Ensure global alias exists for onclicks
   window.searchSongsWithPreview = searchSongsWithPreview;
   window.searchSongs = searchSongsWithPreview; // fallback for legacy markup
+  window.closeSongSearch = closeSongSearch; // Make sure close function is global
+  window.stopPreview = stopPreview; // Make stopPreview global too
 })();
