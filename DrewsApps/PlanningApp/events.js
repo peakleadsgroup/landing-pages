@@ -75,7 +75,7 @@
     </div>
   </div>
 
-  <!-- Load scripts in order (per README) -->
+  <!-- Script order matters -->
   <script src="data.js"></script>
   <script src="helpers.js"></script>
   <script src="ui.js"></script>
