@@ -83,6 +83,38 @@ function stopPreviewOnModalClose() {
   }
 }
 
+// JSONP fallback for mobile CORS issues with iTunes API
+function jsonpRequest(urlBase) {
+  return new Promise((resolve, reject) => {
+    const cbName = `__itunes_jsonp_cb_${Date.now()}_${Math.floor(Math.random()*10000)}`;
+    const url = urlBase + `&callback=${cbName}`;
+    const script = document.createElement('script');
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error('JSONP timeout'));
+    }, 10000);
+
+    function cleanup() {
+      clearTimeout(timeout);
+      try { delete window[cbName]; } catch(_) { window[cbName] = undefined; }
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[cbName] = (data) => {
+      cleanup();
+      resolve(data);
+    };
+
+    script.onerror = () => {
+      cleanup();
+      reject(new Error('JSONP script error'));
+    };
+
+    script.src = url;
+    document.head.appendChild(script);
+  });
+}
+
 // Main search with preview rendering. Exported as searchSongsWithPreview and aliased from searchSongs.
 async function searchSongsWithPreview() {
   const searchInput = document.getElementById('songSearchInput');
@@ -138,6 +170,17 @@ async function searchSongsWithPreview() {
             throw new Error(`Expected JSON, got ${contentType}. Body starts: ${text.slice(0, 80)}`);
           }
         }
+      } catch (e) {
+        lastError = e;
+      }
+    }
+
+    if (!data) {
+      // Fallback for some mobile browsers with strict CORS: use JSONP
+      try {
+        const jsonpParams = mkParams({ entity: 'song', callback: '' });
+        const urlBase = `https://itunes.apple.com/search?${jsonpParams}`;
+        data = await jsonpRequest(urlBase);
       } catch (e) {
         lastError = e;
       }
