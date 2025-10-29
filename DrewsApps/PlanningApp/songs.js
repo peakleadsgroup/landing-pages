@@ -153,6 +153,16 @@ async function searchSongsWithPreview() {
     let data = null;
     let lastError = null;
 
+    // If a proxy is configured, try it FIRST (mobile-friendly)
+    if ((typeof window !== 'undefined') && window.ITUNES_PROXY_URL) {
+      try {
+        const proxyParams = mkParams({ entity: 'song' });
+        data = await fetchViaProxy(proxyParams);
+      } catch (e) {
+        lastError = e;
+      }
+    }
+
     for (const url of attempts) {
       try {
         const response = await fetch(url, {
@@ -191,16 +201,6 @@ async function searchSongsWithPreview() {
         const jsonpParams = mkParams({ entity: 'song', callback: '' });
         const urlBase = `https://itunes.apple.com/search?${jsonpParams}`;
         data = await jsonpRequest(urlBase);
-      } catch (e) {
-        lastError = e;
-      }
-    }
-
-    // Final fallback: user-configurable proxy
-    if (!data && (typeof window !== 'undefined') && window.ITUNES_PROXY_URL) {
-      try {
-        const proxyParams = mkParams({ entity: 'song' });
-        data = await fetchViaProxy(proxyParams);
       } catch (e) {
         lastError = e;
       }
