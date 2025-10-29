@@ -37,9 +37,48 @@
             font-size: 28px;
             color: #1a9e8e;
             font-weight: 300;
-            font-style: italic;
             margin-top: 16px;
             letter-spacing: 1px;
+        }
+
+        .general-info-section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #1a9e8e;
+        }
+
+        .general-info-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            border-left: 5px solid #1a9e8e;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .general-info-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 600px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .event-list {
@@ -98,10 +137,16 @@
             color: #999;
             font-size: 24px;
             user-select: none;
+            touch-action: none;
         }
 
         .drag-handle:active {
             cursor: grabbing;
+        }
+
+        .event-card.drag-ready {
+            opacity: 0.8;
+            box-shadow: 0 4px 12px rgba(26, 158, 142, 0.3);
         }
 
         /* Event-specific border colors */
@@ -900,8 +945,18 @@
 <body>
     <div class="header">
         <img src="https://images.squarespace-cdn.com/content/v1/64909a307fc0025a2064d878/9b8fde02-b8f9-402b-be4c-366cb48134eb/Transparent+PNG+File.png" alt="Signature Sound & Lighting">
-        <div class="couple-name">John & Sarah's Wedding</div>
+        <div class="couple-name">John & Sarah</div>
     </div>
+
+    <div class="general-info-section">
+        <h2 class="section-title">General Info</h2>
+        <div class="general-info-card" onclick="openGeneralInfo()">
+            <div style="font-size: 18px; font-weight: 600; color: #000;">Event Details</div>
+            <div style="font-size: 14px; color: #666; margin-top: 4px;">Click to add ceremony & reception venue info</div>
+        </div>
+    </div>
+
+    <h2 class="section-title">Event Timeline</h2>
 
     <div class="event-list" id="eventList">
         <!-- Events will be populated here -->
@@ -988,6 +1043,16 @@
         let nextId = 17;
         let currentSongInputId = null; // Track which input is being searched for
 
+        // General info data
+        let generalInfo = {
+            ceremonyVenueName: '',
+            ceremonyVenueAddress: '',
+            receptionVenueName: '',
+            receptionVenueAddress: '',
+            plannerName: '',
+            plannerEmail: ''
+        };
+
         // Standard event templates
         const standardEventTemplates = [
             { type: 'ceremony', name: 'Ceremony' },
@@ -1017,9 +1082,9 @@
                     <div class="song-input-container">
                         <div class="song-input-wrapper">
                             <input type="text" id="${id}" value="${value || ''}" placeholder="${placeholder}">
-                            <button class="song-action-btn" onclick="openSongSearch('${id}')">Search</button>
-                            <button class="song-action-btn secondary" onclick="openSongLink('${id}')">Link</button>
-                            <button class="song-action-btn secondary" onclick="openSongUpload('${id}')">Upload</button>
+                            <button class="song-action-btn song-search-btn" data-input-id="${id}">Search</button>
+                            <button class="song-action-btn secondary song-link-btn" data-input-id="${id}">Link</button>
+                            <button class="song-action-btn secondary song-upload-btn" data-input-id="${id}">Upload</button>
                         </div>
                     </div>
                 </div>
@@ -1049,7 +1114,7 @@
             card.className = 'event-card';
             card.setAttribute('data-id', event.id);
             card.setAttribute('data-type', event.type);
-            card.draggable = true;
+            card.draggable = false; // Start as false, enable with long press
             
             card.innerHTML = `
                 <div class="event-content">
@@ -1059,8 +1124,20 @@
                 <div class="drag-handle">☰</div>
             `;
             
+            // Only make the drag handle enable dragging
+            const dragHandle = card.querySelector('.drag-handle');
+            dragHandle.addEventListener('mousedown', () => {
+                card.draggable = true;
+            });
+            
+            dragHandle.addEventListener('mouseup', () => {
+                setTimeout(() => {
+                    card.draggable = false;
+                }, 100);
+            });
+            
             card.addEventListener('click', (e) => {
-                if (!e.target.classList.contains('drag-handle')) {
+                if (!e.target.classList.contains('drag-handle') && !card.classList.contains('dragging')) {
                     openModal(event.id);
                 }
             });
@@ -1068,10 +1145,13 @@
             return card;
         }
 
-        // Setup drag and drop
+        // Setup drag and drop with mobile long press support
         function setupDragAndDrop() {
             const container = document.getElementById('eventList');
+            let longPressTimer;
+            let isDragReady = false;
             
+            // Desktop drag events
             container.addEventListener('dragstart', (e) => {
                 if (e.target.classList.contains('event-card')) {
                     draggedElement = e.target;
@@ -1082,9 +1162,44 @@
             container.addEventListener('dragend', (e) => {
                 if (e.target.classList.contains('event-card')) {
                     e.target.classList.remove('dragging');
+                    e.target.classList.remove('drag-ready');
                     draggedElement = null;
+                    isDragReady = false;
                 }
             });
+            
+            // Long press for mobile
+            container.addEventListener('touchstart', (e) => {
+                const handle = e.target.closest('.drag-handle');
+                if (handle) {
+                    const card = handle.closest('.event-card');
+                    longPressTimer = setTimeout(() => {
+                        isDragReady = true;
+                        card.classList.add('drag-ready');
+                        card.setAttribute('draggable', 'true');
+                        // Vibrate if supported
+                        if (navigator.vibrate) {
+                            navigator.vibrate(50);
+                        }
+                    }, 500); // 500ms long press
+                }
+            }, { passive: true });
+            
+            container.addEventListener('touchend', () => {
+                clearTimeout(longPressTimer);
+                setTimeout(() => {
+                    document.querySelectorAll('.event-card').forEach(card => {
+                        card.classList.remove('drag-ready');
+                        if (!isDragReady) {
+                            card.setAttribute('draggable', 'false');
+                        }
+                    });
+                }, 100);
+            }, { passive: true });
+            
+            container.addEventListener('touchmove', () => {
+                clearTimeout(longPressTimer);
+            }, { passive: true });
             
             container.addEventListener('dragover', (e) => {
                 e.preventDefault();
@@ -1101,6 +1216,10 @@
             container.addEventListener('drop', (e) => {
                 e.preventDefault();
                 updateEventOrder();
+                isDragReady = false;
+                document.querySelectorAll('.event-card').forEach(card => {
+                    card.setAttribute('draggable', 'false');
+                });
                 showSaveIndicator();
             });
         }
@@ -1136,6 +1255,63 @@
             // Here you would sync with Airtable
         }
 
+        // Open general info modal
+        function openGeneralInfo() {
+            const modal = document.getElementById('eventModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalTitle.innerHTML = `<span>General Info</span>`;
+            modalBody.innerHTML = `
+                <div class="info-grid">
+                    <div class="form-group">
+                        <label>Ceremony Venue Name</label>
+                        <input type="text" id="ceremonyVenueName" value="${generalInfo.ceremonyVenueName || ''}" placeholder="Venue name">
+                    </div>
+                    <div class="form-group">
+                        <label>Ceremony Venue Address</label>
+                        <input type="text" id="ceremonyVenueAddress" value="${generalInfo.ceremonyVenueAddress || ''}" placeholder="Full address">
+                    </div>
+                    <div class="form-group">
+                        <label>Reception Venue Name</label>
+                        <input type="text" id="receptionVenueName" value="${generalInfo.receptionVenueName || ''}" placeholder="Venue name">
+                    </div>
+                    <div class="form-group">
+                        <label>Reception Venue Address</label>
+                        <input type="text" id="receptionVenueAddress" value="${generalInfo.receptionVenueAddress || ''}" placeholder="Full address">
+                    </div>
+                    <div class="form-group">
+                        <label>Planner Name</label>
+                        <input type="text" id="plannerName" value="${generalInfo.plannerName || ''}" placeholder="Planner's name">
+                    </div>
+                    <div class="form-group">
+                        <label>Planner Email</label>
+                        <input type="email" id="plannerEmail" value="${generalInfo.plannerEmail || ''}" placeholder="email@example.com">
+                    </div>
+                </div>
+            `;
+            modal.classList.add('active');
+            
+            // Add event listeners for inputs
+            modalBody.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', () => saveGeneralInfo());
+            });
+            
+            // Remove footer for general info
+            const footer = modal.querySelector('.modal-footer');
+            if (footer) footer.remove();
+        }
+
+        function saveGeneralInfo() {
+            generalInfo.ceremonyVenueName = document.getElementById('ceremonyVenueName')?.value || '';
+            generalInfo.ceremonyVenueAddress = document.getElementById('ceremonyVenueAddress')?.value || '';
+            generalInfo.receptionVenueName = document.getElementById('receptionVenueName')?.value || '';
+            generalInfo.receptionVenueAddress = document.getElementById('receptionVenueAddress')?.value || '';
+            generalInfo.plannerName = document.getElementById('plannerName')?.value || '';
+            generalInfo.plannerEmail = document.getElementById('plannerEmail')?.value || '';
+            showSaveIndicator();
+        }
+
         // Open modal with event details
         function openModal(eventId) {
             currentEventId = eventId;
@@ -1163,6 +1339,31 @@
                 input.addEventListener('input', () => {
                     if (input.type === 'radio' || input.type === 'checkbox') return;
                     saveEventDetails(eventId);
+                });
+            });
+            
+            // Add event listeners for song action buttons
+            modalBody.querySelectorAll('.song-search-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const inputId = btn.getAttribute('data-input-id');
+                    openSongSearch(inputId);
+                });
+            });
+            
+            modalBody.querySelectorAll('.song-link-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const inputId = btn.getAttribute('data-input-id');
+                    openSongLink(inputId);
+                });
+            });
+            
+            modalBody.querySelectorAll('.song-upload-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const inputId = btn.getAttribute('data-input-id');
+                    openSongUpload(inputId);
                 });
             });
             
