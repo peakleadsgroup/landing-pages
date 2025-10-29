@@ -776,6 +776,32 @@ body {
     color: #666;
 }
 
+.preview-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: #1a9e8e;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.preview-btn:hover {
+    background: #158c7e;
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(26, 158, 142, 0.3);
+}
+
+.preview-btn:active {
+    transform: scale(0.95);
+}
+
 @media (max-width: 600px) {
     body {
         padding: 16px;
