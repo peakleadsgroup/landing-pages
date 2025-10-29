@@ -75,7 +75,7 @@ function setupDragAndDrop() {
             const offsetWithinCard = touchStartY - rect.top;
             card.__offsetWithinCard = offsetWithinCard;
             
-            // Start long press timer (reduced for snappier feel on mobile)
+            // Start long press timer (more responsive on mobile)
             longPressTimer = setTimeout(() => {
                 isDragging = true;
                 draggedCard = card;
@@ -97,9 +97,10 @@ function setupDragAndDrop() {
                 if (navigator.vibrate) {
                     navigator.vibrate(50);
                 }
-            }, 180);
+            }, 120);
         }, { passive: false });
 
+        let moveQueued = false;
         dragHandle.addEventListener('touchmove', (e) => {
             // If moved before long press completes, cancel it
             if (!isDragging) {
@@ -109,25 +110,34 @@ function setupDragAndDrop() {
 
             e.preventDefault();
             currentTouchY = e.touches[0].clientY;
-            // Move the card to follow the finger
-            card.style.top = (currentTouchY - (card.__offsetWithinCard || 0)) + 'px';
-            card.classList.add('dragging');
+            if (moveQueued) return; // throttle with rAF for smoother updates
+            moveQueued = true;
+            requestAnimationFrame(() => {
+                // Move the card to follow the finger
+                card.style.top = (currentTouchY - (card.__offsetWithinCard || 0)) + 'px';
+                card.classList.add('dragging');
 
-            // Find where to insert based on current touch position
-            const afterElement = getDragAfterElement(container, currentTouchY);
-            if (afterElement == null) {
-                container.appendChild(placeholder);
-            } else {
-                container.insertBefore(placeholder, afterElement);
-            }
+                // Find where to insert based on current touch position
+                const afterElement = getDragAfterElement(container, currentTouchY);
+                if (afterElement == null) {
+                    if (placeholder.parentNode !== container || placeholder.nextSibling != null) {
+                        container.appendChild(placeholder);
+                    }
+                } else {
+                    if (placeholder.nextSibling !== afterElement) {
+                        container.insertBefore(placeholder, afterElement);
+                    }
+                }
 
-            // Auto-scroll when near viewport edges (slower)
-            const edge = 60; // px
-            if (currentTouchY > window.innerHeight - edge) {
-                window.scrollBy(0, 6);
-            } else if (currentTouchY < edge) {
-                window.scrollBy(0, -6);
-            }
+                // Auto-scroll when near viewport edges (slower)
+                const edge = 80; // px
+                if (currentTouchY > window.innerHeight - edge) {
+                    window.scrollBy(0, 3);
+                } else if (currentTouchY < edge) {
+                    window.scrollBy(0, -3);
+                }
+                moveQueued = false;
+            });
         }, { passive: false });
 
         dragHandle.addEventListener('touchend', (e) => {
