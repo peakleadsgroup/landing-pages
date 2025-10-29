@@ -92,7 +92,7 @@ body {
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     position: relative;
     /* Allow vertical scroll gestures to pass through on cards */
@@ -107,6 +107,7 @@ body {
 .event-card.dragging {
     opacity: 0.5;
     z-index: 1000;
+    transition: none;
 }
 
 .event-card.drag-ready {
