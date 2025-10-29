@@ -75,7 +75,7 @@ function setupDragAndDrop() {
             const offsetWithinCard = touchStartY - rect.top;
             card.__offsetWithinCard = offsetWithinCard;
             
-            // Start long press timer (300ms)
+            // Start long press timer (reduced for snappier feel on mobile)
             longPressTimer = setTimeout(() => {
                 isDragging = true;
                 draggedCard = card;
@@ -97,7 +97,7 @@ function setupDragAndDrop() {
                 if (navigator.vibrate) {
                     navigator.vibrate(50);
                 }
-            }, 300);
+            }, 180);
         }, { passive: false });
 
         dragHandle.addEventListener('touchmove', (e) => {
@@ -121,12 +121,12 @@ function setupDragAndDrop() {
                 container.insertBefore(placeholder, afterElement);
             }
 
-            // Auto-scroll when near viewport edges
+            // Auto-scroll when near viewport edges (slower)
             const edge = 60; // px
             if (currentTouchY > window.innerHeight - edge) {
-                window.scrollBy(0, 12);
+                window.scrollBy(0, 6);
             } else if (currentTouchY < edge) {
-                window.scrollBy(0, -12);
+                window.scrollBy(0, -6);
             }
         }, { passive: false });
 
