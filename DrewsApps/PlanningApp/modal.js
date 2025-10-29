@@ -226,13 +226,13 @@ function navigateEvent(direction) {
 }
 
 function deleteEvent(eventId) {
-    if (confirm('Are you sure you want to delete this event?')) {
+    openConfirm('Are you sure you want to delete this event?', () => {
         events = events.filter(e => e.id !== eventId);
         renderEvents();
         setupDragAndDrop();
         closeModal();
         showSaveIndicator();
-    }
+    });
 }
 
 // Close modal when clicking outside
@@ -241,6 +241,30 @@ document.getElementById('eventModal').addEventListener('click', (e) => {
         closeModal();
     }
 });
+
+// Simple confirm modal helpers
+let __onConfirmYes = null;
+function openConfirm(message, onYes) {
+    const modal = document.getElementById('confirmModal');
+    const msg = document.getElementById('confirmMessage');
+    const yesBtn = document.getElementById('confirmYesBtn');
+    msg.textContent = message || 'Are you sure?';
+    __onConfirmYes = onYes;
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+    // Reset existing handler then set
+    yesBtn.onclick = () => {
+        closeConfirm();
+        if (typeof __onConfirmYes === 'function') __onConfirmYes();
+        __onConfirmYes = null;
+    };
+}
+function closeConfirm() {
+    const modal = document.getElementById('confirmModal');
+    modal.classList.remove('active');
+    modal.style.display = 'none';
+    __onConfirmYes = null;
+}
 
 function saveEventDetails(eventId) {
     const event = events.find(e => e.id === eventId);
