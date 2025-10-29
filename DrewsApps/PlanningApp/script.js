@@ -1322,13 +1322,13 @@ function openSongLink(inputId) {
 }
 
 function deleteEvent(eventId) {
-    if (confirm('Are you sure you want to delete this event?')) {
+    openConfirm('Are you sure you want to delete this event?', () => {
         events = events.filter(e => e.id !== eventId);
         renderEvents();
         setupDragAndDrop();
         closeModal();
         showSaveIndicator();
-    }
+    });
 }
 
 function showSaveIndicator() {
