@@ -23,28 +23,44 @@ async function searchSongs() {
   resultsContainer.innerHTML = '<div class="search-loading">Searching...</div>';
 
   try {
-    const params = new URLSearchParams({
+    // Attempt 1: use country + entity=song (most accurate)
+    const mkParams = (opts) => new URLSearchParams({
       term: query,
+      country: 'US',
       media: 'music',
-      entity: 'song',
-      limit: '25'
-    });
-    const url = `https://itunes.apple.com/search?${params.toString()}`;
+      limit: '25',
+      ...opts
+    }).toString();
 
-    const response = await fetch(url, { mode: 'cors' });
+    const attempts = [
+      `https://itunes.apple.com/search?${mkParams({ entity: 'song' })}`,
+      // Fallback: drop entity filter (Apple sometimes 404s on narrow queries)
+      `https://itunes.apple.com/search?${mkParams({})}`
+    ];
 
-    // If Apple returns 404 (it sometimes does for odd queries), don’t try to parse JSON.
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+    let data = null;
+    let lastError = null;
+
+    for (const url of attempts) {
+      try {
+        const response = await fetch(url, {
+          mode: 'cors',
+          headers: { 'Accept': 'application/json' }
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          const text = await response.text();
+          throw new Error(`Expected JSON, got ${contentType}. Body starts: ${text.slice(0, 80)}`);
+        }
+        data = await response.json();
+        break;
+      } catch (e) {
+        lastError = e;
+      }
     }
 
-    const contentType = response.headers.get('content-type') || '';
-    if (!contentType.includes('application/json')) {
-      const text = await response.text();
-      throw new Error(`Expected JSON, got ${contentType}. Body starts: ${text.slice(0, 120)}`);
-    }
-
-    const data = await response.json();
+    if (!data) throw lastError || new Error('Unknown search error');
 
     if (data.results && data.results.length > 0) {
       resultsContainer.innerHTML = '';
@@ -69,7 +85,7 @@ async function searchSongs() {
   } catch (error) {
     console.error('Search error:', error);
     resultsContainer.innerHTML =
-      '<div class="search-no-results">Error searching. Try again later, or use “Link” to paste a song URL.</div>';
+      '<div class="search-no-results">Error searching. Please try again, or use “Link” to paste a song URL.</div>';
   }
 }
 
