@@ -49,12 +49,25 @@ async function searchSongs() {
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const contentType = response.headers.get('content-type') || '';
-        if (!contentType.includes('application/json')) {
+        // iTunes API sometimes returns text/javascript even though it's valid JSON
+        // Accept both application/json and text/javascript
+        const isJsonLike = contentType.includes('application/json') || 
+                          contentType.includes('text/javascript') ||
+                          contentType.includes('application/javascript');
+        
+        if (isJsonLike) {
+          data = await response.json();
+          break;
+        } else {
+          // If not JSON-like content type, try parsing anyway (some APIs misreport)
           const text = await response.text();
-          throw new Error(`Expected JSON, got ${contentType}. Body starts: ${text.slice(0, 80)}`);
+          if (text.trim().startsWith('{')) {
+            data = JSON.parse(text);
+            break;
+          } else {
+            throw new Error(`Expected JSON, got ${contentType}. Body starts: ${text.slice(0, 80)}`);
+          }
         }
-        data = await response.json();
-        break;
       } catch (e) {
         lastError = e;
       }
