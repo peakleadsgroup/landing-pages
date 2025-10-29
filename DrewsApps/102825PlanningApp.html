@@ -18,6 +18,8 @@
             padding: 20px;
             max-width: 800px;
             margin: 0 auto;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .header {
@@ -86,6 +88,7 @@
             flex-direction: column;
             gap: 12px;
             margin-bottom: 80px;
+            position: relative;
         }
 
         .event-card {
@@ -98,6 +101,8 @@
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: relative;
+            touch-action: none;
         }
 
         .event-card:hover {
@@ -107,7 +112,14 @@
 
         .event-card.dragging {
             opacity: 0.5;
-            cursor: grabbing;
+            z-index: 1000;
+        }
+
+        .event-card.drag-ready {
+            opacity: 0.9;
+            box-shadow: 0 6px 20px rgba(26, 158, 142, 0.4);
+            transform: scale(1.03);
+            z-index: 999;
         }
 
         .event-content {
@@ -142,11 +154,6 @@
 
         .drag-handle:active {
             cursor: grabbing;
-        }
-
-        .event-card.drag-ready {
-            opacity: 0.8;
-            box-shadow: 0 4px 12px rgba(26, 158, 142, 0.3);
         }
 
         /* Event-specific border colors */
@@ -311,6 +318,7 @@
 
         .form-group input[type="text"],
         .form-group input[type="time"],
+        .form-group input[type="email"],
         .form-group textarea,
         .form-group select {
             width: 100%;
@@ -900,7 +908,15 @@
         let currentEventId = null;
         let draggedElement = null;
         let nextId = 17;
-        let currentSongInputId = null; // Track which input is being searched for
+        let currentSongInputId = null;
+
+        // Mobile drag state
+        let longPressTimer = null;
+        let isDragging = false;
+        let draggedCard = null;
+        let touchStartY = 0;
+        let currentTouchY = 0;
+        let placeholder = null;
 
         // General info data
         let generalInfo = {
@@ -975,7 +991,6 @@
             card.className = 'event-card';
             card.setAttribute('data-id', event.id);
             card.setAttribute('data-type', event.type);
-            card.draggable = false; // Start as false, enable with long press
             
             card.innerHTML = `
                 <div class="event-content">
@@ -985,103 +1000,145 @@
                 <div class="drag-handle">☰</div>
             `;
             
-            // Only make the drag handle enable dragging
-            const dragHandle = card.querySelector('.drag-handle');
-            dragHandle.addEventListener('mousedown', () => {
-                card.draggable = true;
-            });
-            
-            dragHandle.addEventListener('mouseup', () => {
-                setTimeout(() => {
-                    card.draggable = false;
-                }, 100);
-            });
-            
-            card.addEventListener('click', (e) => {
-                if (!e.target.classList.contains('drag-handle') && !card.classList.contains('dragging')) {
-                    openModal(event.id);
-                }
-            });
-            
             return card;
         }
 
-        // Setup drag and drop with mobile long press support
+        // Setup drag and drop with improved mobile support
         function setupDragAndDrop() {
             const container = document.getElementById('eventList');
-            let longPressTimer;
-            let isDragReady = false;
             
             // Desktop drag events
             container.addEventListener('dragstart', (e) => {
                 if (e.target.classList.contains('event-card')) {
                     draggedElement = e.target;
                     e.target.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
                 }
             });
             
             container.addEventListener('dragend', (e) => {
                 if (e.target.classList.contains('event-card')) {
                     e.target.classList.remove('dragging');
-                    e.target.classList.remove('drag-ready');
                     draggedElement = null;
-                    isDragReady = false;
                 }
             });
-            
-            // Long press for mobile
-            container.addEventListener('touchstart', (e) => {
-                const handle = e.target.closest('.drag-handle');
-                if (handle) {
-                    const card = handle.closest('.event-card');
-                    longPressTimer = setTimeout(() => {
-                        isDragReady = true;
-                        card.classList.add('drag-ready');
-                        card.setAttribute('draggable', 'true');
-                        // Vibrate if supported
-                        if (navigator.vibrate) {
-                            navigator.vibrate(50);
-                        }
-                    }, 500); // 500ms long press
-                }
-            }, { passive: true });
-            
-            container.addEventListener('touchend', () => {
-                clearTimeout(longPressTimer);
-                setTimeout(() => {
-                    document.querySelectorAll('.event-card').forEach(card => {
-                        card.classList.remove('drag-ready');
-                        if (!isDragReady) {
-                            card.setAttribute('draggable', 'false');
-                        }
-                    });
-                }, 100);
-            }, { passive: true });
-            
-            container.addEventListener('touchmove', () => {
-                clearTimeout(longPressTimer);
-            }, { passive: true });
             
             container.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 const afterElement = getDragAfterElement(container, e.clientY);
                 const dragging = document.querySelector('.dragging');
                 
-                if (afterElement == null) {
-                    container.appendChild(dragging);
-                } else {
-                    container.insertBefore(dragging, afterElement);
+                if (dragging) {
+                    if (afterElement == null) {
+                        container.appendChild(dragging);
+                    } else {
+                        container.insertBefore(dragging, afterElement);
+                    }
                 }
             });
             
             container.addEventListener('drop', (e) => {
                 e.preventDefault();
                 updateEventOrder();
-                isDragReady = false;
-                document.querySelectorAll('.event-card').forEach(card => {
-                    card.setAttribute('draggable', 'false');
-                });
                 showSaveIndicator();
+            });
+
+            // Mobile touch events
+            const cards = container.querySelectorAll('.event-card');
+            cards.forEach(card => {
+                const dragHandle = card.querySelector('.drag-handle');
+                
+                // Click to open modal (for both mobile and desktop)
+                card.addEventListener('click', (e) => {
+                    if (!isDragging && !e.target.classList.contains('drag-handle')) {
+                        const id = parseInt(card.getAttribute('data-id'));
+                        openModal(id);
+                    }
+                });
+
+                // Make drag handle draggable on desktop
+                dragHandle.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    card.draggable = true;
+                });
+
+                dragHandle.addEventListener('mouseup', () => {
+                    setTimeout(() => {
+                        card.draggable = false;
+                    }, 100);
+                });
+
+                // Mobile touch events on drag handle
+                dragHandle.addEventListener('touchstart', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    
+                    touchStartY = e.touches[0].clientY;
+                    
+                    // Start long press timer (1 second)
+                    longPressTimer = setTimeout(() => {
+                        isDragging = true;
+                        draggedCard = card;
+                        card.classList.add('drag-ready');
+                        
+                        // Vibrate if supported
+                        if (navigator.vibrate) {
+                            navigator.vibrate(50);
+                        }
+                    }, 1000);
+                }, { passive: false });
+
+                dragHandle.addEventListener('touchmove', (e) => {
+                    // If moved before long press completes, cancel it
+                    if (!isDragging) {
+                        clearTimeout(longPressTimer);
+                        return;
+                    }
+
+                    e.preventDefault();
+                    currentTouchY = e.touches[0].clientY;
+                    
+                    // Move the card visually
+                    const deltaY = currentTouchY - touchStartY;
+                    card.style.transform = `translateY(${deltaY}px)`;
+                    card.classList.add('dragging');
+
+                    // Find where to insert
+                    const afterElement = getDragAfterElement(container, currentTouchY);
+                    if (afterElement == null) {
+                        container.appendChild(card);
+                    } else {
+                        container.insertBefore(card, afterElement);
+                    }
+                }, { passive: false });
+
+                dragHandle.addEventListener('touchend', (e) => {
+                    clearTimeout(longPressTimer);
+                    
+                    if (isDragging) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        card.style.transform = '';
+                        card.classList.remove('drag-ready', 'dragging');
+                        
+                        updateEventOrder();
+                        showSaveIndicator();
+                        
+                        isDragging = false;
+                        draggedCard = null;
+                    }
+                }, { passive: false });
+
+                dragHandle.addEventListener('touchcancel', () => {
+                    clearTimeout(longPressTimer);
+                    if (draggedCard) {
+                        draggedCard.style.transform = '';
+                        draggedCard.classList.remove('drag-ready', 'dragging');
+                    }
+                    isDragging = false;
+                    draggedCard = null;
+                });
             });
         }
 
@@ -1504,7 +1561,6 @@
                 case 'blessing':
                 case 'welcome':
                     const eventType = event.type === 'blessing' ? 'blessing' : 'welcome';
-                    const eventTypeCapital = eventType.charAt(0).toUpperCase() + eventType.slice(1);
                     html += `
                         <div class="form-group">
                             <label>Who will be giving the ${eventType}?</label>
