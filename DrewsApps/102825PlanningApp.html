@@ -565,6 +565,23 @@
             gap: 8px;
         }
 
+        .song-display {
+            padding: 12px;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            color: #333;
+            font-size: 14px;
+            min-height: 45px;
+            display: flex;
+            align-items: center;
+        }
+
+        .song-display:empty::before {
+            content: 'No song selected';
+            color: #999;
+        }
+
         .song-input-wrapper {
             display: flex;
             gap: 8px;
@@ -579,13 +596,14 @@
             background: #1a9e8e;
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 12px 16px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
             transition: all 0.2s;
             white-space: nowrap;
+            flex: 1;
         }
 
         .song-action-btn:hover {
@@ -598,6 +616,16 @@
 
         .song-action-btn.secondary:hover {
             background: #5a6268;
+        }
+
+        @media (max-width: 600px) {
+            .song-input-wrapper {
+                flex-direction: column;
+            }
+            
+            .song-action-btn {
+                width: 100%;
+            }
         }
 
         /* Song Search Modal */
@@ -675,7 +703,7 @@
             background: #158c7e;
         }
 
-        .search-results {
+        .song-search-results {
             max-height: 400px;
             overflow-y: auto;
         }
@@ -747,175 +775,6 @@
             color: #666;
         }
 
-        .song-input-wrapper {
-            position: relative;
-        }
-
-        .song-input-buttons {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-        }
-
-        .song-btn {
-            background: #f0f0f0;
-            border: 2px solid #e0e0e0;
-            color: #333;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .song-btn:hover {
-            background: #e0e0e0;
-            border-color: #1a9e8e;
-        }
-
-        .song-btn.active {
-            background: #1a9e8e;
-            color: white;
-            border-color: #1a9e8e;
-        }
-
-        .song-search-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .song-search-modal.active {
-            display: flex;
-        }
-
-        .song-search-content {
-            background: white;
-            border-radius: 16px;
-            max-width: 600px;
-            width: 100%;
-            max-height: 80vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        }
-
-        .song-search-header {
-            padding: 20px 24px;
-            border-bottom: 2px solid #f0f0f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .song-search-header h3 {
-            color: #000;
-            font-size: 20px;
-        }
-
-        .song-search-body {
-            padding: 24px;
-            overflow-y: auto;
-        }
-
-        .song-search-input-group {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-
-        .song-search-input-group input {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-        }
-
-        .song-search-input-group button {
-            background: #1a9e8e;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .song-search-input-group button:hover {
-            background: #158c7e;
-        }
-
-        .song-search-results {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .song-result-item {
-            padding: 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .song-result-item:hover {
-            border-color: #1a9e8e;
-            background: #f0f9f8;
-        }
-
-        .song-result-artwork {
-            width: 60px;
-            height: 60px;
-            border-radius: 6px;
-            object-fit: cover;
-            flex-shrink: 0;
-        }
-
-        .song-result-info {
-            flex: 1;
-        }
-
-        .song-result-name {
-            font-weight: 600;
-            color: #000;
-            margin-bottom: 4px;
-        }
-
-        .song-result-artist {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .song-search-loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-        }
-
-        .song-search-empty {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-        }
-
         @media (max-width: 600px) {
             body {
                 padding: 16px;
@@ -952,7 +811,7 @@
         <h2 class="section-title">General Info</h2>
         <div class="general-info-card" onclick="openGeneralInfo()">
             <div style="font-size: 18px; font-weight: 600; color: #000;">Event Details</div>
-            <div style="font-size: 14px; color: #666; margin-top: 4px;">Click to add ceremony & reception venue info</div>
+            <div style="font-size: 14px; color: #666; margin-top: 4px;">Click to add general info</div>
         </div>
     </div>
 
@@ -1008,7 +867,7 @@
                 <button class="close-btn" onclick="closeSongSearch()">&times;</button>
             </div>
             <div class="song-search-body">
-                <div class="song-search-input-group">
+                <div class="search-input-wrapper">
                     <input type="text" id="songSearchInput" placeholder="Search by song title or artist..." />
                     <button onclick="searchSongs()">Search</button>
                 </div>
@@ -1076,12 +935,14 @@
 
         // Helper function to generate song input with action buttons
         function generateSongInput(id, label, value, placeholder = "Song Title - Artist") {
+            const displayValue = value || 'No song selected';
             return `
                 <div class="form-group">
                     <label>${label}</label>
                     <div class="song-input-container">
+                        <input type="hidden" id="${id}" value="${value || ''}">
+                        <div class="song-display" id="${id}_display">${displayValue}</div>
                         <div class="song-input-wrapper">
-                            <input type="text" id="${id}" value="${value || ''}" placeholder="${placeholder}">
                             <button class="song-action-btn song-search-btn" data-input-id="${id}">Search</button>
                             <button class="song-action-btn secondary song-link-btn" data-input-id="${id}">Link</button>
                             <button class="song-action-btn secondary song-upload-btn" data-input-id="${id}">Upload</button>
@@ -1423,31 +1284,6 @@
         function closeModal() {
             document.getElementById('eventModal').classList.remove('active');
             currentEventId = null;
-        }
-
-        // Helper function to generate song input with search/link/upload buttons
-        let currentSongInputField = null;
-
-        function generateSongInput(fieldId, label, value = '', placeholder = 'Song Title - Artist') {
-            return `
-                <div class="form-group">
-                    <label>${label}</label>
-                    <div class="song-input-wrapper">
-                        <input type="text" id="${fieldId}" value="${value}" placeholder="${placeholder}">
-                        <div class="song-input-buttons">
-                            <button class="song-btn" onclick="openSongSearch('${fieldId}')" type="button">
-                                🔍 Search
-                            </button>
-                            <button class="song-btn" onclick="openSongLink('${fieldId}')" type="button">
-                                🔗 Link
-                            </button>
-                            <button class="song-btn" onclick="openSongUpload('${fieldId}')" type="button">
-                                📤 Upload
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
         }
 
         function addModalFooter(eventId) {
@@ -1955,8 +1791,11 @@
                     if (input.name === 'lineDanceOther') {
                         event.details.lineDanceOtherEnabled = input.checked;
                     }
-                } else if (input.id) {
-                    event.details[input.id] = input.value;
+                } else if (input.type === 'hidden' || input.id) {
+                    // Save both hidden song inputs and regular inputs
+                    if (input.id) {
+                        event.details[input.id] = input.value;
+                    }
                 }
             });
 
@@ -2194,7 +2033,7 @@
             currentSongInputId = inputId;
             document.getElementById('songSearchModal').classList.add('active');
             document.getElementById('songSearchInput').value = '';
-            document.getElementById('searchResults').innerHTML = '';
+            document.getElementById('songSearchResults').innerHTML = '';
             document.getElementById('songSearchInput').focus();
         }
 
@@ -2209,7 +2048,7 @@
             
             if (!query) return;
             
-            const resultsContainer = document.getElementById('searchResults');
+            const resultsContainer = document.getElementById('songSearchResults');
             resultsContainer.innerHTML = '<div class="search-loading">Searching...</div>';
             
             try {
@@ -2246,8 +2085,13 @@
         function selectSong(song) {
             if (currentSongInputId) {
                 const input = document.getElementById(currentSongInputId);
+                const display = document.getElementById(`${currentSongInputId}_display`);
                 if (input) {
-                    input.value = `${song.trackName} - ${song.artistName}`;
+                    const songText = `${song.trackName} - ${song.artistName}`;
+                    input.value = songText;
+                    if (display) {
+                        display.textContent = songText;
+                    }
                     // Trigger save
                     saveEventDetails(currentEventId);
                 }
