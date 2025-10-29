@@ -18,7 +18,8 @@ function closeSongSearch() {
   currentSongInputId = null;
 }
 
-async function searchSongs() {
+// Main search with preview rendering. Exported as searchSongsWithPreview and aliased from searchSongs.
+async function searchSongsWithPreview() {
   const searchInput = document.getElementById('songSearchInput');
   const query = (searchInput?.value || '').trim();
   if (!query) return;
@@ -180,7 +181,7 @@ function openSongLink(inputId) {
   const input = document.getElementById('songSearchInput');
   if (input) {
     input.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') searchSongs();
+      if (e.key === 'Enter') searchSongsWithPreview();
     });
   }
   const modal = document.getElementById('songSearchModal');
@@ -189,4 +190,7 @@ function openSongLink(inputId) {
       if (e.target.id === 'songSearchModal') closeSongSearch();
     });
   }
+  // Ensure global alias exists for onclicks
+  window.searchSongsWithPreview = searchSongsWithPreview;
+  window.searchSongs = searchSongsWithPreview; // fallback for legacy markup
 })();
