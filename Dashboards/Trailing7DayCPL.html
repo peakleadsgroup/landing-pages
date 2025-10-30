@@ -185,7 +185,8 @@
                     const max = allDates[allDates.length - 1];
                     setMinDate(min);
                     setMaxDate(max);
-                    setStartDate(min);
+                    // Always set start date to 9/5/25
+                    setStartDate('2025-09-05');
                     setEndDate(max);
                 }
 
@@ -273,6 +274,7 @@
                         };
                     });
 
+                    // Apply date filter AFTER calculating trailing metrics
                     return withTrailing.filter(item => {
                         if (startDate && item.date < startDate) return false;
                         if (endDate && item.date > endDate) return false;
