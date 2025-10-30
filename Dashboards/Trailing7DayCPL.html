@@ -113,6 +113,9 @@
                     }))
                     .filter(record => record.date !== null);
 
+                    console.log('Sample spend record:', spendRecords[0]?.fields);
+                    console.log('Processed spend sample:', processedSpend[0]);
+
                     // Fetch client names to map record IDs to names
                     const clientRecords = await fetchAirtableRecords(AIRTABLE_CONFIG.clientsTable);
                     const clientMap = {};
@@ -132,6 +135,10 @@
                             spend.client = clientMap[spend.client];
                         }
                     });
+
+                    console.log('Client map:', clientMap);
+                    console.log('Processed spend after mapping:', processedSpend.slice(0, 5));
+                    console.log('Processed leads after mapping:', processedLeads.slice(0, 5));
 
                     setRawLeadData(processedLeads);
                     setRawSpendData(processedSpend);
@@ -238,6 +245,10 @@
                     const leadsByDate = {};
                     const spendByDate = {};
 
+                    console.log('Filtering for client:', selectedClient);
+                    console.log('Raw lead data sample:', rawLeadData.slice(0, 3));
+                    console.log('Raw spend data sample:', rawSpendData.slice(0, 3));
+
                     rawLeadData.forEach(lead => {
                         if (lead.client !== selectedClient) return;
                         leadsByDate[lead.date] = (leadsByDate[lead.date] || 0) + 1;
@@ -247,6 +258,9 @@
                         if (spend.client !== selectedClient) return;
                         spendByDate[spend.date] = (spendByDate[spend.date] || 0) + spend.spend;
                     });
+
+                    console.log('Filtered leads by date:', leadsByDate);
+                    console.log('Filtered spend by date:', spendByDate);
 
                     const allDates = new Set([...Object.keys(leadsByDate), ...Object.keys(spendByDate)]);
                     const daily = Array.from(allDates).map(date => ({
