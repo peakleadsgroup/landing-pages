@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Generation Revenue Share Agreement</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
+            line-height: 1.7;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 60px 80px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-radius: 4px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo img {
+            max-width: 280px;
+            height: auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 40px;
+            color: #1a1a1a;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .intro {
+            margin-bottom: 35px;
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        .intro p {
+            margin-bottom: 12px;
+        }
+
+        .parties {
+            margin: 25px 0;
+            padding-left: 30px;
+        }
+
+        .parties p {
+            margin-bottom: 8px;
+        }
+
+        .party-block {
+            margin: 20px 0;
+        }
+
+        .party-block p:first-child {
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+
+        .party-detail {
+            color: #495057;
+            font-size: 15px;
+            padding-left: 10px;
+        }
+
+        .collective {
+            margin-top: 25px;
+            font-size: 15px;
+        }
+
+        .center-text {
+            text-align: center;
+            margin: 15px 0;
+            font-weight: 500;
+        }
+
+        h2 {
+            font-size: 17px;
+            margin-top: 35px;
+            margin-bottom: 15px;
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 14px;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .subsection {
+            margin-left: 25px;
+            margin-bottom: 16px;
+        }
+
+        .subsection-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: inline;
+        }
+
+        ul {
+            margin-left: 45px;
+            margin-bottom: 16px;
+            margin-top: 10px;
+        }
+
+        li {
+            margin-bottom: 8px;
+            line-height: 1.7;
+        }
+
+        .signatures {
+            margin-top: 60px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+        }
+
+        .signature-block {
+            min-height: 200px;
+        }
+
+        .signature-label {
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .company-name {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #212529;
+        }
+
+        .signature-line {
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 10px;
+            min-height: 60px;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            padding-bottom: 5px;
+        }
+
+        .signature-text {
+            font-family: 'Brush Script MT', 'Segoe Script', cursive;
+            font-size: 26px;
+            color: #1a1a1a;
+        }
+
+        .signature-input {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-family: 'Brush Script MT', 'Segoe Script', cursive;
+            font-size: 26px;
+            color: #1a1a1a;
+            background: transparent;
+            padding: 0;
+        }
+
+        .signature-input::placeholder {
+            color: #adb5bd;
+            font-style: italic;
+        }
+
+        .signature-info {
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #495057;
+        }
+
+        .date-filled {
+            color: #212529;
+            font-weight: 500;
+        }
+
+        .date-display {
+            font-weight: 500;
+            color: #212529;
+        }
+
+        .sign-button-container {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #e9ecef;
+            display: none;
+        }
+
+        .sign-button-container.show {
+            display: block;
+        }
+
+        .sign-button {
+            background-color: #2c5aa0;
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(44, 90, 160, 0.2);
+        }
+
+        .sign-button:hover {
+            background-color: #234778;
+            box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .sign-button:active {
+            transform: translateY(0);
+        }
+
+        .sign-button.signed {
+            background-color: #28a745;
+            cursor: default;
+        }
+
+        .sign-button.signed:hover {
+            background-color: #28a745;
+            transform: none;
+        }
+
+        strong {
+            font-weight: 600;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+                padding: 40px;
+            }
+            .signature-input {
+                border: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 30px;
+            }
+            .signatures {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            .logo img {
+                max-width: 220px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <img src="https://github.com/peakleadsgroup/landing-pages/blob/main/Images/Peak%20Leads%20Flattened%20Logo.png?raw=true" alt="Peak Leads Group Logo">
+        </div>
+
+        <h1>Lead Generation Revenue Share Agreement</h1>
+
+        <div class="intro">
+            <p>This Lead Generation Revenue Share Agreement ("Agreement") is entered into as of <strong><span id="agreementDate">October 30, 2025</span></strong>, by and between:</p>
+            
+            <div class="parties">
+                <div class="party-block">
+                    <p><strong>Peak Leads Group, LLC</strong> ("Agency")</p>
+                    <p class="party-detail">A marketing and lead generation company represented by Daniel Wellish</p>
+                </div>
+                
+                <p class="center-text">and</p>
+                
+                <div class="party-block">
+                    <p><strong>Bath Pro Carolinas</strong> ("Client")</p>
+                    <p class="party-detail">Represented by Steven Krol</p>
+                </div>
+            </div>
+            
+            <p class="collective">Collectively referred to as the "Parties" and individually as a "Party."</p>
+        </div>
+
+        <div class="section">
+            <h2>1. Purpose</h2>
+            <p>Agency agrees to generate exclusive bath remodeling leads for Client, and Client agrees to compensate Agency through a revenue share based on closed sales directly resulting from Agency-generated leads.</p>
+        </div>
+
+        <div class="section">
+            <h2>2. Scope of Services</h2>
+            <p><strong>Agency shall:</strong></p>
+            <ul>
+                <li>Generate and deliver qualified leads for bath remodeling services through digital advertising and related marketing channels.</li>
+                <li>Deliver leads to Client primarily via email or other agreed delivery method.</li>
+            </ul>
+            <p><strong>Client shall:</strong></p>
+            <ul>
+                <li>Accurately track and report all sales resulting from Agency-provided leads.</li>
+                <li>Maintain transparent sales records for verification purposes.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>2A. Lead Attribution and Ownership</h2>
+            <p>For the purposes of calculating revenue share, a "lead generated by Agency" is defined as any individual who:</p>
+            <ul>
+                <li>Submits contact information (name, phone, email, or address) through a campaign, landing page, or form owned or operated by Agency; or</li>
+                <li>Engages with Agency-created marketing content (including ads, forms, or tracked phone calls) that results in direct contact with Client; or</li>
+                <li>Contacts Client within ninety (90) days of their initial interaction with an Agency campaign, provided attribution can be verified through ad platform data, form timestamps, email delivery logs, or CRM tagging.</li>
+            </ul>
+            <p>In the event a lead was generated by more than one agency or source, the Parties agree that credit shall be granted only to the agency that first submitted the lead to Client, as evidenced by email delivery timestamps or comparable transmission records. Leads delivered after another source's timestamped submission shall not qualify for revenue share under this Agreement.</p>
+        </div>
+
+        <div class="section">
+            <h2>3. Compensation and Payment Terms</h2>
+            <div class="subsection">
+                <p><span class="subsection-title">a. Revenue Share:</span> Client agrees to pay Agency fifteen percent (15%) of the total sale value for all closed deals originating from Agency-generated leads.</p>
+            </div>
+            <div class="subsection">
+                <p><span class="subsection-title">b. Payment Schedule:</span> Payments are due within seven (7) calendar days of Client receiving payment from the end customer. Payments shall be made via ACH, wire transfer, or another mutually agreed method to Agency's designated account.</p>
+            </div>
+            <div class="subsection">
+                <p><span class="subsection-title">c. Audit Rights:</span> Agency may reasonably verify sales reports through documentation or limited CRM access to ensure accuracy.</p>
+            </div>
+            <div class="subsection">
+                <p><span class="subsection-title">d. CRM Access:</span> Client grants Agency read-only CRM access during this Agreement and for thirty (30) days following termination, solely to verify lead attribution, sales status, and revenue share calculations. Agency shall maintain confidentiality of all accessed data.</p>
+            </div>
+            <div class="subsection">
+                <p><span class="subsection-title">e. Post-Termination Revenue Share:</span> Deals closed within the 30-day CRM access period following termination remain subject to the fifteen percent (15%) revenue share. Payment is due within seven (7) calendar days of Client receiving funds.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>4. Term and Termination</h2>
+            <div class="subsection">
+                <p><span class="subsection-title">a. Term:</span> This Agreement shall begin on the Effective Date and continue until terminated by either Party with twenty-four (24) hours' written notice.</p>
+            </div>
+            <div class="subsection">
+                <p><span class="subsection-title">b. Termination for Cause:</span> Either Party may terminate immediately if the other materially breaches this Agreement and fails to cure such breach within twenty-four (24) hours of written notice.</p>
+            </div>
+            <div class="subsection">
+                <p><span class="subsection-title">c. Effect of Termination:</span> Client remains responsible for revenue share owed on all deals closed prior to termination and those closed within the post-termination CRM access period (Section 3e).</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>5. Exclusivity</h2>
+            <p>Agency agrees to generate leads exclusively for Client in the agreed-upon service area during the term of this Agreement. Client shall not share Agency-provided leads with third parties or competing entities.</p>
+        </div>
+
+        <div class="section">
+            <h2>6. Confidentiality</h2>
+            <p>Both Parties agree to maintain confidentiality regarding all non-public information, including lead data, pricing, marketing methods, and customer information.</p>
+        </div>
+
+        <div class="section">
+            <h2>7. Limitation of Liability</h2>
+            <p>Agency shall not be liable for indirect, incidental, or consequential damages. No guarantee of specific sales or profit levels is made.</p>
+        </div>
+
+        <div class="section">
+            <h2>8. Governing Law and Venue</h2>
+            <p>This Agreement shall be governed by the laws of North Carolina. Any disputes shall be resolved in the courts of Wake County, North Carolina.</p>
+        </div>
+
+        <div class="section">
+            <h2>9. Entire Agreement</h2>
+            <p>This document represents the full and final understanding between the Parties and supersedes all prior discussions or agreements.</p>
+        </div>
+
+        <div class="section">
+            <h2>10. Signatures</h2>
+            <div class="signatures">
+                <div class="signature-block">
+                    <p class="signature-label">Agency:</p>
+                    <p class="company-name">Peak Leads Group, LLC</p>
+                    <div class="signature-line">
+                        <div class="signature-text">Daniel Wellish</div>
+                    </div>
+                    <p class="signature-info">Name: Daniel Wellish</p>
+                    <p class="signature-info">Title: Managing Partner</p>
+                    <p class="signature-info date-filled">Date: October 30, 2025</p>
+                </div>
+
+                <div class="signature-block">
+                    <p class="signature-label">Client:</p>
+                    <p class="company-name">Bath Pro Carolinas</p>
+                    <div class="signature-line">
+                        <input type="text" 
+                               class="signature-input" 
+                               id="clientSignature"
+                               placeholder="Click to sign"
+                               autocomplete="off">
+                    </div>
+                    <p class="signature-info">Name: Steven Krol</p>
+                    <p class="signature-info">Title: Owner</p>
+                    <p class="signature-info">Date: <span class="date-display" id="clientDate">__________________</span></p>
+                </div>
+            </div>
+
+            <div class="sign-button-container" id="signButtonContainer">
+                <button class="sign-button" id="signButton">Sign Document</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-fill date when signature is entered
+        const signatureInput = document.getElementById('clientSignature');
+        const dateDisplay = document.getElementById('clientDate');
+        const signButtonContainer = document.getElementById('signButtonContainer');
+        const signButton = document.getElementById('signButton');
+        
+        signatureInput.addEventListener('input', function() {
+            if (this.value.trim() !== '') {
+                const today = new Date();
+                const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+                const formattedDate = `${months[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`;
+                dateDisplay.textContent = formattedDate;
+                
+                // Show sign button when signature is entered
+                signButtonContainer.classList.add('show');
+            } else {
+                dateDisplay.textContent = '__________________';
+                signButtonContainer.classList.remove('show');
+            }
+        });
+
+        // Handle sign button click
+        signButton.addEventListener('click', function() {
+            if (signatureInput.value.trim() !== '') {
+                signButton.textContent = '✓ Document Signed';
+                signButton.classList.add('signed');
+                signatureInput.disabled = true;
+                
+                // Optional: You can add additional functionality here
+                // such as sending the data to a server, generating a PDF, etc.
+            }
+        });
+    </script>
+</body>
+</html>
