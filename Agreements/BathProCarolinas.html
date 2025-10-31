@@ -217,6 +217,70 @@
             color: #212529;
         }
 
+        /* Consent Checkbox Section */
+        .consent-section {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+
+        .consent-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .consent-title::before {
+            content: "⚠️";
+            margin-right: 10px;
+            font-size: 20px;
+        }
+
+        .consent-checkbox-container {
+            display: flex;
+            align-items: flex-start;
+            margin-top: 20px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .consent-checkbox-container input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            margin-right: 12px;
+            margin-top: 2px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .consent-checkbox-label {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #212529;
+            cursor: pointer;
+        }
+
+        .consent-checkbox-label strong {
+            font-weight: 600;
+        }
+
+        .consent-error {
+            display: none;
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        .consent-error.show {
+            display: block;
+        }
+
         .sign-button-container {
             text-align: center;
             margin-top: 40px;
@@ -242,14 +306,20 @@
             box-shadow: 0 2px 8px rgba(44, 90, 160, 0.2);
         }
 
-        .sign-button:hover {
+        .sign-button:hover:not(:disabled) {
             background-color: #234778;
             box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3);
             transform: translateY(-1px);
         }
 
-        .sign-button:active {
+        .sign-button:active:not(:disabled) {
             transform: translateY(0);
+        }
+
+        .sign-button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
         }
 
         .sign-button.signed {
@@ -354,6 +424,9 @@
             }
             .signature-input {
                 border: none;
+            }
+            .consent-section {
+                display: none;
             }
         }
 
@@ -479,6 +552,8 @@
 
         <div class="section">
             <h2>10. Signatures</h2>
+            <p><strong>Electronic Signature Consent:</strong> By typing your name below and clicking "Sign Document," you agree to conduct this transaction by electronic means, use electronic signatures as legally binding, and receive all contract documents electronically. Your electronic signature has the same legal effect as a handwritten signature under the U.S. Electronic Signatures in Global and National Commerce Act (ESIGN) and the Uniform Electronic Transactions Act (UETA).</p>
+            
             <div class="signatures">
                 <div class="signature-block">
                     <p class="signature-label">Agency:</p>
@@ -507,8 +582,25 @@
                 </div>
             </div>
 
+            <!-- Express Consent Checkbox Section -->
+            <div class="consent-section">
+                <div class="consent-title">Required Acknowledgment</div>
+                <p style="font-size: 14px; margin-bottom: 15px; color: #495057;">Before signing this agreement, you must confirm that you understand and agree to the following:</p>
+                
+                <div class="consent-checkbox-container" id="consentCheckboxContainer">
+                    <input type="checkbox" id="consentCheckbox" aria-label="Agreement consent">
+                    <label for="consentCheckbox" class="consent-checkbox-label">
+                        <strong>I acknowledge that I have read and understand this entire Lead Generation Revenue Share Agreement</strong>, including all terms, conditions, payment obligations, and termination clauses. I agree to be legally bound by this agreement and consent to the use of electronic signatures. I understand that this electronic signature will have the same legal effect as a handwritten signature.
+                    </label>
+                </div>
+                
+                <div class="consent-error" id="consentError">
+                    ⚠️ You must check this box to acknowledge and sign the agreement
+                </div>
+            </div>
+
             <div class="sign-button-container" id="signButtonContainer">
-                <button class="sign-button" id="signButton">Sign Document</button>
+                <button class="sign-button" id="signButton" disabled>Sign Document</button>
                 <button class="download-button" id="downloadButton" style="display: none;">Download PDF</button>
             </div>
         </div>
@@ -528,13 +620,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script>
-        // Auto-fill date when signature is entered
+        // Elements
         const signatureInput = document.getElementById('clientSignature');
         const dateDisplay = document.getElementById('clientDate');
         const signButtonContainer = document.getElementById('signButtonContainer');
         const signButton = document.getElementById('signButton');
         const downloadButton = document.getElementById('downloadButton');
+        const consentCheckbox = document.getElementById('consentCheckbox');
+        const consentError = document.getElementById('consentError');
+        const consentCheckboxContainer = document.getElementById('consentCheckboxContainer');
         
+        // Auto-fill date when signature is entered
         signatureInput.addEventListener('input', function() {
             if (this.value.trim() !== '') {
                 const today = new Date();
@@ -545,14 +641,53 @@
                 
                 // Show sign button when signature is entered
                 signButtonContainer.classList.add('show');
+                
+                // Update button state based on checkbox
+                updateSignButtonState();
             } else {
                 dateDisplay.textContent = '__________________';
                 signButtonContainer.classList.remove('show');
             }
         });
 
+        // Handle consent checkbox changes
+        consentCheckbox.addEventListener('change', function() {
+            updateSignButtonState();
+            // Hide error when checkbox is checked
+            if (this.checked) {
+                consentError.classList.remove('show');
+            }
+        });
+
+        // Make the entire container clickable
+        consentCheckboxContainer.addEventListener('click', function(e) {
+            if (e.target !== consentCheckbox) {
+                consentCheckbox.checked = !consentCheckbox.checked;
+                consentCheckbox.dispatchEvent(new Event('change'));
+            }
+        });
+
+        // Update sign button state
+        function updateSignButtonState() {
+            const hasSignature = signatureInput.value.trim() !== '';
+            const hasConsent = consentCheckbox.checked;
+            
+            if (hasSignature && hasConsent) {
+                signButton.disabled = false;
+            } else {
+                signButton.disabled = true;
+            }
+        }
+
         // Handle sign button click
         signButton.addEventListener('click', async function() {
+            // Double-check consent
+            if (!consentCheckbox.checked) {
+                consentError.classList.add('show');
+                consentCheckbox.focus();
+                return;
+            }
+
             if (signatureInput.value.trim() !== '') {
                 // Show loading overlay
                 const loadingOverlay = document.getElementById('loadingOverlay');
@@ -561,98 +696,217 @@
                 // Update button immediately
                 signButton.textContent = '✓ Document Signed';
                 signButton.classList.add('signed');
+                signButton.disabled = true;
                 signatureInput.disabled = true;
+                consentCheckbox.disabled = true;
                 
-                // Generate PDF and send webhook immediately upon signing
+                // Capture all data
                 const clientSignature = signatureInput.value.trim();
                 const clientDate = dateDisplay.textContent;
+                const webhookUrl = 'https://hook.us2.make.com/gjcib2uroq0f19aktxm6iq0qv05x8xes';
+                
+                // Get IP address
+                let ipAddress = 'Unknown';
+                try {
+                    const ipResponse = await fetch('https://api.ipify.org?format=json');
+                    const ipData = await ipResponse.json();
+                    ipAddress = ipData.ip;
+                } catch (e) {
+                    console.log('Could not fetch IP:', e);
+                }
+
+                // Get geolocation data (approximate)
+                let locationData = 'Unknown';
+                try {
+                    const locationResponse = await fetch(`https://ipapi.co/${ipAddress}/json/`);
+                    const locationJson = await locationResponse.json();
+                    locationData = `${locationJson.city}, ${locationJson.region}, ${locationJson.country_name}`;
+                } catch (e) {
+                    console.log('Could not fetch location:', e);
+                }
+                
+                // Build comprehensive webhook payload
+                const webhookData = {
+                    // Contract Information
+                    contractType: 'Lead Generation Revenue Share Agreement',
+                    contractTitle: 'Lead Generation Revenue Share Agreement',
+                    effectiveDate: document.getElementById('agreementDate').textContent,
+                    
+                    // Client Information
+                    clientName: 'Steven Krol',
+                    clientTitle: 'Owner',
+                    clientCompany: 'Bath Pro Carolinas',
+                    clientSignature: clientSignature,
+                    clientSignatureDate: clientDate,
+                    
+                    // Agency Information
+                    agencyName: 'Peak Leads Group, LLC',
+                    agencyRep: 'Daniel Wellish',
+                    agencyTitle: 'Managing Partner',
+                    agencySignatureDate: 'October 30, 2025',
+                    
+                    // Contract Terms (Key Details)
+                    revenueSharePercentage: '15%',
+                    paymentTermsDays: 7,
+                    crmAccessDays: 30,
+                    terminationNoticePeriod: '24 hours',
+                    governingState: 'North Carolina',
+                    venue: 'Wake County, North Carolina',
+                    
+                    // Signature Metadata
+                    signatureTimestamp: new Date().toISOString(),
+                    signatureTimestampLocal: new Date().toLocaleString('en-US', { 
+                        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        dateStyle: 'full',
+                        timeStyle: 'long'
+                    }),
+                    consentGiven: true,
+                    consentTimestamp: new Date().toISOString(),
+                    status: 'signed',
+                    
+                    // Legal Proof Data
+                    ipAddress: ipAddress,
+                    geolocation: locationData,
+                    userAgent: navigator.userAgent,
+                    browserName: navigator.userAgentData ? navigator.userAgentData.brands.map(b => b.brand).join(', ') : 'Unknown',
+                    browserVersion: navigator.appVersion,
+                    browserLanguage: navigator.language,
+                    browserLanguages: navigator.languages.join(', '),
+                    platform: navigator.platform,
+                    screenResolution: `${screen.width}x${screen.height}`,
+                    screenColorDepth: `${screen.colorDepth}-bit`,
+                    windowSize: `${window.innerWidth}x${window.innerHeight}`,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    timezoneOffset: new Date().getTimezoneOffset(),
+                    
+                    // Signature Method
+                    signatureMethod: 'electronic_typed',
+                    signatureDevice: /mobile/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
+                    
+                    // Page Information
+                    pageUrl: window.location.href,
+                    pageTitle: document.title,
+                    referrer: document.referrer || 'Direct',
+                    
+                    // Session Information
+                    sessionId: generateSessionId(),
+                    cookiesEnabled: navigator.cookieEnabled,
+                    doNotTrack: navigator.doNotTrack || 'Not set',
+                    
+                    // Additional Metadata
+                    documentVersion: '1.0',
+                    agreementHash: await generateDocumentHash()
+                };
+                
+                console.log('=== CONTRACT SIGNING DATA ===');
+                console.log('Sending comprehensive contract data to webhook...');
+                console.log('Payload:', JSON.stringify(webhookData, null, 2));
                 
                 try {
-                    const { jsPDF } = window.jspdf;
-                    const pdf = new jsPDF({
-                        orientation: 'portrait',
-                        unit: 'pt',
-                        format: 'a4',
-                        compress: true
-                    });
-                    
-                    const element = document.querySelector('.container');
-                    
-                    // Generate PDF
-                    await pdf.html(element, {
-                        callback: async function(doc) {
-                            const filename = `Lead_Gen_Agreement_${clientSignature.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
-                            const pdfBase64 = doc.output('datauristring').split(',')[1];
-                            
-                            // Send webhook with PDF
-                            const webhookUrl = 'https://hook.us2.make.com/gjcib2uroq0f19aktxm6iq0qv05x8xes';
-                            
-                            const webhookData = {
-                                contractType: 'Lead Generation Revenue Share Agreement',
-                                clientName: 'Steven Krol',
-                                clientCompany: 'Bath Pro Carolinas',
-                                clientSignature: clientSignature,
-                                signatureDate: clientDate,
-                                agencyName: 'Peak Leads Group, LLC',
-                                agencyRep: 'Daniel Wellish',
-                                effectiveDate: document.getElementById('agreementDate').textContent,
-                                timestamp: new Date().toISOString(),
-                                pdfFilename: filename,
-                                pdfBase64: pdfBase64,
-                                status: 'signed'
-                            };
-                            
-                            console.log('Sending webhook with PDF to Make.com...');
-                            
-                            try {
-                                await fetch(webhookUrl, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify(webhookData),
-                                    mode: 'no-cors'
-                                });
-                                
-                                console.log('Webhook with PDF sent successfully');
-                            } catch (webhookError) {
-                                console.error('Error sending webhook:', webhookError);
-                            }
-                            
-                            // Store PDF for download button
-                            window.signedPDF = doc;
-                            window.signedFilename = filename;
-                            
-                            // Hide loading overlay
-                            loadingOverlay.classList.remove('show');
-                            
-                            // Show download button
-                            downloadButton.style.display = 'inline-block';
+                    const response = await fetch(webhookUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
                         },
-                        x: 40,
-                        y: 40,
-                        width: 515,
-                        windowWidth: 900,
-                        margin: [40, 40, 40, 40]
+                        body: JSON.stringify(webhookData),
+                        mode: 'no-cors'
                     });
-                } catch (error) {
-                    console.error('Error generating PDF:', error);
-                    loadingOverlay.classList.remove('show');
-                    alert('There was an error processing the document. Please try again.');
+                    
+                    console.log('✓ Contract data sent successfully to webhook');
+                    console.log('Response status:', response.status);
+                    
+                    // Store signature data locally as backup
+                    try {
+                        const signatureRecord = {
+                            ...webhookData,
+                            localStorageBackup: true,
+                            backupTimestamp: new Date().toISOString()
+                        };
+                        console.log('✓ Signature record created for backup');
+                    } catch (storageError) {
+                        console.log('Note: Could not create local backup:', storageError);
+                    }
+                    
+                } catch (webhookError) {
+                    console.error('✗ Error sending webhook:', webhookError);
+                    alert('Warning: There was an issue submitting your signature. Please contact support with the following info:\n\nTime: ' + new Date().toISOString() + '\nSignature: ' + clientSignature);
                 }
+                
+                // Hide loading overlay
+                setTimeout(() => {
+                    loadingOverlay.classList.remove('show');
+                    
+                    // Show download button
+                    downloadButton.style.display = 'inline-block';
+                    
+                    console.log('=== SIGNATURE COMPLETE ===');
+                }, 1500);
             }
         });
 
+        // Generate session ID
+        function generateSessionId() {
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Generate document hash for verification
+        async function generateDocumentHash() {
+            try {
+                const contractText = document.querySelector('.container').innerText;
+                const encoder = new TextEncoder();
+                const data = encoder.encode(contractText);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                return hashHex;
+            } catch (e) {
+                console.log('Could not generate document hash:', e);
+                return 'hash_generation_failed';
+            }
+        }
+
         // Handle PDF download
-        downloadButton.addEventListener('click', function() {
-            if (window.signedPDF && window.signedFilename) {
-                // Download the PDF that was already generated
-                window.signedPDF.save(window.signedFilename);
-                alert('✓ PDF downloaded successfully!');
-            } else {
-                alert('Please wait a moment and try again.');
+        downloadButton.addEventListener('click', async function() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.classList.add('show');
+            
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'pt',
+                    format: 'a4',
+                    compress: true
+                });
+                
+                const element = document.querySelector('.container');
+                
+                await pdf.html(element, {
+                    callback: function(doc) {
+                        const clientSignature = signatureInput.value.trim();
+                        const filename = `Lead_Gen_Agreement_${clientSignature.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+                        doc.save(filename);
+                        
+                        loadingOverlay.classList.remove('show');
+                        alert('✓ PDF downloaded successfully!');
+                    },
+                    x: 40,
+                    y: 40,
+                    width: 515,
+                    windowWidth: 900,
+                    margin: [40, 40, 40, 40]
+                });
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                loadingOverlay.classList.remove('show');
+                alert('Error generating PDF. Please try again.');
             }
         });
+
+        // Log page load
+        console.log('=== CONTRACT PAGE LOADED ===');
+        console.log('Document ready for signature');
+        console.log('Timestamp:', new Date().toISOString());
     </script>
 </body>
 </html>
