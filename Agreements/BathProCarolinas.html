@@ -51,19 +51,23 @@
             margin-bottom: 35px;
             font-size: 15px;
             line-height: 1.8;
+            text-align: left;
         }
 
         .intro p {
             margin-bottom: 12px;
+            text-align: left;
         }
 
         .parties {
             margin: 25px 0;
-            padding-left: 30px;
+            padding-left: 0;
+            text-align: left;
         }
 
         .parties p {
             margin-bottom: 8px;
+            text-align: left;
         }
 
         .party-block {
@@ -84,6 +88,7 @@
         .collective {
             margin-top: 25px;
             font-size: 15px;
+            text-align: left;
         }
 
         .center-text {
@@ -104,6 +109,7 @@
             margin-bottom: 14px;
             font-size: 15px;
             line-height: 1.7;
+            text-align: left;
         }
 
         .section {
@@ -113,6 +119,11 @@
         .subsection {
             margin-left: 25px;
             margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .subsection p {
+            text-align: left;
         }
 
         .subsection-title {
@@ -130,6 +141,7 @@
         li {
             margin-bottom: 8px;
             line-height: 1.7;
+            text-align: left;
         }
 
         .signatures {
@@ -250,6 +262,30 @@
             transform: none;
         }
 
+        .download-button {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(108, 117, 125, 0.2);
+            margin-left: 15px;
+        }
+
+        .download-button:hover {
+            background-color: #5a6268;
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .download-button:active {
+            transform: translateY(0);
+        }
+
         strong {
             font-weight: 600;
         }
@@ -297,107 +333,95 @@
             <p>This Lead Generation Revenue Share Agreement ("Agreement") is entered into as of <strong><span id="agreementDate">October 30, 2025</span></strong>, by and between:</p>
             
             <div class="parties">
-                <div class="party-block">
-                    <p><strong>Peak Leads Group, LLC</strong> ("Agency")</p>
-                    <p class="party-detail">A marketing and lead generation company represented by Daniel Wellish</p>
-                </div>
-                
-                <p class="center-text">and</p>
-                
-                <div class="party-block">
-                    <p><strong>Bath Pro Carolinas</strong> ("Client")</p>
-                    <p class="party-detail">Represented by Steven Krol</p>
-                </div>
+                <p><strong>Peak Leads Group, LLC</strong> ("Agency"), a marketing and lead generation company represented by Daniel Wellish, and <strong>Bath Pro Carolinas</strong> ("Client") represented by Steven Krol</p>
             </div>
             
-            <p class="collective">Collectively referred to as the "Parties" and individually as a "Party."</p>
+            <p class="collective">Together referred to as the "Parties," and individually as a "Party."</p>
         </div>
 
         <div class="section">
             <h2>1. Purpose</h2>
-            <p>Agency agrees to generate exclusive bath remodeling leads for Client, and Client agrees to compensate Agency through a revenue share based on closed sales directly resulting from Agency-generated leads.</p>
+            <p>Agency agrees to provide exclusive lead generation and marketing services for Client's bath remodeling business, and Client agrees to compensate Agency through a revenue share model based on closed sales directly resulting from Agency-provided leads.</p>
         </div>
 
         <div class="section">
             <h2>2. Scope of Services</h2>
             <p><strong>Agency shall:</strong></p>
             <ul>
-                <li>Generate and deliver qualified leads for bath remodeling services through digital advertising and related marketing channels.</li>
-                <li>Deliver leads to Client primarily via email or other agreed delivery method.</li>
+                <li>Generate and deliver leads for bath remodeling services to Client through digital advertising and related marketing channels.</li>
+                <li>Provide leads via email.</li>
             </ul>
             <p><strong>Client shall:</strong></p>
             <ul>
-                <li>Accurately track and report all sales resulting from Agency-provided leads.</li>
-                <li>Maintain transparent sales records for verification purposes.</li>
+                <li>Accurately report all resulting sales from Agency-provided leads.</li>
             </ul>
         </div>
 
         <div class="section">
-            <h2>2A. Lead Attribution and Ownership</h2>
-            <p>For the purposes of calculating revenue share, a "lead generated by Agency" is defined as any individual who:</p>
+            <h2>2A. Lead Attribution Definition</h2>
+            <p>For the purpose of calculating revenue share, a "lead generated by Agency" is defined as any individual that:</p>
             <ul>
-                <li>Submits contact information (name, phone, email, or address) through a campaign, landing page, or form owned or operated by Agency; or</li>
-                <li>Engages with Agency-created marketing content (including ads, forms, or tracked phone calls) that results in direct contact with Client; or</li>
-                <li>Contacts Client within ninety (90) days of their initial interaction with an Agency campaign, provided attribution can be verified through ad platform data, form timestamps, email delivery logs, or CRM tagging.</li>
+                <li>Submits contact information (name, phone, email, or address) through an advertising campaign, landing page, or form owned or operated by Agency.</li>
+                <li>Engages with Agency-generated marketing content (including ads, forms, or phone calls) resulting in direct contact with Client.</li>
+                <li>Contacts Client within 90 days of their initial interaction with Agency's campaign, provided their source can be verified via ad platform data, call tracking, form submission timestamps, or CRM tagging.</li>
             </ul>
-            <p>In the event a lead was generated by more than one agency or source, the Parties agree that credit shall be granted only to the agency that first submitted the lead to Client, as evidenced by email delivery timestamps or comparable transmission records. Leads delivered after another source's timestamped submission shall not qualify for revenue share under this Agreement.</p>
         </div>
 
         <div class="section">
             <h2>3. Compensation and Payment Terms</h2>
             <div class="subsection">
-                <p><span class="subsection-title">a. Revenue Share:</span> Client agrees to pay Agency fifteen percent (15%) of the total sale value for all closed deals originating from Agency-generated leads.</p>
+                <p><span class="subsection-title">a. Revenue Share:</span> Client agrees to pay Agency fifteen percent (15%) of the total sale value for all closed deals that originate from leads generated by Agency.</p>
             </div>
             <div class="subsection">
-                <p><span class="subsection-title">b. Payment Schedule:</span> Payments are due within seven (7) calendar days of Client receiving payment from the end customer. Payments shall be made via ACH, wire transfer, or another mutually agreed method to Agency's designated account.</p>
+                <p><span class="subsection-title">b. Payment Schedule:</span> Payments are due within seven (7) calendar days of Client marking the deal "closed won" in their CRM. Payments shall be made via ACH, wire transfer, or other agreed method to Agency's designated account.</p>
             </div>
             <div class="subsection">
-                <p><span class="subsection-title">c. Audit Rights:</span> Agency may reasonably verify sales reports through documentation or limited CRM access to ensure accuracy.</p>
+                <p><span class="subsection-title">c. Audit Rights:</span> Agency reserves the right to reasonably verify sales reports through mutually agreed documentation or CRM access to ensure transparency.</p>
             </div>
             <div class="subsection">
-                <p><span class="subsection-title">d. CRM Access:</span> Client grants Agency read-only CRM access during this Agreement and for thirty (30) days following termination, solely to verify lead attribution, sales status, and revenue share calculations. Agency shall maintain confidentiality of all accessed data.</p>
+                <p><span class="subsection-title">d. CRM Access:</span> Client agrees to grant Agency read-only access to its CRM or sales tracking system for the duration of this Agreement and for thirty (30) days following termination if applicable. This access is solely for verifying lead attribution, sales status, and accurate revenue share calculations. Agency agrees to maintain the confidentiality of all information accessed through Client's CRM and to use it exclusively for the purposes described herein.</p>
             </div>
             <div class="subsection">
-                <p><span class="subsection-title">e. Post-Termination Revenue Share:</span> Deals closed within the 30-day CRM access period following termination remain subject to the fifteen percent (15%) revenue share. Payment is due within seven (7) calendar days of Client receiving funds.</p>
+                <p><span class="subsection-title">e. Post-Termination Revenue Share:</span> Client agrees that any deals closed during the 30-day CRM access period following termination of this Agreement shall still be subject to the fifteen percent (15%) revenue share owed to Agency, regardless of the Agreement being voided. Payment for such deals is due within seven (7) calendar days of Client marking the deal "closed won" in their CRM.</p>
             </div>
         </div>
 
         <div class="section">
             <h2>4. Term and Termination</h2>
             <div class="subsection">
-                <p><span class="subsection-title">a. Term:</span> This Agreement shall begin on the Effective Date and continue until terminated by either Party with twenty-four (24) hours' written notice.</p>
+                <p><span class="subsection-title">a. Term:</span> This Agreement shall commence on the Effective Date and continue until termination with 24 hours notice.</p>
             </div>
             <div class="subsection">
-                <p><span class="subsection-title">b. Termination for Cause:</span> Either Party may terminate immediately if the other materially breaches this Agreement and fails to cure such breach within twenty-four (24) hours of written notice.</p>
+                <p><span class="subsection-title">b. Termination for Cause:</span> Either Party may terminate immediately if the other Party materially breaches this Agreement and fails to cure such breach within 24 hours written notice.</p>
             </div>
             <div class="subsection">
-                <p><span class="subsection-title">c. Effect of Termination:</span> Client remains responsible for revenue share owed on all deals closed prior to termination and those closed within the post-termination CRM access period (Section 3e).</p>
+                <p><span class="subsection-title">c. Effect of Termination:</span> Client shall remain responsible for any revenue share payments owed to Agency for sales closed prior to the termination date, as well as those closed during the 30-day CRM access period (see Section 3e).</p>
             </div>
         </div>
 
         <div class="section">
             <h2>5. Exclusivity</h2>
-            <p>Agency agrees to generate leads exclusively for Client in the agreed-upon service area during the term of this Agreement. Client shall not share Agency-provided leads with third parties or competing entities.</p>
+            <p>Agency agrees to generate leads exclusively for Client in the agreed-upon service area for bath remodeling during the term of this Agreement. Client agrees not to share Agency-provided leads with any third party or other business entity.</p>
         </div>
 
         <div class="section">
             <h2>6. Confidentiality</h2>
-            <p>Both Parties agree to maintain confidentiality regarding all non-public information, including lead data, pricing, marketing methods, and customer information.</p>
+            <p>Each Party agrees to maintain the confidentiality of all non-public information shared during this Agreement, including lead data, pricing, marketing strategies, and client/customer information.</p>
         </div>
 
         <div class="section">
             <h2>7. Limitation of Liability</h2>
-            <p>Agency shall not be liable for indirect, incidental, or consequential damages. No guarantee of specific sales or profit levels is made.</p>
+            <p>Agency shall not be liable for indirect, incidental, or consequential damages. Agency makes no guarantee of specific revenue or profit levels, though it commits to delivering agreed-upon lead volumes and quality standards.</p>
         </div>
 
         <div class="section">
             <h2>8. Governing Law and Venue</h2>
-            <p>This Agreement shall be governed by the laws of North Carolina. Any disputes shall be resolved in the courts of Wake County, North Carolina.</p>
+            <p>This Agreement shall be governed by and construed in accordance with the laws of the State of North Carolina, without regard to its conflict of law principles. Any disputes shall be resolved in the courts of Wake County, North Carolina.</p>
         </div>
 
         <div class="section">
             <h2>9. Entire Agreement</h2>
-            <p>This document represents the full and final understanding between the Parties and supersedes all prior discussions or agreements.</p>
+            <p>This Agreement constitutes the entire understanding between the Parties with respect to the subject matter and supersedes all prior agreements or understandings, written or oral.</p>
         </div>
 
         <div class="section">
@@ -432,9 +456,14 @@
 
             <div class="sign-button-container" id="signButtonContainer">
                 <button class="sign-button" id="signButton">Sign Document</button>
+                <button class="download-button" id="downloadButton" style="display: none;">Download PDF</button>
             </div>
         </div>
     </div>
+
+    <!-- jsPDF and html2canvas libraries for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script>
         // Auto-fill date when signature is entered
@@ -442,6 +471,7 @@
         const dateDisplay = document.getElementById('clientDate');
         const signButtonContainer = document.getElementById('signButtonContainer');
         const signButton = document.getElementById('signButton');
+        const downloadButton = document.getElementById('downloadButton');
         
         signatureInput.addEventListener('input', function() {
             if (this.value.trim() !== '') {
@@ -466,8 +496,109 @@
                 signButton.classList.add('signed');
                 signatureInput.disabled = true;
                 
-                // Optional: You can add additional functionality here
-                // such as sending the data to a server, generating a PDF, etc.
+                // Show download button
+                downloadButton.style.display = 'inline-block';
+            }
+        });
+
+        // Handle PDF download
+        downloadButton.addEventListener('click', async function() {
+            // Hide buttons temporarily for PDF generation
+            signButtonContainer.style.display = 'none';
+            
+            try {
+                const { jsPDF } = window.jspdf;
+                const element = document.querySelector('.container');
+                
+                // Generate canvas from HTML
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff'
+                });
+                
+                // Create PDF
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+                
+                const imgWidth = 210; // A4 width in mm
+                const pageHeight = 297; // A4 height in mm
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+                
+                // Add first page
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                // Add additional pages if needed
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                // Get contract data
+                const clientSignature = signatureInput.value.trim();
+                const clientDate = dateDisplay.textContent;
+                const filename = `Lead_Gen_Agreement_${clientSignature.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+                
+                // Convert PDF to base64 for webhook
+                const pdfBase64 = pdf.output('datauristring').split(',')[1];
+                
+                // Send webhook to Make.com
+                const webhookUrl = 'https://hook.us2.make.com/gjcib2uroq0f19aktxm6iq0qv05x8xes';
+                
+                const webhookData = {
+                    contractType: 'Lead Generation Revenue Share Agreement',
+                    clientName: 'Steven Krol',
+                    clientCompany: 'Bath Pro Carolinas',
+                    clientSignature: clientSignature,
+                    signatureDate: clientDate,
+                    agencyName: 'Peak Leads Group, LLC',
+                    agencyRep: 'Daniel Wellish',
+                    effectiveDate: document.getElementById('agreementDate').textContent,
+                    timestamp: new Date().toISOString(),
+                    pdfFilename: filename,
+                    pdfBase64: pdfBase64
+                };
+                
+                // Send to Make.com
+                try {
+                    const response = await fetch(webhookUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(webhookData)
+                    });
+                    
+                    if (response.ok) {
+                        console.log('Webhook sent successfully to Make.com');
+                    } else {
+                        console.error('Webhook failed:', response.status);
+                    }
+                } catch (webhookError) {
+                    console.error('Error sending webhook:', webhookError);
+                }
+                
+                // Download PDF locally
+                pdf.save(filename);
+                
+                alert('PDF downloaded successfully!\n\nContract data has been sent to your Make.com automation.');
+                
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('There was an error generating the PDF. Please try again.');
+            } finally {
+                // Show buttons again
+                signButtonContainer.style.display = 'block';
             }
         });
     </script>
