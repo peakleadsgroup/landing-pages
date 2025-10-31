@@ -490,7 +490,7 @@
         });
 
         // Handle sign button click
-        signButton.addEventListener('click', function() {
+        signButton.addEventListener('click', async function() {
             if (signatureInput.value.trim() !== '') {
                 signButton.textContent = '✓ Document Signed';
                 signButton.classList.add('signed');
@@ -498,11 +498,50 @@
                 
                 // Show download button
                 downloadButton.style.display = 'inline-block';
+                
+                // Send webhook to Make.com immediately upon signing
+                const clientSignature = signatureInput.value.trim();
+                const clientDate = dateDisplay.textContent;
+                const webhookUrl = 'https://hook.us2.make.com/gjcib2uroq0f19aktxm6iq0qv05x8xes';
+                
+                const webhookData = {
+                    contractType: 'Lead Generation Revenue Share Agreement',
+                    clientName: 'Steven Krol',
+                    clientCompany: 'Bath Pro Carolinas',
+                    clientSignature: clientSignature,
+                    signatureDate: clientDate,
+                    agencyName: 'Peak Leads Group, LLC',
+                    agencyRep: 'Daniel Wellish',
+                    effectiveDate: document.getElementById('agreementDate').textContent,
+                    timestamp: new Date().toISOString(),
+                    status: 'signed'
+                };
+                
+                console.log('Sending webhook to Make.com on signature...');
+                
+                try {
+                    await fetch(webhookUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(webhookData),
+                        mode: 'no-cors'
+                    });
+                    
+                    console.log('Webhook sent successfully');
+                } catch (webhookError) {
+                    console.error('Error sending webhook:', webhookError);
+                }
             }
         });
 
         // Handle PDF download
         downloadButton.addEventListener('click', async function() {
+            // Temporarily show signature for PDF generation
+            const wasDisabled = signatureInput.disabled;
+            signatureInput.disabled = false;
+            
             // Hide buttons temporarily for PDF generation
             signButtonContainer.style.display = 'none';
             
@@ -530,7 +569,7 @@
                         // Convert PDF to base64 for webhook
                         const pdfBase64 = doc.output('datauristring').split(',')[1];
                         
-                        // Send webhook to Make.com
+                        // Send PDF via webhook to Make.com
                         const webhookUrl = 'https://hook.us2.make.com/gjcib2uroq0f19aktxm6iq0qv05x8xes';
                         
                         const webhookData = {
@@ -544,33 +583,33 @@
                             effectiveDate: document.getElementById('agreementDate').textContent,
                             timestamp: new Date().toISOString(),
                             pdfFilename: filename,
-                            pdfBase64: pdfBase64
+                            pdfBase64: pdfBase64,
+                            status: 'pdf_generated'
                         };
                         
-                        console.log('Sending webhook to Make.com...', webhookUrl);
+                        console.log('Sending PDF webhook to Make.com...');
                         
                         // Send to Make.com
                         try {
-                            const response = await fetch(webhookUrl, {
+                            await fetch(webhookUrl, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
                                 },
                                 body: JSON.stringify(webhookData),
-                                mode: 'no-cors' // Important for webhooks
+                                mode: 'no-cors'
                             });
                             
-                            console.log('Webhook sent successfully');
+                            console.log('PDF webhook sent successfully');
                             
                         } catch (webhookError) {
-                            console.error('Error sending webhook:', webhookError);
-                            alert('Warning: Webhook failed to send. PDF will still download.\n\nError: ' + webhookError.message);
+                            console.error('Error sending PDF webhook:', webhookError);
                         }
                         
                         // Download PDF locally
                         doc.save(filename);
                         
-                        alert('✓ PDF downloaded successfully!\n✓ Contract data sent to Make.com automation.');
+                        alert('✓ PDF downloaded successfully!');
                     },
                     x: 40,
                     y: 40,
@@ -583,6 +622,8 @@
                 console.error('Error generating PDF:', error);
                 alert('There was an error generating the PDF. Please try again.\n\nError: ' + error.message);
             } finally {
+                // Restore disabled state
+                signatureInput.disabled = wasDisabled;
                 // Show buttons again
                 signButtonContainer.style.display = 'block';
             }
