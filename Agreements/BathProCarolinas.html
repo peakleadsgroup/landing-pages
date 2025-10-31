@@ -727,6 +727,49 @@
                 
                 // Build comprehensive webhook payload
                 const webhookData = {
+                    // Full Summary
+                    fullSummary: `
+CONTRACT SIGNING SUMMARY
+========================
+
+AGREEMENT: Lead Generation Revenue Share Agreement
+EFFECTIVE DATE: ${document.getElementById('agreementDate').textContent}
+SIGNED ON: ${new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'long' })}
+
+PARTIES:
+--------
+Agency: Peak Leads Group, LLC
+  Representative: Daniel Wellish (Managing Partner)
+  Signed: October 30, 2025
+
+Client: Bath Pro Carolinas
+  Representative: Steven Krol (Owner)
+  Signature: ${clientSignature}
+  Signed: ${clientDate}
+
+KEY TERMS:
+----------
+• Revenue Share: 15% of total sale value on all closed deals from Agency leads
+• Payment Terms: Due within 7 days of deal marked "closed won"
+• CRM Access: Read-only access for verification during term + 30 days post-termination
+• Termination Notice: 24 hours notice required
+• Post-Termination Revenue Share: Applies to deals closed during 30-day access period
+• Governing Law: State of North Carolina
+• Venue: Wake County, North Carolina
+
+SIGNATURE VERIFICATION:
+-----------------------
+• Consent Given: Yes
+• IP Address: ${ipAddress}
+• Location: ${locationData}
+• Device: ${/mobile/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop'}
+• Browser: ${navigator.userAgent}
+• Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
+• Signature Method: Electronic (Typed)
+
+DOCUMENT STATUS: FULLY EXECUTED
+`.trim(),
+
                     // Contract Information
                     contractType: 'Lead Generation Revenue Share Agreement',
                     contractTitle: 'Lead Generation Revenue Share Agreement',
