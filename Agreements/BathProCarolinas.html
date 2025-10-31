@@ -286,6 +286,59 @@
             transform: translateY(0);
         }
 
+        /* Loading Overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 40px 60px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2c5aa0;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 18px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .loading-subtext {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+
         strong {
             font-weight: 600;
         }
@@ -461,6 +514,15 @@
         </div>
     </div>
 
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Processing Document...</div>
+            <div class="loading-subtext">Generating PDF and sending securely</div>
+        </div>
+    </div>
+
     <!-- jsPDF and html2canvas libraries for PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -492,140 +554,103 @@
         // Handle sign button click
         signButton.addEventListener('click', async function() {
             if (signatureInput.value.trim() !== '') {
+                // Show loading overlay
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                loadingOverlay.classList.add('show');
+                
+                // Update button immediately
                 signButton.textContent = '✓ Document Signed';
                 signButton.classList.add('signed');
                 signatureInput.disabled = true;
                 
-                // Show download button
-                downloadButton.style.display = 'inline-block';
-                
-                // Send webhook to Make.com immediately upon signing
+                // Generate PDF and send webhook immediately upon signing
                 const clientSignature = signatureInput.value.trim();
                 const clientDate = dateDisplay.textContent;
-                const webhookUrl = 'https://hook.us2.make.com/gjcib2uroq0f19aktxm6iq0qv05x8xes';
-                
-                const webhookData = {
-                    contractType: 'Lead Generation Revenue Share Agreement',
-                    clientName: 'Steven Krol',
-                    clientCompany: 'Bath Pro Carolinas',
-                    clientSignature: clientSignature,
-                    signatureDate: clientDate,
-                    agencyName: 'Peak Leads Group, LLC',
-                    agencyRep: 'Daniel Wellish',
-                    effectiveDate: document.getElementById('agreementDate').textContent,
-                    timestamp: new Date().toISOString(),
-                    status: 'signed'
-                };
-                
-                console.log('Sending webhook to Make.com on signature...');
                 
                 try {
-                    await fetch(webhookUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(webhookData),
-                        mode: 'no-cors'
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'pt',
+                        format: 'a4',
+                        compress: true
                     });
                     
-                    console.log('Webhook sent successfully');
-                } catch (webhookError) {
-                    console.error('Error sending webhook:', webhookError);
+                    const element = document.querySelector('.container');
+                    
+                    // Generate PDF
+                    await pdf.html(element, {
+                        callback: async function(doc) {
+                            const filename = `Lead_Gen_Agreement_${clientSignature.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+                            const pdfBase64 = doc.output('datauristring').split(',')[1];
+                            
+                            // Send webhook with PDF
+                            const webhookUrl = 'https://hook.us2.make.com/gjcib2uroq0f19aktxm6iq0qv05x8xes';
+                            
+                            const webhookData = {
+                                contractType: 'Lead Generation Revenue Share Agreement',
+                                clientName: 'Steven Krol',
+                                clientCompany: 'Bath Pro Carolinas',
+                                clientSignature: clientSignature,
+                                signatureDate: clientDate,
+                                agencyName: 'Peak Leads Group, LLC',
+                                agencyRep: 'Daniel Wellish',
+                                effectiveDate: document.getElementById('agreementDate').textContent,
+                                timestamp: new Date().toISOString(),
+                                pdfFilename: filename,
+                                pdfBase64: pdfBase64,
+                                status: 'signed'
+                            };
+                            
+                            console.log('Sending webhook with PDF to Make.com...');
+                            
+                            try {
+                                await fetch(webhookUrl, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify(webhookData),
+                                    mode: 'no-cors'
+                                });
+                                
+                                console.log('Webhook with PDF sent successfully');
+                            } catch (webhookError) {
+                                console.error('Error sending webhook:', webhookError);
+                            }
+                            
+                            // Store PDF for download button
+                            window.signedPDF = doc;
+                            window.signedFilename = filename;
+                            
+                            // Hide loading overlay
+                            loadingOverlay.classList.remove('show');
+                            
+                            // Show download button
+                            downloadButton.style.display = 'inline-block';
+                        },
+                        x: 40,
+                        y: 40,
+                        width: 515,
+                        windowWidth: 900,
+                        margin: [40, 40, 40, 40]
+                    });
+                } catch (error) {
+                    console.error('Error generating PDF:', error);
+                    loadingOverlay.classList.remove('show');
+                    alert('There was an error processing the document. Please try again.');
                 }
             }
         });
 
         // Handle PDF download
-        downloadButton.addEventListener('click', async function() {
-            // Temporarily show signature for PDF generation
-            const wasDisabled = signatureInput.disabled;
-            signatureInput.disabled = false;
-            
-            // Hide buttons temporarily for PDF generation
-            signButtonContainer.style.display = 'none';
-            
-            try {
-                const { jsPDF } = window.jspdf;
-                
-                // Use a better PDF generation approach
-                const pdf = new jsPDF({
-                    orientation: 'portrait',
-                    unit: 'pt',
-                    format: 'a4',
-                    compress: true
-                });
-                
-                const element = document.querySelector('.container');
-                
-                // Generate PDF using html method (better for text)
-                await pdf.html(element, {
-                    callback: async function(doc) {
-                        // Get contract data
-                        const clientSignature = signatureInput.value.trim();
-                        const clientDate = dateDisplay.textContent;
-                        const filename = `Lead_Gen_Agreement_${clientSignature.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
-                        
-                        // Convert PDF to base64 for webhook
-                        const pdfBase64 = doc.output('datauristring').split(',')[1];
-                        
-                        // Send PDF via webhook to Make.com
-                        const webhookUrl = 'https://hook.us2.make.com/gjcib2uroq0f19aktxm6iq0qv05x8xes';
-                        
-                        const webhookData = {
-                            contractType: 'Lead Generation Revenue Share Agreement',
-                            clientName: 'Steven Krol',
-                            clientCompany: 'Bath Pro Carolinas',
-                            clientSignature: clientSignature,
-                            signatureDate: clientDate,
-                            agencyName: 'Peak Leads Group, LLC',
-                            agencyRep: 'Daniel Wellish',
-                            effectiveDate: document.getElementById('agreementDate').textContent,
-                            timestamp: new Date().toISOString(),
-                            pdfFilename: filename,
-                            pdfBase64: pdfBase64,
-                            status: 'pdf_generated'
-                        };
-                        
-                        console.log('Sending PDF webhook to Make.com...');
-                        
-                        // Send to Make.com
-                        try {
-                            await fetch(webhookUrl, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify(webhookData),
-                                mode: 'no-cors'
-                            });
-                            
-                            console.log('PDF webhook sent successfully');
-                            
-                        } catch (webhookError) {
-                            console.error('Error sending PDF webhook:', webhookError);
-                        }
-                        
-                        // Download PDF locally
-                        doc.save(filename);
-                        
-                        alert('✓ PDF downloaded successfully!');
-                    },
-                    x: 40,
-                    y: 40,
-                    width: 515,
-                    windowWidth: 900,
-                    margin: [40, 40, 40, 40]
-                });
-                
-            } catch (error) {
-                console.error('Error generating PDF:', error);
-                alert('There was an error generating the PDF. Please try again.\n\nError: ' + error.message);
-            } finally {
-                // Restore disabled state
-                signatureInput.disabled = wasDisabled;
-                // Show buttons again
-                signButtonContainer.style.display = 'block';
+        downloadButton.addEventListener('click', function() {
+            if (window.signedPDF && window.signedFilename) {
+                // Download the PDF that was already generated
+                window.signedPDF.save(window.signedFilename);
+                alert('✓ PDF downloaded successfully!');
+            } else {
+                alert('Please wait a moment and try again.');
             }
         });
     </script>
