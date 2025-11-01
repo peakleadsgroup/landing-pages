@@ -15,11 +15,11 @@
     t.src=v;s=b.getElementsByTagName(e)[0];
     s.parentNode.insertBefore(t,s)}(window, document,'script',
     'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', 'METAPIXEL');
+    fbq('init', '1627671998616043');
     fbq('track', 'PageView');
     </script>
     <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=METAPIXEL&ev=PageView&noscript=1"
+    src="https://www.facebook.com/tr?id=1627671998616043&ev=PageView&noscript=1"
     /></noscript>
     <!-- End Meta Pixel Code -->
     
@@ -561,8 +561,8 @@
 <body>
     <div class="form-container">
         <div class="logo-container">
-            <img src="LOGOLINK" 
-                 alt="ALTNAME" 
+            <img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/images/Home%20Overhaul1762038890145.png" 
+                 alt="Home Overhaul" 
                  class="logo-img">
         </div>
 
@@ -763,8 +763,9 @@
         // ============================================
         // CONFIGURATION - Change this to switch behavior
         // ============================================
-        const REDIRECT_MODE = 'phone'; // Options: 'calendar', 'phone', or 'none'
+        const REDIRECT_MODE = 'link'; // Options: 'calendar', 'phone', 'link', or 'none'
         const CLIENT_PHONE = '+19191234567'; // Client phone number for call/text buttons
+        const CLIENT_LINK = 'https://book.get-home-quote.com/widget/booking/fMJnUYDVd7rqAL2MTAeh?backgroundColor=%23ffffff&primaryColor=%23178af6ff&buttonText=Schedule+Meeting&showCalendarTitle=true&showCalendarDescription=true&showCalendarDetails=true&default=true'; // Client redirect link (only used if REDIRECT_MODE = 'link')
         
         // Project Type Options - Set to true to show, false to hide
         const PROJECT_TYPE_OPTIONS = {
@@ -1444,6 +1445,10 @@
             window.location.href = `CALENDARLINK?${params.toString()}`;
         }
 
+        function redirectToClientLink() {
+            window.location.href = CLIENT_LINK;
+        }
+
         function showContactScreen() {
             // Get lead's name
             const firstName = document.getElementById('firstName')?.value.trim() || '';
@@ -1573,12 +1578,12 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 full_summary_html: fullSummaryHTML,
                 timestamp: new Date().toISOString(),
                 form_type: 'bathroom_remodel_qualification',
-                clientATID: 'CLIENTATID',
+                clientATID: 'recBJAobF4e7NCdI5',
                 adATID: new URLSearchParams(window.location.search).get('adATID'),
                 event_id: eventId
             };
             
-            fetch('https://hook.us2.make.com/pj9hvsgduxea2xxjshy1yruqrswiawld', {
+            fetch('https://hook.us2.make.com/g5h4leaf5ibs3dncj6n2lon5d9w3yi3g', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1591,6 +1596,8 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                     showContactScreen();
                 } else if (REDIRECT_MODE === 'calendar') {
                     showCalendarScreen();
+                } else if (REDIRECT_MODE === 'link') {
+                    redirectToClientLink();
                 } else if (REDIRECT_MODE === 'none') {
                     showConfirmationScreen();
                 } else {
