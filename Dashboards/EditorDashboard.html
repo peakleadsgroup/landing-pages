@@ -59,6 +59,48 @@
                 </div>
             </div>
 
+            <!-- Status Filter Tabs -->
+            <div class="bg-white rounded-lg shadow-sm mb-6 overflow-hidden">
+                <div class="flex overflow-x-auto">
+                    <button onclick="setStatusFilter('Revision')" id="tab-Revision" class="status-tab flex-1 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-b-2 border-transparent transition-colors whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            <span>Revision</span>
+                            <span id="count-Revision" class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-gray-200 text-gray-700">0</span>
+                        </div>
+                    </button>
+                    <button onclick="setStatusFilter('In Progress')" id="tab-In Progress" class="status-tab flex-1 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-b-2 border-transparent transition-colors whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            <span>New Videos</span>
+                            <span id="count-In Progress" class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-gray-200 text-gray-700">0</span>
+                        </div>
+                    </button>
+                    <button onclick="setStatusFilter('Pending Approval')" id="tab-Pending Approval" class="status-tab flex-1 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-b-2 border-transparent transition-colors whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span>Pending Approval</span>
+                            <span id="count-Pending Approval" class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-gray-200 text-gray-700">0</span>
+                        </div>
+                    </button>
+                    <button onclick="setStatusFilter('Completed')" id="tab-Completed" class="status-tab flex-1 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-b-2 border-transparent transition-colors whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span>Completed</span>
+                            <span id="count-Completed" class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-gray-200 text-gray-700">0</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
             <!-- Error Message -->
             <div id="errorMessage" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 hidden">
                 <div class="flex items-start gap-3">
@@ -103,7 +145,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                 </svg>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">No Assignments Yet</h3>
-                <p class="text-gray-600">You don't have any ads assigned at the moment. Check back later!</p>
+                <p class="text-gray-600">You don't have any ads with this status at the moment.</p>
             </div>
 
             <!-- Invalid Staff ID State -->
@@ -143,26 +185,69 @@
             API_KEY: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589'  // Your Airtable Personal Access Token
         };
 
-        // Validate configuration on load
-        function validateConfig() {
-            const issues = [];
-            if (CONFIG.BASE_ID === 'YOUR_BASE_ID' || !CONFIG.BASE_ID.startsWith('app')) {
-                issues.push('BASE_ID needs to be set (should start with "app")');
-            }
-            if (CONFIG.API_KEY === 'YOUR_API_KEY' || CONFIG.API_KEY.length < 10) {
-                issues.push('API_KEY needs to be set (Personal Access Token from Airtable)');
-            }
-            return issues;
-        }
-
         let currentStaffId = null;
         let staffRecord = null;
         let allAds = [];
+        let currentStatusFilter = 'In Progress'; // Default tab
 
         // Get staff ID from URL parameter
         function getStaffIdFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('staffId') || urlParams.get('id');
+        }
+
+        // Set status filter and update UI
+        function setStatusFilter(status) {
+            currentStatusFilter = status;
+            
+            // Update tab styles
+            document.querySelectorAll('.status-tab').forEach(tab => {
+                tab.classList.remove('text-blue-600', 'border-blue-600', 'bg-blue-50');
+                tab.classList.add('text-gray-600', 'border-transparent');
+            });
+            
+            const activeTab = document.getElementById(`tab-${status}`);
+            activeTab.classList.remove('text-gray-600', 'border-transparent');
+            activeTab.classList.add('text-blue-600', 'border-blue-600', 'bg-blue-50');
+            
+            // Filter and display ads
+            filterAndDisplayAds();
+        }
+
+        // Filter ads by current status and display
+        function filterAndDisplayAds() {
+            const filteredAds = allAds.filter(ad => {
+                const status = ad.fields['Status'];
+                return status === currentStatusFilter;
+            });
+
+            if (filteredAds.length === 0) {
+                showState('noAdsState');
+            } else {
+                displayAds(filteredAds);
+                showState('adsContainer');
+            }
+        }
+
+        // Update tab counts
+        function updateTabCounts() {
+            const statuses = ['Revision', 'In Progress', 'Pending Approval', 'Completed'];
+            
+            statuses.forEach(status => {
+                const count = allAds.filter(ad => ad.fields['Status'] === status).length;
+                const countElement = document.getElementById(`count-${status}`);
+                if (countElement) {
+                    countElement.textContent = count;
+                    // Update badge color based on count
+                    if (count > 0) {
+                        countElement.classList.remove('bg-gray-200', 'text-gray-700');
+                        countElement.classList.add('bg-blue-600', 'text-white');
+                    } else {
+                        countElement.classList.remove('bg-blue-600', 'text-white');
+                        countElement.classList.add('bg-gray-200', 'text-gray-700');
+                    }
+                }
+            });
         }
 
         // Show/hide UI states
@@ -191,7 +276,6 @@
             }
 
             try {
-                // URL encode the table name in case it has spaces
                 const encodedTableName = encodeURIComponent(CONFIG.STAFF_TABLE);
                 const url = `https://api.airtable.com/v0/${CONFIG.BASE_ID}/${encodedTableName}/${currentStaffId}`;
                 
@@ -244,11 +328,12 @@
                 document.getElementById('staffName').textContent = `Welcome, ${staffName}`;
 
                 // Get linked ad IDs from staff record
-                // The field in Staff table that links to B2C Ads table
                 const linkedAdIds = staffRecord.fields['B2C Ads'] || [];
                 console.log('Linked ad IDs:', linkedAdIds);
 
                 if (linkedAdIds.length === 0) {
+                    allAds = [];
+                    updateTabCounts();
                     showState('noAdsState');
                     refreshIcon.classList.remove('animate-spin');
                     return;
@@ -272,29 +357,23 @@
 
                 const adsData = await Promise.all(adPromises);
                 
-                // Filter out nulls and ads not "In Progress"
-                allAds = adsData
-                    .filter(ad => ad && ad.id)
-                    .filter(ad => {
-                        const status = ad.fields['Status'];
-                        return status === 'In Progress';
-                    });
+                // Filter out nulls
+                allAds = adsData.filter(ad => ad && ad.id);
                 
-                console.log('Loaded ads (filtered for In Progress):', allAds);
+                console.log('Loaded all ads:', allAds);
 
                 // Sort by created date - newest first
                 allAds.sort((a, b) => {
                     const dateA = new Date(a.fields['Created'] || 0);
                     const dateB = new Date(b.fields['Created'] || 0);
-                    return dateB - dateA; // Descending order (newest first)
+                    return dateB - dateA;
                 });
 
-                if (allAds.length === 0) {
-                    showState('noAdsState');
-                } else {
-                    displayAds(allAds);
-                    showState('adsContainer');
-                }
+                // Update tab counts
+                updateTabCounts();
+
+                // Display ads for current filter
+                filterAndDisplayAds();
                 
             } catch (error) {
                 console.error('Error fetching ads:', error);
@@ -310,7 +389,7 @@
             const adsGrid = document.getElementById('adsGrid');
             const adCount = document.getElementById('adCount');
             
-            adCount.textContent = `${ads.length} ad${ads.length !== 1 ? 's' : ''} assigned`;
+            adCount.textContent = `${ads.length} ad${ads.length !== 1 ? 's' : ''} - ${currentStatusFilter}`;
 
             adsGrid.innerHTML = ads.map(ad => {
                 const fields = ad.fields;
@@ -319,6 +398,7 @@
                 const script = fields['Linked Script'] || '';
                 const driveUrl = fields['ElevenLabs Drive URL'] || '';
                 const created = fields['Created'] || null;
+                const status = fields['Status'] || 'Unknown';
 
                 // Format created date
                 let formattedCreated = 'No date';
@@ -338,6 +418,18 @@
                     } catch (e) {}
                 }
 
+                // Status badge color
+                let statusColor = 'bg-gray-100 text-gray-800';
+                if (status === 'In Progress') {
+                    statusColor = 'bg-blue-100 text-blue-800';
+                } else if (status === 'Pending Approval') {
+                    statusColor = 'bg-yellow-100 text-yellow-800';
+                } else if (status === 'Completed') {
+                    statusColor = 'bg-green-100 text-green-800';
+                } else if (status === 'Revision') {
+                    statusColor = 'bg-orange-100 text-orange-800';
+                }
+
                 // Niche badge color
                 let nicheColor = 'bg-purple-100 text-purple-800';
                 if (niche.toLowerCase().includes('roofing')) {
@@ -355,9 +447,14 @@
                             <div class="flex items-start justify-between mb-3">
                                 <div class="flex-1">
                                     <div class="text-xs font-mono text-gray-500 mb-1">${scriptId}</div>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${nicheColor}">
-                                        ${niche}
-                                    </span>
+                                    <div class="flex gap-2 flex-wrap">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${nicheColor}">
+                                            ${niche}
+                                        </span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">
+                                            ${status}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -415,6 +512,7 @@
             const driveUrl = fields['ElevenLabs Drive URL'] || '';
             const finishedVideoFolder = fields['Finished Video'] || '';
             const created = fields['Created'] || null;
+            const status = fields['Status'] || 'Unknown';
 
             // Format created date
             let formattedCreated = 'No date';
@@ -434,6 +532,18 @@
                 } catch (e) {}
             }
 
+            // Status badge color
+            let statusColor = 'bg-gray-100 text-gray-800';
+            if (status === 'In Progress') {
+                statusColor = 'bg-blue-100 text-blue-800';
+            } else if (status === 'Pending Approval') {
+                statusColor = 'bg-yellow-100 text-yellow-800';
+            } else if (status === 'Completed') {
+                statusColor = 'bg-green-100 text-green-800';
+            } else if (status === 'Revision') {
+                statusColor = 'bg-orange-100 text-orange-800';
+            }
+
             // Niche badge color
             let nicheColor = 'bg-purple-100 text-purple-800';
             if (niche.toLowerCase().includes('roofing')) {
@@ -448,9 +558,14 @@
                     <div class="flex items-start justify-between pb-4 border-b">
                         <div>
                             <div class="text-sm font-mono text-gray-500 mb-2">${scriptId}</div>
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${nicheColor}">
-                                ${niche}
-                            </span>
+                            <div class="flex gap-2 flex-wrap">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${nicheColor}">
+                                    ${niche}
+                                </span>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusColor}">
+                                    ${status}
+                                </span>
+                            </div>
                         </div>
                         <div class="text-sm text-gray-500">${formattedCreated}</div>
                     </div>
@@ -484,8 +599,8 @@
                         <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">${script}</p>
                     </div>
 
-                    <!-- Upload Instructions -->
-                    ${finishedVideoFolder ? `
+                    <!-- Upload Instructions (only show for In Progress and Revision) -->
+                    ${(status === 'In Progress' || status === 'Revision') && finishedVideoFolder ? `
                     <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
                         <div class="flex items-start gap-4">
                             <div class="flex-shrink-0">
@@ -527,7 +642,31 @@
                             </div>
                         </div>
                     </div>
-                    ` : `
+                    ` : (status === 'Pending Approval' ? `
+                    <div class="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6">
+                        <div class="flex items-start gap-4">
+                            <svg class="w-6 h-6 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-900 mb-1">Pending Approval</h4>
+                                <p class="text-sm text-gray-700">This video has been submitted and is awaiting approval.</p>
+                            </div>
+                        </div>
+                    </div>
+                    ` : (status === 'Completed' ? `
+                    <div class="bg-green-50 border-2 border-green-200 rounded-lg p-6">
+                        <div class="flex items-start gap-4">
+                            <svg class="w-6 h-6 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-900 mb-1">Completed</h4>
+                                <p class="text-sm text-gray-700">This video has been approved and is complete!</p>
+                            </div>
+                        </div>
+                    </div>
+                    ` : (finishedVideoFolder ? '' : `
                     <div class="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6">
                         <div class="flex items-start gap-4">
                             <svg class="w-6 h-6 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -539,7 +678,7 @@
                             </div>
                         </div>
                     </div>
-                    `}
+                    `)))}
 
                 </div>
             `;
@@ -595,7 +734,7 @@
                 // Close modal after 1.5 seconds and refresh
                 setTimeout(() => {
                     closeAdDetailModal();
-                    fetchAds(); // Refresh to remove the ad from the list (it's no longer "In Progress")
+                    fetchAds(); // Refresh to update the ad status
                 }, 1500);
 
             } catch (error) {
@@ -641,6 +780,9 @@
                 return;
             }
 
+            // Set initial active tab
+            setStatusFilter(currentStatusFilter);
+            
             fetchAds();
         }
 
