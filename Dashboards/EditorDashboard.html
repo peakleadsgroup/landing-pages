@@ -71,13 +71,13 @@
                             <span id="count-Revision" class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-gray-200 text-gray-700">0</span>
                         </div>
                     </button>
-                    <button onclick="setStatusFilter('In Progress')" id="tab-In Progress" class="status-tab flex-1 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-b-2 border-transparent transition-colors whitespace-nowrap">
+                    <button onclick="setStatusFilter('New Videos')" id="tab-New Videos" class="status-tab flex-1 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-b-2 border-transparent transition-colors whitespace-nowrap">
                         <div class="flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                             </svg>
                             <span>New Videos</span>
-                            <span id="count-In Progress" class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-gray-200 text-gray-700">0</span>
+                            <span id="count-New Videos" class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-gray-200 text-gray-700">0</span>
                         </div>
                     </button>
                     <button onclick="setStatusFilter('Pending Approval')" id="tab-Pending Approval" class="status-tab flex-1 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-b-2 border-transparent transition-colors whitespace-nowrap">
@@ -188,7 +188,7 @@
         let currentStaffId = null;
         let staffRecord = null;
         let allAds = [];
-        let currentStatusFilter = 'In Progress'; // Default tab
+        let currentStatusFilter = 'New Videos'; // Default tab
 
         // Get staff ID from URL parameter
         function getStaffIdFromUrl() {
@@ -231,7 +231,7 @@
 
         // Update tab counts
         function updateTabCounts() {
-            const statuses = ['Revision', 'In Progress', 'Pending Approval', 'Completed'];
+            const statuses = ['Revision', 'New Videos', 'Pending Approval', 'Completed'];
             
             statuses.forEach(status => {
                 const count = allAds.filter(ad => ad.fields['Status'] === status).length;
@@ -420,7 +420,7 @@
 
                 // Status badge color
                 let statusColor = 'bg-gray-100 text-gray-800';
-                if (status === 'In Progress') {
+                if (status === 'New Videos') {
                     statusColor = 'bg-blue-100 text-blue-800';
                 } else if (status === 'Pending Approval') {
                     statusColor = 'bg-yellow-100 text-yellow-800';
@@ -534,7 +534,7 @@
 
             // Status badge color
             let statusColor = 'bg-gray-100 text-gray-800';
-            if (status === 'In Progress') {
+            if (status === 'New Videos') {
                 statusColor = 'bg-blue-100 text-blue-800';
             } else if (status === 'Pending Approval') {
                 statusColor = 'bg-yellow-100 text-yellow-800';
@@ -599,8 +599,8 @@
                         <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">${script}</p>
                     </div>
 
-                    <!-- Upload Instructions (only show for In Progress and Revision) -->
-                    ${(status === 'In Progress' || status === 'Revision') && finishedVideoFolder ? `
+                    <!-- Upload Instructions (only show for New Videos and Revision) -->
+                    ${(status === 'New Videos' || status === 'Revision') && finishedVideoFolder ? `
                     <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
                         <div class="flex items-start gap-4">
                             <div class="flex-shrink-0">
