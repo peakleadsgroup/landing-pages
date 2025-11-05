@@ -263,6 +263,12 @@
             background: #fff;
         }
 
+        .calendar-container {
+            margin-top: 30px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
         @media (max-width: 600px) {
             .form-container {
                 padding: 25px;
@@ -414,18 +420,17 @@
             </div>
         </div>
 
-        <!-- SUCCESS SCREEN -->
-        <div class="form-step" id="successStep">
-            <div style="text-align: center; padding: 40px 0;">
-                <div style="width: 80px; height: 80px; border-radius: 50%; background: #4CAF50; margin: 0 auto 30px; display: flex; align-items: center; justify-content: center;">
-                    <div style="color: white; font-size: 30px; font-weight: bold;">✓</div>
-                </div>
-                <div style="font-size: 24px; color: #4CAF50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
-                <div style="font-size: 16px; color: #666; line-height: 1.5;">Redirecting you to schedule your free consultation...</div>
+        <!-- CALENDAR BOOKING STEP -->
+        <div class="form-step" id="calendarStep">
+            <div class="question">Schedule Your Free Consultation</div>
+            <div class="sub-heading">Pick a time that works best for you</div>
+            <div class="calendar-container">
+                <iframe src="https://api.leadconnectorhq.com/widget/booking/Fg8DOseLOaSO2KrAg3kX" style="width: 100%;border:none;overflow: hidden;" scrolling="no" id="Fg8DOseLOaSO2KrAg3kX_1762302290002"></iframe>
             </div>
         </div>
     </div>
 
+    <script src="https://link.msgsndr.com/js/form_embed.js" type="text/javascript"></script>
     <script>
         let currentStep = 1;
         let formData = {};
@@ -618,17 +623,6 @@
             const phone2Valid = !shouldShowConfirm || (p2.digits.length === 10 && p2.digits === p1.digits);
             const buttonShouldEnable = phoneValid && phone2Valid;
             
-            console.log('Phone validation:', {
-                phone1: p1.digits,
-                phone2: p2.digits,
-                shouldShowConfirm,
-                phoneValid,
-                phone2Valid,
-                buttonShouldEnable,
-                currentStep: currentStep,
-                startsWithOne: p1.digits.charAt(0) === '1'
-            });
-            
             if (phoneSubmitBtn) {
                 phoneSubmitBtn.disabled = !buttonShouldEnable;
             }
@@ -649,24 +643,14 @@
             }
         }
 
-       function redirectToCalendar() {
-            // Build Cal.com URL with correct parameters for pre-filling
-            const first = document.getElementById('firstName')?.value.trim() || '';
-            const last = document.getElementById('lastName')?.value.trim() || '';
-            const name = `${first} ${last}`.replace(/\s+/g, ' ').trim();
+        function showCalendarStep() {
+            // Hide progress bar and main heading
+            document.getElementById('progressBarContainer').style.display = 'none';
+            document.getElementById('mainHeading').style.display = 'none';
             
-            const params = new URLSearchParams();
-            
-            if (name) params.set('full_name', name);
-            
-            // Use smsReminderNumber parameter to match your Cal.com configuration
-            const smsDigits = document.getElementById('phone_digits')?.value || '';
-            if (smsDigits.length === 10) {
-                params.set('phone', `1${smsDigits}`);
-            }
-            
-            // Redirect to new Cal.com link
-            window.location.href = `https://api.leadconnectorhq.com/widget/bookings/elevatedkandbg99oy4?${params.toString()}`;
+            // Show calendar step
+            document.getElementById('step7').classList.remove('active');
+            document.getElementById('calendarStep').classList.add('active');
         }
 
         function submitFinalForm() {
@@ -754,7 +738,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 event_id: eventId  // Include event ID for CAPI matching
             };
             
-            // Submit webhook data first, then redirect immediately
+            // Submit webhook data
             fetch('https://hook.us2.make.com/g5h4leaf5ibs3dncj6n2lon5d9w3yi3g', {
                 method: 'POST',
                 headers: {
@@ -763,8 +747,8 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 body: JSON.stringify(webhookData),
                 mode: 'no-cors'
             }).finally(() => {
-                // Redirect immediately without showing success screen
-                redirectToCalendar();
+                // Show calendar booking step instead of redirecting
+                showCalendarStep();
             });
         }
 
