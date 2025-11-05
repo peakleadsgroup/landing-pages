@@ -644,6 +644,28 @@
         }
 
         function showCalendarStep() {
+            // Build Cal.com URL with parameters for pre-filling
+            const first = document.getElementById('firstName')?.value.trim() || '';
+            const last = document.getElementById('lastName')?.value.trim() || '';
+            const name = `${first} ${last}`.replace(/\s+/g, ' ').trim();
+            
+            const params = new URLSearchParams();
+            
+            if (name) params.set('full_name', name);
+            
+            // Use phone parameter to pass the phone number
+            const smsDigits = document.getElementById('phone_digits')?.value || '';
+            if (smsDigits.length === 10) {
+                params.set('phone', `1${smsDigits}`);
+            }
+            
+            // Update iframe src with parameters
+            const iframe = document.getElementById('Fg8DOseLOaSO2KrAg3kX_1762302290002');
+            if (iframe) {
+                const baseUrl = 'https://api.leadconnectorhq.com/widget/booking/Fg8DOseLOaSO2KrAg3kX';
+                iframe.src = `${baseUrl}?${params.toString()}`;
+            }
+            
             // Hide progress bar and main heading
             document.getElementById('progressBarContainer').style.display = 'none';
             document.getElementById('mainHeading').style.display = 'none';
