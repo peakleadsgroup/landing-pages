@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPL Analyzer - Qualified Leads</title>
+    <title>CPL Analyzer - Debug Version</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
@@ -37,6 +37,7 @@
             const [error, setError] = useState(null);
             const [rawLeadData, setRawLeadData] = useState([]);
             const [rawSpendData, setRawSpendData] = useState([]);
+            const [debugInfo, setDebugInfo] = useState(null);
             const chartRef = useRef(null);
             const chartInstance = useRef(null);
 
@@ -83,14 +84,16 @@
                 setError(null);
 
                 try {
-                    // Fetch client names first to map record IDs to names
+                    // Fetch client names first
                     const clientRecords = await fetchAirtableRecords(AIRTABLE_CONFIG.clientsTable);
                     const clientMap = {};
                     clientRecords.forEach(record => {
-                        clientMap[record.id] = record.fields['Name'] || record.fields['Client'] || 'Unknown';
+                        const name = record.fields['Name'] || record.fields['Client'] || 'Unknown';
+                        clientMap[record.id] = name;
                     });
 
-                    console.log('Client map:', clientMap);
+                    console.log('=== CLIENT MAP ===');
+                    console.log(clientMap);
 
                     // Fetch leads data
                     const leadsRecords = await fetchAirtableRecords(AIRTABLE_CONFIG.leadsTable);
@@ -98,18 +101,21 @@
                     // Fetch spend data
                     const spendRecords = await fetchAirtableRecords(AIRTABLE_CONFIG.spendTable);
 
+                    console.log('=== RAW DATA SAMPLES ===');
+                    console.log('Sample lead record:', leadsRecords[0]?.fields);
+                    console.log('Sample spend record:', spendRecords[0]?.fields);
+
                     // Process leads data
                     const processedLeads = leadsRecords
                         .filter(record => record.fields['Status'] === 'Qualified')
                         .map(record => {
-                            const clientId = record.fields['Linked Client'] ? 
-                                (Array.isArray(record.fields['Linked Client']) ? 
-                                    record.fields['Linked Client'][0] : 
-                                    record.fields['Linked Client']) : 'Unknown';
+                            const linkedClient = record.fields['Linked Client'];
+                            const clientId = Array.isArray(linkedClient) ? linkedClient[0] : linkedClient;
+                            const clientName = clientMap[clientId] || clientId || 'Unknown';
                             
                             return {
                                 clientId: clientId,
-                                client: clientMap[clientId] || clientId || 'Unknown',
+                                clientName: clientName,
                                 date: formatDate(record.fields['Created']),
                                 status: record.fields['Status']
                             };
@@ -118,22 +124,49 @@
 
                     // Process spend data
                     const processedSpend = spendRecords.map(record => {
-                        const clientId = record.fields['Linked Client'] ? 
-                            (Array.isArray(record.fields['Linked Client']) ? 
-                                record.fields['Linked Client'][0] : 
-                                record.fields['Linked Client']) : 'Unknown';
+                        const linkedClient = record.fields['Linked Client'];
+                        const clientId = Array.isArray(linkedClient) ? linkedClient[0] : linkedClient;
+                        const clientName = clientMap[clientId] || clientId || 'Unknown';
                         
                         return {
                             date: formatDate(record.fields['Created']),
                             clientId: clientId,
-                            client: clientMap[clientId] || clientId || 'Unknown',
+                            clientName: clientName,
                             spend: parseFloat(record.fields['Spend']) || 0
                         };
                     })
                     .filter(record => record.date !== null);
 
-                    console.log('Processed leads sample:', processedLeads.slice(0, 5));
-                    console.log('Processed spend sample:', processedSpend.slice(0, 5));
+                    console.log('=== PROCESSED DATA ===');
+                    console.log('Processed leads sample:', processedLeads.slice(0, 3));
+                    console.log('Processed spend sample:', processedSpend.slice(0, 3));
+
+                    // Create debug info showing which clients have leads vs spend
+                    const leadsClientCounts = {};
+                    const spendClientCounts = {};
+                    const spendClientTotals = {};
+
+                    processedLeads.forEach(lead => {
+                        leadsClientCounts[lead.clientName] = (leadsClientCounts[lead.clientName] || 0) + 1;
+                    });
+
+                    processedSpend.forEach(spend => {
+                        spendClientCounts[spend.clientName] = (spendClientCounts[spend.clientName] || 0) + 1;
+                        spendClientTotals[spend.clientName] = (spendClientTotals[spend.clientName] || 0) + spend.spend;
+                    });
+
+                    const allClientNames = new Set([...Object.keys(leadsClientCounts), ...Object.keys(spendClientCounts)]);
+                    const debugData = Array.from(allClientNames).map(name => ({
+                        client: name,
+                        leadsCount: leadsClientCounts[name] || 0,
+                        spendRecordsCount: spendClientCounts[name] || 0,
+                        totalSpend: spendClientTotals[name] || 0
+                    })).sort((a, b) => a.client.localeCompare(b.client));
+
+                    setDebugInfo(debugData);
+
+                    console.log('=== DEBUG INFO ===');
+                    console.table(debugData);
 
                     setRawLeadData(processedLeads);
                     setRawSpendData(processedSpend);
@@ -153,14 +186,14 @@
                 // Aggregate leads by date and client
                 const leadsByDateClient = {};
                 leads.forEach(lead => {
-                    const key = `${lead.date}|${lead.client}`;
+                    const key = `${lead.date}|${lead.clientName}`;
                     leadsByDateClient[key] = (leadsByDateClient[key] || 0) + 1;
                 });
 
                 // Aggregate spend by date and client
                 const spendByDateClient = {};
                 spend.forEach(item => {
-                    const key = `${item.date}|${item.client}`;
+                    const key = `${item.date}|${item.clientName}`;
                     spendByDateClient[key] = (spendByDateClient[key] || 0) + item.spend;
                 });
 
@@ -188,7 +221,6 @@
                     const max = allDates[allDates.length - 1];
                     setMinDate(min);
                     setMaxDate(max);
-                    // Always set start date to 9/5/25
                     setStartDate('2025-09-05');
                     setEndDate(max);
                 }
@@ -232,51 +264,32 @@
                 setDailyData(withTrailing);
             };
 
-            // Calculate filtered data based on client and date selections
             const getFilteredData = () => {
                 if (dailyData.length === 0) return [];
 
-                // Filter by client if selected
                 if (selectedClient !== 'all') {
                     const leadsByDate = {};
                     const spendByDate = {};
 
-                    console.log('Filtering for client:', selectedClient);
-                    console.log('Total raw leads:', rawLeadData.length);
-                    console.log('Total raw spend records:', rawSpendData.length);
-
-                    // Filter leads
                     rawLeadData.forEach(lead => {
-                        if (lead.client === selectedClient) {
+                        if (lead.clientName === selectedClient) {
                             leadsByDate[lead.date] = (leadsByDate[lead.date] || 0) + 1;
                         }
                     });
 
-                    // Filter spend
                     rawSpendData.forEach(spend => {
-                        if (spend.client === selectedClient) {
+                        if (spend.clientName === selectedClient) {
                             spendByDate[spend.date] = (spendByDate[spend.date] || 0) + spend.spend;
                         }
                     });
 
-                    console.log('Filtered leads by date:', leadsByDate);
-                    console.log('Filtered spend by date:', spendByDate);
-                    console.log('Total filtered leads:', Object.values(leadsByDate).reduce((a, b) => a + b, 0));
-                    console.log('Total filtered spend:', Object.values(spendByDate).reduce((a, b) => a + b, 0));
-
-                    // Get all dates from both leads and spend
                     const allDates = new Set([...Object.keys(leadsByDate), ...Object.keys(spendByDate)]);
-                    
-                    // Create daily data
                     const daily = Array.from(allDates).map(date => ({
                         date: date,
                         spend: spendByDate[date] || 0,
                         leads: leadsByDate[date] || 0
                     })).sort((a, b) => a.date.localeCompare(b.date));
 
-                    console.log('Daily data before trailing calc:', daily.slice(0, 5));
-
-                    // Calculate trailing 7-day metrics
                     const withTrailing = daily.map((day, index) => {
                         const startIdx = Math.max(0, index - 6);
                         const window = daily.slice(startIdx, index + 1);
@@ -296,18 +309,13 @@
                         };
                     });
 
-                    // Apply date filter AFTER calculating trailing metrics
-                    const filtered = withTrailing.filter(item => {
+                    return withTrailing.filter(item => {
                         if (startDate && item.date < startDate) return false;
                         if (endDate && item.date > endDate) return false;
                         return true;
                     });
-
-                    console.log('Final filtered data:', filtered.slice(0, 5));
-                    return filtered;
                 }
 
-                // No client filter, just apply date filter
                 return dailyData.filter(item => {
                     if (startDate && item.date < startDate) return false;
                     if (endDate && item.date > endDate) return false;
@@ -447,8 +455,8 @@
                 <div className="min-h-screen p-6">
                     <div className="max-w-7xl mx-auto">
                         <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
-                            <h1 className="text-3xl font-bold text-gray-800 mb-2">CPL Analyzer</h1>
-                            <p className="text-gray-600 mb-6">Trailing 7-Day Cost Per Lead for Qualified Leads (Powered by Airtable)</p>
+                            <h1 className="text-3xl font-bold text-gray-800 mb-2">CPL Analyzer - Debug Version</h1>
+                            <p className="text-gray-600 mb-6">With detailed logging to help identify data issues</p>
 
                             {error && (
                                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -461,6 +469,45 @@
                                             <p className="text-sm text-red-800">{error}</p>
                                         </div>
                                     </div>
+                                </div>
+                            )}
+
+                            {debugInfo && (
+                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                                    <h3 className="font-semibold text-yellow-900 mb-3">📊 Data Summary by Client</h3>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm">
+                                            <thead className="bg-yellow-100">
+                                                <tr>
+                                                    <th className="px-3 py-2 text-left">Client</th>
+                                                    <th className="px-3 py-2 text-right">Qualified Leads</th>
+                                                    <th className="px-3 py-2 text-right">Spend Records</th>
+                                                    <th className="px-3 py-2 text-right">Total Spend</th>
+                                                    <th className="px-3 py-2 text-center">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {debugInfo.map((info, idx) => (
+                                                    <tr key={idx} className="border-b border-yellow-100">
+                                                        <td className="px-3 py-2">{info.client}</td>
+                                                        <td className="px-3 py-2 text-right">{info.leadsCount}</td>
+                                                        <td className="px-3 py-2 text-right">{info.spendRecordsCount}</td>
+                                                        <td className="px-3 py-2 text-right">${info.totalSpend.toFixed(2)}</td>
+                                                        <td className="px-3 py-2 text-center">
+                                                            {info.spendRecordsCount === 0 && info.leadsCount > 0 ? (
+                                                                <span className="text-red-600 font-semibold">⚠️ No Spend Data</span>
+                                                            ) : (
+                                                                <span className="text-green-600">✓ OK</span>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <p className="text-xs text-yellow-800 mt-3">
+                                        ℹ️ This table shows which clients have leads but no spend data in Airtable. Check your Campaign Spend table to add missing records.
+                                    </p>
                                 </div>
                             )}
 
@@ -513,6 +560,7 @@
                                                         setDailyData([]);
                                                         setRawLeadData([]);
                                                         setRawSpendData([]);
+                                                        setDebugInfo(null);
                                                     }}
                                                     className="text-sm text-red-600 hover:text-red-800 font-medium"
                                                 >
