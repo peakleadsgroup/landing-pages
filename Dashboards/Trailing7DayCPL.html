@@ -37,6 +37,7 @@
             const [error, setError] = useState(null);
             const [rawLeadData, setRawLeadData] = useState([]);
             const [rawSpendData, setRawSpendData] = useState([]);
+            const [clientMap, setClientMap] = useState({});
             const chartRef = useRef(null);
             const chartInstance = useRef(null);
 
@@ -83,62 +84,60 @@
                 setError(null);
 
                 try {
+                    // Fetch client names first to build the mapping
+                    const clientRecords = await fetchAirtableRecords(AIRTABLE_CONFIG.clientsTable);
+                    const newClientMap = {};
+                    clientRecords.forEach(record => {
+                        newClientMap[record.id] = record.fields['Name'] || record.fields['Client'] || 'Unknown';
+                    });
+                    setClientMap(newClientMap);
+                    console.log('Client Map:', newClientMap);
+
                     // Fetch leads data
                     const leadsRecords = await fetchAirtableRecords(AIRTABLE_CONFIG.leadsTable);
                     
                     // Fetch spend data
                     const spendRecords = await fetchAirtableRecords(AIRTABLE_CONFIG.spendTable);
 
-                    // Process leads data
+                    console.log('Sample lead record:', leadsRecords[0]?.fields);
+                    console.log('Sample spend record:', spendRecords[0]?.fields);
+
+                    // Process leads data - keep the record ID first, we'll map it later
                     const processedLeads = leadsRecords
                         .filter(record => record.fields['Status'] === 'Qualified')
-                        .map(record => ({
-                            client: record.fields['Linked Client'] ? 
+                        .map(record => {
+                            const clientId = record.fields['Linked Client'] ? 
                                 (Array.isArray(record.fields['Linked Client']) ? 
                                     record.fields['Linked Client'][0] : 
-                                    record.fields['Linked Client']) : 'Unknown',
-                            date: formatDate(record.fields['Created']),
-                            status: record.fields['Status']
-                        }))
+                                    record.fields['Linked Client']) : 'Unknown';
+                            
+                            return {
+                                clientId: clientId,
+                                client: newClientMap[clientId] || clientId,
+                                date: formatDate(record.fields['Created']),
+                                status: record.fields['Status']
+                            };
+                        })
                         .filter(record => record.date !== null);
 
-                    // Process spend data
-                    const processedSpend = spendRecords.map(record => ({
-                        date: formatDate(record.fields['Created']),
-                        client: record.fields['Linked Client'] ? 
+                    // Process spend data - keep the record ID first, we'll map it later
+                    const processedSpend = spendRecords.map(record => {
+                        const clientId = record.fields['Linked Client'] ? 
                             (Array.isArray(record.fields['Linked Client']) ? 
                                 record.fields['Linked Client'][0] : 
-                                record.fields['Linked Client']) : 'Unknown',
-                        spend: parseFloat(record.fields['Spend']) || 0
-                    }))
+                                record.fields['Linked Client']) : 'Unknown';
+                        
+                        return {
+                            date: formatDate(record.fields['Created']),
+                            clientId: clientId,
+                            client: newClientMap[clientId] || clientId,
+                            spend: parseFloat(record.fields['Spend']) || 0
+                        };
+                    })
                     .filter(record => record.date !== null);
 
-                    console.log('Sample spend record:', spendRecords[0]?.fields);
-                    console.log('Processed spend sample:', processedSpend[0]);
-
-                    // Fetch client names to map record IDs to names
-                    const clientRecords = await fetchAirtableRecords(AIRTABLE_CONFIG.clientsTable);
-                    const clientMap = {};
-                    clientRecords.forEach(record => {
-                        clientMap[record.id] = record.fields['Name'] || record.fields['Client'] || 'Unknown';
-                    });
-
-                    // Replace client record IDs with names
-                    processedLeads.forEach(lead => {
-                        if (clientMap[lead.client]) {
-                            lead.client = clientMap[lead.client];
-                        }
-                    });
-
-                    processedSpend.forEach(spend => {
-                        if (clientMap[spend.client]) {
-                            spend.client = clientMap[spend.client];
-                        }
-                    });
-
-                    console.log('Client map:', clientMap);
-                    console.log('Processed spend after mapping:', processedSpend.slice(0, 5));
-                    console.log('Processed leads after mapping:', processedLeads.slice(0, 5));
+                    console.log('Processed leads sample:', processedLeads.slice(0, 3));
+                    console.log('Processed spend sample:', processedSpend.slice(0, 3));
 
                     setRawLeadData(processedLeads);
                     setRawSpendData(processedSpend);
@@ -147,6 +146,7 @@
                     processData(processedLeads, processedSpend);
 
                 } catch (err) {
+                    console.error('Error fetching data:', err);
                     setError(err.message);
                 } finally {
                     setLoading(false);
@@ -167,6 +167,9 @@
                     const key = `${item.date}|${item.client}`;
                     spendByDateClient[key] = (spendByDateClient[key] || 0) + item.spend;
                 });
+
+                console.log('Leads by date-client:', leadsByDateClient);
+                console.log('Spend by date-client:', spendByDateClient);
 
                 // Combine all unique date-client combinations
                 const allKeys = new Set([...Object.keys(leadsByDateClient), ...Object.keys(spendByDateClient)]);
@@ -245,29 +248,40 @@
                     const leadsByDate = {};
                     const spendByDate = {};
 
-                    console.log('Filtering for client:', selectedClient);
-                    console.log('Raw lead data sample:', rawLeadData.slice(0, 3));
-                    console.log('Raw spend data sample:', rawSpendData.slice(0, 3));
+                    console.log('=== FILTERING FOR CLIENT ===');
+                    console.log('Selected client:', selectedClient);
+                    console.log('Total raw leads:', rawLeadData.length);
+                    console.log('Total raw spend records:', rawSpendData.length);
 
+                    // Filter leads
                     rawLeadData.forEach(lead => {
-                        if (lead.client !== selectedClient) return;
-                        leadsByDate[lead.date] = (leadsByDate[lead.date] || 0) + 1;
+                        if (lead.client === selectedClient) {
+                            leadsByDate[lead.date] = (leadsByDate[lead.date] || 0) + 1;
+                        }
                     });
 
+                    // Filter spend
                     rawSpendData.forEach(spend => {
-                        if (spend.client !== selectedClient) return;
-                        spendByDate[spend.date] = (spendByDate[spend.date] || 0) + spend.spend;
+                        if (spend.client === selectedClient) {
+                            spendByDate[spend.date] = (spendByDate[spend.date] || 0) + spend.spend;
+                        }
                     });
 
                     console.log('Filtered leads by date:', leadsByDate);
                     console.log('Filtered spend by date:', spendByDate);
+                    console.log('Total filtered lead records:', Object.keys(leadsByDate).length);
+                    console.log('Total filtered spend records:', Object.keys(spendByDate).length);
 
+                    // Get all dates that have either leads or spend
                     const allDates = new Set([...Object.keys(leadsByDate), ...Object.keys(spendByDate)]);
                     const daily = Array.from(allDates).map(date => ({
                         date: date,
                         spend: spendByDate[date] || 0,
                         leads: leadsByDate[date] || 0
                     })).sort((a, b) => a.date.localeCompare(b.date));
+
+                    console.log('Combined daily data points:', daily.length);
+                    console.log('Sample combined data:', daily.slice(0, 3));
 
                     const withTrailing = daily.map((day, index) => {
                         const startIdx = Math.max(0, index - 6);
@@ -289,11 +303,16 @@
                     });
 
                     // Apply date filter AFTER calculating trailing metrics
-                    return withTrailing.filter(item => {
+                    const filtered = withTrailing.filter(item => {
                         if (startDate && item.date < startDate) return false;
                         if (endDate && item.date > endDate) return false;
                         return true;
                     });
+
+                    console.log('Final filtered data points:', filtered.length);
+                    console.log('=== END FILTERING ===');
+
+                    return filtered;
                 }
 
                 // No client filter, just apply date filter
