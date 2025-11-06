@@ -57,11 +57,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
         }
 
         .logo-img {
-            max-width: 200px;
-            max-height: 80px;
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
             object-fit: contain;
         }
 
@@ -260,7 +263,7 @@
             margin-bottom: 20px;
         }
 
-        #phone, #phone2 {
+        #phone, #phone2, #email {
             padding: 15px;
             border: 2px solid #e9ecef;
             border-radius: 8px;
@@ -269,7 +272,7 @@
             width: 100%;
         }
 
-        #phone:focus, #phone2:focus {
+        #phone:focus, #phone2:focus, #email:focus {
             outline: none;
             border-color: #2196f3;
             background: #fff;
@@ -555,14 +558,18 @@
             .question {
                 font-size: 18px;
             }
+            
+            .logo-container {
+                height: 60px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="form-container">
         <div class="logo-container">
-            <img src="https://github.com/peakleadsgroup/landing-pages/blob/main/Images/FREE%20SOLAR%20INSTALLATION%20FLAT.png?raw=true" 
-                 alt="Free Solar Installation" 
+            <img src="LOGOLINK" 
+                 alt="ALTNAME" 
                  class="logo-img">
         </div>
 
@@ -594,13 +601,13 @@
             </div>
         </div>
 
-        <!-- STEP 3: Main Goal -->
+        <!-- STEP 3: Home Type -->
         <div class="form-step" id="step3">
-            <div class="question">What is your main goal?</div>
+            <div class="question">What type of home do you have?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'saving_money')">Saving money</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'going_green')">Going green</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'reliability')">Reliability</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'standalone')">Standalone</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'townhome_duplex')">Townhome/duplex</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'condo_apartment')">Condo/apartment</div>
             </div>
         </div>
 
@@ -665,7 +672,7 @@
             </div>
         </div>
 
-        <!-- STEP 7: PHONE -->
+        <!-- STEP 7: PHONE & EMAIL -->
         <div class="form-step" id="step7">
             <div class="question">Where can we reach you with your quote?</div>
             <div class="row">
@@ -675,14 +682,13 @@
                     <small id="phoneHelp" class="phone-help">US number, 10 digits.</small>
                     <input type="hidden" id="phone_digits" name="phone_digits" value="">
                 </div>
-                <div id="phoneConfirmWrap" style="display:none">
-                    <label for="phone2">Please re-enter your phone</label>
-                    <input id="phone2" name="phone_confirm" type="tel" inputmode="tel" placeholder="(___) ___-____" autocomplete="tel" aria-describedby="phone2Help">
-                    <small id="phone2Help" class="phone-help">Must match exactly.</small>
+                <div id="emailWrap">
+                    <label for="email">Email</label>
+                    <input id="email" name="email" type="email" placeholder="your@email.com" required autocomplete="email">
                 </div>
             </div>
             <div class="nav-buttons">
-                <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Get My Quote</button>
+                <button class="nav-btn" onclick="submitFinalForm()" id="contactSubmitBtn" disabled>Get My Quote</button>
             </div>
         </div>
 
@@ -763,9 +769,9 @@
         // ============================================
         // CONFIGURATION - Change this to switch behavior
         // ============================================
-        const REDIRECT_MODE = 'phone'; // Options: 'calendar', 'phone', 'link', or 'none'
+        const REDIRECT_MODE = 'calendar'; // Options: 'calendar', 'phone', 'link', or 'none'
         const CLIENT_PHONE = '+19191234567'; // Client phone number for call/text buttons
-        const CLIENT_LINK = 'CLIENTLINK'; // Client redirect link (only used if REDIRECT_MODE = 'link')
+        const CLIENT_LINK = 'cal.com'; // Client redirect link (only used if REDIRECT_MODE = 'link')
         
         // Calendar Configuration (only used if REDIRECT_MODE = 'calendar')
         const CALENDAR_CONFIG = {
@@ -1009,12 +1015,11 @@
 
         function validatePhones() {
             const phoneInput = document.getElementById('phone');
-            const phone2Input = document.getElementById('phone2');
-            const phoneConfirmWrap = document.getElementById('phoneConfirmWrap');
+            const emailInput = document.getElementById('email');
             const phoneDigits = document.getElementById('phone_digits');
-            const phoneSubmitBtn = document.getElementById('phoneSubmitBtn');
+            const contactSubmitBtn = document.getElementById('contactSubmitBtn');
             
-            if (!phoneInput) return;
+            if (!phoneInput || !emailInput) return;
 
             const p1 = formatPhone(phoneInput.value);
             if (phoneInput.value !== p1.formatted) phoneInput.value = p1.formatted;
@@ -1051,47 +1056,36 @@
                 }
             }
 
-            const shouldShowConfirm = p1.digits.length === 10 && validation.valid;
-            phoneConfirmWrap.style.display = shouldShowConfirm ? '' : 'none';
-            if (phone2Input) phone2Input.required = shouldShowConfirm;
-
-            const p2 = formatPhone(phone2Input ? phone2Input.value : '');
-            if (phone2Input && phone2Input.value !== p2.formatted) phone2Input.value = p2.formatted;
-
-            if(shouldShowConfirm && phone2Input){
-                if(p2.digits.length === 0){
-                    phone2Input.setCustomValidity('Please re-enter your phone number.');
-                } else if(p2.digits !== p1.digits){
-                    phone2Input.setCustomValidity('Phone numbers do not match.');
-                } else {
-                    phone2Input.setCustomValidity('');
-                }
-            } else if (phone2Input) {
-                phone2Input.value = '';
-                phone2Input.setCustomValidity('');
+            // Validate email
+            const emailValue = emailInput.value.trim();
+            const emailValid = emailValue.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue);
+            
+            if (emailValue.length > 0 && !emailValid) {
+                emailInput.setCustomValidity('Please enter a valid email address.');
+            } else {
+                emailInput.setCustomValidity('');
             }
 
             const phoneValid = p1.digits.length === 10 && validation.valid;
-            const phone2Valid = !shouldShowConfirm || (p2.digits.length === 10 && p2.digits === p1.digits);
-            const buttonShouldEnable = phoneValid && phone2Valid;
+            const buttonShouldEnable = phoneValid && emailValid;
             
-            if (phoneSubmitBtn) {
-                phoneSubmitBtn.disabled = !buttonShouldEnable;
+            if (contactSubmitBtn) {
+                contactSubmitBtn.disabled = !buttonShouldEnable;
             }
         }
 
         function setupPhoneValidation() {
             const phoneInput = document.getElementById('phone');
-            const phone2Input = document.getElementById('phone2');
+            const emailInput = document.getElementById('email');
             
             if (phoneInput) {
                 phoneInput.addEventListener('input', validatePhones);
                 phoneInput.addEventListener('blur', validatePhones);
             }
             
-            if (phone2Input) {
-                phone2Input.addEventListener('input', validatePhones);
-                phone2Input.addEventListener('blur', validatePhones);
+            if (emailInput) {
+                emailInput.addEventListener('input', validatePhones);
+                emailInput.addEventListener('blur', validatePhones);
             }
         }
 
@@ -1500,7 +1494,8 @@
             
             const finalData = {
                 ...formData,
-                phone: document.getElementById('phone_digits').value
+                phone: document.getElementById('phone_digits').value,
+                email: document.getElementById('email').value.trim()
             };
             
             if (typeof fbq !== 'undefined') {
@@ -1511,7 +1506,7 @@
                     currency: 'USD',
                     homeowner_status: finalData.homeowner,
                     electric_bill: finalData.electricBill,
-                    main_goal: finalData.mainGoal,
+                    home_type: finalData.homeType,
                     timeline: finalData.timeline
                 }, {
                     eventID: eventId
@@ -1522,10 +1517,11 @@
 
 Name: ${finalData.firstName} ${finalData.lastName}
 Phone: ${formatPhoneForDisplay(finalData.phone)}
+Email: ${finalData.email}
 
 Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}
 Electric Bill Over $100/mo: ${finalData.electricBill === 'yes' ? 'Yes' : 'No'}
-Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}
+Home Type: ${getHomeTypeDisplay(finalData.homeType)}
 Timeline: ${getTimelineDisplay(finalData.timeline)}
 
 Address:
@@ -1543,7 +1539,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
     timeZone: 'America/New_York'
 })} EST`.trim();
 
-            const fullSummaryHTML = `Solar Installation Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR><BR>Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Electric Bill Over $100/mo: ${finalData.electricBill === 'yes' ? 'Yes' : 'No'}<BR>Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}<BR>Timeline: ${getTimelineDisplay(finalData.timeline)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+            const fullSummaryHTML = `Solar Installation Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR>Email: ${finalData.email}<BR><BR>Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Electric Bill Over $100/mo: ${finalData.electricBill === 'yes' ? 'Yes' : 'No'}<BR>Home Type: ${getHomeTypeDisplay(finalData.homeType)}<BR>Timeline: ${getTimelineDisplay(finalData.timeline)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
     year: 'numeric', 
     month: 'long', 
@@ -1557,13 +1553,14 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             const webhookData = {
                 homeowner: finalData.homeowner,
                 electric_bill: finalData.electricBill,
-                main_goal: finalData.mainGoal,
+                home_type: finalData.homeType,
                 timeline: finalData.timeline,
                 street_address: finalData.address.street,
                 city: finalData.address.city,
                 state: finalData.address.state,
                 zip: finalData.address.zip,
                 phone: finalData.phone,
+                email: finalData.email,
                 first_name: finalData.firstName,
                 last_name: finalData.lastName,
                 full_name: `${finalData.firstName} ${finalData.lastName}`,
@@ -1607,11 +1604,11 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             return digits;
         }
 
-        function getMainGoalDisplay(value) {
+        function getHomeTypeDisplay(value) {
             const options = {
-                'saving_money': 'Saving money',
-                'going_green': 'Going green',
-                'reliability': 'Reliability'
+                'standalone': 'Standalone',
+                'townhome_duplex': 'Townhome/duplex',
+                'condo_apartment': 'Condo/apartment'
             };
             return options[value] || value;
         }
