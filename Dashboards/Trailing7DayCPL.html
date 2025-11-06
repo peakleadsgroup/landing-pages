@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPL Analyzer - Debug Version</title>
+    <title>CPL Analyzer - Qualified Leads</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
@@ -37,7 +37,6 @@
             const [error, setError] = useState(null);
             const [rawLeadData, setRawLeadData] = useState([]);
             const [rawSpendData, setRawSpendData] = useState([]);
-            const [debugInfo, setDebugInfo] = useState(null);
             const chartRef = useRef(null);
             const chartInstance = useRef(null);
 
@@ -84,16 +83,14 @@
                 setError(null);
 
                 try {
-                    // Fetch client names first
+                    // Fetch client names to build the mapping
                     const clientRecords = await fetchAirtableRecords(AIRTABLE_CONFIG.clientsTable);
                     const clientMap = {};
                     clientRecords.forEach(record => {
-                        const name = record.fields['Name'] || record.fields['Client'] || 'Unknown';
-                        clientMap[record.id] = name;
+                        clientMap[record.id] = record.fields['Name'] || record.fields['Client'] || 'Unknown';
                     });
 
-                    console.log('=== CLIENT MAP ===');
-                    console.log(clientMap);
+                    console.log('Client Map:', clientMap);
 
                     // Fetch leads data
                     const leadsRecords = await fetchAirtableRecords(AIRTABLE_CONFIG.leadsTable);
@@ -101,7 +98,6 @@
                     // Fetch spend data
                     const spendRecords = await fetchAirtableRecords(AIRTABLE_CONFIG.spendTable);
 
-                    console.log('=== RAW DATA SAMPLES ===');
                     console.log('Sample lead record:', leadsRecords[0]?.fields);
                     console.log('Sample spend record:', spendRecords[0]?.fields);
 
@@ -114,59 +110,43 @@
                             const clientName = clientMap[clientId] || clientId || 'Unknown';
                             
                             return {
-                                clientId: clientId,
-                                clientName: clientName,
+                                client: clientName,
                                 date: formatDate(record.fields['Created']),
                                 status: record.fields['Status']
                             };
                         })
                         .filter(record => record.date !== null);
 
-                    // Process spend data
+                    // Process spend data - handle both linked records AND text fields
                     const processedSpend = spendRecords.map(record => {
-                        const linkedClient = record.fields['Linked Client'];
-                        const clientId = Array.isArray(linkedClient) ? linkedClient[0] : linkedClient;
-                        const clientName = clientMap[clientId] || clientId || 'Unknown';
+                        const clientField = record.fields['Client'];
+                        let clientName;
+                        
+                        // Check if it's a linked record (array) or plain text
+                        if (Array.isArray(clientField)) {
+                            // It's a linked record - use the mapping
+                            const clientId = clientField[0];
+                            clientName = clientMap[clientId] || clientId || 'Unknown';
+                        } else if (typeof clientField === 'string') {
+                            // It's plain text - use it directly
+                            clientName = clientField;
+                        } else if (clientField) {
+                            // Single linked record (not array)
+                            clientName = clientMap[clientField] || clientField || 'Unknown';
+                        } else {
+                            clientName = 'Unknown';
+                        }
                         
                         return {
-                            date: formatDate(record.fields['Created']),
-                            clientId: clientId,
-                            clientName: clientName,
+                            date: formatDate(record.fields['Date'] || record.fields['Created']),
+                            client: clientName,
                             spend: parseFloat(record.fields['Spend']) || 0
                         };
                     })
                     .filter(record => record.date !== null);
 
-                    console.log('=== PROCESSED DATA ===');
-                    console.log('Processed leads sample:', processedLeads.slice(0, 3));
-                    console.log('Processed spend sample:', processedSpend.slice(0, 3));
-
-                    // Create debug info showing which clients have leads vs spend
-                    const leadsClientCounts = {};
-                    const spendClientCounts = {};
-                    const spendClientTotals = {};
-
-                    processedLeads.forEach(lead => {
-                        leadsClientCounts[lead.clientName] = (leadsClientCounts[lead.clientName] || 0) + 1;
-                    });
-
-                    processedSpend.forEach(spend => {
-                        spendClientCounts[spend.clientName] = (spendClientCounts[spend.clientName] || 0) + 1;
-                        spendClientTotals[spend.clientName] = (spendClientTotals[spend.clientName] || 0) + spend.spend;
-                    });
-
-                    const allClientNames = new Set([...Object.keys(leadsClientCounts), ...Object.keys(spendClientCounts)]);
-                    const debugData = Array.from(allClientNames).map(name => ({
-                        client: name,
-                        leadsCount: leadsClientCounts[name] || 0,
-                        spendRecordsCount: spendClientCounts[name] || 0,
-                        totalSpend: spendClientTotals[name] || 0
-                    })).sort((a, b) => a.client.localeCompare(b.client));
-
-                    setDebugInfo(debugData);
-
-                    console.log('=== DEBUG INFO ===');
-                    console.table(debugData);
+                    console.log('Processed leads sample:', processedLeads.slice(0, 5));
+                    console.log('Processed spend sample:', processedSpend.slice(0, 5));
 
                     setRawLeadData(processedLeads);
                     setRawSpendData(processedSpend);
@@ -186,16 +166,19 @@
                 // Aggregate leads by date and client
                 const leadsByDateClient = {};
                 leads.forEach(lead => {
-                    const key = `${lead.date}|${lead.clientName}`;
+                    const key = `${lead.date}|${lead.client}`;
                     leadsByDateClient[key] = (leadsByDateClient[key] || 0) + 1;
                 });
 
                 // Aggregate spend by date and client
                 const spendByDateClient = {};
                 spend.forEach(item => {
-                    const key = `${item.date}|${item.clientName}`;
+                    const key = `${item.date}|${item.client}`;
                     spendByDateClient[key] = (spendByDateClient[key] || 0) + item.spend;
                 });
+
+                console.log('Leads by date-client (first 10):', Object.entries(leadsByDateClient).slice(0, 10));
+                console.log('Spend by date-client (first 10):', Object.entries(spendByDateClient).slice(0, 10));
 
                 // Combine all unique date-client combinations
                 const allKeys = new Set([...Object.keys(leadsByDateClient), ...Object.keys(spendByDateClient)]);
@@ -264,21 +247,23 @@
                 setDailyData(withTrailing);
             };
 
+            // Calculate filtered data based on client and date selections
             const getFilteredData = () => {
                 if (dailyData.length === 0) return [];
 
+                // Filter by client if selected
                 if (selectedClient !== 'all') {
                     const leadsByDate = {};
                     const spendByDate = {};
 
                     rawLeadData.forEach(lead => {
-                        if (lead.clientName === selectedClient) {
+                        if (lead.client === selectedClient) {
                             leadsByDate[lead.date] = (leadsByDate[lead.date] || 0) + 1;
                         }
                     });
 
                     rawSpendData.forEach(spend => {
-                        if (spend.clientName === selectedClient) {
+                        if (spend.client === selectedClient) {
                             spendByDate[spend.date] = (spendByDate[spend.date] || 0) + spend.spend;
                         }
                     });
@@ -309,6 +294,7 @@
                         };
                     });
 
+                    // Apply date filter AFTER calculating trailing metrics
                     return withTrailing.filter(item => {
                         if (startDate && item.date < startDate) return false;
                         if (endDate && item.date > endDate) return false;
@@ -316,6 +302,7 @@
                     });
                 }
 
+                // No client filter, just apply date filter
                 return dailyData.filter(item => {
                     if (startDate && item.date < startDate) return false;
                     if (endDate && item.date > endDate) return false;
@@ -455,8 +442,8 @@
                 <div className="min-h-screen p-6">
                     <div className="max-w-7xl mx-auto">
                         <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
-                            <h1 className="text-3xl font-bold text-gray-800 mb-2">CPL Analyzer - Debug Version</h1>
-                            <p className="text-gray-600 mb-6">With detailed logging to help identify data issues</p>
+                            <h1 className="text-3xl font-bold text-gray-800 mb-2">CPL Analyzer</h1>
+                            <p className="text-gray-600 mb-6">Trailing 7-Day Cost Per Lead for Qualified Leads (Powered by Airtable)</p>
 
                             {error && (
                                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -469,45 +456,6 @@
                                             <p className="text-sm text-red-800">{error}</p>
                                         </div>
                                     </div>
-                                </div>
-                            )}
-
-                            {debugInfo && (
-                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                                    <h3 className="font-semibold text-yellow-900 mb-3">📊 Data Summary by Client</h3>
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm">
-                                            <thead className="bg-yellow-100">
-                                                <tr>
-                                                    <th className="px-3 py-2 text-left">Client</th>
-                                                    <th className="px-3 py-2 text-right">Qualified Leads</th>
-                                                    <th className="px-3 py-2 text-right">Spend Records</th>
-                                                    <th className="px-3 py-2 text-right">Total Spend</th>
-                                                    <th className="px-3 py-2 text-center">Status</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {debugInfo.map((info, idx) => (
-                                                    <tr key={idx} className="border-b border-yellow-100">
-                                                        <td className="px-3 py-2">{info.client}</td>
-                                                        <td className="px-3 py-2 text-right">{info.leadsCount}</td>
-                                                        <td className="px-3 py-2 text-right">{info.spendRecordsCount}</td>
-                                                        <td className="px-3 py-2 text-right">${info.totalSpend.toFixed(2)}</td>
-                                                        <td className="px-3 py-2 text-center">
-                                                            {info.spendRecordsCount === 0 && info.leadsCount > 0 ? (
-                                                                <span className="text-red-600 font-semibold">⚠️ No Spend Data</span>
-                                                            ) : (
-                                                                <span className="text-green-600">✓ OK</span>
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <p className="text-xs text-yellow-800 mt-3">
-                                        ℹ️ This table shows which clients have leads but no spend data in Airtable. Check your Campaign Spend table to add missing records.
-                                    </p>
                                 </div>
                             )}
 
@@ -560,7 +508,6 @@
                                                         setDailyData([]);
                                                         setRawLeadData([]);
                                                         setRawSpendData([]);
-                                                        setDebugInfo(null);
                                                     }}
                                                     className="text-sm text-red-600 hover:text-red-800 font-medium"
                                                 >
