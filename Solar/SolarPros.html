@@ -1436,7 +1436,19 @@
         }
 
         function redirectToClientLink() {
-            window.location.href = CLIENT_LINK;
+            const first = document.getElementById('firstName')?.value.trim() || '';
+            const last = document.getElementById('lastName')?.value.trim() || '';
+            const name = `${first} ${last}`.replace(/\s+/g, ' ').trim();
+            
+            const params = new URLSearchParams();
+            
+            // Use the actual email from the form
+            const userEmail = document.getElementById('email')?.value.trim() || '';
+            if (userEmail) params.set('email', userEmail);
+            
+            if (name) params.set('name', name);
+            
+            window.location.href = `${CLIENT_LINK}?${params.toString()}`;
         }
 
         function showContactScreen() {
