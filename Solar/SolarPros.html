@@ -605,7 +605,7 @@
         <div class="form-step" id="step3">
             <div class="question">What type of home do you have?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'standalone')">Standalone</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'single_family')">Single Family</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'townhome_duplex')">Townhome/duplex</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'condo_apartment')">Condo/apartment</div>
             </div>
@@ -1621,7 +1621,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
 
         function getHomeTypeDisplay(value) {
             const options = {
-                'standalone': 'Standalone',
+                'single_family': 'Single Family',
                 'townhome_duplex': 'Townhome/duplex',
                 'condo_apartment': 'Condo/apartment'
             };
