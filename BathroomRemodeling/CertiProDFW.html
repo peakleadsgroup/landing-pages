@@ -260,7 +260,7 @@
             margin-bottom: 20px;
         }
 
-        #phone, #phone2 {
+        #phone, #email {
             padding: 15px;
             border: 2px solid #e9ecef;
             border-radius: 8px;
@@ -269,7 +269,7 @@
             width: 100%;
         }
 
-        #phone:focus, #phone2:focus {
+        #phone:focus, #email:focus {
             outline: none;
             border-color: #2196f3;
             background: #fff;
@@ -675,10 +675,9 @@
                     <small id="phoneHelp" class="phone-help">US number, 10 digits.</small>
                     <input type="hidden" id="phone_digits" name="phone_digits" value="">
                 </div>
-                <div id="phoneConfirmWrap" style="display:none">
-                    <label for="phone2">Please re-enter your phone</label>
-                    <input id="phone2" name="phone_confirm" type="tel" inputmode="tel" placeholder="(___) ___-____" autocomplete="tel" aria-describedby="phone2Help">
-                    <small id="phone2Help" class="phone-help">Must match exactly.</small>
+                <div id="emailWrap" style="display:none">
+                    <label for="email">Email</label>
+                    <input id="email" name="email" type="email" inputmode="email" placeholder="your@email.com" autocomplete="email" aria-describedby="emailHelp">
                 </div>
             </div>
             <div class="nav-buttons">
@@ -1011,10 +1010,15 @@
             return { valid: true, error: '' };
         }
 
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
         function validatePhones() {
             const phoneInput = document.getElementById('phone');
-            const phone2Input = document.getElementById('phone2');
-            const phoneConfirmWrap = document.getElementById('phoneConfirmWrap');
+            const emailInput = document.getElementById('email');
+            const emailWrap = document.getElementById('emailWrap');
             const phoneDigits = document.getElementById('phone_digits');
             const phoneSubmitBtn = document.getElementById('phoneSubmitBtn');
             
@@ -1055,29 +1059,29 @@
                 }
             }
 
-            const shouldShowConfirm = p1.digits.length === 10 && validation.valid;
-            phoneConfirmWrap.style.display = shouldShowConfirm ? '' : 'none';
-            if (phone2Input) phone2Input.required = shouldShowConfirm;
+            const shouldShowEmail = p1.digits.length === 10 && validation.valid;
+            emailWrap.style.display = shouldShowEmail ? '' : 'none';
+            if (emailInput) emailInput.required = shouldShowEmail;
 
-            const p2 = formatPhone(phone2Input ? phone2Input.value : '');
-            if (phone2Input && phone2Input.value !== p2.formatted) phone2Input.value = p2.formatted;
-
-            if(shouldShowConfirm && phone2Input){
-                if(p2.digits.length === 0){
-                    phone2Input.setCustomValidity('Please re-enter your phone number.');
-                } else if(p2.digits !== p1.digits){
-                    phone2Input.setCustomValidity('Phone numbers do not match.');
+            // Validate email
+            let emailValid = false;
+            if(shouldShowEmail && emailInput){
+                const emailValue = emailInput.value.trim();
+                if(emailValue.length === 0){
+                    emailInput.setCustomValidity('Please enter your email address.');
+                } else if(!isValidEmail(emailValue)){
+                    emailInput.setCustomValidity('Please enter a valid email address.');
                 } else {
-                    phone2Input.setCustomValidity('');
+                    emailInput.setCustomValidity('');
+                    emailValid = true;
                 }
-            } else if (phone2Input) {
-                phone2Input.value = '';
-                phone2Input.setCustomValidity('');
+            } else if (emailInput) {
+                emailInput.value = '';
+                emailInput.setCustomValidity('');
             }
 
             const phoneValid = p1.digits.length === 10 && validation.valid;
-            const phone2Valid = !shouldShowConfirm || (p2.digits.length === 10 && p2.digits === p1.digits);
-            const buttonShouldEnable = phoneValid && phone2Valid;
+            const buttonShouldEnable = phoneValid && (!shouldShowEmail || emailValid);
             
             if (phoneSubmitBtn) {
                 phoneSubmitBtn.disabled = !buttonShouldEnable;
@@ -1086,16 +1090,16 @@
 
         function setupPhoneValidation() {
             const phoneInput = document.getElementById('phone');
-            const phone2Input = document.getElementById('phone2');
+            const emailInput = document.getElementById('email');
             
             if (phoneInput) {
                 phoneInput.addEventListener('input', validatePhones);
                 phoneInput.addEventListener('blur', validatePhones);
             }
             
-            if (phone2Input) {
-                phone2Input.addEventListener('input', validatePhones);
-                phone2Input.addEventListener('blur', validatePhones);
+            if (emailInput) {
+                emailInput.addEventListener('input', validatePhones);
+                emailInput.addEventListener('blur', validatePhones);
             }
         }
 
@@ -1387,6 +1391,7 @@
             const appointmentData = {
                 ...formData,
                 phone: document.getElementById('phone_digits').value,
+                email: document.getElementById('email')?.value.trim() || '',
                 appointment_date: selectedDate.toISOString().split('T')[0],
                 appointment_time: slot.display,
                 appointment_datetime: slot.isoString,
@@ -1503,7 +1508,8 @@
             
             const finalData = {
                 ...formData,
-                phone: document.getElementById('phone_digits').value
+                phone: document.getElementById('phone_digits').value,
+                email: document.getElementById('email')?.value.trim() || ''
             };
             
             if (typeof fbq !== 'undefined') {
@@ -1525,6 +1531,7 @@
 
 Name: ${finalData.firstName} ${finalData.lastName}
 Phone: ${formatPhoneForDisplay(finalData.phone)}
+Email: ${finalData.email}
 
 Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}
 Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}
@@ -1546,7 +1553,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
     timeZone: 'America/New_York'
 })} EST`.trim();
 
-            const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR><BR>Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+            const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR>Email: ${finalData.email}<BR><BR>Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
     year: 'numeric', 
     month: 'long', 
@@ -1567,6 +1574,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 state: finalData.address.state,
                 zip: finalData.address.zip,
                 phone: finalData.phone,
+                email: finalData.email,
                 first_name: finalData.firstName,
                 last_name: finalData.lastName,
                 full_name: `${finalData.firstName} ${finalData.lastName}`,
