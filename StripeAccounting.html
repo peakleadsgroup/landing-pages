@@ -75,9 +75,10 @@
                 }));
 
                 // Create workbook
-                const ws = XLSX.utils.json_to_sheet(excelData);
+                const wb = XLSX.utils.book_new();
                 
-                // Set column widths
+                // Sheet 1: Transactions
+                const ws = XLSX.utils.json_to_sheet(excelData);
                 ws['!cols'] = [
                     { wch: 12 }, // Date
                     { wch: 12 }, // Type
@@ -88,9 +89,94 @@
                     { wch: 20 }, // Customer Name
                     { wch: 10 }  // Business
                 ];
-
-                const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, 'Transactions');
+
+                // Sheet 2: Tax Summary with formulas
+                const taxSummaryData = [
+                    ['Tax Category Summary', '', '', ''],
+                    ['', '', '', ''],
+                    ['Tax Category', 'Description', 'SSL Total', 'PLG Total'],
+                    ['Income', 'Customer payments (charges & payments)', '', ''],
+                    ['Refunds (Contra Income)', 'Money given back to customers', '', ''],
+                    ['Expense - Merchant Fees', 'Stripe processing fees', '', ''],
+                    ['Expense/Refund - Adjustments', 'Disputes & chargebacks', '', ''],
+                    ['', '', '', ''],
+                    ['TOTAL NET INCOME', '', '', '']
+                ];
+
+                const wsTax = XLSX.utils.aoa_to_sheet(taxSummaryData);
+
+                // Add formulas for SSL column (column C, starting at row 4)
+                // Row 4: Income (charges + payments)
+                wsTax['C4'] = { 
+                    f: `SUMIFS(Transactions!F:F,Transactions!B:B,"charge",Transactions!H:H,"SSL")+SUMIFS(Transactions!F:F,Transactions!B:B,"payment",Transactions!H:H,"SSL")`,
+                    t: 'n'
+                };
+                
+                // Row 5: Refunds
+                wsTax['C5'] = { 
+                    f: `SUMIFS(Transactions!F:F,Transactions!B:B,"refund",Transactions!H:H,"SSL")`,
+                    t: 'n'
+                };
+                
+                // Row 6: Stripe Fees
+                wsTax['C6'] = { 
+                    f: `SUMIFS(Transactions!F:F,Transactions!B:B,"stripe_fee",Transactions!H:H,"SSL")`,
+                    t: 'n'
+                };
+                
+                // Row 7: Adjustments
+                wsTax['C7'] = { 
+                    f: `SUMIFS(Transactions!F:F,Transactions!B:B,"adjustment",Transactions!H:H,"SSL")`,
+                    t: 'n'
+                };
+                
+                // Row 9: Total
+                wsTax['C9'] = { 
+                    f: `SUM(C4:C7)`,
+                    t: 'n'
+                };
+
+                // Add formulas for PLG column (column D)
+                // Row 4: Income (charges + payments)
+                wsTax['D4'] = { 
+                    f: `SUMIFS(Transactions!F:F,Transactions!B:B,"charge",Transactions!H:H,"PLG")+SUMIFS(Transactions!F:F,Transactions!B:B,"payment",Transactions!H:H,"PLG")`,
+                    t: 'n'
+                };
+                
+                // Row 5: Refunds
+                wsTax['D5'] = { 
+                    f: `SUMIFS(Transactions!F:F,Transactions!B:B,"refund",Transactions!H:H,"PLG")`,
+                    t: 'n'
+                };
+                
+                // Row 6: Stripe Fees
+                wsTax['D6'] = { 
+                    f: `SUMIFS(Transactions!F:F,Transactions!B:B,"stripe_fee",Transactions!H:H,"PLG")`,
+                    t: 'n'
+                };
+                
+                // Row 7: Adjustments
+                wsTax['D7'] = { 
+                    f: `SUMIFS(Transactions!F:F,Transactions!B:B,"adjustment",Transactions!H:H,"PLG")`,
+                    t: 'n'
+                };
+                
+                // Row 9: Total
+                wsTax['D9'] = { 
+                    f: `SUM(D4:D7)`,
+                    t: 'n'
+                };
+
+                // Set column widths for tax summary
+                wsTax['!cols'] = [
+                    { wch: 30 }, // Tax Category
+                    { wch: 40 }, // Description
+                    { wch: 15 }, // SSL Total
+                    { wch: 15 }  // PLG Total
+                ];
+
+                XLSX.utils.book_append_sheet(wb, wsTax, 'Tax Summary');
 
                 // Generate file name with current date
                 const today = new Date().toISOString().split('T')[0];
