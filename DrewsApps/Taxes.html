@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tax Transaction Report Generator</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .upload-section {
+            padding: 40px;
+            background: #f8f9fa;
+        }
+
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .upload-box {
+            border: 3px dashed #667eea;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            background: white;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .upload-box:hover {
+            border-color: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .upload-box.uploaded {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .upload-box h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .upload-box p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #10b981;
+            margin-left: 15px;
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .report-section {
+            padding: 40px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .summary-card h3 {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .summary-card .amount {
+            font-size: 2em;
+            font-weight: 700;
+        }
+
+        .category-section {
+            margin-bottom: 40px;
+        }
+
+        .category-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            font-size: 1.8em;
+        }
+
+        .category-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .category-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 5px solid #667eea;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+
+        .category-header h3 {
+            color: #333;
+            font-size: 1.3em;
+        }
+
+        .category-header .total {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .transaction-list {
+            margin-top: 15px;
+        }
+
+        .transaction-item {
+            display: grid;
+            grid-template-columns: 100px 1fr auto;
+            gap: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .transaction-date {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .transaction-desc {
+            color: #333;
+        }
+
+        .transaction-amount {
+            font-weight: 600;
+            color: #667eea;
+            text-align: right;
+        }
+
+        .income-item .transaction-amount {
+            color: #10b981;
+        }
+
+        .export-section {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 0.9em;
+            text-decoration: underline;
+            padding: 5px;
+        }
+
+        .toggle-btn:hover {
+            color: #764ba2;
+        }
+
+        .collapsed .transaction-list {
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 768px) {
+            .upload-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .transaction-item {
+                grid-template-columns: 80px 1fr auto;
+                gap: 10px;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .upload-section, .export-section {
+                display: none;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const TaxReportGenerator = () => {
+            const [creditCardFile, setCreditCardFile] = useState(null);
+            const [stripeFile, setStripeFile] = useState(null);
+            const [report, setReport] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [collapsedCategories, setCollapsedCategories] = useState(new Set());
+
+            const handleFileUpload = (file, type) => {
+                if (type === 'credit') {
+                    setCreditCardFile(file);
+                } else {
+                    setStripeFile(file);
+                }
+            };
+
+            const categorizeTransaction = (description) => {
+                const desc = description.toLowerCase();
+                
+                // Advertising & Marketing
+                if (desc.includes('facebk') || desc.includes('facebook') || desc.includes('google*ads')) {
+                    return 'Advertising & Marketing';
+                }
+                
+                // Software & Subscriptions
+                if (desc.includes('google*gsuite') || desc.includes('openai') || desc.includes('claude') ||
+                    desc.includes('airtable') || desc.includes('make.com') || desc.includes('cal.com') ||
+                    desc.includes('canva') || desc.includes('capcut') || desc.includes('splice') ||
+                    desc.includes('heygen') || desc.includes('elevenlabs') || desc.includes('upwork') ||
+                    desc.includes('fiverr') || desc.includes('indeed') || desc.includes('tally.so') ||
+                    desc.includes('lumabooth') || desc.includes('webflow') || desc.includes('carrd') ||
+                    desc.includes('loom') || desc.includes('instantly') || desc.includes('paddle') ||
+                    desc.includes('n8n') || desc.includes('replit') || desc.includes('quickbooks') ||
+                    desc.includes('beatport') || desc.includes('apify') || desc.includes('twilio') ||
+                    desc.includes('nazar') || desc.includes('name-cheap')) {
+                    return 'Software & Subscriptions';
+                }
+                
+                // Travel & Transportation
+                if (desc.includes('airline') || desc.includes('united') || desc.includes('american') ||
+                    desc.includes('delta') || desc.includes('frontier') || desc.includes('southwest') ||
+                    desc.includes('swa') || desc.includes('uber') || desc.includes('airbnb') ||
+                    desc.includes('hotel') || desc.includes('red roof')) {
+                    return 'Travel & Transportation';
+                }
+                
+                // Office & Equipment
+                if (desc.includes('amazon') || desc.includes('home depot') || desc.includes('grand rental') ||
+                    desc.includes('u-haul') || desc.includes('airgas')) {
+                    return 'Office & Equipment';
+                }
+                
+                // Business Services
+                if (desc.includes('jack perkins cpa') || desc.includes('nc sec of state') ||
+                    desc.includes('taxbandits') || desc.includes('special event insur') ||
+                    desc.includes('the knot')) {
+                    return 'Professional Services';
+                }
+                
+                // Meals & Entertainment
+                if (desc.includes('chipotle') || desc.includes('panda express') || desc.includes('mcdonald') ||
+                    desc.includes('starbucks') || desc.includes('subway') || desc.includes('walmart') ||
+                    desc.includes('tst*') || desc.includes('publix') || desc.includes('coffee') ||
+                    desc.includes('brewing') || desc.includes('restaurant') || desc.includes('food')) {
+                    return 'Meals & Entertainment';
+                }
+                
+                // Payments & Credits
+                if (desc.includes('payment') || desc.includes('autopay') || desc.includes('reward') ||
+                    desc.includes('refund') || desc.includes('credit')) {
+                    return 'Payments & Credits';
+                }
+                
+                return 'Other Business Expenses';
+            };
+
+            const generateReport = () => {
+                if (!creditCardFile && !stripeFile) return;
+                
+                setLoading(true);
+                
+                const parsePromises = [];
+                
+                if (creditCardFile) {
+                    parsePromises.push(
+                        new Promise((resolve) => {
+                            Papa.parse(creditCardFile, {
+                                header: true,
+                                complete: (results) => resolve({ type: 'credit', data: results.data }),
+                            });
+                        })
+                    );
+                }
+                
+                if (stripeFile) {
+                    parsePromises.push(
+                        new Promise((resolve) => {
+                            Papa.parse(stripeFile, {
+                                header: true,
+                                complete: (results) => resolve({ type: 'stripe', data: results.data }),
+                            });
+                        })
+                    );
+                }
+                
+                Promise.all(parsePromises).then((results) => {
+                    const categories = {};
+                    const incomeTransactions = [];
+                    let totalExpenses = 0;
+                    let totalIncome = 0;
+                    
+                    results.forEach(({ type, data }) => {
+                        if (type === 'credit') {
+                            data.forEach(row => {
+                                if (!row.Date || !row.Description) return;
+                                
+                                const amount = parseFloat(row.Amount);
+                                if (isNaN(amount)) return;
+                                
+                                // Skip payments and credits from expenses
+                                if (amount < 0 && !row.Description.toLowerCase().includes('payment') && 
+                                    !row.Description.toLowerCase().includes('reward') &&
+                                    !row.Description.toLowerCase().includes('autopay') &&
+                                    !row.Description.toLowerCase().includes('refund')) {
+                                    return; // Skip negative amounts that aren't payments
+                                }
+                                
+                                // Only count actual business expenses (positive amounts, excluding payments)
+                                if (amount > 0 && !row.Description.toLowerCase().includes('payment') &&
+                                    !row.Description.toLowerCase().includes('reward') &&
+                                    !row.Description.toLowerCase().includes('autopay')) {
+                                    
+                                    const category = categorizeTransaction(row.Description);
+                                    
+                                    if (!categories[category]) {
+                                        categories[category] = [];
+                                    }
+                                    
+                                    categories[category].push({
+                                        date: row.Date,
+                                        description: row.Description.trim(),
+                                        amount: amount,
+                                        source: 'Credit Card'
+                                    });
+                                    
+                                    totalExpenses += amount;
+                                }
+                            });
+                        } else if (type === 'stripe') {
+                            data.forEach(row => {
+                                if (!row.Type || !row.Description) return;
+                                
+                                const amount = parseFloat(row.Amount);
+                                const net = parseFloat(row.Net);
+                                if (isNaN(amount) || isNaN(net)) return;
+                                
+                                // Income from charges and payments
+                                if ((row.Type === 'charge' || row.Type === 'payment') && net > 0) {
+                                    incomeTransactions.push({
+                                        date: row['Created (UTC)'].split(' ')[0],
+                                        description: row.Description || 'Stripe Payment',
+                                        amount: amount,
+                                        net: net,
+                                        fee: parseFloat(row.Fee) || 0,
+                                        source: 'Stripe'
+                                    });
+                                    totalIncome += amount;
+                                }
+                                
+                                // Stripe fees as expenses
+                                if (row.Type === 'stripe_fee' && amount < 0) {
+                                    const category = 'Software & Subscriptions';
+                                    if (!categories[category]) {
+                                        categories[category] = [];
+                                    }
+                                    categories[category].push({
+                                        date: row['Created (UTC)'].split(' ')[0],
+                                        description: row.Description || 'Stripe Fee',
+                                        amount: Math.abs(amount),
+                                        source: 'Stripe'
+                                    });
+                                    totalExpenses += Math.abs(amount);
+                                }
+                            });
+                        }
+                    });
+                    
+                    // Sort transactions within each category by date
+                    Object.keys(categories).forEach(category => {
+                        categories[category].sort((a, b) => new Date(b.date) - new Date(a.date));
+                    });
+                    
+                    incomeTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    
+                    setReport({
+                        categories,
+                        incomeTransactions,
+                        totalExpenses,
+                        totalIncome,
+                        netIncome: totalIncome - totalExpenses,
+                        transactionCount: Object.values(categories).reduce((sum, cat) => sum + cat.length, 0) + incomeTransactions.length
+                    });
+                    
+                    setLoading(false);
+                });
+            };
+
+            const toggleCategory = (category) => {
+                setCollapsedCategories(prev => {
+                    const newSet = new Set(prev);
+                    if (newSet.has(category)) {
+                        newSet.delete(category);
+                    } else {
+                        newSet.add(category);
+                    }
+                    return newSet;
+                });
+            };
+
+            const exportToCSV = () => {
+                if (!report) return;
+                
+                let csv = 'Date,Description,Category,Amount,Source\n';
+                
+                // Add income
+                report.incomeTransactions.forEach(t => {
+                    csv += `"${t.date}","${t.description}","Income",${t.amount},"${t.source}"\n`;
+                });
+                
+                // Add expenses
+                Object.entries(report.categories).forEach(([category, transactions]) => {
+                    transactions.forEach(t => {
+                        csv += `"${t.date}","${t.description}","${category}",${t.amount},"${t.source}"\n`;
+                    });
+                });
+                
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `tax-report-${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+            };
+
+            const printReport = () => {
+                window.print();
+            };
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>📊 Tax Transaction Report Generator</h1>
+                        <p>Upload your credit card and Stripe CSV files to generate a comprehensive tax report</p>
+                    </div>
+                    
+                    <div className="upload-section">
+                        <div className="upload-grid">
+                            <div 
+                                className={`upload-box ${creditCardFile ? 'uploaded' : ''}`}
+                                onClick={() => document.getElementById('creditCardInput').click()}
+                            >
+                                <div className="upload-icon">
+                                    {creditCardFile ? '✅' : '💳'}
+                                </div>
+                                <h3>Credit Card Activity</h3>
+                                <p>{creditCardFile ? creditCardFile.name : 'Click to upload activity.csv'}</p>
+                                <input
+                                    id="creditCardInput"
+                                    type="file"
+                                    accept=".csv"
+                                    onChange={(e) => handleFileUpload(e.target.files[0], 'credit')}
+                                />
+                            </div>
+                            
+                            <div 
+                                className={`upload-box ${stripeFile ? 'uploaded' : ''}`}
+                                onClick={() => document.getElementById('stripeInput').click()}
+                            >
+                                <div className="upload-icon">
+                                    {stripeFile ? '✅' : '💰'}
+                                </div>
+                                <h3>Stripe Transactions</h3>
+                                <p>{stripeFile ? stripeFile.name : 'Click to upload balance_history.csv'}</p>
+                                <input
+                                    id="stripeInput"
+                                    type="file"
+                                    accept=".csv"
+                                    onChange={(e) => handleFileUpload(e.target.files[0], 'stripe')}
+                                />
+                            </div>
+                        </div>
+                        
+                        <div style={{ textAlign: 'center' }}>
+                            <button 
+                                className="btn"
+                                onClick={generateReport}
+                                disabled={(!creditCardFile && !stripeFile) || loading}
+                            >
+                                {loading ? 'Generating Report...' : 'Generate Tax Report'}
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {loading && (
+                        <div className="loading">
+                            <p>🔄 Processing your transactions...</p>
+                        </div>
+                    )}
+                    
+                    {report && !loading && (
+                        <div className="report-section">
+                            <div className="summary-grid">
+                                <div className="summary-card">
+                                    <h3>Total Income</h3>
+                                    <div className="amount">${report.totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                </div>
+                                
+                                <div className="summary-card">
+                                    <h3>Total Expenses</h3>
+                                    <div className="amount">${report.totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                </div>
+                                
+                                <div className="summary-card">
+                                    <h3>Net Income</h3>
+                                    <div className="amount">${report.netIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                </div>
+                                
+                                <div className="summary-card">
+                                    <h3>Total Transactions</h3>
+                                    <div className="amount">{report.transactionCount}</div>
+                                </div>
+                            </div>
+                            
+                            {/* Income Section */}
+                            <div className="category-section">
+                                <h2>💰 Business Income</h2>
+                                <div className="category-card">
+                                    <div 
+                                        className="category-header"
+                                        onClick={() => toggleCategory('income')}
+                                    >
+                                        <h3>Stripe Payments & Charges</h3>
+                                        <div>
+                                            <span className="total" style={{color: '#10b981'}}>
+                                                ${report.totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </span>
+                                            <button className="toggle-btn">
+                                                {collapsedCategories.has('income') ? '▼ Show' : '▲ Hide'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {!collapsedCategories.has('income') && (
+                                        <div className="transaction-list">
+                                            {report.incomeTransactions.map((t, idx) => (
+                                                <div key={idx} className="transaction-item income-item">
+                                                    <div className="transaction-date">{t.date}</div>
+                                                    <div className="transaction-desc">{t.description}</div>
+                                                    <div className="transaction-amount">
+                                                        ${t.amount.toFixed(2)}
+                                                        <div style={{fontSize: '0.8em', color: '#666'}}>
+                                                            Net: ${t.net.toFixed(2)}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            
+                            {/* Expense Categories */}
+                            <div className="category-section">
+                                <h2>💸 Business Expenses by Category</h2>
+                                <div className="category-grid">
+                                    {Object.entries(report.categories)
+                                        .filter(([_, transactions]) => transactions.length > 0)
+                                        .sort(([_, a], [__, b]) => {
+                                            const sumA = a.reduce((sum, t) => sum + t.amount, 0);
+                                            const sumB = b.reduce((sum, t) => sum + t.amount, 0);
+                                            return sumB - sumA;
+                                        })
+                                        .map(([category, transactions]) => {
+                                            const total = transactions.reduce((sum, t) => sum + t.amount, 0);
+                                            return (
+                                                <div key={category} className={`category-card ${collapsedCategories.has(category) ? 'collapsed' : ''}`}>
+                                                    <div 
+                                                        className="category-header"
+                                                        onClick={() => toggleCategory(category)}
+                                                    >
+                                                        <h3>{category} ({transactions.length})</h3>
+                                                        <div>
+                                                            <span className="total">
+                                                                ${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                            </span>
+                                                            <button className="toggle-btn">
+                                                                {collapsedCategories.has(category) ? '▼ Show' : '▲ Hide'}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    {!collapsedCategories.has(category) && (
+                                                        <div className="transaction-list">
+                                                            {transactions.map((t, idx) => (
+                                                                <div key={idx} className="transaction-item">
+                                                                    <div className="transaction-date">{t.date}</div>
+                                                                    <div className="transaction-desc">{t.description}</div>
+                                                                    <div className="transaction-amount">${t.amount.toFixed(2)}</div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                </div>
+                            </div>
+                            
+                            <div className="export-section">
+                                <h3 style={{marginBottom: '20px', color: '#333'}}>Export Options</h3>
+                                <button className="btn" onClick={exportToCSV}>
+                                    📥 Download CSV Report
+                                </button>
+                                <button className="btn btn-secondary" onClick={printReport}>
+                                    🖨️ Print Report
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        ReactDOM.render(<TaxReportGenerator />, document.getElementById('root'));
+    </script>
+</body>
+</html>
