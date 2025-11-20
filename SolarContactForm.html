@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Your Free Solar Quote | Peak Leads Group</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .benefits {
+            background: #f8f9ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+
+        .benefits ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .benefits li {
+            padding: 8px 0;
+            color: #555;
+        }
+
+        .benefits li:before {
+            content: "✓ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="tel"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .consent-section {
+            background: #fff9e6;
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+
+        .consent-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            margin-top: 2px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .checkbox-label {
+            color: #333;
+            font-size: 14px;
+            line-height: 1.6;
+            cursor: pointer;
+        }
+
+        .consent-details {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.6;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .consent-details p {
+            margin-bottom: 10px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .privacy-footer {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .privacy-footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .privacy-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            .subtitle {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">☀️ Peak Leads Group</div>
+            <h1>Go Solar & Save Big!</h1>
+            <p class="subtitle">Get Your Free, No-Obligation Solar Quote Today</p>
+        </div>
+
+        <form id="solarForm">
+            <div class="form-group">
+                <label for="fullName">Full Name <span class="required">*</span></label>
+                <input type="text" id="fullName" name="fullName" required placeholder="John Smith">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address <span class="required">*</span></label>
+                <input type="email" id="email" name="email" required placeholder="john@example.com">
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number <span class="required">*</span></label>
+                <input type="tel" id="phone" name="phone" required placeholder="(555) 123-4567">
+            </div>
+
+            <div class="consent-section">
+                <div class="consent-title">Communication Consent Required</div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="consent" name="consent" required>
+                    <label for="consent" class="checkbox-label">
+                        <strong>I agree to receive calls, text messages, and other communications from Peak Leads Group and its authorized partners</strong> at the phone number provided above, including through the use of automated technology, pre-recorded messages, and artificial or prerecorded voices. I understand that my consent is not a condition of purchase and that I may revoke my consent at any time. <span class="required">*</span>
+                    </label>
+                </div>
+
+                <div class="consent-details">
+                    <p><strong>What You're Consenting To:</strong></p>
+                    <p>By providing your phone number and checking the box above, you expressly consent to receive:</p>
+                    <ul style="margin-left: 20px; margin-bottom: 10px;">
+                        <li>Informational and marketing calls and text messages</li>
+                        <li>Automated calls, texts, and prerecorded voice messages</li>
+                        <li>Communications regarding solar energy products, services, quotes, and promotions</li>
+                    </ul>
+                    <p><strong>Message Frequency:</strong> Message frequency may vary. You may receive up to 10 messages per month.</p>
+                    <p><strong>Message & Data Rates:</strong> Message and data rates may apply depending on your mobile carrier plan.</p>
+                    <p><strong>How to Opt-Out:</strong> You may opt out at any time by replying STOP to any text message, calling us at (919) 363-4740, or emailing drew@peakleadsgroup.com.</p>
+                    <p><strong>Help:</strong> For help or questions, reply HELP to any text message or contact us at drew@peakleadsgroup.com.</p>
+                    <p><strong>No Purchase Required:</strong> Your consent is not a condition of purchasing any goods or services.</p>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">Get My Free Solar Quote</button>
+
+            <div class="privacy-footer">
+                <p>We respect your privacy and will never sell your information.</p>
+                <p>
+                    By submitting this form, you agree to our 
+                    <a href="#privacy-policy">Privacy Policy</a> and 
+                    <a href="#terms">Terms of Service</a>.
+                </p>
+                <p style="margin-top: 15px;">
+                    <strong>Peak Leads Group</strong><br>
+                    Email: drew@peakleadsgroup.com<br>
+                    Phone: (919) 363-4740<br>
+                    Address: 105 Buckhaven Ct, Apex, NC 27502
+                </p>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Form validation and submission
+        const form = document.getElementById('solarForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Phone number formatting
+        const phoneInput = document.getElementById('phone');
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 0) {
+                if (value.length <= 3) {
+                    value = '(' + value;
+                } else if (value.length <= 6) {
+                    value = '(' + value.slice(0, 3) + ') ' + value.slice(3);
+                } else {
+                    value = '(' + value.slice(0, 3) + ') ' + value.slice(3, 6) + '-' + value.slice(6, 10);
+                }
+            }
+            e.target.value = value;
+        });
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validate consent checkbox
+            const consentCheckbox = document.getElementById('consent');
+            if (!consentCheckbox.checked) {
+                alert('Please agree to receive communications to continue.');
+                return;
+            }
+
+            // Collect form data
+            const formData = {
+                fullName: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                consent: consentCheckbox.checked,
+                consentTimestamp: new Date().toISOString(),
+                consentIP: 'Collected via form submission'
+            };
+
+            // Disable submit button
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            // Here you would send the data to your server/CRM
+            // Example using fetch:
+            /*
+            fetch('YOUR_WEBHOOK_URL', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Redirect to thank you page or show success message
+                window.location.href = '/thank-you';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('There was an error submitting your request. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Get My Free Solar Quote';
+            });
+            */
+
+            // For demo purposes, show success message
+            setTimeout(() => {
+                alert('Thank you! Your information has been submitted. We will contact you shortly.');
+                form.reset();
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Get My Free Solar Quote';
+            }, 1000);
+        });
+
+        // Enable/disable submit button based on consent
+        document.getElementById('consent').addEventListener('change', function() {
+            submitBtn.disabled = !this.checked;
+        });
+
+        // Initial state
+        submitBtn.disabled = !document.getElementById('consent').checked;
+    </script>
+</body>
+</html>
