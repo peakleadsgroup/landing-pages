@@ -341,6 +341,14 @@
                 return;
             }
 
+            // Check file size (limit to 10MB to avoid issues)
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (selectedFile.size > maxSize) {
+                errorMessage.textContent = `✗ File is too large. Maximum size is 10MB. Your file is ${formatFileSize(selectedFile.size)}.`;
+                errorMessage.classList.add('active');
+                return;
+            }
+
             // Disable button and show progress
             uploadBtn.disabled = true;
             loading.classList.add('active');
@@ -349,18 +357,70 @@
             successMessage.classList.remove('active');
 
             try {
-                // Step 1: Convert file to base64
+                // Step 1: Upload file to file.io (supports CORS and returns a URL)
                 progressFill.style.width = '30%';
-                loading.textContent = 'Processing file...';
+                loading.textContent = 'Uploading file...';
 
-                const base64Data = await fileToBase64(selectedFile);
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                // Try file.io first (supports CORS)
+                let fileUrl = null;
+                try {
+                    const uploadResponse = await fetch('https://file.io', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (uploadResponse.ok) {
+                        const uploadData = await uploadResponse.json();
+                        if (uploadData.success && uploadData.link) {
+                            fileUrl = uploadData.link;
+                        }
+                    }
+                } catch (e) {
+                    console.log('file.io failed, trying alternative...', e);
+                }
+
+                // Fallback: If file.io fails, try using a CORS proxy with 0x0.st
+                if (!fileUrl) {
+                    try {
+                        // Use a CORS proxy
+                        const proxyUrl = 'https://cors-anywhere.herokuapp.com/https://0x0.st';
+                        const proxyResponse = await fetch(proxyUrl, {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: formData
+                        });
+
+                        if (proxyResponse.ok) {
+                            fileUrl = (await proxyResponse.text()).trim();
+                        }
+                    } catch (e) {
+                        console.log('CORS proxy failed, trying direct base64 for small files...', e);
+                        
+                        // Last resort: Use base64 for small files only (< 5MB)
+                        if (selectedFile.size < 5 * 1024 * 1024) {
+                            const base64Data = await fileToBase64(selectedFile);
+                            fileUrl = base64Data;
+                        } else {
+                            throw new Error('File upload service unavailable. Please try again later or use a smaller file.');
+                        }
+                    }
+                }
+
+                if (!fileUrl) {
+                    throw new Error('Failed to upload file. Please try again.');
+                }
+
                 progressFill.style.width = '60%';
-                loading.textContent = 'Uploading to Airtable...';
+                loading.textContent = 'Saving to Airtable...';
 
-                // Step 2: Update Airtable record with the base64 file
-                // Airtable accepts base64 data URLs for attachments
+                // Step 2: Update Airtable record with the file URL
                 const attachment = [{
-                    url: base64Data,
+                    url: fileUrl,
                     filename: selectedFile.name
                 }];
 
