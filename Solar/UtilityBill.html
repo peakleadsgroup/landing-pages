@@ -349,33 +349,18 @@
             successMessage.classList.remove('active');
 
             try {
-                // Step 1: Upload file to temporary hosting service to get a public URL
-                // Using 0x0.st - a free file hosting service
+                // Step 1: Convert file to base64
                 progressFill.style.width = '30%';
-                loading.textContent = 'Uploading file...';
+                loading.textContent = 'Processing file...';
 
-                const formData = new FormData();
-                formData.append('file', selectedFile);
-
-                // Upload to 0x0.st (free file hosting)
-                const uploadResponse = await fetch('https://0x0.st', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!uploadResponse.ok) {
-                    throw new Error('Failed to upload file to hosting service');
-                }
-
-                const fileUrl = (await uploadResponse.text()).trim();
+                const base64Data = await fileToBase64(selectedFile);
                 progressFill.style.width = '60%';
-                loading.textContent = 'Saving to Airtable...';
+                loading.textContent = 'Uploading to Airtable...';
 
-                // Step 2: Update Airtable record with the file URL
-                // Airtable expects attachments in this format:
-                // [{ url: "https://...", filename: "file.pdf" }]
+                // Step 2: Update Airtable record with the base64 file
+                // Airtable accepts base64 data URLs for attachments
                 const attachment = [{
-                    url: fileUrl,
+                    url: base64Data,
                     filename: selectedFile.name
                 }];
 
@@ -420,6 +405,15 @@
                 errorMessage.classList.add('active');
                 uploadBtn.disabled = false;
             }
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
         }
     </script>
 </body>
