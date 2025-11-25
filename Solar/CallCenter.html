@@ -333,13 +333,14 @@
         }
 
         .save-btn:disabled {
-            background: #ccc;
+            background: #ccc !important;
+            color: #666;
             cursor: not-allowed;
             box-shadow: none;
         }
 
-        .save-btn.enabled {
-            background: #4CAF50;
+        .save-btn.enabled:not(:disabled) {
+            background: #4CAF50 !important;
             color: white;
         }
 
@@ -369,6 +370,7 @@
             .save-btn {
                 padding: 12px 24px;
                 font-size: 14px;
+                bottom: 80px;
             }
         }
     </style>
@@ -402,7 +404,8 @@
         // Stage order
         const STAGE_ORDER = [
             'Uncontacted',
-            'Contacted',
+            'Calling',
+            'Left VM',
             'Waiting on Appointment Time',
             'Waiting on UB',
             'Not Interested'
