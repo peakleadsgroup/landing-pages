@@ -481,7 +481,7 @@
         <!-- PHONE/TEXT CONTACT SCREEN -->
         <div class="form-step" id="contactStep">
             <div style="text-align: center;">
-                <div style="font-size: 24px; color: #4CAF50; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your free estimate!</div>
+                <div style="font-size: 24px; color: #4CAF50; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your virtual appointment!</div>
                 <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Or if you're ready to schedule now you can contact us by clicking the button below</div>
                 
                 <a href="sms:+19843212153?&body=Hey%2C%20this%20is%20Drew%21%20I%20just%20saw%20your%20video%20on%20social%20media%20and%20would%20like%20to%20schedule%20an%20appointment%20to%20get%20my%20free%2C%20no%20obligation%20quote.%20Please%20send%20me%20some%20days%2Ftimes%20that%20you%27re%20available%21" class="contact-button text-button" id="textButton">
@@ -812,7 +812,7 @@
             
             // Build the SMS body with lead's name
             const smsBody = encodeURIComponent(
-                `Hey, this is ${firstName}! I just saw your video on social media and would like to schedule an appointment to get my free, no obligation quote. Please send me some days/times that you're available!`
+                `Hey, this is ${firstName}! I just saw your video on social media and would like to schedule a virtual appointment to see how much I could save by going solar. Please send me some days/times that you're available!`
             );
             
             // Update the text button and phone display
@@ -903,6 +903,10 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                     "First Name": finalData.firstName,
                     "Last Name": finalData.lastName,
                     "Email": finalData.email,
+                    "Street Address": finalData.address.street,
+                    "City": finalData.address.city,
+                    "State": finalData.address.state,
+                    "Zip": finalData.address.zip,
                     "Full Summary": fullSummary
                 }
             };
