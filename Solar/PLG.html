@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Installation Qualification</title>
+    
+    <!-- Meta Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1395459551965162');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1395459551965162&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Meta Pixel Code -->
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
+                        url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/solarback2.avif') center/cover no-repeat fixed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo-container {
+            margin-bottom: 30px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .logo-img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .main-heading {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .question {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .sub-heading {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 25px;
+            font-style: italic;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .option {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .option:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .option.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            color: #1976d2;
+        }
+
+        .address-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .address-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .address-input {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f8f9fa;
+            width: 100%;
+        }
+
+        .address-input:focus {
+            outline: none;
+            border-color: #2196f3;
+            background: #fff;
+        }
+
+        .address-input.error {
+            border-color: #f44336;
+        }
+
+        .address-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .address-label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .address-error {
+            color: #f44336;
+            font-size: 12px;
+            margin-top: 5px;
+            text-align: left;
+            display: none;
+        }
+
+        .hidden-initially {
+            display: none !important;
+        }
+
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4CAF50;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .nav-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .name-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .phone-step label {
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: block;
+            color: #2c3e50;
+            text-align: left;
+        }
+
+        .phone-help {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+            text-align: left;
+        }
+
+        .row {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        #phone, #phone2, #email {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f8f9fa;
+            width: 100%;
+        }
+
+        #phone:focus, #phone2:focus, #email:focus {
+            outline: none;
+            border-color: #2196f3;
+            background: #fff;
+        }
+
+        /* Phone/Text Button Styles */
+        .contact-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: white;
+            text-decoration: none;
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .text-button {
+            background: #3b82f6;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+        
+        .text-button:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+        }
+        
+        .contact-button:active {
+            transform: translateY(0);
+        }
+        
+        .message-icon {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .phone-number-display {
+            color: #4CAF50;
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 20px;
+            letter-spacing: 1px;
+        }
+
+        @media (max-width: 600px) {
+            .form-container {
+                padding: 25px;
+                margin: 10px;
+            }
+
+            .address-row {
+                grid-template-columns: 1fr;
+            }
+
+            .name-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .main-heading {
+                font-size: 20px;
+            }
+
+            .question {
+                font-size: 18px;
+            }
+            
+            .logo-container {
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="logo-container">
+            <img src="https://github.com/peakleadsgroup/landing-pages/blob/main/Images/FREE%20SOLAR%20INSTALLATION%20FLAT.png?raw=true" 
+                 alt="ALTNAME" 
+                 class="logo-img">
+        </div>
+
+        <div id="mainHeading">
+            <h1 class="main-heading">
+                Take our 30 second quiz to <span class="highlight">see how much you can save</span>
+            </h1>
+        </div>
+
+        <div class="progress-bar" id="progressBarContainer">
+            <div class="progress-fill" id="progressFill" style="width: 14.3%"></div>
+        </div>
+
+        <!-- STEP 1: Homeowner -->
+        <div class="form-step active" id="step1">
+            <div class="question">Do you own your home?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'yes')">Yes</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'no')">No</div>
+            </div>
+        </div>
+
+        <!-- STEP 2: Electric Bill -->
+        <div class="form-step" id="step2">
+            <div class="question">Do you pay more than $100/mo for electricity?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'electricBill', 'yes')">Yes</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'electricBill', 'no')">No</div>
+            </div>
+        </div>
+
+        <!-- STEP 3: Home Type -->
+        <div class="form-step" id="step3">
+            <div class="question">What type of home do you have?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'single_family')">Single Family</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'townhome_duplex')">Townhome/duplex</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'condo_apartment')">Condo/apartment</div>
+            </div>
+        </div>
+
+        <!-- STEP 4: Timeline -->
+        <div class="form-step" id="step4">
+            <div class="question">How soon would you like to make the switch if the numbers make sense?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'asap')">ASAP</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'within_month')">Within a month</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'within_3_months')">Within 3 months</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'within_6_months')">Within 6 months</div>
+            </div>
+        </div>
+
+        <!-- STEP 5: Address -->
+        <div class="form-step" id="step5">
+            <div class="question">What is the location of this project?</div>
+            <div class="sub-heading">Please make sure your address is full and correct so we can confirm you are within our service area</div>
+            <div class="address-grid">
+                <div class="address-field">
+                    <label class="address-label" for="street">Street Address</label>
+                    <input type="text" class="address-input" id="street" placeholder="Street Address" oninput="validateAddressForm()">
+                    <div class="address-error" id="streetError">Street address must start with a number</div>
+                </div>
+                
+                <div id="cityField" class="address-field hidden-initially">
+                    <label class="address-label" for="city">City</label>
+                    <input type="text" class="address-input" id="city" placeholder="City" oninput="validateAddressForm()">
+                </div>
+                
+                <div class="address-row hidden-initially" id="stateZipRow">
+                    <div class="address-field">
+                        <label class="address-label" for="state">State</label>
+                        <input type="text" class="address-input" id="state" placeholder="State" oninput="validateAddressForm()">
+                    </div>
+                    <div class="address-field">
+                        <label class="address-label" for="zip">Zip Code</label>
+                        <input type="text" class="address-input" id="zip" placeholder="Zip Code" oninput="validateAddressForm()" maxlength="5">
+                    </div>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="goToStep6()" id="submitFormBtn" disabled>Next</button>
+            </div>
+        </div>
+
+        <!-- STEP 6: NAME -->
+        <div class="form-step" id="step6">
+            <div class="question">Who will we be making this quote out to?</div>
+            <div class="name-grid">
+                <div>
+                    <label for="firstName" style="margin-bottom: 10px; display: block; color: #2c3e50; text-align: center;">First Name</label>
+                    <input type="text" class="address-input" id="firstName" placeholder="First Name" required autocomplete="given-name" oninput="validateNameForm()">
+                </div>
+                <div>
+                    <label for="lastName" style="margin-bottom: 10px; display: block; color: #2c3e50; text-align: center;">Last Name</label>
+                    <input type="text" class="address-input" id="lastName" placeholder="Last Name" required autocomplete="family-name" oninput="validateNameForm()">
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="goToStep7()" id="nameNextBtn" disabled>Next</button>
+            </div>
+        </div>
+
+        <!-- STEP 7: PHONE & EMAIL -->
+        <div class="form-step" id="step7">
+            <div class="question">Where can we reach you with your quote?</div>
+            <div class="row">
+                <div id="phoneWrap">
+                    <label for="phone">Phone</label>
+                    <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required autocomplete="tel" aria-describedby="phoneHelp">
+                    <small id="phoneHelp" class="phone-help">US number, 10 digits.</small>
+                    <input type="hidden" id="phone_digits" name="phone_digits" value="">
+                </div>
+                <div id="emailWrap">
+                    <label for="email">Email</label>
+                    <input id="email" name="email" type="email" placeholder="your@email.com" required autocomplete="email">
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="submitFinalForm()" id="contactSubmitBtn" disabled>Get My Quote</button>
+            </div>
+        </div>
+
+        <!-- PHONE/TEXT CONTACT SCREEN -->
+        <div class="form-step" id="contactStep">
+            <div style="text-align: center;">
+                <div style="font-size: 24px; color: #4CAF50; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your free estimate!</div>
+                <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Or if you're ready to schedule now you can contact us by clicking the button below</div>
+                
+                <a href="sms:+19843212153?&body=Hey%2C%20this%20is%20Drew%21%20I%20just%20saw%20your%20video%20on%20social%20media%20and%20would%20like%20to%20schedule%20an%20appointment%20to%20get%20my%20free%2C%20no%20obligation%20quote.%20Please%20send%20me%20some%20days%2Ftimes%20that%20you%27re%20available%21" class="contact-button text-button" id="textButton">
+                    <svg class="message-icon" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 11H7V9h2v2zm4 0h-2V9h2v2zm4 0h-2V9h2v2z"/>
+                    </svg>
+                    Text
+                </a>
+                
+                <div class="phone-number-display">(984) 321-2153</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Airtable Configuration
+        const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
+        const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
+        const AIRTABLE_TABLE_ID = 'tbleru0SBQwlXgojx';
+        const CLIENT_PHONE = '+19843212153';
+
+        let currentStep = 1;
+        let formData = {};
+        let eventId = null;
+        let hasTrackedEngagement = false;
+
+        function generateEventId() {
+            return 'event_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function selectOptionAndAdvance(element, field, value) {
+            const options = element.parentElement.querySelectorAll('.option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            element.classList.add('selected');
+            formData[field] = value;
+            
+            if (!hasTrackedEngagement) {
+                if (typeof fbq !== 'undefined') {
+                    fbq('track', 'ViewContent', {
+                        content_category: 'solar_installation',
+                        content_name: 'solar_installation_quiz_start'
+                    });
+                }
+                hasTrackedEngagement = true;
+            }
+            
+            setTimeout(() => {
+                nextStep();
+            }, 200);
+        }
+
+        function validateAddressForm() {
+            const street = document.getElementById('street').value.trim();
+            const city = document.getElementById('city').value.trim();
+            const state = document.getElementById('state').value.trim();
+            const zip = document.getElementById('zip').value.trim();
+            const cityField = document.getElementById('cityField');
+            const stateZipRow = document.getElementById('stateZipRow');
+            const streetInput = document.getElementById('street');
+            const streetError = document.getElementById('streetError');
+            
+            // Check if street starts with a number
+            const startsWithNumber = /^\d/.test(street);
+            
+            if (street.length > 0) {
+                if (!startsWithNumber) {
+                    streetInput.classList.add('error');
+                    streetError.style.display = 'block';
+                } else {
+                    streetInput.classList.remove('error');
+                    streetError.style.display = 'none';
+                }
+                
+                cityField.classList.remove('hidden-initially');
+                stateZipRow.classList.remove('hidden-initially');
+            } else {
+                streetInput.classList.remove('error');
+                streetError.style.display = 'none';
+                cityField.classList.add('hidden-initially');
+                stateZipRow.classList.add('hidden-initially');
+                document.getElementById('city').value = '';
+                document.getElementById('state').value = '';
+                document.getElementById('zip').value = '';
+            }
+            
+            const submitBtn = document.getElementById('submitFormBtn');
+            if (submitBtn) {
+                submitBtn.disabled = !(street && city && state && zip && startsWithNumber);
+            }
+            
+            if (street && city && state && zip && startsWithNumber) {
+                formData.address = { street, city, state, zip };
+            }
+        }
+
+        function updateProgress() {
+            const progressFill = document.getElementById('progressFill');
+            const percentage = (currentStep / 7) * 100;
+            progressFill.style.width = percentage + '%';
+        }
+
+        function nextStep() {
+            if (currentStep < 7) {
+                document.getElementById('step' + currentStep).classList.remove('active');
+                currentStep++;
+                document.getElementById('step' + currentStep).classList.add('active');
+                updateProgress();
+            }
+        }
+
+        function goToStep6() {
+            validateAddressForm();
+            if (formData.address) {
+                nextStep();
+            }
+        }
+
+        function validateNameForm() {
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const nameNextBtn = document.getElementById('nameNextBtn');
+            
+            if (nameNextBtn) {
+                nameNextBtn.disabled = !(firstName && lastName);
+            }
+            
+            if (firstName && lastName) {
+                formData.firstName = firstName;
+                formData.lastName = lastName;
+            }
+        }
+
+        function goToStep7() {
+            validateNameForm();
+            if (formData.firstName && formData.lastName) {
+                nextStep();
+                setupPhoneValidation();
+            }
+        }
+
+        function formatPhone(val) {
+            const d = val.replace(/\D/g,'').slice(0,10);
+            let f = d;
+            if(d.length > 6) f = `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+            else if(d.length > 3) f = `(${d.slice(0,3)}) ${d.slice(3)}`;
+            else if(d.length > 0) f = `(${d}`;
+            return {formatted:f, digits:d};
+        }
+
+        function isValidPhoneNumber(digits) {
+            // Check 1: Must be exactly 10 digits
+            if (digits.length !== 10) {
+                return { valid: false, error: 'Phone number must be 10 digits.' };
+            }
+
+            // Check 2: Cannot start with 1
+            if (digits.charAt(0) === '1') {
+                return { valid: false, error: "Phone number shouldn't start with a 1." };
+            }
+
+            const areaCode = digits.substring(0, 3);
+            const exchange = digits.substring(3, 6);
+            const lineNumber = digits.substring(6, 10);
+
+            // Check 3: Area code validation - repeating digits (000, 111, 222, etc)
+            if (/^(\d)\1{2}$/.test(areaCode)) {
+                return { valid: false, error: 'Invalid area code.' };
+            }
+
+            // Check 4: Area code validation - 555
+            if (areaCode === '555') {
+                return { valid: false, error: 'Area code 555 is not valid.' };
+            }
+
+            // Check 5: Area code validation - toll-free numbers
+            const tollFreeAreaCodes = ['800', '888', '877', '866', '855', '844', '833'];
+            if (tollFreeAreaCodes.includes(areaCode)) {
+                return { valid: false, error: 'Toll-free numbers are not accepted.' };
+            }
+
+            // Check 6: Exchange code validation - special services
+            const specialExchanges = ['911', '411', '611'];
+            if (specialExchanges.includes(exchange)) {
+                return { valid: false, error: 'Invalid exchange code.' };
+            }
+
+            // Check 7: Exchange code validation - cannot start with 0 or 1
+            if (exchange.charAt(0) === '0' || exchange.charAt(0) === '1') {
+                return { valid: false, error: 'Invalid exchange code.' };
+            }
+
+            // Check 8: Sequential digits (ascending)
+            if (digits === '1234567890' || digits === '0123456789') {
+                return { valid: false, error: 'Sequential numbers are not valid.' };
+            }
+            for (let i = 0; i < digits.length - 2; i++) {
+                const digit1 = parseInt(digits.charAt(i));
+                const digit2 = parseInt(digits.charAt(i + 1));
+                const digit3 = parseInt(digits.charAt(i + 2));
+                
+                if (digit2 === digit1 + 1 && digit3 === digit2 + 1) {
+                    // Allow one sequence of 3, but check if entire number is sequential
+                    let sequentialCount = 3;
+                    for (let j = i + 3; j < digits.length; j++) {
+                        if (parseInt(digits.charAt(j)) === parseInt(digits.charAt(j - 1)) + 1) {
+                            sequentialCount++;
+                        } else {
+                            break;
+                        }
+                    }
+                    if (sequentialCount >= 7) {
+                        return { valid: false, error: 'Sequential numbers are not valid.' };
+                    }
+                }
+            }
+
+            // Check 9: All same digits (555-555-5555, etc)
+            if (/^(\d)\1{9}$/.test(digits)) {
+                return { valid: false, error: 'All digits cannot be the same.' };
+            }
+
+            // Check 10: Repeating patterns (123-123-1234, 456-456-4567)
+            if (areaCode === exchange && areaCode === lineNumber.substring(0, 3)) {
+                return { valid: false, error: 'Repeating patterns are not valid.' };
+            }
+
+            // Check 11: Known fake/test numbers (555-0100 through 555-0199)
+            if (exchange === '555' && lineNumber.startsWith('01')) {
+                return { valid: false, error: 'Test numbers are not valid.' };
+            }
+
+            // Check 12: Wildcard/placeholder detection - multiple zeros in a row
+            if (digits.includes('000') || digits.includes('0000')) {
+                return { valid: false, error: 'Invalid phone number format.' };
+            }
+
+            // Check 13: 999-9999 patterns
+            if (lineNumber === '9999' || exchange === '999') {
+                return { valid: false, error: 'Invalid phone number format.' };
+            }
+
+            return { valid: true, error: '' };
+        }
+
+        function validatePhones() {
+            const phoneInput = document.getElementById('phone');
+            const emailInput = document.getElementById('email');
+            const phoneDigits = document.getElementById('phone_digits');
+            const contactSubmitBtn = document.getElementById('contactSubmitBtn');
+            
+            if (!phoneInput || !emailInput) return;
+
+            const p1 = formatPhone(phoneInput.value);
+            if (phoneInput.value !== p1.formatted) phoneInput.value = p1.formatted;
+            phoneDigits.value = p1.digits;
+
+            let phoneError = document.getElementById('phoneError');
+            if (!phoneError) {
+                phoneError = document.createElement('div');
+                phoneError.id = 'phoneError';
+                phoneError.style.color = 'red';
+                phoneError.style.fontSize = '12px';
+                phoneError.style.marginTop = '5px';
+                phoneError.style.display = 'none';
+                
+                const phoneHelp = document.getElementById('phoneHelp');
+                if (phoneHelp) {
+                    phoneHelp.parentNode.insertBefore(phoneError, phoneHelp.nextSibling);
+                }
+            }
+
+            // Validate phone number with all checks
+            const validation = isValidPhoneNumber(p1.digits);
+            
+            if (p1.digits.length > 0 && !validation.valid) {
+                phoneError.textContent = validation.error;
+                phoneError.style.display = 'block';
+                phoneInput.setCustomValidity(validation.error);
+            } else {
+                phoneError.style.display = 'none';
+                if(p1.digits.length === 10 && validation.valid){
+                    phoneInput.setCustomValidity('');
+                } else if (p1.digits.length > 0 && p1.digits.length < 10) {
+                    phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
+                }
+            }
+
+            // Validate email
+            const emailValue = emailInput.value.trim();
+            const emailValid = emailValue.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue);
+            
+            if (emailValue.length > 0 && !emailValid) {
+                emailInput.setCustomValidity('Please enter a valid email address.');
+            } else {
+                emailInput.setCustomValidity('');
+            }
+
+            const phoneValid = p1.digits.length === 10 && validation.valid;
+            const buttonShouldEnable = phoneValid && emailValid;
+            
+            if (contactSubmitBtn) {
+                contactSubmitBtn.disabled = !buttonShouldEnable;
+            }
+        }
+
+        function setupPhoneValidation() {
+            const phoneInput = document.getElementById('phone');
+            const emailInput = document.getElementById('email');
+            
+            if (phoneInput) {
+                phoneInput.addEventListener('input', validatePhones);
+                phoneInput.addEventListener('blur', validatePhones);
+            }
+            
+            if (emailInput) {
+                emailInput.addEventListener('input', validatePhones);
+                emailInput.addEventListener('blur', validatePhones);
+            }
+        }
+
+        function showContactScreen() {
+            // Get lead's name
+            const firstName = document.getElementById('firstName')?.value.trim() || '';
+            
+            // Format phone number for display
+            const phoneForDisplay = formatClientPhoneForDisplay(CLIENT_PHONE);
+            
+            // Build the SMS body with lead's name
+            const smsBody = encodeURIComponent(
+                `Hey, this is ${firstName}! I just saw your video on social media and would like to schedule an appointment to get my free, no obligation quote. Please send me some days/times that you're available!`
+            );
+            
+            // Update the text button and phone display
+            const textButton = document.getElementById('textButton');
+            const phoneDisplay = document.querySelector('.phone-number-display');
+            
+            if (textButton) textButton.href = `sms:${CLIENT_PHONE}?&body=${smsBody}`;
+            if (phoneDisplay) phoneDisplay.textContent = phoneForDisplay;
+            
+            // Show the contact screen
+            document.getElementById('step7').classList.remove('active');
+            document.getElementById('contactStep').classList.add('active');
+            document.getElementById('progressBarContainer').style.display = 'none';
+            document.getElementById('mainHeading').style.display = 'none';
+        }
+
+        function formatClientPhoneForDisplay(phoneNumber) {
+            // Remove all non-digit characters
+            const digits = phoneNumber.replace(/\D/g, '');
+            
+            // Format as (XXX) XXX-XXXX
+            if (digits.length === 11 && digits.startsWith('1')) {
+                // Remove leading 1 for display
+                const without1 = digits.substring(1);
+                return `(${without1.slice(0,3)}) ${without1.slice(3,6)}-${without1.slice(6)}`;
+            } else if (digits.length === 10) {
+                return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+            }
+            
+            // Return original if format doesn't match
+            return phoneNumber;
+        }
+
+        function submitFinalForm() {
+            eventId = generateEventId();
+            
+            const finalData = {
+                ...formData,
+                phone: document.getElementById('phone_digits').value,
+                email: document.getElementById('email').value.trim()
+            };
+            
+            if (typeof fbq !== 'undefined') {
+                fbq('track', 'Lead', {
+                    content_category: 'solar_installation',
+                    content_name: 'solar_installation_quote',
+                    value: 1.00,
+                    currency: 'USD',
+                    homeowner_status: finalData.homeowner,
+                    electric_bill: finalData.electricBill,
+                    home_type: finalData.homeType,
+                    timeline: finalData.timeline
+                }, {
+                    eventID: eventId
+                });
+            }
+            
+            const fullSummary = `Solar Installation Lead Information:
+
+Name: ${finalData.firstName} ${finalData.lastName}
+Phone: ${formatPhoneForDisplay(finalData.phone)}
+Email: ${finalData.email}
+
+Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}
+Electric Bill Over $100/mo: ${finalData.electricBill === 'yes' ? 'Yes' : 'No'}
+Home Type: ${getHomeTypeDisplay(finalData.homeType)}
+Timeline: ${getTimelineDisplay(finalData.timeline)}
+
+Address:
+${finalData.address.street}
+${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}
+
+Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'America/New_York'
+})} EST`.trim();
+
+            // Prepare Airtable data
+            const airtableData = {
+                fields: {
+                    "Phone": `+1${finalData.phone}`,
+                    "First Name": finalData.firstName,
+                    "Last Name": finalData.lastName,
+                    "Email": finalData.email,
+                    "Full Summary": fullSummary
+                }
+            };
+            
+            // Submit to Airtable
+            fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(airtableData)
+            }).then(response => {
+                if (!response.ok) {
+                    console.error('Airtable submission failed:', response.statusText);
+                }
+            }).catch(error => {
+                console.error('Error submitting to Airtable:', error);
+            }).finally(() => {
+                // Show contact screen after submission
+                showContactScreen();
+            });
+        }
+
+        function formatPhoneForDisplay(digits) {
+            if (digits && digits.length === 10) {
+                return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+            }
+            return digits;
+        }
+
+        function getHomeTypeDisplay(value) {
+            const options = {
+                'single_family': 'Single Family',
+                'townhome_duplex': 'Townhome/duplex',
+                'condo_apartment': 'Condo/apartment'
+            };
+            return options[value] || value;
+        }
+
+        function getTimelineDisplay(value) {
+            const options = {
+                'asap': 'ASAP',
+                'within_month': 'Within a month',
+                'within_3_months': 'Within 3 months',
+                'within_6_months': 'Within 6 months'
+            };
+            return options[value] || value;
+        }
+
+        updateProgress();
+
+        window.__attachPlaces = function(){
+            if(!window.google || !google.maps || !google.maps.places) return;
+            
+            const addressInput = document.getElementById('street');
+            if (!addressInput) return;
+            
+            const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+                types: ['address'],
+                componentRestrictions: { country: ['us'] },
+                fields: ['address_components','formatted_address','geometry']
+            });
+            
+            autocomplete.addListener('place_changed', ()=>{
+                const place = autocomplete.getPlace();
+                if(!place || !place.address_components) return;
+
+                const comps = Object.fromEntries(place.address_components.flatMap(c => c.types.map(t => [t, c])));
+                
+                let streetAddress = '';
+                if(comps.street_number) streetAddress += comps.street_number.long_name + ' ';
+                if(comps.route) streetAddress += comps.route.long_name;
+                if(streetAddress.trim()) addressInput.value = streetAddress.trim();
+                
+                const cityField = document.getElementById('cityField');
+                const stateZipRow = document.getElementById('stateZipRow');
+                if (streetAddress.trim()) {
+                    cityField.classList.remove('hidden-initially');
+                    stateZipRow.classList.remove('hidden-initially');
+                }
+                
+                const cityInput = document.getElementById('city');
+                const stateInput = document.getElementById('state');
+                const zipInput = document.getElementById('zip');
+                
+                if(comps.locality && cityInput) cityInput.value = comps.locality.long_name;
+                else if(comps.sublocality && cityInput) cityInput.value = comps.sublocality.long_name;
+                if(comps.administrative_area_level_1 && stateInput) stateInput.value = comps.administrative_area_level_1.short_name;
+                if(comps.postal_code && zipInput) zipInput.value = comps.postal_code.long_name;
+
+                validateAddressForm();
+            });
+        };
+    </script>
+
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&libraries=places&callback=__attachPlaces">
+    </script>
+</body>
+</html>
+
