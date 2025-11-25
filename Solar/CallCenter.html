@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Call Center - Lead Management</title>
+    <title>Peak Leads Group - Solar Leads</title>
     <style>
         * {
             margin: 0;
@@ -214,6 +214,11 @@
             min-height: 24px;
         }
 
+        .detail-value.full-summary {
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
         .detail-value input,
         .detail-value textarea,
         .detail-value select {
@@ -299,9 +304,7 @@
         }
 
         .save-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
+            margin: 20px auto 0;
             padding: 15px 30px;
             border: none;
             border-radius: 50px;
@@ -310,7 +313,8 @@
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             transition: all 0.3s;
-            z-index: 999;
+            display: block;
+            width: fit-content;
         }
 
         .save-btn:disabled {
@@ -348,8 +352,6 @@
             }
 
             .save-btn {
-                bottom: 20px;
-                right: 20px;
                 padding: 12px 24px;
                 font-size: 14px;
             }
@@ -358,7 +360,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>Call Center - Lead Management</h1>
+        <h1>Peak Leads Group - Solar Leads</h1>
         <div id="lastUpdate">Loading leads...</div>
     </div>
 
@@ -375,8 +377,6 @@
             <div class="detail-content" id="detailContent"></div>
         </div>
     </div>
-
-    <button class="save-btn" id="saveBtn" onclick="saveChanges()" disabled>Save Changes</button>
 
     <script>
         // Airtable Configuration
@@ -541,6 +541,8 @@
                     <label>Notes</label>
                     <textarea id="notesField" oninput="checkForChanges()">${escapeHtml(lead['Notes'] || '')}</textarea>
                 </div>
+
+                <button class="save-btn" id="saveBtn" onclick="saveChanges()" disabled>Save Changes</button>
             `;
 
             overlay.classList.add('active');
@@ -560,12 +562,14 @@
         }
 
         function createReadOnlyField(label, value) {
+            const isFullSummary = label === 'Full Summary';
+            const cssClass = isFullSummary ? ' full-summary' : '';
             return `
                 <div class="detail-field">
                     <div class="detail-label">
                         <span>${label}</span>
                     </div>
-                    <div class="detail-value">${escapeHtml(value || '')}</div>
+                    <div class="detail-value${cssClass}">${escapeHtml(value || '')}</div>
                 </div>
             `;
         }
@@ -648,6 +652,7 @@
 
         function updateSaveButton() {
             const btn = document.getElementById('saveBtn');
+            if (!btn) return;
             if (hasChanges) {
                 btn.disabled = false;
                 btn.classList.add('enabled');
