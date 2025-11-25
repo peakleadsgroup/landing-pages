@@ -919,20 +919,26 @@
             const stageSelect = document.getElementById('stageSelect');
             const notesField = document.getElementById('notesField');
 
-            // Collect all field values
+            // Collect all field values - only include fields that have changed
             const fields = {};
             
             // Stage
             if (stageSelect) {
-                fields['Stage'] = stageSelect.value;
+                const newStage = stageSelect.value;
+                if (newStage !== (originalLeadData?.Stage || '')) {
+                    fields['Stage'] = newStage;
+                }
             }
 
             // Notes
             if (notesField) {
-                fields['Notes'] = notesField.value;
+                const newNotes = notesField.value;
+                if (newNotes !== (originalLeadData?.['Notes'] || '')) {
+                    fields['Notes'] = newNotes;
+                }
             }
 
-            // Get all editable fields
+            // Get all editable fields - only include changed fields
             const fieldElements = document.querySelectorAll('.detail-value');
             fieldElements.forEach(element => {
                 const detailField = element.closest('.detail-field');
@@ -942,21 +948,50 @@
                 if (!labelElement) return;
                 
                 const label = labelElement.textContent;
-                if (!label || label === 'Full Summary' || label === 'Stage') return;
+                if (!label || label === 'Full Summary' || label === 'Stage' || label === 'Calendar Link') return;
 
+                let newValue = '';
                 const input = element.querySelector('input, textarea');
                 if (input) {
-                    fields[label] = input.value;
+                    newValue = input.value.trim();
                 } else {
                     // Handle phone links
                     const link = element.querySelector('a');
                     if (link) {
-                        fields[label] = link.textContent.trim();
+                        newValue = link.textContent.trim();
                     } else {
-                        fields[label] = element.textContent.trim();
+                        newValue = element.textContent.trim();
+                    }
+                }
+
+                // Only include if value has changed
+                const originalValue = originalLeadData?.[label] || '';
+                if (newValue !== originalValue) {
+                    // Format phone number for Airtable if it's the Phone field
+                    if (label === 'Phone' && newValue) {
+                        // Remove all non-digit characters and ensure it starts with +1
+                        const digits = newValue.replace(/\D/g, '');
+                        if (digits.length === 10) {
+                            fields[label] = `+1${digits}`;
+                        } else if (digits.length === 11 && digits.startsWith('1')) {
+                            fields[label] = `+${digits}`;
+                        } else if (newValue.startsWith('+')) {
+                            fields[label] = newValue;
+                        } else {
+                            fields[label] = newValue; // Let Airtable validate
+                        }
+                    } else {
+                        fields[label] = newValue;
                     }
                 }
             });
+
+            // Don't send if no fields changed
+            if (Object.keys(fields).length === 0) {
+                hasChanges = false;
+                updateSaveButton();
+                return;
+            }
 
             // Update currentLead
             Object.assign(currentLead, fields);
@@ -978,7 +1013,9 @@
                 );
 
                 if (!response.ok) {
-                    throw new Error('Failed to save changes');
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error('Airtable API Error:', errorData);
+                    throw new Error(errorData.error?.message || `Failed to save changes: ${response.status} ${response.statusText}`);
                 }
 
                 // Update in local array
@@ -1000,7 +1037,7 @@
             } catch (error) {
                 console.error('Error saving changes:', error);
                 if (!silent) {
-                    alert('Error saving changes. Please try again.');
+                    alert(`Error saving changes: ${error.message || 'Please try again.'}`);
                 }
             }
         }
