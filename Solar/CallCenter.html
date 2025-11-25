@@ -184,6 +184,8 @@
 
         .detail-content {
             padding: 20px;
+            padding-bottom: 100px;
+            position: relative;
         }
 
         .detail-field {
@@ -238,14 +240,23 @@
         .edit-icon {
             cursor: pointer;
             color: #4CAF50;
-            font-size: 16px;
             margin-left: 10px;
             opacity: 0.7;
             transition: opacity 0.2s;
+            display: inline-flex;
+            align-items: center;
+            width: 16px;
+            height: 16px;
         }
 
         .edit-icon:hover {
             opacity: 1;
+        }
+
+        .edit-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: currentColor;
         }
 
         .stage-select {
@@ -304,6 +315,8 @@
         }
 
         .save-btn {
+            position: sticky;
+            bottom: 20px;
             margin: 20px auto 0;
             padding: 15px 30px;
             border: none;
@@ -315,6 +328,8 @@
             transition: all 0.3s;
             display: block;
             width: fit-content;
+            z-index: 10;
+            background: #ccc;
         }
 
         .save-btn:disabled {
@@ -527,6 +542,11 @@
                     </select>
                 </div>
 
+                <div class="notes-section">
+                    <label>Notes</label>
+                    <textarea id="notesField" oninput="checkForChanges()">${escapeHtml(lead['Notes'] || '')}</textarea>
+                </div>
+
                 ${createEditableField('First Name', lead['First Name'] || '', 'text')}
                 ${createEditableField('Last Name', lead['Last Name'] || '', 'text')}
                 ${createEditableField('Phone', lead['Phone'] || '', 'tel')}
@@ -537,11 +557,6 @@
                 ${createEditableField('Zip', lead['Zip'] || '', 'text')}
                 ${createReadOnlyField('Full Summary', lead['Full Summary'] || '')}
 
-                <div class="notes-section">
-                    <label>Notes</label>
-                    <textarea id="notesField" oninput="checkForChanges()">${escapeHtml(lead['Notes'] || '')}</textarea>
-                </div>
-
                 <button class="save-btn" id="saveBtn" onclick="saveChanges()" disabled>Save Changes</button>
             `;
 
@@ -550,13 +565,26 @@
 
         function createEditableField(label, value, type = 'text') {
             const fieldId = `field_${label.replace(/\s+/g, '_')}`;
+            const isPhone = label === 'Phone';
+            const phoneValue = value || '';
+            const phoneLink = isPhone && phoneValue ? `tel:${phoneValue.replace(/\D/g, '')}` : '';
+            
+            let valueContent = escapeHtml(value || '');
+            if (isPhone && phoneValue) {
+                valueContent = `<a href="${phoneLink}" style="color: #4CAF50; text-decoration: none; font-weight: 500;">${escapeHtml(phoneValue)}</a>`;
+            }
+            
             return `
                 <div class="detail-field">
                     <div class="detail-label">
                         <span>${label}</span>
-                        <span class="edit-icon" onclick="editField('${fieldId}', '${type}')">✏️</span>
+                        <span class="edit-icon" onclick="editField('${fieldId}', '${type}')">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                            </svg>
+                        </span>
                     </div>
-                    <div class="detail-value" id="${fieldId}">${escapeHtml(value || '')}</div>
+                    <div class="detail-value" id="${fieldId}">${valueContent}</div>
                 </div>
             `;
         }
@@ -576,7 +604,14 @@
 
         function editField(fieldId, type) {
             const fieldElement = document.getElementById(fieldId);
-            const currentValue = fieldElement.textContent.trim();
+            // Get text content, handling both plain text and links
+            let currentValue = '';
+            const link = fieldElement.querySelector('a');
+            if (link) {
+                currentValue = link.textContent.trim();
+            } else {
+                currentValue = fieldElement.textContent.trim();
+            }
             
             let input;
             if (type === 'tel' || type === 'email' || type === 'text') {
@@ -589,7 +624,15 @@
             }
 
             input.onblur = () => {
-                fieldElement.textContent = input.value;
+                const isPhone = type === 'tel';
+                const phoneValue = input.value;
+                
+                if (isPhone && phoneValue) {
+                    const phoneDigits = phoneValue.replace(/\D/g, '');
+                    fieldElement.innerHTML = `<a href="tel:${phoneDigits}" style="color: #4CAF50; text-decoration: none; font-weight: 500;">${escapeHtml(phoneValue)}</a>`;
+                } else {
+                    fieldElement.textContent = input.value;
+                }
                 checkForChanges();
             };
 
@@ -638,7 +681,18 @@
                 if (!label || label === 'Full Summary') return;
 
                 const input = element.querySelector('input, textarea');
-                const currentValue = input ? input.value : element.textContent.trim();
+                let currentValue = '';
+                if (input) {
+                    currentValue = input.value;
+                } else {
+                    // Handle phone links
+                    const link = element.querySelector('a');
+                    if (link) {
+                        currentValue = link.textContent.trim();
+                    } else {
+                        currentValue = element.textContent.trim();
+                    }
+                }
                 const originalValue = originalLeadData?.[label] || '';
 
                 if (currentValue !== originalValue) {
@@ -676,9 +730,9 @@
             }
         }
 
-        function autoSaveAndClose() {
+        async function autoSaveAndClose() {
             if (hasChanges && currentLead) {
-                saveChanges(true);
+                await saveChanges(true);
             }
             document.getElementById('detailOverlay').classList.remove('active');
             currentLead = null;
@@ -709,15 +763,24 @@
             // Get all editable fields
             const fieldElements = document.querySelectorAll('.detail-value');
             fieldElements.forEach(element => {
+                const detailField = element.closest('.detail-field');
+                if (!detailField) return;
+                
+                const labelElement = detailField.querySelector('.detail-label span');
+                if (!labelElement) return;
+                
+                const label = labelElement.textContent;
+                if (!label || label === 'Full Summary' || label === 'Stage') return;
+
                 const input = element.querySelector('input, textarea');
                 if (input) {
-                    const label = element.closest('.detail-field').querySelector('.detail-label span').textContent;
-                    if (label !== 'Full Summary') {
-                        fields[label] = input.value;
-                    }
+                    fields[label] = input.value;
                 } else {
-                    const label = element.closest('.detail-field').querySelector('.detail-label span').textContent;
-                    if (label !== 'Full Summary' && label !== 'Stage') {
+                    // Handle phone links
+                    const link = element.querySelector('a');
+                    if (link) {
+                        fields[label] = link.textContent.trim();
+                    } else {
                         fields[label] = element.textContent.trim();
                     }
                 }
@@ -764,7 +827,9 @@
                 displayLeads();
             } catch (error) {
                 console.error('Error saving changes:', error);
-                alert('Error saving changes. Please try again.');
+                if (!silent) {
+                    alert('Error saving changes. Please try again.');
+                }
             }
         }
 
