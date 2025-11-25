@@ -314,10 +314,17 @@
             border-color: #4CAF50;
         }
 
-        .save-btn {
+        .button-container {
             position: sticky;
             bottom: 20px;
-            margin: 20px auto 0;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+            z-index: 10;
+        }
+
+        .save-btn, .messages-btn {
             padding: 15px 30px;
             border: none;
             border-radius: 50px;
@@ -326,9 +333,21 @@
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             transition: all 0.3s;
-            display: block;
             width: fit-content;
-            z-index: 10;
+        }
+
+        .messages-btn {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .messages-btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        .save-btn {
             background: #ccc;
         }
 
@@ -356,6 +375,128 @@
             color: #999;
         }
 
+        .messages-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .messages-overlay.active {
+            display: flex;
+        }
+
+        .messages-panel {
+            background: white;
+            border-radius: 10px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .messages-header {
+            background: #3b82f6;
+            color: white;
+            padding: 20px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .messages-header h2 {
+            margin: 0;
+        }
+
+        .messages-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message-item {
+            display: flex;
+            flex-direction: column;
+            max-width: 75%;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-item.inbound {
+            align-self: flex-start;
+        }
+
+        .message-item.outbound {
+            align-self: flex-end;
+        }
+
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .message-item.inbound .message-bubble {
+            background: #e9ecef;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-item.outbound .message-bubble {
+            background: #3b82f6;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-meta {
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+            padding: 0 4px;
+        }
+
+        .message-item.outbound .message-meta {
+            text-align: right;
+        }
+
+        .message-type-badge {
+            display: inline-block;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-right: 6px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .message-item.inbound .message-type-badge {
+            background: rgba(0,0,0,0.1);
+            color: #333;
+        }
+
+        .message-item.outbound .message-type-badge {
+            background: rgba(255,255,255,0.3);
+            color: white;
+        }
+
         @media (max-width: 768px) {
             .stage-content {
                 grid-template-columns: 1fr;
@@ -367,10 +508,13 @@
                 border-radius: 0;
             }
 
-            .save-btn {
+            .button-container {
+                bottom: 80px;
+            }
+
+            .save-btn, .messages-btn {
                 padding: 12px 24px;
                 font-size: 14px;
-                bottom: 80px;
             }
         }
     </style>
@@ -395,11 +539,24 @@
         </div>
     </div>
 
+    <div class="messages-overlay" id="messagesOverlay">
+        <div class="messages-panel">
+            <div class="messages-header">
+                <h2>Messages</h2>
+                <button class="close-btn" onclick="closeMessages()">×</button>
+            </div>
+            <div class="messages-content" id="messagesContent">
+                <div class="loading">Loading messages...</div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Airtable Configuration
         const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
         const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
         const AIRTABLE_TABLE_ID = 'tbleru0SBQwlXgojx';
+        const AIRTABLE_MESSAGES_TABLE_ID = 'tblcd9wgdPNt8RUqv';
 
         // Stage order
         const STAGE_ORDER = [
@@ -569,7 +726,10 @@
                 ${createEditableField('Zip', lead['Zip'] || '', 'text')}
                 ${createReadOnlyField('Full Summary', lead['Full Summary'] || '')}
 
-                <button class="save-btn" id="saveBtn" onclick="saveChanges()" disabled>Save Changes</button>
+                <div class="button-container">
+                    <button class="messages-btn" id="messagesBtn" onclick="openMessages('${lead.id}')">Messages</button>
+                    <button class="save-btn" id="saveBtn" onclick="saveChanges()" disabled>Save Changes</button>
+                </div>
             `;
 
             overlay.classList.add('active');
@@ -850,6 +1010,126 @@
             div.textContent = text;
             return div.innerHTML;
         }
+
+        async function openMessages(leadId) {
+            const overlay = document.getElementById('messagesOverlay');
+            const content = document.getElementById('messagesContent');
+            
+            overlay.classList.add('active');
+            content.innerHTML = '<div class="loading">Loading messages...</div>';
+
+            try {
+                // Fetch messages filtered by lead - Lead field is a linked record array
+                // Filter by checking if the Lead array contains this lead ID
+                const filterFormula = encodeURIComponent(`FIND("${leadId}", ARRAYJOIN({Lead}))`);
+                const response = await fetch(
+                    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_MESSAGES_TABLE_ID}?filterByFormula=${filterFormula}&sort[0][field]=Created&sort[0][direction]=asc`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${AIRTABLE_API_KEY}`
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch messages');
+                }
+
+                const data = await response.json();
+                const messages = data.records || [];
+
+                if (messages.length === 0) {
+                    content.innerHTML = '<div class="empty-state">No messages found for this lead.</div>';
+                    return;
+                }
+
+                // Display messages
+                content.innerHTML = messages.map(record => {
+                    const fields = record.fields;
+                    const direction = fields['Direction'] || 'Inbound';
+                    const messageType = fields['Message Type'] || 'Text';
+                    const messageContent = fields['Message Content'] || '';
+                    const created = fields['Created'] || '';
+                    const staff = Array.isArray(fields['Staff']) && fields['Staff'].length > 0 
+                        ? fields['Staff'][0] 
+                        : null;
+
+                    // Format date
+                    let dateStr = '';
+                    if (created) {
+                        const date = new Date(created);
+                        dateStr = date.toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                        });
+                    }
+
+                    // Get staff name if available
+                    // Staff is a linked record, so it's an array of record IDs
+                    // We'll need to fetch staff details separately if needed
+                    // For now, if Staff field contains data, try to extract name
+                    let staffName = '';
+                    const staffField = fields['Staff'];
+                    if (staffField) {
+                        if (Array.isArray(staffField) && staffField.length > 0) {
+                            // If it's an array of objects with fields
+                            const firstStaff = staffField[0];
+                            if (firstStaff && firstStaff.fields) {
+                                // Try common name fields
+                                staffName = firstStaff.fields.Name || 
+                                           firstStaff.fields['Full Name'] || 
+                                           firstStaff.fields['First Name'] || 
+                                           '';
+                            } else if (typeof firstStaff === 'string') {
+                                staffName = firstStaff;
+                            }
+                        } else if (typeof staffField === 'string') {
+                            staffName = staffField;
+                        }
+                    }
+
+                    const directionClass = direction.toLowerCase() === 'outbound' ? 'outbound' : 'inbound';
+                    const typeBadge = `<span class="message-type-badge">${escapeHtml(messageType)}</span>`;
+
+                    return `
+                        <div class="message-item ${directionClass}">
+                            <div class="message-bubble">
+                                ${typeBadge}
+                                ${escapeHtml(messageContent)}
+                            </div>
+                            <div class="message-meta">
+                                ${dateStr ? dateStr : ''}${staffName ? ` • ${escapeHtml(staffName)}` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Scroll to bottom
+                content.scrollTop = content.scrollHeight;
+            } catch (error) {
+                console.error('Error loading messages:', error);
+                content.innerHTML = '<div class="empty-state">Error loading messages. Please try again.</div>';
+            }
+        }
+
+        function closeMessages() {
+            document.getElementById('messagesOverlay').classList.remove('active');
+        }
+
+        // Close messages overlay when clicking outside
+        document.addEventListener('DOMContentLoaded', () => {
+            const messagesOverlay = document.getElementById('messagesOverlay');
+            if (messagesOverlay) {
+                messagesOverlay.addEventListener('click', (e) => {
+                    if (e.target.id === 'messagesOverlay') {
+                        closeMessages();
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
