@@ -402,9 +402,9 @@
         // Stage order
         const STAGE_ORDER = [
             'Uncontacted',
+            'Contacted',
             'Waiting on Appointment Time',
             'Waiting on UB',
-            'Contacted',
             'Not Interested'
         ];
 
@@ -545,6 +545,15 @@
                 <div class="notes-section">
                     <label>Notes</label>
                     <textarea id="notesField" oninput="checkForChanges()">${escapeHtml(lead['Notes'] || '')}</textarea>
+                </div>
+
+                <div class="detail-field">
+                    <div class="detail-label">
+                        <span>Calendar Link</span>
+                    </div>
+                    <div class="detail-value">
+                        <a href="https://cal.com/mahaffie/freesolarinstallation" target="_blank" style="color: #4CAF50; text-decoration: none; font-weight: 500;">https://cal.com/mahaffie/freesolarinstallation</a>
+                    </div>
                 </div>
 
                 ${createEditableField('First Name', lead['First Name'] || '', 'text')}
