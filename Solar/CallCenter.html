@@ -784,7 +784,7 @@
                 <div class="detail-field">
                     <div class="detail-label">
                         <span>Utility Bill Upload Link</span>
-                        <button class="text-link-btn" onclick="createTextMessage('${leadId}')">Text Link</button>
+                        <button class="text-link-btn" id="textLinkBtn_${leadId}" onclick="createTextMessage('${leadId}')">Text Link</button>
                     </div>
                     <div class="detail-value">
                         <a href="https://airtable.com/appmBb0lzqRK9dI8v/pagRKXWv8sE9tXVie/form?hide_RecordID=true&RecordID=${leadId}" target="_blank" style="color: #4CAF50; text-decoration: none; font-weight: 500;">https://airtable.com/appmBb0lzqRK9dI8v/pagRKXWv8sE9tXVie/form?hide_RecordID=true&RecordID=${leadId}</a>
@@ -1436,6 +1436,12 @@
                 // Refresh unread counts and update badge
                 await loadUnreadCounts();
                 updateMessagesBadge(leadId);
+                
+                // Disable the button
+                const textLinkBtn = document.getElementById(`textLinkBtn_${leadId}`);
+                if (textLinkBtn) {
+                    textLinkBtn.disabled = true;
+                }
                 
                 console.log('Text message created successfully');
             } catch (error) {
