@@ -339,12 +339,31 @@
         .messages-btn {
             background: #3b82f6;
             color: white;
+            position: relative;
         }
 
         .messages-btn:hover {
             background: #2563eb;
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        .unread-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
         .save-btn {
@@ -572,6 +591,7 @@
         let currentLead = null;
         let originalLeadData = null;
         let hasChanges = false;
+        let unreadCounts = {}; // Store unread message counts per lead
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -605,6 +625,9 @@
                     id: record.id,
                     ...record.fields
                 }));
+
+                // Load unread message counts
+                await loadUnreadCounts();
 
                 displayLeads();
                 document.getElementById('loading').style.display = 'none';
@@ -757,7 +780,10 @@
                 ${createReadOnlyField('Full Summary', lead['Full Summary'] || '')}
 
                 <div class="button-container">
-                    <button class="messages-btn" id="messagesBtn" onclick="openMessages('${lead.id}')">Messages</button>
+                    <button class="messages-btn" id="messagesBtn" onclick="openMessages('${lead.id}')">
+                        Messages
+                        ${unreadCounts[lead.id] > 0 ? `<span class="unread-badge">${unreadCounts[lead.id]}</span>` : ''}
+                    </button>
                     <button class="save-btn" id="saveBtn" onclick="saveChanges()" disabled>Save Changes</button>
                 </div>
             `;
@@ -1161,6 +1187,31 @@
                     return;
                 }
 
+                // Mark all unread messages as read
+                const unreadMessages = messages.filter(msg => !msg.fields['Read']);
+                if (unreadMessages.length > 0) {
+                    // Mark them as read in Airtable
+                    await Promise.all(unreadMessages.map(msg => 
+                        fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_MESSAGES_TABLE_ID}/${msg.id}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                fields: {
+                                    'Read': true
+                                }
+                            })
+                        })
+                    ));
+                    
+                    // Update local unread count
+                    unreadCounts[leadId] = 0;
+                    // Update badge in detail view
+                    setTimeout(() => updateMessagesBadge(leadId), 100);
+                }
+
                 // Display messages
                 content.innerHTML = messages.map(record => {
                     const fields = record.fields;
@@ -1230,6 +1281,79 @@
             } catch (error) {
                 console.error('Error loading messages:', error);
                 content.innerHTML = '<div class="empty-state">Error loading messages. Please try again.</div>';
+            }
+        }
+
+        async function loadUnreadCounts() {
+            try {
+                // Fetch all messages
+                const response = await fetch(
+                    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_MESSAGES_TABLE_ID}`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${AIRTABLE_API_KEY}`
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    console.error('Failed to load unread counts');
+                    return;
+                }
+
+                const data = await response.json();
+                const allMessages = data.records || [];
+
+                // Reset counts
+                unreadCounts = {};
+
+                // Count unread messages per lead
+                allMessages.forEach(message => {
+                    const read = message.fields['Read'];
+                    if (read === false || read === undefined || read === null) {
+                        const leadField = message.fields['Lead'];
+                        if (leadField) {
+                            // Handle array of leads
+                            const leadIds = Array.isArray(leadField) 
+                                ? leadField.map(lead => typeof lead === 'string' ? lead : (lead.id || lead))
+                                : [typeof leadField === 'string' ? leadField : (leadField.id || leadField)];
+                            
+                            leadIds.forEach(leadId => {
+                                if (leadId) {
+                                    unreadCounts[leadId] = (unreadCounts[leadId] || 0) + 1;
+                                }
+                            });
+                        }
+                    }
+                });
+
+                console.log('Unread counts loaded:', unreadCounts);
+            } catch (error) {
+                console.error('Error loading unread counts:', error);
+            }
+        }
+
+        function updateMessagesBadge(leadId) {
+            // Update the badge in the detail view if it's open
+            const messagesBtn = document.getElementById('messagesBtn');
+            if (messagesBtn) {
+                const count = unreadCounts[leadId] || 0;
+                const existingBadge = messagesBtn.querySelector('.unread-badge');
+                
+                if (count > 0) {
+                    if (existingBadge) {
+                        existingBadge.textContent = count;
+                    } else {
+                        const badge = document.createElement('span');
+                        badge.className = 'unread-badge';
+                        badge.textContent = count;
+                        messagesBtn.appendChild(badge);
+                    }
+                } else {
+                    if (existingBadge) {
+                        existingBadge.remove();
+                    }
+                }
             }
         }
 
