@@ -946,11 +946,8 @@
 
         function closeDetail() {
             if (hasChanges) {
-                if (confirm('You have unsaved changes. Save before closing?')) {
-                    saveChanges();
-                } else {
-                    autoSaveAndClose();
-                }
+                // Auto-save without asking
+                autoSaveAndClose();
             } else {
                 document.getElementById('detailOverlay').classList.remove('active');
                 currentLead = null;
@@ -1084,17 +1081,13 @@
                 updateSaveButton();
                 originalLeadData = JSON.parse(JSON.stringify(currentLead));
 
-                if (!silent) {
-                    alert('Changes saved successfully!');
-                }
+                // Changes saved successfully - no popup needed
 
                 // Refresh display to show updated stage grouping
                 displayLeads();
             } catch (error) {
                 console.error('Error saving changes:', error);
-                if (!silent) {
-                    alert(`Error saving changes: ${error.message || 'Please try again.'}`);
-                }
+                // Error logged to console - no popup needed
             }
         }
 
