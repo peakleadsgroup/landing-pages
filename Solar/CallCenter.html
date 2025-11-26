@@ -692,6 +692,27 @@
             const name = lead['Full Name'] || `${lead['First Name'] || ''} ${lead['Last Name'] || ''}`.trim() || 'No Name';
             title.textContent = name;
 
+            // Build Cal.com URL with parameters
+            const calName = `${lead['First Name'] || ''} ${lead['Last Name'] || ''}`.trim() || '';
+            const calEmail = lead['Email'] || '';
+            const calPhone = lead['Phone'] || '';
+            
+            const calParams = new URLSearchParams();
+            if (calName) calParams.set('name', calName);
+            if (calEmail) calParams.set('email', calEmail);
+            if (calPhone) {
+                // Format phone for Cal.com (remove +1 if present, or format as needed)
+                const phoneDigits = calPhone.replace(/\D/g, '');
+                const formattedPhone = phoneDigits.length === 11 && phoneDigits.startsWith('1') 
+                    ? phoneDigits.substring(1) 
+                    : phoneDigits.length === 10 
+                    ? phoneDigits 
+                    : calPhone.replace(/\D/g, '');
+                calParams.set('attendeePhoneNumber', formattedPhone);
+            }
+            
+            const calUrl = `https://cal.com/mahaffie/freesolarinstallation${calParams.toString() ? '?' + calParams.toString() : ''}`;
+
             content.innerHTML = `
                 <div class="stage-select">
                     <label>Stage</label>
@@ -712,7 +733,7 @@
                         <span>Calendar Link</span>
                     </div>
                     <div class="detail-value">
-                        <a href="https://cal.com/mahaffie/freesolarinstallation" target="_blank" style="color: #4CAF50; text-decoration: none; font-weight: 500;">https://cal.com/mahaffie/freesolarinstallation</a>
+                        <a href="${calUrl}" target="_blank" style="color: #4CAF50; text-decoration: none; font-weight: 500;">${calUrl}</a>
                     </div>
                 </div>
 
