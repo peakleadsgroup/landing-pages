@@ -906,7 +906,7 @@
             const fieldElements = document.querySelectorAll('.detail-value');
             fieldElements.forEach(element => {
                 const label = element.closest('.detail-field')?.querySelector('.detail-label span')?.textContent;
-                if (!label || label === 'Full Summary') return;
+                if (!label || label === 'Full Summary' || label === 'Calendar Link' || label === 'Airtable Form') return;
 
                 const input = element.querySelector('input, textarea');
                 let currentValue = '';
@@ -1004,7 +1004,7 @@
                 if (!labelElement) return;
                 
                 const label = labelElement.textContent;
-                if (!label || label === 'Full Summary' || label === 'Stage' || label === 'Calendar Link') return;
+                if (!label || label === 'Full Summary' || label === 'Stage' || label === 'Calendar Link' || label === 'Airtable Form') return;
 
                 let newValue = '';
                 const input = element.querySelector('input, textarea');
