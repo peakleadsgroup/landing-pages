@@ -716,6 +716,15 @@
                     </div>
                 </div>
 
+                <div class="detail-field">
+                    <div class="detail-label">
+                        <span>Airtable Form</span>
+                    </div>
+                    <div class="detail-value">
+                        <a href="https://airtable.com/appmBb0lzqRK9dI8v/pagRKXWv8sE9tXVie/form?hide_RecordID=true&RecordID=${leadId}" target="_blank" style="color: #4CAF50; text-decoration: none; font-weight: 500;">https://airtable.com/appmBb0lzqRK9dI8v/pagRKXWv8sE9tXVie/form?hide_RecordID=true&RecordID=${leadId}</a>
+                    </div>
+                </div>
+
                 ${createEditableField('First Name', lead['First Name'] || '', 'text')}
                 ${createEditableField('Last Name', lead['Last Name'] || '', 'text')}
                 ${createEditableField('Phone', lead['Phone'] || '', 'tel')}
