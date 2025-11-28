@@ -1022,8 +1022,10 @@
                 const labelElement = detailField.querySelector('.detail-label span');
                 if (!labelElement) return;
                 
-                const label = labelElement.textContent;
-                if (!label || label === 'Full Summary' || label === 'Stage' || label === 'Calendar Link' || label === 'Airtable Form') return;
+                const label = labelElement.textContent.trim();
+                // Exclude read-only fields and display-only links
+                const excludedFields = ['Full Summary', 'Stage', 'Calendar Link', 'Utility Bill Upload Link', 'Airtable Form'];
+                if (!label || excludedFields.includes(label)) return;
 
                 let newValue = '';
                 const input = element.querySelector('input, textarea');
@@ -1033,6 +1035,11 @@
                     // Handle phone links
                     const link = element.querySelector('a');
                     if (link) {
+                        // Skip if this is a display-only link (Calendar Link or Utility Bill Upload Link)
+                        const linkHref = link.getAttribute('href') || '';
+                        if (linkHref.includes('cal.com') || linkHref.includes('airtable.com')) {
+                            return; // Skip this field - it's a display link, not editable
+                        }
                         newValue = link.textContent.trim();
                     } else {
                         newValue = element.textContent.trim();
