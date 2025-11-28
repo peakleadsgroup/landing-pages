@@ -799,6 +799,10 @@
         let campaignClientData = null;
         let matchedClientData = null;
         let adRecordId = null;
+        
+        // Get campaign ID immediately from URL (before DOM is ready)
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialCampaignID = urlParams.get('campaignID');
 
         // ============================================
         // AIRTABLE API FUNCTIONS
@@ -848,10 +852,10 @@
             }
         }
 
-        async function loadClientFromCampaign() {
+        async function loadClientFromCampaign(campaignIDParam = null) {
             try {
-                const urlParams = new URLSearchParams(window.location.search);
-                const campaignID = urlParams.get('campaignID');
+                // Use provided param or get from URL
+                const campaignID = campaignIDParam || initialCampaignID || new URLSearchParams(window.location.search).get('campaignID');
                 
                 if (!campaignID) {
                     console.log('No campaignID found in URL');
@@ -1048,10 +1052,28 @@
             }
         }
 
+        function preloadLogo(logoUrl) {
+            // Preload the image immediately for faster display
+            if (logoUrl) {
+                const link = document.createElement('link');
+                link.rel = 'preload';
+                link.as = 'image';
+                link.href = logoUrl;
+                document.head.appendChild(link);
+                
+                // Also preload using Image object
+                const img = new Image();
+                img.src = logoUrl;
+            }
+        }
+
         function loadLogo(logoUrl) {
             const logoImg = document.getElementById('logoImg');
             console.log('Loading logo:', logoUrl);
             if (logoUrl && logoImg) {
+                // Preload first for faster display
+                preloadLogo(logoUrl);
+                
                 logoImg.src = logoUrl;
                 logoImg.style.display = 'block';
                 console.log('Logo image set, display:', logoImg.style.display);
@@ -1071,22 +1093,33 @@
             }
         }
 
-        // Initialize on page load
+        // Start loading client data immediately (don't wait for DOM)
+        // Initialize immediately - start fetching as soon as script runs
         (async function() {
             try {
                 console.log('Initializing page, loading client data...');
-                // Load client from campaign ID
-                campaignClientData = await loadClientFromCampaign();
+                // Load client from campaign ID (use pre-fetched value if available)
+                campaignClientData = await loadClientFromCampaign(initialCampaignID);
                 
                 if (campaignClientData) {
                     console.log('Client data loaded successfully');
                     clientData = campaignClientData;
                     
-                    // Load logo
+                    // Load logo immediately when we get the URL
                     const logoUrl = campaignClientData.fields['Logo Link'];
                     console.log('Logo URL from client data:', logoUrl);
                     if (logoUrl) {
-                        loadLogo(logoUrl);
+                        // Preload immediately, even before DOM is ready
+                        preloadLogo(logoUrl);
+                        
+                        // Load logo when DOM is ready
+                        if (document.readyState === 'loading') {
+                            document.addEventListener('DOMContentLoaded', () => {
+                                loadLogo(logoUrl);
+                            });
+                        } else {
+                            loadLogo(logoUrl);
+                        }
                     } else {
                         console.warn('No Logo Link found in client data');
                     }
@@ -1116,6 +1149,19 @@
                 );
             }
         })();
+        
+        // Also ensure logo loads when DOM is ready (backup)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                // If client data is already loaded, ensure logo is displayed
+                if (clientData && clientData.fields && clientData.fields['Logo Link']) {
+                    const logoImg = document.getElementById('logoImg');
+                    if (logoImg && !logoImg.src) {
+                        loadLogo(clientData.fields['Logo Link']);
+                    }
+                }
+            });
+        }
 
         // ============================================
         // FORM FUNCTIONS
