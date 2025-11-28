@@ -854,32 +854,62 @@
                 const campaignID = urlParams.get('campaignID');
                 
                 if (!campaignID) {
+                    console.log('No campaignID found in URL');
                     return null;
                 }
 
-                // Fetch campaign by Campaign ID
+                console.log('Looking for campaign with ID:', campaignID);
+
+                // First, try to fetch campaign by Campaign ID field
+                let campaign = null;
                 const campaignUrl = `${AIRTABLE_BASE_URL}/${TABLES.CAMPAIGNS}?filterByFormula={Campaign ID}="${campaignID}"`;
                 const campaignData = await fetchAirtableData(campaignUrl);
                 
-                if (!campaignData.records || campaignData.records.length === 0) {
-                    return null;
+                if (campaignData.records && campaignData.records.length > 0) {
+                    campaign = campaignData.records[0];
+                    console.log('Found campaign by Campaign ID field:', campaign.id);
+                } else {
+                    // If not found by Campaign ID field, try fetching directly by record ID
+                    console.log('Campaign not found by Campaign ID field, trying direct record ID lookup');
+                    try {
+                        const directCampaignUrl = `${AIRTABLE_BASE_URL}/${TABLES.CAMPAIGNS}/${campaignID}`;
+                        const directCampaignData = await fetchAirtableData(directCampaignUrl);
+                        campaign = directCampaignData;
+                        console.log('Found campaign by direct record ID:', campaign.id);
+                    } catch (directError) {
+                        console.error('Campaign not found by record ID either:', directError);
+                        await sendErrorWebhook(
+                            'Campaign not found',
+                            { campaignID, error: 'Campaign not found by Campaign ID field or record ID' },
+                            formData
+                        );
+                        return null;
+                    }
                 }
                 
-                const campaign = campaignData.records[0];
-                
                 // Get linked client record ID
-                if (!campaign.fields.Client || campaign.fields.Client.length === 0) {
+                if (!campaign.fields || !campaign.fields.Client || campaign.fields.Client.length === 0) {
+                    console.error('Campaign has no linked Client');
+                    await sendErrorWebhook(
+                        'Campaign has no linked client',
+                        { campaignID, campaignId: campaign.id },
+                        formData
+                    );
                     return null;
                 }
                 
                 const clientRecordId = campaign.fields.Client[0];
+                console.log('Found linked client record ID:', clientRecordId);
                 
                 // Fetch client data
                 const clientUrl = `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}/${clientRecordId}`;
                 const clientData = await fetchAirtableData(clientUrl);
                 
+                console.log('Loaded client data:', clientData.id, clientData.fields);
+                
                 return clientData;
             } catch (error) {
+                console.error('Error loading client from campaign:', error);
                 await sendErrorWebhook(
                     'Error loading client from campaign',
                     { error: error.message, stack: error.stack },
@@ -1020,33 +1050,57 @@
 
         function loadLogo(logoUrl) {
             const logoImg = document.getElementById('logoImg');
+            console.log('Loading logo:', logoUrl);
             if (logoUrl && logoImg) {
                 logoImg.src = logoUrl;
                 logoImg.style.display = 'block';
+                console.log('Logo image set, display:', logoImg.style.display);
+                
+                // Handle logo load errors
+                logoImg.onerror = function() {
+                    console.error('Failed to load logo image:', logoUrl);
+                    logoImg.style.display = 'none';
+                };
+                
+                // Confirm logo loaded
+                logoImg.onload = function() {
+                    console.log('Logo image loaded successfully');
+                };
+            } else {
+                console.log('No logo URL or logo element not found', { logoUrl, logoImg: !!logoImg });
             }
         }
 
         // Initialize on page load
         (async function() {
             try {
+                console.log('Initializing page, loading client data...');
                 // Load client from campaign ID
                 campaignClientData = await loadClientFromCampaign();
                 
                 if (campaignClientData) {
+                    console.log('Client data loaded successfully');
                     clientData = campaignClientData;
                     
                     // Load logo
                     const logoUrl = campaignClientData.fields['Logo Link'];
+                    console.log('Logo URL from client data:', logoUrl);
                     if (logoUrl) {
                         loadLogo(logoUrl);
+                    } else {
+                        console.warn('No Logo Link found in client data');
                     }
                     
                     // Initialize Meta Pixel
                     const metaPixel = campaignClientData.fields['Meta Pixel'];
                     if (metaPixel) {
+                        console.log('Initializing Meta Pixel:', metaPixel);
                         initializeMetaPixel(metaPixel);
+                    } else {
+                        console.log('No Meta Pixel found in client data');
                     }
                 } else {
+                    console.warn('No client data loaded from campaign');
                     // Initialize default Meta Pixel (if needed)
                     // For now, we'll just track PageView without pixel ID
                     if (typeof fbq !== 'undefined') {
@@ -1054,6 +1108,7 @@
                     }
                 }
             } catch (error) {
+                console.error('Error initializing page:', error);
                 await sendErrorWebhook(
                     'Error initializing page',
                     { error: error.message, stack: error.stack },
