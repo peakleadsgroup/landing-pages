@@ -799,6 +799,7 @@
         let campaignClientData = null;
         let matchedClientData = null;
         let adRecordId = null;
+        let campaignRecordId = null; // Track the campaign record ID for Source Campaign linking
         
         // Get campaign ID immediately from URL (before DOM is ready)
         const urlParams = new URLSearchParams(window.location.search);
@@ -871,6 +872,7 @@
                 
                 if (campaignData.records && campaignData.records.length > 0) {
                     campaign = campaignData.records[0];
+                    campaignRecordId = campaign.id; // Store campaign record ID for Source Campaign linking
                     console.log('Found campaign by Campaign ID field:', campaign.id);
                 } else {
                     // If not found by Campaign ID field, try fetching directly by record ID
@@ -879,6 +881,7 @@
                         const directCampaignUrl = `${AIRTABLE_BASE_URL}/${TABLES.CAMPAIGNS}/${campaignID}`;
                         const directCampaignData = await fetchAirtableData(directCampaignUrl);
                         campaign = directCampaignData;
+                        campaignRecordId = campaign.id; // Store campaign record ID for Source Campaign linking
                         console.log('Found campaign by direct record ID:', campaign.id);
                     } catch (directError) {
                         console.error('Campaign not found by record ID either:', directError);
@@ -990,19 +993,29 @@
                 const record = {
                     fields: {
                         'Phone': leadData.phone,
-                        'Full Summary': leadData.fullSummary
+                        'Full Summary': leadData.fullSummary,
+                        'Full Name': leadData.fullName,
+                        'Model': 'Lead',
+                        'Address': leadData.address
                     }
                 };
                 
-                // Add linked client if we have one
+                // Add linked client ONLY if we found a match by zip code (no fallback to campaign client)
                 if (matchedClientData && matchedClientData.id) {
                     record.fields['Linked Client'] = [matchedClientData.id];
+                }
+                
+                // Always add Source Campaign if we have a campaign record ID
+                if (campaignRecordId) {
+                    record.fields['Source Campaign'] = [campaignRecordId];
                 }
                 
                 // Add linked ad if we found one
                 if (adRecordId) {
                     record.fields['Ad'] = [adRecordId];
                 }
+                
+                console.log('Submitting lead to Airtable:', record);
                 
                 // Submit to Airtable
                 const response = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}`, {
@@ -1019,7 +1032,9 @@
                     throw new Error(`Airtable submission failed: ${response.status} ${response.statusText} - ${errorText}`);
                 }
                 
-                return await response.json();
+                const result = await response.json();
+                console.log('Lead submitted successfully:', result);
+                return result;
             } catch (error) {
                 // Send error webhook with full lead data
                 await sendErrorWebhook(
@@ -2000,10 +2015,15 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
     timeZone: 'America/New_York'
 })} EST`.trim();
 
+            // Format full address
+            const formattedAddress = `${finalData.address.street}, ${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}`;
+            
             // Prepare lead data for Airtable
             const leadData = {
                 phone: finalData.phone,
-                fullSummary: fullSummary
+                fullSummary: fullSummary,
+                fullName: `${finalData.firstName} ${finalData.lastName}`,
+                address: formattedAddress
             };
             
             // Submit to Airtable
