@@ -757,14 +757,14 @@
 
         function createLeadCard(lead) {
             const name = lead['Full Name'] || `${lead['First Name'] || ''} ${lead['Last Name'] || ''}`.trim() || 'No Name';
-            const phone = lead['Phone'] || 'No Phone';
-            const state = lead['State'] || 'No State';
+            const city = lead['City'] || '';
+            const state = lead['State'] || '';
+            const location = city && state ? `${city}, ${state}` : (city || state || 'No Location');
             
             return `
                 <div class="lead-card" onclick="openDetail('${lead.id}')">
                     <div class="lead-card-name">${escapeHtml(name)}</div>
-                    <div class="lead-card-phone">${escapeHtml(phone)}</div>
-                    <div class="lead-card-state">${escapeHtml(state)}</div>
+                    <div class="lead-card-state">${escapeHtml(location)}</div>
                 </div>
             `;
         }
