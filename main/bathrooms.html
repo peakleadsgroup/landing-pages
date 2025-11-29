@@ -828,6 +828,7 @@
         let leadRecordId = null; // Track the lead record ID so we can update it with appointment
         let clientTimezone = 'America/New_York'; // Default timezone
         let clientAvailability = []; // Client's available times
+        let clientAvailableDays = [1, 2, 3, 4, 5]; // Default: Monday-Friday
         
         // Get campaign ID immediately from URL (before DOM is ready)
         const urlParams = new URLSearchParams(window.location.search);
@@ -1625,8 +1626,21 @@
                    date.getFullYear() === today.getFullYear();
         }
         
+        function convertDayNameToNumber(dayName) {
+            const dayMap = {
+                'Sunday': 0,
+                'Monday': 1,
+                'Tuesday': 2,
+                'Wednesday': 3,
+                'Thursday': 4,
+                'Friday': 5,
+                'Saturday': 6
+            };
+            return dayMap[dayName] !== undefined ? dayMap[dayName] : null;
+        }
+        
         function isDayOfWeekAvailable(date) {
-            return CALENDAR_CONFIG.availableDaysOfWeek.includes(date.getDay());
+            return clientAvailableDays.includes(date.getDay());
         }
         
         function isWithinBookingWindow(date) {
@@ -2027,7 +2041,7 @@
             const progressBar = document.getElementById('progressBarContainer');
             const mainHeading = document.getElementById('mainHeading');
             
-            // Get client timezone and availability
+            // Get client timezone, availability, and days
             const activeClient = matchedClientData || campaignClientData;
             if (activeClient && activeClient.fields) {
                 // Set timezone from client data
@@ -2045,6 +2059,29 @@
                 } else {
                     console.warn('No Availability field found in client data');
                     clientAvailability = [];
+                }
+                
+                // Set available days from client data
+                if (activeClient.fields['Days']) {
+                    const daysArray = Array.isArray(activeClient.fields['Days']) 
+                        ? activeClient.fields['Days'] 
+                        : [activeClient.fields['Days']];
+                    
+                    // Convert day names to day numbers
+                    clientAvailableDays = daysArray
+                        .map(dayName => convertDayNameToNumber(dayName))
+                        .filter(dayNum => dayNum !== null);
+                    
+                    console.log('Using client available days:', daysArray, '->', clientAvailableDays);
+                    
+                    // If no valid days found, use default
+                    if (clientAvailableDays.length === 0) {
+                        console.warn('No valid days found, using default (Monday-Friday)');
+                        clientAvailableDays = [1, 2, 3, 4, 5];
+                    }
+                } else {
+                    console.warn('No Days field found in client data, using default (Monday-Friday)');
+                    clientAvailableDays = [1, 2, 3, 4, 5];
                 }
             }
             
