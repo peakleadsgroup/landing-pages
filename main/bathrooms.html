@@ -799,10 +799,12 @@
             CLIENTS: 'tblMl8Y97cMSbricC',
             CAMPAIGNS: 'tbl6uhtOFzGzA7EMu',
             B2C_LEADS: 'tblPt6Wc79hTBSmcD',
-            B2C_ADS: 'tbl7ungQGMMLYwshw'
+            B2C_ADS: 'tbl7ungQGMMLYwshw',
+            CONTACTS: 'tblzbIWvSdazhesWf'
         };
         
         const ERROR_WEBHOOK_URL = 'https://hook.us2.make.com/6gxa0e1tq1eyfbhjh6o2shvcg1lpsbzw';
+        const CONTACT_NOTIFICATION_WEBHOOK_URL = 'https://hook.us2.make.com/16nbe9d7b8igymuas81euw3o124khm7s';
         
         // Calendar Configuration (defaults, will be overridden by client data)
         const CALENDAR_CONFIG = {
@@ -1023,8 +1025,108 @@
             }
         }
 
+        async function getContactsForClient(clientRecordId) {
+            try {
+                if (!clientRecordId) return [];
+                
+                // Fetch the client record to get linked contacts
+                const clientUrl = `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}/${clientRecordId}`;
+                const clientData = await fetchAirtableData(clientUrl);
+                
+                if (!clientData.fields || !clientData.fields['Contacts'] || clientData.fields['Contacts'].length === 0) {
+                    return [];
+                }
+                
+                // Get all contact record IDs
+                const contactRecordIds = clientData.fields['Contacts'];
+                
+                // Fetch all contacts
+                const contacts = [];
+                for (const contactId of contactRecordIds) {
+                    try {
+                        const contactUrl = `${AIRTABLE_BASE_URL}/${TABLES.CONTACTS}/${contactId}`;
+                        const contactData = await fetchAirtableData(contactUrl);
+                        contacts.push(contactData);
+                    } catch (error) {
+                        console.error('Error fetching contact:', error);
+                    }
+                }
+                
+                return contacts;
+            } catch (error) {
+                console.error('Error fetching contacts for client:', error);
+                return [];
+            }
+        }
+        
+        async function sendContactNotifications(clientRecordId, leadFullName, fullSummaryHTML, appointmentTime = null) {
+            try {
+                if (!clientRecordId) {
+                    console.log('No client record ID, skipping notifications');
+                    return;
+                }
+                
+                const contacts = await getContactsForClient(clientRecordId);
+                
+                if (contacts.length === 0) {
+                    console.log('No contacts found for client');
+                    return;
+                }
+                
+                // Filter contacts that have "New Lead" in Notifications
+                const contactsToNotify = contacts.filter(contact => {
+                    const notifications = contact.fields['Notifications'];
+                    if (!notifications) return false;
+                    
+                    const notificationsArray = Array.isArray(notifications) ? notifications : [notifications];
+                    return notificationsArray.includes('New Lead');
+                });
+                
+                console.log(`Sending notifications to ${contactsToNotify.length} contacts`);
+                
+                // Send webhook for each contact
+                for (const contact of contactsToNotify) {
+                    const webhookData = {
+                        'Client Name': contact.fields['Name'] || '',
+                        'Client Email': contact.fields['Email'] || '',
+                        'Lead Full Name': leadFullName,
+                        'Full Summary HTML': fullSummaryHTML
+                    };
+                    
+                    // Add appointment time if provided
+                    if (appointmentTime) {
+                        webhookData['Appointment Time'] = appointmentTime;
+                    }
+                    
+                    try {
+                        await fetch(CONTACT_NOTIFICATION_WEBHOOK_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(webhookData),
+                            mode: 'no-cors'
+                        });
+                        console.log('Notification sent to:', contact.fields['Email']);
+                    } catch (error) {
+                        console.error('Error sending notification webhook:', error);
+                    }
+                }
+            } catch (error) {
+                console.error('Error in sendContactNotifications:', error);
+            }
+        }
+        
         async function submitLeadToAirtable(leadData) {
             try {
+                // Determine which client to use for Lead Price (matched client first, then campaign client)
+                const clientForPrice = matchedClientData || campaignClientData;
+                let leadPrice = null;
+                
+                if (clientForPrice && clientForPrice.fields && clientForPrice.fields['Lead Price']) {
+                    leadPrice = clientForPrice.fields['Lead Price'];
+                }
+                
                 // Prepare the record
                 const record = {
                     fields: {
@@ -1039,6 +1141,11 @@
                 // Add email if provided
                 if (leadData.email && leadData.email.trim()) {
                     record.fields['Email'] = leadData.email.trim();
+                }
+                
+                // Add Lead Price if available
+                if (leadPrice !== null && leadPrice !== undefined) {
+                    record.fields['Price'] = leadPrice;
                 }
                 
                 // Add linked client ONLY if we found a match by zip code (no fallback to campaign client)
@@ -1991,6 +2098,36 @@
                         throw new Error(`Failed to update appointment: ${errorText}`);
                     }
                     console.log('Appointment saved to Airtable:', appointmentText);
+                    
+                    // Send appointment notifications to contacts
+                    const clientToNotify = matchedClientData || campaignClientData;
+                    if (clientToNotify && clientToNotify.id) {
+                        // Get lead data for notification
+                        const leadFullName = formData.fullName || `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || 'Unknown';
+                        
+                        // Use stored summary HTML if available, otherwise build it
+                        let fullSummaryHTML = formData.fullSummaryHTML;
+                        if (!fullSummaryHTML) {
+                            const emailLineHTML = formData.email ? `Email: ${formData.email}<BR>` : '';
+                            fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${leadFullName}<BR>Phone: ${formatPhoneForDisplay(formData.phone || '')}<BR>${emailLineHTML}Homeowner: ${formData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Last Updated: ${getLastUpdatedDisplay(formData.lastUpdated)}<BR>Project Type: ${getProjectTypeDisplay(formData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(formData.mainGoal)}<BR><BR>Address:<BR>${formData.address?.street || ''}<BR>${formData.address?.city || ''}, ${formData.address?.state || ''} ${formData.address?.zip || ''}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true,
+                                timeZone: 'America/New_York'
+                            })} EST`;
+                        }
+                        
+                        await sendContactNotifications(
+                            clientToNotify.id,
+                            leadFullName,
+                            fullSummaryHTML,
+                            appointmentText
+                        );
+                    }
                 } catch (error) {
                     console.error('Error updating appointment in Airtable:', error);
                     await sendErrorWebhook(
@@ -2320,11 +2457,31 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             // Format full address
             const formattedAddress = `${finalData.address.street}, ${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}`;
             
+            // Build HTML version of full summary
+            const emailLineHTML = finalData.email ? `Email: ${finalData.email}<BR>` : '';
+            const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR>${emailLineHTML}Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+                timeZone: 'America/New_York'
+            })} EST`;
+            
+            // Store form data for later use (e.g., appointment notifications)
+            formData.phone = finalData.phone;
+            formData.email = finalData.email || '';
+            formData.fullName = `${finalData.firstName} ${finalData.lastName}`;
+            formData.fullSummaryHTML = fullSummaryHTML;
+            
             // Prepare lead data for Airtable
             const leadData = {
                 phone: finalData.phone,
                 email: finalData.email || '',
                 fullSummary: fullSummary,
+                fullSummaryHTML: fullSummaryHTML,
                 fullName: `${finalData.firstName} ${finalData.lastName}`,
                 address: formattedAddress
             };
@@ -2332,6 +2489,16 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             // Submit to Airtable
             try {
                 await submitLeadToAirtable(leadData);
+                
+                // Send notifications to contacts if client is linked
+                const clientToNotify = matchedClientData || campaignClientData;
+                if (clientToNotify && clientToNotify.id) {
+                    await sendContactNotifications(
+                        clientToNotify.id,
+                        leadData.fullName,
+                        fullSummaryHTML
+                    );
+                }
             } catch (error) {
                 // Error webhook already sent in submitLeadToAirtable
                 // Continue to show appropriate screen
