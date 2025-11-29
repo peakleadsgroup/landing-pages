@@ -1482,6 +1482,7 @@
             let emailValid = true;
             if (emailInput) {
                 const emailValidation = isValidEmail(emailInput.value);
+                const emailTouched = emailInput.dataset.touched === 'true';
                 
                 // Create or update email error display
                 let emailError = document.getElementById('emailError');
@@ -1498,10 +1499,13 @@
                 
                 if (!emailValidation.valid) {
                     emailInput.setCustomValidity(emailValidation.error);
-                    emailInput.classList.add('error');
-                    if (emailError) {
-                        emailError.textContent = emailValidation.error;
-                        emailError.style.display = 'block';
+                    // Only show error if field has been touched
+                    if (emailTouched) {
+                        emailInput.classList.add('error');
+                        if (emailError) {
+                            emailError.textContent = emailValidation.error;
+                            emailError.style.display = 'block';
+                        }
                     }
                     emailValid = false;
                 } else {
@@ -1532,8 +1536,15 @@
             }
             
             if (emailInput) {
-                emailInput.addEventListener('input', validatePhones);
-                emailInput.addEventListener('blur', validatePhones);
+                // Mark email as touched when user interacts with it
+                emailInput.addEventListener('input', function() {
+                    emailInput.dataset.touched = 'true';
+                    validatePhones();
+                });
+                emailInput.addEventListener('blur', function() {
+                    emailInput.dataset.touched = 'true';
+                    validatePhones();
+                });
             }
         }
 
