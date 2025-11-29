@@ -1867,10 +1867,21 @@
         }
         
         function showCalendarScreen() {
-            document.getElementById('step7').classList.remove('active');
-            document.getElementById('calendarStep').classList.add('active');
-            document.getElementById('progressBarContainer').style.display = 'none';
-            document.getElementById('mainHeading').style.display = 'none';
+            console.log('showCalendarScreen called');
+            const step7 = document.getElementById('step7');
+            const calendarStep = document.getElementById('calendarStep');
+            const progressBar = document.getElementById('progressBarContainer');
+            const mainHeading = document.getElementById('mainHeading');
+            
+            if (step7) step7.classList.remove('active');
+            if (calendarStep) {
+                calendarStep.classList.add('active');
+                console.log('Calendar step activated');
+            } else {
+                console.error('Calendar step element not found!');
+            }
+            if (progressBar) progressBar.style.display = 'none';
+            if (mainHeading) mainHeading.style.display = 'none';
             
             initializeCalendar();
         }
@@ -2099,15 +2110,34 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             }
             
             // Determine which submit screen to show
-            const activeClient = matchedClientData || campaignClientData;
+            // Use matched client first, but fall back to campaign client if matched client doesn't have Submit Screen
+            let activeClient = matchedClientData || campaignClientData;
             let submitScreenType = 'None'; // Default
             
-            if (activeClient && activeClient.fields['Submit Screen']) {
-                submitScreenType = activeClient.fields['Submit Screen'];
+            console.log('Matched client:', matchedClientData);
+            console.log('Campaign client:', campaignClientData);
+            
+            // Try to get Submit Screen from matched client first
+            if (matchedClientData && matchedClientData.fields && matchedClientData.fields['Submit Screen']) {
+                activeClient = matchedClientData;
+                submitScreenType = String(matchedClientData.fields['Submit Screen']).trim();
+                console.log('Using Submit Screen from matched client:', submitScreenType);
+            } 
+            // Fall back to campaign client if matched client doesn't have Submit Screen
+            else if (campaignClientData && campaignClientData.fields && campaignClientData.fields['Submit Screen']) {
+                activeClient = campaignClientData;
+                submitScreenType = String(campaignClientData.fields['Submit Screen']).trim();
+                console.log('Using Submit Screen from campaign client:', submitScreenType);
             }
             
-            // Show appropriate screen based on submit screen type
-            if (submitScreenType === 'Redirect') {
+            console.log('Active client:', activeClient);
+            console.log('Submit screen type determined:', submitScreenType);
+            
+            console.log('Submit screen type determined:', submitScreenType);
+            
+            // Show appropriate screen based on submit screen type (case-insensitive comparison)
+            const normalizedType = submitScreenType.toLowerCase();
+            if (normalizedType === 'redirect') {
                 // Redirect to URL from Redirect URL field
                 const redirectUrl = activeClient && activeClient.fields['Redirect URL'] ? activeClient.fields['Redirect URL'] : null;
                 if (redirectUrl) {
@@ -2117,13 +2147,14 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                     console.warn('Redirect option selected but no Redirect URL found');
                     showConfirmationScreen();
                 }
-            } else if (submitScreenType === 'Calendar') {
+            } else if (normalizedType === 'calendar') {
+                console.log('Showing calendar screen');
                 showCalendarScreen();
-            } else if (submitScreenType === 'Phone') {
+            } else if (normalizedType === 'phone') {
                 showContactScreen('Phone');
-            } else if (submitScreenType === 'Text') {
+            } else if (normalizedType === 'text') {
                 showContactScreen('Text');
-            } else if (submitScreenType === 'Phone/Text') {
+            } else if (normalizedType === 'phone/text') {
                 showContactScreen('Phone/Text');
             } else {
                 // None or default
