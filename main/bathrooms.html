@@ -689,9 +689,8 @@
                     <input type="hidden" id="phone_digits" name="phone_digits" value="">
                 </div>
                 <div id="emailWrap" style="display:none">
-                    <label for="email">Email (optional)</label>
-                    <input id="email" name="email" type="email" inputmode="email" placeholder="your@email.com" autocomplete="email" aria-describedby="emailHelp">
-                    <small id="emailHelp" class="phone-help">Optional - for quote delivery.</small>
+                    <label for="email">Email</label>
+                    <input id="email" name="email" type="email" inputmode="email" placeholder="your@email.com" autocomplete="email" required>
                 </div>
             </div>
             <div class="nav-buttons">
@@ -1422,7 +1421,7 @@
 
         function isValidEmail(email) {
             if (!email || email.trim() === '') {
-                return { valid: true, error: '' }; // Email is optional
+                return { valid: false, error: 'Email is required.' };
             }
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (emailRegex.test(email.trim())) {
@@ -1477,20 +1476,42 @@
 
             const shouldShowEmail = p1.digits.length === 10 && validation.valid;
             emailWrap.style.display = shouldShowEmail ? '' : 'none';
-            if (emailInput) emailInput.required = false; // Email is optional
+            if (emailInput) emailInput.required = true; // Email is required
 
-            // Validate email if entered
+            // Validate email (required)
             let emailValid = true;
-            if (emailInput && emailInput.value.trim()) {
+            if (emailInput) {
                 const emailValidation = isValidEmail(emailInput.value);
+                
+                // Create or update email error display
+                let emailError = document.getElementById('emailError');
+                if (!emailError && shouldShowEmail) {
+                    emailError = document.createElement('div');
+                    emailError.id = 'emailError';
+                    emailError.style.color = 'red';
+                    emailError.style.fontSize = '12px';
+                    emailError.style.marginTop = '5px';
+                    emailError.style.display = 'none';
+                    
+                    emailInput.parentNode.appendChild(emailError);
+                }
+                
                 if (!emailValidation.valid) {
                     emailInput.setCustomValidity(emailValidation.error);
+                    emailInput.classList.add('error');
+                    if (emailError) {
+                        emailError.textContent = emailValidation.error;
+                        emailError.style.display = 'block';
+                    }
                     emailValid = false;
                 } else {
                     emailInput.setCustomValidity('');
+                    emailInput.classList.remove('error');
+                    if (emailError) {
+                        emailError.style.display = 'none';
+                    }
+                    emailValid = true;
                 }
-            } else if (emailInput) {
-                emailInput.setCustomValidity('');
             }
 
             const phoneValid = p1.digits.length === 10 && validation.valid;
@@ -2075,7 +2096,17 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             }
             
             // Show appropriate screen based on submit screen type
-            if (submitScreenType === 'Calendar') {
+            if (submitScreenType === 'Redirect') {
+                // Redirect to URL from Redirect URL field
+                const redirectUrl = activeClient && activeClient.fields['Redirect URL'] ? activeClient.fields['Redirect URL'] : null;
+                if (redirectUrl) {
+                    window.location.href = redirectUrl;
+                } else {
+                    // If no redirect URL, show confirmation screen
+                    console.warn('Redirect option selected but no Redirect URL found');
+                    showConfirmationScreen();
+                }
+            } else if (submitScreenType === 'Calendar') {
                 showCalendarScreen();
             } else if (submitScreenType === 'Phone') {
                 showContactScreen('Phone');
