@@ -1634,11 +1634,15 @@
             return date <= maxDate;
         }
         
-        function getAvailableTimesForDate(date) {
+        async function getAvailableTimesForDate(date) {
             if (!date || !clientAvailability || clientAvailability.length === 0) return [];
             
             const slots = [];
             const now = getCurrentDateInTimezone();
+            
+            // Get already booked times for this date
+            const bookedTimes = await getBookedAppointments(date);
+            console.log('Booked times for date:', bookedTimes);
             
             // Use client's Availability field to generate time slots
             clientAvailability.forEach(timeStr => {
@@ -1655,15 +1659,35 @@
                     const hours = slotTime.getHours();
                     const minutes = slotTime.getMinutes();
                     const ampm = hours >= 12 ? 'PM' : 'AM';
-                    const displayHours = hours % 12 || 12;
+                    const displayHours12 = hours % 12 || 12;
                     const displayMinutes = minutes.toString().padStart(2, '0');
+                    // Display format for calendar (can be single digit hour)
+                    const displayTime = `${displayHours12}:${displayMinutes} ${ampm}`;
+                    // Format for Appt field (HH:mm with leading zero)
+                    const apptTimeFormat = `${displayHours12.toString().padStart(2, '0')}:${displayMinutes} ${ampm}`;
                     
-                    slots.push({
-                        time: slotTime,
-                        display: `${displayHours}:${displayMinutes} ${ampm}`,
-                        isoString: slotTime.toISOString(),
-                        originalTime: timeStr // Keep original format for Appt field
+                    // Check if this time is already booked
+                    // Normalize times for comparison (handle both "9:00 AM" and "09:00 AM" formats)
+                    const normalizeTime = (timeStr) => {
+                        // Remove leading zero from hour if present, e.g., "09:00 AM" -> "9:00 AM"
+                        return timeStr.trim().replace(/^0(\d):/, '$1:');
+                    };
+                    
+                    const normalizedDisplayTime = normalizeTime(displayTime);
+                    const isBooked = bookedTimes.some(booked => {
+                        const normalizedBooked = normalizeTime(booked);
+                        return normalizedBooked === normalizedDisplayTime;
                     });
+                    
+                    if (!isBooked) {
+                        slots.push({
+                            time: slotTime,
+                            display: displayTime,
+                            apptFormat: apptTimeFormat, // Store formatted time for Appt field
+                            isoString: slotTime.toISOString(),
+                            originalTime: timeStr
+                        });
+                    }
                 }
             });
             
@@ -1683,6 +1707,54 @@
                     timeZone: clientTimezone
                 })
             };
+        }
+        
+        function formatAppointmentDate(date, timeDisplay) {
+            // Format as MM/DD/YYYY at HH:mm AM/PM
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            const year = date.getFullYear();
+            
+            return `${month}/${day}/${year} at ${timeDisplay}`;
+        }
+        
+        async function getBookedAppointments(date) {
+            try {
+                // Format the date as MM/DD/YYYY to match appointment format
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                const year = date.getFullYear();
+                const datePrefix = `${month}/${day}/${year} at `;
+                
+                // Fetch all leads with appointments on this date
+                // We'll filter by checking if Appt field starts with our date prefix
+                const leadsUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}?filterByFormula=SEARCH("${datePrefix}", {Appt})`;
+                const leadsData = await fetchAirtableData(leadsUrl);
+                
+                if (!leadsData.records || leadsData.records.length === 0) {
+                    return [];
+                }
+                
+                // Extract the times that are already booked
+                const bookedTimes = [];
+                leadsData.records.forEach(lead => {
+                    const appt = lead.fields['Appt'];
+                    if (appt && appt.startsWith(datePrefix)) {
+                        // Extract the time part (everything after "at ")
+                        const timePart = appt.substring(datePrefix.length).trim();
+                        if (timePart) {
+                            bookedTimes.push(timePart);
+                        }
+                    }
+                });
+                
+                console.log('Booked times found:', bookedTimes);
+                return bookedTimes;
+            } catch (error) {
+                console.error('Error fetching booked appointments:', error);
+                // Return empty array on error so we don't block availability
+                return [];
+            }
         }
         
         function renderCalendar() {
@@ -1719,9 +1791,8 @@
                 const date = new Date(startDate);
                 date.setDate(startDate.getDate() + i);
                 
-                const isAvailable = isDayOfWeekAvailable(date) && 
-                                  isWithinBookingWindow(date) &&
-                                  getAvailableTimesForDate(date).length > 0;
+                // Check if day is available (time slot availability checked when day is selected)
+                const isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date);
                 
                 const dayCell = document.createElement('div');
                 dayCell.className = 'calendar-day';
@@ -1839,11 +1910,13 @@
             document.getElementById('timeSection').style.display = 'block';
         }
         
-        function renderTimes() {
+        async function renderTimes() {
             const timeGrid = document.getElementById('timeGrid');
-            timeGrid.innerHTML = '';
+            timeGrid.innerHTML = '<div style="text-align: center; padding: 20px;">Loading available times...</div>';
             
-            const slots = getAvailableTimesForDate(selectedDate);
+            const slots = await getAvailableTimesForDate(selectedDate);
+            
+            timeGrid.innerHTML = '';
             
             if (slots.length === 0) {
                 timeGrid.innerHTML = `
@@ -1870,8 +1943,10 @@
         async function selectCalendarTime(slot) {
             selectedTime = slot;
             
-            const formatted = formatDate(selectedDate);
-            const appointmentText = `${formatted.fullDate} at ${slot.display}`;
+            // Format appointment as MM/DD/YYYY at HH:mm AM/PM
+            // Use apptFormat if available (has leading zero), otherwise use display
+            const timeForAppt = slot.apptFormat || slot.display;
+            const appointmentText = formatAppointmentDate(selectedDate, timeForAppt);
             
             // Update the lead record in Airtable with the appointment
             if (leadRecordId) {
