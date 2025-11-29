@@ -829,6 +829,7 @@
         let clientTimezone = 'America/New_York'; // Default timezone
         let clientAvailability = []; // Client's available times
         let clientAvailableDays = [1, 2, 3, 4, 5]; // Default: Monday-Friday
+        let clientDaysOut = 14; // Default: 14 days out
         
         // Get campaign ID immediately from URL (before DOM is ready)
         const urlParams = new URLSearchParams(window.location.search);
@@ -1650,7 +1651,7 @@
             if (hoursFromNow < CALENDAR_CONFIG.minHoursInAdvance) return false;
             
             const maxDate = new Date(now);
-            maxDate.setDate(now.getDate() + CALENDAR_CONFIG.daysOut);
+            maxDate.setDate(now.getDate() + clientDaysOut);
             
             return date <= maxDate;
         }
@@ -2082,6 +2083,21 @@
                 } else {
                     console.warn('No Days field found in client data, using default (Monday-Friday)');
                     clientAvailableDays = [1, 2, 3, 4, 5];
+                }
+                
+                // Set days out from client data
+                if (activeClient.fields['Days Out'] !== undefined && activeClient.fields['Days Out'] !== null) {
+                    const daysOutValue = Number(activeClient.fields['Days Out']);
+                    if (!isNaN(daysOutValue) && daysOutValue > 0) {
+                        clientDaysOut = daysOutValue;
+                        console.log('Using client days out:', clientDaysOut);
+                    } else {
+                        console.warn('Invalid Days Out value, using default (14)');
+                        clientDaysOut = 14;
+                    }
+                } else {
+                    console.warn('No Days Out field found in client data, using default (14)');
+                    clientDaysOut = 14;
                 }
             }
             
