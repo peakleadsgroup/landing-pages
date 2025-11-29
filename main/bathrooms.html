@@ -2507,8 +2507,10 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             };
             
             // Submit to Airtable
+            let submissionSuccessful = false;
             try {
                 await submitLeadToAirtable(leadData);
+                submissionSuccessful = true;
                 
                 // Send notifications to contacts if client is linked
                 const clientToNotify = matchedClientData || campaignClientData;
@@ -2521,7 +2523,16 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 }
             } catch (error) {
                 // Error webhook already sent in submitLeadToAirtable
-                // Continue to show appropriate screen
+                // Show generic confirmation screen instead of calendar/phone options
+                console.error('Lead submission failed, showing generic confirmation:', error);
+                showConfirmationScreen();
+                return; // Exit early - don't show calendar/phone options
+            }
+            
+            // Only proceed to show submit screen if submission was successful
+            if (!submissionSuccessful) {
+                showConfirmationScreen();
+                return;
             }
             
             // Determine which submit screen to show
