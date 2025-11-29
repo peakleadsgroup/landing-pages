@@ -788,16 +788,12 @@
         
         const ERROR_WEBHOOK_URL = 'https://hook.us2.make.com/6gxa0e1tq1eyfbhjh6o2shvcg1lpsbzw';
         
-        // Calendar Configuration
+        // Calendar Configuration (defaults, will be overridden by client data)
         const CALENDAR_CONFIG = {
             timezone: 'America/New_York',
             daysOut: 14,
             minHoursInAdvance: 48,
-            availableDaysOfWeek: [1, 2, 3, 4, 5], // Monday-Friday
-            timeWindows: [
-                { start: '09:00', end: '14:00' },
-                { start: '16:00', end: '18:00' }
-            ]
+            availableDaysOfWeek: [1, 2, 3, 4, 5] // Monday-Friday
         };
         
         // Webhook URL for calendar bookings
@@ -813,6 +809,9 @@
         let matchedClientData = null;
         let adRecordId = null;
         let campaignRecordId = null; // Track the campaign record ID for Source Campaign linking
+        let leadRecordId = null; // Track the lead record ID so we can update it with appointment
+        let clientTimezone = 'America/New_York'; // Default timezone
+        let clientAvailability = []; // Client's available times
         
         // Get campaign ID immediately from URL (before DOM is ready)
         const urlParams = new URLSearchParams(window.location.search);
@@ -1052,6 +1051,13 @@
                 
                 const result = await response.json();
                 console.log('Lead submitted successfully:', result);
+                
+                // Store the lead record ID so we can update it with appointment later
+                if (result.records && result.records.length > 0) {
+                    leadRecordId = result.records[0].id;
+                    console.log('Lead record ID stored:', leadRecordId);
+                }
+                
                 return result;
             } catch (error) {
                 // Send error webhook with full lead data
@@ -1557,7 +1563,25 @@
         let currentWeekStart = null;
         
         function getCurrentDateInTimezone() {
-            return new Date(new Date().toLocaleString('en-US', { timeZone: CALENDAR_CONFIG.timezone }));
+            return new Date(new Date().toLocaleString('en-US', { timeZone: clientTimezone }));
+        }
+        
+        function parseTimeString(timeStr) {
+            // Parse time strings like "8:00 AM", "9:00 AM", "8:00 PM"
+            const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+            if (!match) return null;
+            
+            let hours = parseInt(match[1]);
+            const minutes = parseInt(match[2]);
+            const ampm = match[3].toUpperCase();
+            
+            if (ampm === 'PM' && hours !== 12) {
+                hours += 12;
+            } else if (ampm === 'AM' && hours === 12) {
+                hours = 0;
+            }
+            
+            return { hours, minutes };
         }
         
         function initializeCalendar() {
@@ -1596,42 +1620,40 @@
         }
         
         function getAvailableTimesForDate(date) {
-            if (!date) return [];
+            if (!date || !clientAvailability || clientAvailability.length === 0) return [];
             
             const slots = [];
             const now = getCurrentDateInTimezone();
             
-            CALENDAR_CONFIG.timeWindows.forEach(window => {
-                const [startHour, startMin] = window.start.split(':').map(Number);
-                const [endHour, endMin] = window.end.split(':').map(Number);
+            // Use client's Availability field to generate time slots
+            clientAvailability.forEach(timeStr => {
+                const timeParts = parseTimeString(timeStr);
+                if (!timeParts) return;
                 
-                let currentSlot = new Date(date);
-                currentSlot.setHours(startHour, startMin, 0, 0);
+                const slotTime = new Date(date);
+                slotTime.setHours(timeParts.hours, timeParts.minutes, 0, 0);
                 
-                const windowEnd = new Date(date);
-                windowEnd.setHours(endHour, endMin, 0, 0);
+                const hoursFromNow = (slotTime - now) / (1000 * 60 * 60);
                 
-                while (currentSlot < windowEnd) {
-                    const slotTime = new Date(currentSlot);
-                    const hoursFromNow = (slotTime - now) / (1000 * 60 * 60);
+                // Only show times that meet minimum advance requirement
+                if (hoursFromNow >= CALENDAR_CONFIG.minHoursInAdvance) {
+                    const hours = slotTime.getHours();
+                    const minutes = slotTime.getMinutes();
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    const displayHours = hours % 12 || 12;
+                    const displayMinutes = minutes.toString().padStart(2, '0');
                     
-                    if (hoursFromNow >= CALENDAR_CONFIG.minHoursInAdvance) {
-                        const hours = slotTime.getHours();
-                        const minutes = slotTime.getMinutes();
-                        const ampm = hours >= 12 ? 'PM' : 'AM';
-                        const displayHours = hours % 12 || 12;
-                        const displayMinutes = minutes.toString().padStart(2, '0');
-                        
-                        slots.push({
-                            time: slotTime,
-                            display: `${displayHours}:${displayMinutes} ${ampm}`,
-                            isoString: slotTime.toISOString()
-                        });
-                    }
-                    
-                    currentSlot.setMinutes(currentSlot.getMinutes() + 60);
+                    slots.push({
+                        time: slotTime,
+                        display: `${displayHours}:${displayMinutes} ${ampm}`,
+                        isoString: slotTime.toISOString(),
+                        originalTime: timeStr // Keep original format for Appt field
+                    });
                 }
             });
+            
+            // Sort slots by time
+            slots.sort((a, b) => a.time - b.time);
             
             return slots;
         }
@@ -1643,7 +1665,7 @@
                     year: 'numeric', 
                     month: 'long', 
                     day: 'numeric',
-                    timeZone: CALENDAR_CONFIG.timezone
+                    timeZone: clientTimezone
                 })
             };
         }
@@ -1834,16 +1856,51 @@
             selectedTime = slot;
             
             const formatted = formatDate(selectedDate);
+            const appointmentText = `${formatted.fullDate} at ${slot.display}`;
+            
+            // Update the lead record in Airtable with the appointment
+            if (leadRecordId) {
+                try {
+                    const updateResponse = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}/${leadRecordId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            fields: {
+                                'Appt': appointmentText
+                            }
+                        })
+                    });
+                    
+                    if (!updateResponse.ok) {
+                        const errorText = await updateResponse.text();
+                        throw new Error(`Failed to update appointment: ${errorText}`);
+                    }
+                    console.log('Appointment saved to Airtable:', appointmentText);
+                } catch (error) {
+                    console.error('Error updating appointment in Airtable:', error);
+                    await sendErrorWebhook(
+                        'Error updating appointment in Airtable',
+                        { error: error.message, appointmentText, leadRecordId },
+                        formData
+                    );
+                }
+            } else {
+                console.warn('No lead record ID available to update with appointment');
+            }
+            
+            // Send webhook with appointment data
             const appointmentData = {
                 ...formData,
                 phone: document.getElementById('phone_digits').value,
                 appointment_date: selectedDate.toISOString().split('T')[0],
                 appointment_time: slot.display,
                 appointment_datetime: slot.isoString,
-                appointment_full_text: `${formatted.fullDate} at ${slot.display}`
+                appointment_full_text: appointmentText
             };
             
-            // Send webhook with appointment data
             try {
                 await fetch(CALENDAR_WEBHOOK_URL, {
                     method: 'POST',
@@ -1872,6 +1929,27 @@
             const calendarStep = document.getElementById('calendarStep');
             const progressBar = document.getElementById('progressBarContainer');
             const mainHeading = document.getElementById('mainHeading');
+            
+            // Get client timezone and availability
+            const activeClient = matchedClientData || campaignClientData;
+            if (activeClient && activeClient.fields) {
+                // Set timezone from client data
+                if (activeClient.fields['Timezone']) {
+                    clientTimezone = activeClient.fields['Timezone'];
+                    console.log('Using client timezone:', clientTimezone);
+                }
+                
+                // Set availability from client data
+                if (activeClient.fields['Availability']) {
+                    clientAvailability = Array.isArray(activeClient.fields['Availability']) 
+                        ? activeClient.fields['Availability'] 
+                        : [activeClient.fields['Availability']];
+                    console.log('Using client availability:', clientAvailability);
+                } else {
+                    console.warn('No Availability field found in client data');
+                    clientAvailability = [];
+                }
+            }
             
             if (step7) step7.classList.remove('active');
             if (calendarStep) {
