@@ -1084,7 +1084,14 @@
                 
                 console.log(`Sending notifications to ${contactsToNotify.length} contacts`);
                 
+                if (appointmentTime) {
+                    console.log('This is an appointment notification with time:', appointmentTime);
+                } else {
+                    console.log('This is a new lead notification');
+                }
+                
                 // Send webhook for each contact
+                const webhookPromises = [];
                 for (const contact of contactsToNotify) {
                     const webhookData = {
                         'Client Name': contact.fields['Name'] || '',
@@ -1098,20 +1105,28 @@
                         webhookData['Appointment Time'] = appointmentTime;
                     }
                     
-                    try {
-                        await fetch(CONTACT_NOTIFICATION_WEBHOOK_URL, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(webhookData),
-                            mode: 'no-cors'
-                        });
-                        console.log('Notification sent to:', contact.fields['Email']);
-                    } catch (error) {
-                        console.error('Error sending notification webhook:', error);
-                    }
+                    console.log(`Preparing webhook for contact: ${contact.fields['Email'] || contact.fields['Name'] || 'Unknown'}`);
+                    
+                    // Send webhook (don't await individually, collect promises)
+                    const webhookPromise = fetch(CONTACT_NOTIFICATION_WEBHOOK_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(webhookData),
+                        mode: 'no-cors'
+                    }).then(() => {
+                        console.log('Notification sent to:', contact.fields['Email'] || contact.fields['Name'] || 'Unknown');
+                    }).catch(error => {
+                        console.error('Error sending notification webhook for', contact.fields['Email'] || contact.fields['Name'], ':', error);
+                    });
+                    
+                    webhookPromises.push(webhookPromise);
                 }
+                
+                // Wait for all webhooks to complete
+                await Promise.allSettled(webhookPromises);
+                console.log(`Completed sending ${contactsToNotify.length} notification webhooks`);
             } catch (error) {
                 console.error('Error in sendContactNotifications:', error);
             }
@@ -2101,7 +2116,9 @@
                     
                     // Send appointment notifications to contacts
                     const clientToNotify = matchedClientData || campaignClientData;
+                    console.log('Appointment booking - clientToNotify:', clientToNotify);
                     if (clientToNotify && clientToNotify.id) {
+                        console.log('Sending appointment notifications for client:', clientToNotify.id);
                         // Get lead data for notification
                         const leadFullName = formData.fullName || `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || 'Unknown';
                         
@@ -2127,6 +2144,9 @@
                             fullSummaryHTML,
                             appointmentText
                         );
+                        console.log('Appointment notifications sent');
+                    } else {
+                        console.log('No client found for appointment notifications');
                     }
                 } catch (error) {
                     console.error('Error updating appointment in Airtable:', error);
