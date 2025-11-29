@@ -258,7 +258,7 @@
             margin-bottom: 20px;
         }
 
-        #phone, #phone2 {
+        #phone, #email {
             padding: 15px;
             border: 2px solid #e9ecef;
             border-radius: 8px;
@@ -267,7 +267,7 @@
             width: 100%;
         }
 
-        #phone:focus, #phone2:focus {
+        #phone:focus, #email:focus {
             outline: none;
             border-color: #2196f3;
             background: #fff;
@@ -688,10 +688,10 @@
                     <small id="phoneHelp" class="phone-help">US number, 10 digits.</small>
                     <input type="hidden" id="phone_digits" name="phone_digits" value="">
                 </div>
-                <div id="phoneConfirmWrap" style="display:none">
-                    <label for="phone2">Please re-enter your phone</label>
-                    <input id="phone2" name="phone_confirm" type="tel" inputmode="tel" placeholder="(___) ___-____" autocomplete="tel" aria-describedby="phone2Help">
-                    <small id="phone2Help" class="phone-help">Must match exactly.</small>
+                <div id="emailWrap" style="display:none">
+                    <label for="email">Email (optional)</label>
+                    <input id="email" name="email" type="email" inputmode="email" placeholder="your@email.com" autocomplete="email" aria-describedby="emailHelp">
+                    <small id="emailHelp" class="phone-help">Optional - for quote delivery.</small>
                 </div>
             </div>
             <div class="nav-buttons">
@@ -1013,6 +1013,11 @@
                         'Address': leadData.address
                     }
                 };
+                
+                // Add email if provided
+                if (leadData.email && leadData.email.trim()) {
+                    record.fields['Email'] = leadData.email.trim();
+                }
                 
                 // Add linked client ONLY if we found a match by zip code (no fallback to campaign client)
                 if (matchedClientData && matchedClientData.id) {
@@ -1415,10 +1420,21 @@
             return { valid: true, error: '' };
         }
 
+        function isValidEmail(email) {
+            if (!email || email.trim() === '') {
+                return { valid: true, error: '' }; // Email is optional
+            }
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (emailRegex.test(email.trim())) {
+                return { valid: true, error: '' };
+            }
+            return { valid: false, error: 'Please enter a valid email address.' };
+        }
+
         function validatePhones() {
             const phoneInput = document.getElementById('phone');
-            const phone2Input = document.getElementById('phone2');
-            const phoneConfirmWrap = document.getElementById('phoneConfirmWrap');
+            const emailInput = document.getElementById('email');
+            const emailWrap = document.getElementById('emailWrap');
             const phoneDigits = document.getElementById('phone_digits');
             const phoneSubmitBtn = document.getElementById('phoneSubmitBtn');
             
@@ -1459,29 +1475,26 @@
                 }
             }
 
-            const shouldShowConfirm = p1.digits.length === 10 && validation.valid;
-            phoneConfirmWrap.style.display = shouldShowConfirm ? '' : 'none';
-            if (phone2Input) phone2Input.required = shouldShowConfirm;
+            const shouldShowEmail = p1.digits.length === 10 && validation.valid;
+            emailWrap.style.display = shouldShowEmail ? '' : 'none';
+            if (emailInput) emailInput.required = false; // Email is optional
 
-            const p2 = formatPhone(phone2Input ? phone2Input.value : '');
-            if (phone2Input && phone2Input.value !== p2.formatted) phone2Input.value = p2.formatted;
-
-            if(shouldShowConfirm && phone2Input){
-                if(p2.digits.length === 0){
-                    phone2Input.setCustomValidity('Please re-enter your phone number.');
-                } else if(p2.digits !== p1.digits){
-                    phone2Input.setCustomValidity('Phone numbers do not match.');
+            // Validate email if entered
+            let emailValid = true;
+            if (emailInput && emailInput.value.trim()) {
+                const emailValidation = isValidEmail(emailInput.value);
+                if (!emailValidation.valid) {
+                    emailInput.setCustomValidity(emailValidation.error);
+                    emailValid = false;
                 } else {
-                    phone2Input.setCustomValidity('');
+                    emailInput.setCustomValidity('');
                 }
-            } else if (phone2Input) {
-                phone2Input.value = '';
-                phone2Input.setCustomValidity('');
+            } else if (emailInput) {
+                emailInput.setCustomValidity('');
             }
 
             const phoneValid = p1.digits.length === 10 && validation.valid;
-            const phone2Valid = !shouldShowConfirm || (p2.digits.length === 10 && p2.digits === p1.digits);
-            const buttonShouldEnable = phoneValid && phone2Valid;
+            const buttonShouldEnable = phoneValid && emailValid;
             
             if (phoneSubmitBtn) {
                 phoneSubmitBtn.disabled = !buttonShouldEnable;
@@ -1490,16 +1503,16 @@
 
         function setupPhoneValidation() {
             const phoneInput = document.getElementById('phone');
-            const phone2Input = document.getElementById('phone2');
+            const emailInput = document.getElementById('email');
             
             if (phoneInput) {
                 phoneInput.addEventListener('input', validatePhones);
                 phoneInput.addEventListener('blur', validatePhones);
             }
             
-            if (phone2Input) {
-                phone2Input.addEventListener('input', validatePhones);
-                phone2Input.addEventListener('blur', validatePhones);
+            if (emailInput) {
+                emailInput.addEventListener('input', validatePhones);
+                emailInput.addEventListener('blur', validatePhones);
             }
         }
 
@@ -1959,9 +1972,13 @@
         async function submitFinalForm() {
             eventId = generateEventId();
             
+            const emailInput = document.getElementById('email');
+            const emailValue = emailInput ? emailInput.value.trim() : '';
+            
             const finalData = {
                 ...formData,
-                phone: document.getElementById('phone_digits').value
+                phone: document.getElementById('phone_digits').value,
+                email: emailValue
             };
             
             // Track Facebook event if we have client data and pixel
@@ -2004,12 +2021,12 @@
             }
             
             // Build full summary
+            const emailLine = finalData.email ? `Email: ${finalData.email}\n` : '';
             const fullSummary = `Bathroom Remodel Lead Information:
 
 Name: ${finalData.firstName} ${finalData.lastName}
 Phone: ${formatPhoneForDisplay(finalData.phone)}
-
-Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}
+${emailLine}Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}
 Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}
 Project Type: ${getProjectTypeDisplay(finalData.projectType)}
 Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}
@@ -2035,6 +2052,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             // Prepare lead data for Airtable
             const leadData = {
                 phone: finalData.phone,
+                email: finalData.email || '',
                 fullSummary: fullSummary,
                 fullName: `${finalData.firstName} ${finalData.lastName}`,
                 address: formattedAddress
