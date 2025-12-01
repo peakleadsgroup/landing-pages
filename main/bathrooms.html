@@ -800,7 +800,6 @@
             CAMPAIGNS: 'tbl6uhtOFzGzA7EMu',
             B2C_LEADS: 'tblPt6Wc79hTBSmcD',
             B2C_ADS: 'tbl7ungQGMMLYwshw',
-            CONTACTS: 'tblzbIWvSdazhesWf'
         };
         
         const ERROR_WEBHOOK_URL = 'https://hook.us2.make.com/6gxa0e1tq1eyfbhjh6o2shvcg1lpsbzw';
@@ -1047,120 +1046,37 @@
             }
         }
 
-        async function getContactsForClient(clientRecordId) {
+        async function sendLeadWebhook(leadRecordId, metaCampaignID, linkedClientAirtableID, appointmentTime = null) {
             try {
-                if (!clientRecordId) return [];
-                
-                // Fetch the client record to get linked contacts
-                const clientUrl = `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}/${clientRecordId}`;
-                const clientData = await fetchAirtableData(clientUrl);
-                
-                if (!clientData.fields || !clientData.fields['Contacts'] || clientData.fields['Contacts'].length === 0) {
-                    return [];
-                }
-                
-                // Get all contact record IDs
-                const contactRecordIds = clientData.fields['Contacts'];
-                
-                // Fetch all contacts
-                const contacts = [];
-                for (const contactId of contactRecordIds) {
-                    try {
-                        const contactUrl = `${AIRTABLE_BASE_URL}/${TABLES.CONTACTS}/${contactId}`;
-                        const contactData = await fetchAirtableData(contactUrl);
-                        contacts.push(contactData);
-                    } catch (error) {
-                        console.error('Error fetching contact:', error);
-                    }
-                }
-                
-                return contacts;
-            } catch (error) {
-                console.error('Error fetching contacts for client:', error);
-                return [];
-            }
-        }
-        
-        async function sendContactNotifications(clientRecordId, leadFullName, fullSummaryHTML, appointmentTime = null, leadRecordId = null, metaCampaignID = null) {
-            try {
-                if (!clientRecordId) {
-                    console.log('No client record ID, skipping notifications');
+                // Only send if there's a linked client
+                if (!linkedClientAirtableID) {
+                    console.log('No linked client, skipping webhook');
                     return;
                 }
                 
-                const contacts = await getContactsForClient(clientRecordId);
+                const webhookData = {
+                    'Lead Airtable ID': leadRecordId,
+                    'Campaign ID': metaCampaignID,
+                    'Client Airtable ID': linkedClientAirtableID
+                };
                 
-                if (contacts.length === 0) {
-                    console.log('No contacts found for client');
-                    return;
+                // Add appointment time if provided
+                if (appointmentTime) {
+                    webhookData['Appointment Time'] = appointmentTime;
                 }
                 
-                // Filter contacts that have "New Lead" in Notifications
-                const contactsToNotify = contacts.filter(contact => {
-                    const notifications = contact.fields['Notifications'];
-                    if (!notifications) return false;
-                    
-                    const notificationsArray = Array.isArray(notifications) ? notifications : [notifications];
-                    return notificationsArray.includes('New Lead');
+                await fetch(CONTACT_NOTIFICATION_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(webhookData),
+                    mode: 'no-cors'
                 });
                 
-                console.log(`Sending notifications to ${contactsToNotify.length} contacts`);
-                
-                if (appointmentTime) {
-                    console.log('This is an appointment notification with time:', appointmentTime);
-                } else {
-                    console.log('This is a new lead notification');
-                }
-                
-                // Send webhook for each contact
-                const webhookPromises = [];
-                for (const contact of contactsToNotify) {
-                    const webhookData = {
-                        'Client Name': contact.fields['Name'] || '',
-                        'Client Email': contact.fields['Email'] || '',
-                        'Lead Full Name': leadFullName,
-                        'Full Summary HTML': fullSummaryHTML
-                    };
-                    
-                    // Add Meta campaign ID if available
-                    if (metaCampaignID) {
-                        webhookData['Meta Campaign ID'] = metaCampaignID;
-                    }
-                    
-                    // Add B2C Lead Airtable ID if available
-                    if (leadRecordId) {
-                        webhookData['B2C Lead Airtable ID'] = leadRecordId;
-                    }
-                    
-                    // Add appointment time if provided
-                    if (appointmentTime) {
-                        webhookData['Appointment Time'] = appointmentTime;
-                    }
-                    
-                    console.log(`Preparing webhook for contact: ${contact.fields['Email'] || contact.fields['Name'] || 'Unknown'}`);
-                    
-                    // Send webhook (don't await individually, collect promises)
-                    const webhookPromise = fetch(CONTACT_NOTIFICATION_WEBHOOK_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(webhookData),
-                        mode: 'no-cors'
-                    }).then(() => {
-                        console.log('Notification sent to:', contact.fields['Email'] || contact.fields['Name'] || 'Unknown');
-                    }).catch(error => {
-                        console.error('Error sending notification webhook for', contact.fields['Email'] || contact.fields['Name'], ':', error);
-                    });
-                    
-                    webhookPromises.push(webhookPromise);
-                }
-                
-                // Wait for all webhooks to complete
-                await Promise.allSettled(webhookPromises);
-                console.log(`Completed sending ${contactsToNotify.length} notification webhooks`);
+                console.log('Lead webhook sent successfully');
             } catch (error) {
-                console.error('Error in sendContactNotifications:', error);
+                console.error('Error sending lead webhook:', error);
             }
         }
         
@@ -2170,14 +2086,15 @@
                             })} EST`;
                         }
                         
-                        await sendContactNotifications(
-                            clientToNotify.id,
-                            leadFullName,
-                            fullSummaryHTML,
-                            appointmentText, // appointmentTime
-                            leadRecordId, // B2C Lead Airtable ID
-                            metaCampaignID // Meta Campaign ID
-                        );
+                        // Send webhook if client is linked
+                        if (matchedClientData && matchedClientData.id && leadRecordId) {
+                            await sendLeadWebhook(
+                                leadRecordId,
+                                metaCampaignID,
+                                matchedClientData.id,
+                                appointmentText
+                            );
+                        }
                         console.log('Appointment notifications sent');
                     } else {
                         console.log('No client found for appointment notifications');
@@ -2561,16 +2478,12 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 await submitLeadToAirtable(leadData);
                 submissionSuccessful = true;
                 
-                // Send notifications to contacts if client is linked
-                const clientToNotify = matchedClientData || campaignClientData;
-                if (clientToNotify && clientToNotify.id) {
-                    await sendContactNotifications(
-                        clientToNotify.id,
-                        leadData.fullName,
-                        fullSummaryHTML,
-                        null, // appointmentTime
-                        leadRecordId, // B2C Lead Airtable ID
-                        metaCampaignID // Meta Campaign ID
+                // Send webhook if client is linked
+                if (matchedClientData && matchedClientData.id && leadRecordId) {
+                    await sendLeadWebhook(
+                        leadRecordId,
+                        metaCampaignID,
+                        matchedClientData.id
                     );
                 }
             } catch (error) {
