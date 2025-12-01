@@ -1296,6 +1296,20 @@
                     }
                 }
                 
+                // No client found by zip code - log this
+                await logToAirtable(
+                    'Error',
+                    'Zip Code Match',
+                    'No client found by zip code',
+                    { zipCode: zipCode },
+                    {},
+                    {
+                        campaignID: metaCampaignID || initialCampaignID,
+                        clientAirtableID: campaignClientData?.id,
+                        notes: `No matching client found for zip code: ${zipCode}`
+                    }
+                );
+                
                 return null;
             } catch (error) {
                 await logToAirtable(
