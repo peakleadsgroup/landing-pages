@@ -912,15 +912,30 @@
             try {
                 const stepText = `Step ${stepNumber}`;
                 const formDataJSON = JSON.stringify(formDataSnapshot, null, 2);
+                const currentTimestamp = new Date().toISOString();
                 
                 if (isInitial || !formProgressLogId) {
-                    // Create new log record - only use the two fields that exist
+                    // Create new log record
                     const logRecord = {
                         fields: {
+                            'Timestamp': currentTimestamp,
                             'Current Step': stepText,
-                            'Form Progress Data': formDataJSON
+                            'Form Progress Data': formDataJSON,
+                            'Event Type': 'Info',
+                            'Status': 'Info',
+                            'Event Category': 'Tracker'
                         }
                     };
+                    
+                    // Add campaign ID if available
+                    if (metaCampaignID || initialCampaignID) {
+                        logRecord.fields['Campaign ID'] = metaCampaignID || initialCampaignID;
+                    }
+                    
+                    // Add client ID if available
+                    if (campaignClientData?.id) {
+                        logRecord.fields['Client Airtable ID'] = campaignClientData.id;
+                    }
                     
                     const response = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.FORM_LOGS}`, {
                         method: 'POST',
@@ -941,15 +956,52 @@
                         // Log the error response for debugging
                         const errorText = await response.text();
                         console.error('Failed to create form progress log:', response.status, errorText);
+                        
+                        // Log this Airtable error to Airtable
+                        await logToAirtable(
+                            'Error',
+                            'Form Progress',
+                            'Failed to create form progress log',
+                            { 
+                                status: response.status, 
+                                statusText: response.statusText,
+                                error: errorText,
+                                stepNumber: stepNumber
+                            },
+                            formDataSnapshot,
+                            {
+                                campaignID: metaCampaignID || initialCampaignID,
+                                clientAirtableID: campaignClientData?.id,
+                                notes: 'Error occurred while creating form progress log record'
+                            }
+                        );
                     }
                 } else {
-                    // Update existing log record - only update the two fields that exist
+                    // Update existing log record
                     const updateRecord = {
                         fields: {
+                            'Timestamp': currentTimestamp, // Update timestamp on each action
                             'Current Step': stepText,
                             'Form Progress Data': formDataJSON
                         }
                     };
+                    
+                    // Update campaign ID if available now
+                    if (metaCampaignID || initialCampaignID) {
+                        updateRecord.fields['Campaign ID'] = metaCampaignID || initialCampaignID;
+                    }
+                    
+                    // Update client ID if available now (prefer matched client, fall back to campaign client)
+                    if (matchedClientData?.id) {
+                        updateRecord.fields['Client Airtable ID'] = matchedClientData.id;
+                    } else if (campaignClientData?.id) {
+                        updateRecord.fields['Client Airtable ID'] = campaignClientData.id;
+                    }
+                    
+                    // Update lead ID if available now
+                    if (leadRecordId) {
+                        updateRecord.fields['Lead Airtable ID'] = leadRecordId;
+                    }
                     
                     const updateResponse = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.FORM_LOGS}/${formProgressLogId}`, {
                         method: 'PATCH',
@@ -964,11 +1016,49 @@
                         // Log the error response for debugging
                         const errorText = await updateResponse.text();
                         console.error('Failed to update form progress log:', updateResponse.status, errorText);
+                        
+                        // Log this Airtable error to Airtable
+                        await logToAirtable(
+                            'Error',
+                            'Form Progress',
+                            'Failed to update form progress log',
+                            { 
+                                status: updateResponse.status, 
+                                statusText: updateResponse.statusText,
+                                error: errorText,
+                                stepNumber: stepNumber,
+                                logRecordId: formProgressLogId
+                            },
+                            formDataSnapshot,
+                            {
+                                campaignID: metaCampaignID || initialCampaignID,
+                                clientAirtableID: matchedClientData?.id || campaignClientData?.id,
+                                leadAirtableID: leadRecordId,
+                                notes: 'Error occurred while updating form progress log record'
+                            }
+                        );
                     }
                 }
             } catch (err) {
-                // Silently fail - don't break the form if logging fails
+                // Log any unexpected errors to Airtable
                 console.error('Failed to update form progress log (non-critical):', err);
+                await logToAirtable(
+                    'Error',
+                    'Form Progress',
+                    'Unexpected error in createOrUpdateFormProgressLog',
+                    { 
+                        error: err.message, 
+                        stack: err.stack,
+                        stepNumber: stepNumber
+                    },
+                    formDataSnapshot,
+                    {
+                        campaignID: metaCampaignID || initialCampaignID,
+                        clientAirtableID: matchedClientData?.id || campaignClientData?.id,
+                        leadAirtableID: leadRecordId,
+                        notes: 'Unexpected exception in form progress logging'
+                    }
+                );
             }
         }
 
@@ -982,11 +1072,50 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error(`Airtable API error: ${response.status} ${response.statusText}`);
+                    const errorText = await response.text();
+                    const error = new Error(`Airtable API error: ${response.status} ${response.statusText}`);
+                    
+                    // Log Airtable API errors to Airtable
+                    await logToAirtable(
+                        'Error',
+                        'Airtable API',
+                        'Airtable API request failed',
+                        { 
+                            status: response.status, 
+                            statusText: response.statusText,
+                            error: errorText,
+                            url: url
+                        },
+                        {},
+                        {
+                            campaignID: metaCampaignID || initialCampaignID,
+                            notes: `Airtable API fetch failed: ${url}`
+                        }
+                    );
+                    
+                    throw error;
                 }
                 
                 return await response.json();
             } catch (error) {
+                // Only log to Airtable if it's not already an Airtable API error (to avoid double logging)
+                if (!error.message || !error.message.includes('Airtable API error')) {
+                    await logToAirtable(
+                        'Error',
+                        'Airtable API',
+                        'Unexpected error in fetchAirtableData',
+                        { 
+                            error: error.message, 
+                            stack: error.stack,
+                            url: url
+                        },
+                        {},
+                        {
+                            campaignID: metaCampaignID || initialCampaignID,
+                            notes: `Unexpected error fetching from Airtable: ${url}`
+                        }
+                    );
+                }
                 console.error('Airtable fetch error:', error);
                 throw error;
             }
@@ -2085,6 +2214,22 @@
                 return bookedTimes;
             } catch (error) {
                 console.error('Error fetching booked appointments:', error);
+                // Log error to Airtable
+                await logToAirtable(
+                    'Error',
+                    'Appointment Booking',
+                    'Error fetching booked appointments',
+                    { 
+                        error: error.message, 
+                        stack: error.stack
+                    },
+                    {},
+                    {
+                        campaignID: metaCampaignID || initialCampaignID,
+                        clientAirtableID: matchedClientData?.id || campaignClientData?.id,
+                        notes: 'Error occurred while fetching booked appointments for calendar'
+                    }
+                );
                 // Return empty array on error so we don't block availability
                 return [];
             }
@@ -2299,7 +2444,30 @@
                     
                     if (!updateResponse.ok) {
                         const errorText = await updateResponse.text();
-                        throw new Error(`Failed to update appointment: ${errorText}`);
+                        const error = new Error(`Failed to update appointment: ${errorText}`);
+                        
+                        // Log Airtable error to Airtable
+                        await logToAirtable(
+                            'Error',
+                            'Appointment Booking',
+                            'Failed to update appointment in Airtable',
+                            { 
+                                status: updateResponse.status, 
+                                statusText: updateResponse.statusText,
+                                error: errorText,
+                                appointmentText: appointmentText,
+                                leadRecordId: leadRecordId
+                            },
+                            formData,
+                            {
+                                campaignID: metaCampaignID || initialCampaignID,
+                                clientAirtableID: matchedClientData?.id || campaignClientData?.id,
+                                leadAirtableID: leadRecordId,
+                                notes: `Failed to update appointment: ${appointmentText}`
+                            }
+                        );
+                        
+                        throw error;
                     }
                     console.log('Appointment saved to Airtable:', appointmentText);
                     
@@ -2358,19 +2526,27 @@
                     }
                 } catch (error) {
                     console.error('Error updating appointment in Airtable:', error);
-                    await logToAirtable(
-                        'Error',
-                        'Appointment Booking',
-                        'Error updating appointment in Airtable',
-                        { error: error.message, appointmentText, leadRecordId },
-                        formData,
-                        {
-                            campaignID: metaCampaignID || initialCampaignID,
-                            clientAirtableID: matchedClientData?.id || campaignClientData?.id,
-                            leadAirtableID: leadRecordId,
-                            notes: `Appointment: ${appointmentText}`
-                        }
-                    );
+                    // Only log if it's not already logged (to avoid duplicate logs)
+                    if (!error.message || !error.message.includes('Failed to update appointment')) {
+                        await logToAirtable(
+                            'Error',
+                            'Appointment Booking',
+                            'Error updating appointment in Airtable',
+                            { 
+                                error: error.message, 
+                                stack: error.stack,
+                                appointmentText: appointmentText, 
+                                leadRecordId: leadRecordId 
+                            },
+                            formData,
+                            {
+                                campaignID: metaCampaignID || initialCampaignID,
+                                clientAirtableID: matchedClientData?.id || campaignClientData?.id,
+                                leadAirtableID: leadRecordId,
+                                notes: `Unexpected error updating appointment: ${appointmentText}`
+                            }
+                        );
+                    }
                 }
             } else {
                 console.warn('No lead record ID available to update with appointment');
