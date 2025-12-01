@@ -833,6 +833,7 @@
         let clientDaysOut = 14; // Default: 14 days out
         let isSubmitting = false; // Flag to prevent duplicate submissions
         let formProgressLogId = null; // Track the form progress log record ID for updates
+        let sessionUniqueID = null; // Unique ID for tracking user journey across all log records
         
         // Get campaign ID immediately from URL (before DOM is ready)
         const urlParams = new URLSearchParams(window.location.search);
@@ -849,11 +850,15 @@
                         'Timestamp': new Date().toISOString(),
                         'Event Type': eventType,
                         'Event Category': eventCategory,
-                        'Status': eventType === 'Error' ? 'Failure' : (eventType === 'Success' ? 'Success' : 'Info'),
                         'URL': window.location.href,
                         'User Agent': navigator.userAgent
                     }
                 };
+                
+                // Add Unique ID if available
+                if (sessionUniqueID) {
+                    logRecord.fields['Unique ID'] = sessionUniqueID;
+                }
                 
                 // Add error message if provided
                 if (errorMessage) {
@@ -922,10 +927,14 @@
                             'Current Step': stepText,
                             'Form Progress Data': formDataJSON,
                             'Event Type': 'Info',
-                            'Status': 'Info',
                             'Event Category': 'Tracker'
                         }
                     };
+                    
+                    // Add Unique ID if available
+                    if (sessionUniqueID) {
+                        logRecord.fields['Unique ID'] = sessionUniqueID;
+                    }
                     
                     // Add campaign ID if available
                     if (metaCampaignID || initialCampaignID) {
@@ -1121,8 +1130,21 @@
             }
         }
 
+        function generateUniqueID() {
+            // Generate a unique ID using timestamp and random string
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(2, 11);
+            return `session_${timestamp}_${random}`;
+        }
+
         async function loadClientFromCampaign(campaignIDParam = null) {
             try {
+                // Generate unique ID for this session if not already generated
+                if (!sessionUniqueID) {
+                    sessionUniqueID = generateUniqueID();
+                    console.log('Generated session Unique ID:', sessionUniqueID);
+                }
+                
                 // Use provided param or get from URL
                 const campaignID = campaignIDParam || initialCampaignID || new URLSearchParams(window.location.search).get('campaignID');
                 
@@ -1568,6 +1590,12 @@
             } else {
                 console.log('No logo URL or logo element not found', { logoUrl, logoImg: !!logoImg });
             }
+        }
+
+        // Generate unique ID immediately when page loads (before campaign load)
+        if (!sessionUniqueID) {
+            sessionUniqueID = generateUniqueID();
+            console.log('Generated session Unique ID on page load:', sessionUniqueID);
         }
 
         // Start loading client data immediately (don't wait for DOM)
