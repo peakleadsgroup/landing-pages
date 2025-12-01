@@ -832,6 +832,7 @@
         let clientAvailability = []; // Client's available times
         let clientAvailableDays = [1, 2, 3, 4, 5]; // Default: Monday-Friday
         let clientDaysOut = 14; // Default: 14 days out
+        let isSubmitting = false; // Flag to prevent duplicate submissions
         
         // Get campaign ID immediately from URL (before DOM is ready)
         const urlParams = new URLSearchParams(window.location.search);
@@ -2416,16 +2417,31 @@
         }
 
         async function submitFinalForm() {
-            eventId = generateEventId();
+            // Prevent duplicate submissions
+            if (isSubmitting) {
+                console.log('Submission already in progress, ignoring duplicate click');
+                return;
+            }
             
-            const emailInput = document.getElementById('email');
-            const emailValue = emailInput ? emailInput.value.trim() : '';
+            // Set submission flag and disable button immediately
+            isSubmitting = true;
+            const phoneSubmitBtn = document.getElementById('phoneSubmitBtn');
+            if (phoneSubmitBtn) {
+                phoneSubmitBtn.disabled = true;
+                phoneSubmitBtn.textContent = 'Submitting...';
+            }
             
-            const finalData = {
-                ...formData,
-                phone: document.getElementById('phone_digits').value,
-                email: emailValue
-            };
+            try {
+                eventId = generateEventId();
+                
+                const emailInput = document.getElementById('email');
+                const emailValue = emailInput ? emailInput.value.trim() : '';
+                
+                const finalData = {
+                    ...formData,
+                    phone: document.getElementById('phone_digits').value,
+                    email: emailValue
+                };
             
             // Track Facebook event if we have client data and pixel
             if (typeof fbq !== 'undefined' && clientData && clientData.fields['Meta Pixel']) {
@@ -2544,6 +2560,12 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 // Show generic confirmation screen instead of calendar/phone options
                 console.error('Lead submission failed, showing generic confirmation:', error);
                 showConfirmationScreen();
+                // Reset submission flag and button on error
+                isSubmitting = false;
+                if (phoneSubmitBtn) {
+                    phoneSubmitBtn.disabled = false;
+                    phoneSubmitBtn.textContent = 'Get My Quote';
+                }
                 return; // Exit early - don't show calendar/phone options
             }
             
@@ -2603,6 +2625,22 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             } else {
                 // None or default
                 showConfirmationScreen();
+            }
+            } catch (error) {
+                // Catch any unexpected errors that weren't caught by the Airtable submission catch
+                console.error('Unexpected error in submitFinalForm:', error);
+                await sendErrorWebhook(
+                    'Unexpected error in submitFinalForm',
+                    { error: error.message, stack: error.stack },
+                    formData
+                );
+                showConfirmationScreen();
+                // Reset submission flag and button on error
+                isSubmitting = false;
+                if (phoneSubmitBtn) {
+                    phoneSubmitBtn.disabled = false;
+                    phoneSubmitBtn.textContent = 'Get My Quote';
+                }
             }
         }
 
