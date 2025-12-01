@@ -1338,12 +1338,13 @@
                             
                             // Log successful ad lookup by record ID
                             await logToAirtable(
-                                'Info',
+                                'Success',
                                 'Ad Lookup',
                                 null,
                                 null,
                                 {},
                                 {
+                                    campaignID: metaCampaignID || initialCampaignID,
                                     adAirtableID: adData.id,
                                     notes: `Ad found by direct record ID: ${adATID}`
                                 }
@@ -1363,6 +1364,20 @@
                 
                 if (!adsData.records || adsData.records.length === 0) {
                     console.log('No ads found in table');
+                    
+                    // Log error when no ads found in table
+                    await logToAirtable(
+                        'Error',
+                        'Ad Lookup',
+                        'No ads found in table',
+                        { adATID: adATID },
+                        {},
+                        {
+                            campaignID: metaCampaignID || initialCampaignID,
+                            notes: `Ad lookup failed - no ads exist in table for: ${adATID}`
+                        }
+                    );
+                    
                     return null;
                 }
                 
@@ -1373,12 +1388,13 @@
                         
                         // Log successful ad lookup
                         await logToAirtable(
-                            'Info',
+                            'Success',
                             'Ad Lookup',
                             null,
                             null,
                             {},
                             {
+                                campaignID: metaCampaignID || initialCampaignID,
                                 adAirtableID: ad.id,
                                 notes: `Ad found by scriptATID: ${adATID}`
                             }
@@ -1389,10 +1405,41 @@
                 }
                 
                 console.log('No ad found matching adATID:', adATID);
+                
+                // Log error when no ad is found
+                await logToAirtable(
+                    'Error',
+                    'Ad Lookup',
+                    'No ad found matching adATID',
+                    { adATID: adATID },
+                    {},
+                    {
+                        campaignID: metaCampaignID || initialCampaignID,
+                        notes: `Ad lookup failed - no matching ad found for: ${adATID}`
+                    }
+                );
+                
                 return null;
             } catch (error) {
-                // Don't send error webhook for ad lookup failures - it's optional
+                // Log error when ad lookup fails
                 console.log('Ad lookup failed (non-critical):', error.message);
+                
+                await logToAirtable(
+                    'Error',
+                    'Ad Lookup',
+                    'Error during ad lookup',
+                    { 
+                        error: error.message, 
+                        stack: error.stack,
+                        adATID: adATID
+                    },
+                    {},
+                    {
+                        campaignID: metaCampaignID || initialCampaignID,
+                        notes: `Ad lookup error for: ${adATID}`
+                    }
+                );
+                
                 return null;
             }
         }
@@ -1555,6 +1602,20 @@
                 fbq('init', pixelId);
                 fbq('track', 'PageView');
                 
+                // Log Meta conversion event
+                logToAirtable(
+                    'Info',
+                    'Meta Conversion',
+                    'Meta Pixel PageView event sent',
+                    { pixelId: pixelId, eventType: 'PageView' },
+                    {},
+                    {
+                        campaignID: metaCampaignID || initialCampaignID,
+                        clientAirtableID: campaignClientData?.id,
+                        notes: `Meta Pixel initialized and PageView tracked`
+                    }
+                );
+                
                 // Update noscript tag
                 const noscript = document.getElementById('metaPixelNoscript');
                 if (noscript) {
@@ -1562,6 +1623,19 @@
                 }
             } catch (error) {
                 console.error('Meta Pixel initialization error:', error);
+                // Log Meta Pixel error
+                logToAirtable(
+                    'Error',
+                    'Meta Conversion',
+                    'Meta Pixel initialization error',
+                    { error: error.message, stack: error.stack, pixelId: pixelId },
+                    {},
+                    {
+                        campaignID: metaCampaignID || initialCampaignID,
+                        clientAirtableID: campaignClientData?.id,
+                        notes: 'Error initializing Meta Pixel'
+                    }
+                );
             }
         }
 
@@ -1657,6 +1731,19 @@
                     // For now, we'll just track PageView without pixel ID
                     if (typeof fbq !== 'undefined') {
                         fbq('track', 'PageView');
+                        
+                        // Log Meta conversion event (no pixel ID available)
+                        logToAirtable(
+                            'Info',
+                            'Meta Conversion',
+                            'Meta Pixel PageView event sent (no pixel ID)',
+                            { eventType: 'PageView', pixelId: null },
+                            {},
+                            {
+                                campaignID: initialCampaignID,
+                                notes: 'PageView tracked but no client/pixel ID available'
+                            }
+                        );
                     }
                 }
                 
@@ -1712,6 +1799,25 @@
                         content_category: 'home_improvement',
                         content_name: 'bathroom_remodel_quiz_start'
                     });
+                    
+                    // Log Meta conversion event
+                    logToAirtable(
+                        'Info',
+                        'Meta Conversion',
+                        'Meta Pixel ViewContent event sent',
+                        { 
+                            pixelId: clientData.fields['Meta Pixel'],
+                            eventType: 'ViewContent',
+                            content_category: 'home_improvement',
+                            content_name: 'bathroom_remodel_quiz_start'
+                        },
+                        formData,
+                        {
+                            campaignID: metaCampaignID || initialCampaignID,
+                            clientAirtableID: clientData?.id,
+                            notes: 'User engaged with form - ViewContent event tracked'
+                        }
+                    );
                 }
                 hasTrackedEngagement = true;
             }
@@ -2868,7 +2974,7 @@
             
             // Track Facebook event if we have client data and pixel
             if (typeof fbq !== 'undefined' && clientData && clientData.fields['Meta Pixel']) {
-                fbq('track', 'Lead', {
+                const leadEventData = {
                     content_category: 'home_improvement',
                     content_name: 'bathroom_remodel_quote',
                     value: 1.00,
@@ -2877,9 +2983,31 @@
                     project_type: finalData.projectType,
                     main_goal: finalData.mainGoal,
                     last_updated: finalData.lastUpdated
-                }, {
+                };
+                
+                fbq('track', 'Lead', leadEventData, {
                     eventID: eventId
                 });
+                
+                // Log Meta conversion event
+                await logToAirtable(
+                    'Info',
+                    'Meta Conversion',
+                    'Meta Pixel Lead event sent',
+                    { 
+                        pixelId: clientData.fields['Meta Pixel'],
+                        eventType: 'Lead',
+                        eventID: eventId,
+                        eventData: leadEventData
+                    },
+                    formData,
+                    {
+                        campaignID: metaCampaignID || initialCampaignID,
+                        clientAirtableID: matchedClientData?.id || campaignClientData?.id,
+                        leadAirtableID: leadRecordId,
+                        notes: 'Lead conversion event tracked to Meta Pixel'
+                    }
+                );
             }
             
             // Find client by zip code
