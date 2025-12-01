@@ -843,7 +843,20 @@
         // AIRTABLE API FUNCTIONS
         // ============================================
         
+        // Check if the current request is from a Facebook/Instagram crawler
+        function isFacebookCrawler() {
+            const userAgent = navigator.userAgent || '';
+            return userAgent.includes('facebookexternalhit') || 
+                   userAgent.includes('Facebot') || 
+                   userAgent.includes('facebookexternalhit/1.1');
+        }
+
         async function logToAirtable(eventType, eventCategory, errorMessage, errorDetails, formDataSnapshot, additionalData = {}) {
+            // Skip logging for Facebook/Instagram crawlers
+            if (isFacebookCrawler()) {
+                return;
+            }
+            
             try {
                 const logRecord = {
                     fields: {
@@ -914,6 +927,11 @@
         }
 
         async function createOrUpdateFormProgressLog(stepNumber, formDataSnapshot, isInitial = false) {
+            // Skip logging for Facebook/Instagram crawlers
+            if (isFacebookCrawler()) {
+                return;
+            }
+            
             try {
                 const stepText = `Step ${stepNumber}`;
                 const formDataJSON = JSON.stringify(formDataSnapshot, null, 2);
