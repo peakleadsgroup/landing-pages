@@ -888,7 +888,7 @@
                 }
                 
                 // Submit to Airtable (silently fail if this doesn't work)
-                await fetch(`${AIRTABLE_BASE_URL}/${TABLES.FORM_LOGS}`, {
+                const response = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.FORM_LOGS}`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
@@ -896,6 +896,12 @@
                     },
                     body: JSON.stringify({ records: [logRecord] })
                 });
+                
+                if (!response.ok) {
+                    // Log the error response for debugging
+                    const errorText = await response.text();
+                    console.error('Failed to log to Airtable:', response.status, errorText);
+                }
             } catch (err) {
                 // Silently fail - don't break the form if logging fails
                 console.error('Failed to log to Airtable (non-critical):', err);
@@ -908,30 +914,13 @@
                 const formDataJSON = JSON.stringify(formDataSnapshot, null, 2);
                 
                 if (isInitial || !formProgressLogId) {
-                    // Create new log record
+                    // Create new log record - only use the two fields that exist
                     const logRecord = {
                         fields: {
-                            'Timestamp': new Date().toISOString(),
-                            'Event Type': 'Info',
-                            'Event Category': 'Form Progress',
-                            'Status': 'Info',
                             'Current Step': stepText,
-                            'Form Progress Data': formDataJSON,
-                            'URL': window.location.href,
-                            'User Agent': navigator.userAgent
+                            'Form Progress Data': formDataJSON
                         }
                     };
-                    
-                    // Add campaign ID if available
-                    if (initialCampaignID) {
-                        logRecord.fields['Campaign ID'] = initialCampaignID;
-                    }
-                    if (metaCampaignID) {
-                        logRecord.fields['Campaign ID'] = metaCampaignID;
-                    }
-                    if (campaignClientData?.id) {
-                        logRecord.fields['Client Airtable ID'] = campaignClientData.id;
-                    }
                     
                     const response = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.FORM_LOGS}`, {
                         method: 'POST',
@@ -948,34 +937,21 @@
                             formProgressLogId = result.records[0].id;
                             console.log('Form progress log created:', formProgressLogId);
                         }
+                    } else {
+                        // Log the error response for debugging
+                        const errorText = await response.text();
+                        console.error('Failed to create form progress log:', response.status, errorText);
                     }
                 } else {
-                    // Update existing log record
+                    // Update existing log record - only update the two fields that exist
                     const updateRecord = {
                         fields: {
                             'Current Step': stepText,
-                            'Form Progress Data': formDataJSON,
-                            'Timestamp': new Date().toISOString() // Update timestamp to show last activity
+                            'Form Progress Data': formDataJSON
                         }
                     };
                     
-                    // Update client/lead IDs if available now
-                    if (matchedClientData?.id) {
-                        updateRecord.fields['Client Airtable ID'] = matchedClientData.id;
-                    } else if (campaignClientData?.id) {
-                        updateRecord.fields['Client Airtable ID'] = campaignClientData.id;
-                    }
-                    if (leadRecordId) {
-                        updateRecord.fields['Lead Airtable ID'] = leadRecordId;
-                    }
-                    if (adRecordId) {
-                        updateRecord.fields['Ad Airtable ID'] = adRecordId;
-                    }
-                    if (metaCampaignID || initialCampaignID) {
-                        updateRecord.fields['Campaign ID'] = metaCampaignID || initialCampaignID;
-                    }
-                    
-                    await fetch(`${AIRTABLE_BASE_URL}/${TABLES.FORM_LOGS}/${formProgressLogId}`, {
+                    const updateResponse = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.FORM_LOGS}/${formProgressLogId}`, {
                         method: 'PATCH',
                         headers: {
                             'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
@@ -983,6 +959,12 @@
                         },
                         body: JSON.stringify(updateRecord)
                     });
+                    
+                    if (!updateResponse.ok) {
+                        // Log the error response for debugging
+                        const errorText = await updateResponse.text();
+                        console.error('Failed to update form progress log:', updateResponse.status, errorText);
+                    }
                 }
             } catch (err) {
                 // Silently fail - don't break the form if logging fails
