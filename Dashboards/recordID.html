@@ -165,7 +165,7 @@
                 'Phone',
                 'Address',
                 'Price',
-                'Appointment (Respective Timezone)',
+                'Appt',
                 'Notes'
             ]
         };
@@ -351,7 +351,7 @@
                     th.className += ' notes-column';
                 } else if (fieldKeys[i] === 'Created') {
                     th.className += ' created-column';
-                } else if (fieldKeys[i] === 'Appointment (Respective Timezone)') {
+                } else if (fieldKeys[i] === 'Appt') {
                     th.className += ' appointment-column';
                 } else if (fieldKeys[i] === 'Phone') {
                     th.className += ' phone-column';
@@ -461,7 +461,7 @@
                         cellClass += ' notes-column';
                     } else if (key === 'Created') {
                         cellClass += ' created-column';
-                    } else if (key === 'Appointment (Respective Timezone)') {
+                    } else if (key === 'Appt') {
                         cellClass += ' appointment-column';
                     } else if (key === 'Phone') {
                         cellClass += ' phone-column';
