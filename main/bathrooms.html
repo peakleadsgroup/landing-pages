@@ -827,6 +827,7 @@
         let matchedClientData = null;
         let adRecordId = null;
         let campaignRecordId = null; // Track the campaign record ID for Source Campaign linking
+        let metaCampaignID = null; // Track the Meta campaign ID (from Campaign ID field)
         let leadRecordId = null; // Track the lead record ID so we can update it with appointment
         let clientTimezone = 'America/New_York'; // Default timezone
         let clientAvailability = []; // Client's available times
@@ -906,6 +907,7 @@
                 if (campaignData.records && campaignData.records.length > 0) {
                     campaign = campaignData.records[0];
                     campaignRecordId = campaign.id; // Store campaign record ID for Source Campaign linking
+                    metaCampaignID = campaign.fields['Campaign ID'] || campaignID; // Store Meta campaign ID
                     console.log('Found campaign by Campaign ID field:', campaign.id);
                 } else {
                     // If not found by Campaign ID field, try fetching directly by record ID
@@ -915,6 +917,7 @@
                         const directCampaignData = await fetchAirtableData(directCampaignUrl);
                         campaign = directCampaignData;
                         campaignRecordId = campaign.id; // Store campaign record ID for Source Campaign linking
+                        metaCampaignID = campaign.fields['Campaign ID'] || null; // Store Meta campaign ID if available
                         console.log('Found campaign by direct record ID:', campaign.id);
                     } catch (directError) {
                         console.error('Campaign not found by record ID either:', directError);
@@ -1078,7 +1081,7 @@
             }
         }
         
-        async function sendContactNotifications(clientRecordId, leadFullName, fullSummaryHTML, appointmentTime = null) {
+        async function sendContactNotifications(clientRecordId, leadFullName, fullSummaryHTML, appointmentTime = null, leadRecordId = null, metaCampaignID = null) {
             try {
                 if (!clientRecordId) {
                     console.log('No client record ID, skipping notifications');
@@ -1118,6 +1121,16 @@
                         'Lead Full Name': leadFullName,
                         'Full Summary HTML': fullSummaryHTML
                     };
+                    
+                    // Add Meta campaign ID if available
+                    if (metaCampaignID) {
+                        webhookData['Meta Campaign ID'] = metaCampaignID;
+                    }
+                    
+                    // Add B2C Lead Airtable ID if available
+                    if (leadRecordId) {
+                        webhookData['B2C Lead Airtable ID'] = leadRecordId;
+                    }
                     
                     // Add appointment time if provided
                     if (appointmentTime) {
@@ -2161,7 +2174,9 @@
                             clientToNotify.id,
                             leadFullName,
                             fullSummaryHTML,
-                            appointmentText
+                            appointmentText, // appointmentTime
+                            leadRecordId, // B2C Lead Airtable ID
+                            metaCampaignID // Meta Campaign ID
                         );
                         console.log('Appointment notifications sent');
                     } else {
@@ -2552,7 +2567,10 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                     await sendContactNotifications(
                         clientToNotify.id,
                         leadData.fullName,
-                        fullSummaryHTML
+                        fullSummaryHTML,
+                        null, // appointmentTime
+                        leadRecordId, // B2C Lead Airtable ID
+                        metaCampaignID // Meta Campaign ID
                     );
                 }
             } catch (error) {
