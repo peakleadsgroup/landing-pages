@@ -1095,9 +1095,15 @@
                     fields: {
                         'Phone': leadData.phone,
                         'Full Summary': leadData.fullSummary,
+                        'Full Summary HTML': leadData.fullSummaryHTML,
                         'Full Name': leadData.fullName,
+                        'First Name': leadData.firstName,
+                        'Last Name': leadData.lastName,
                         'Model': 'Lead',
-                        'Address': leadData.address
+                        'Address': leadData.address,
+                        'City': leadData.city,
+                        'State': leadData.state,
+                        'Zip': leadData.zip
                     }
                 };
                 
@@ -2469,7 +2475,12 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 fullSummary: fullSummary,
                 fullSummaryHTML: fullSummaryHTML,
                 fullName: `${finalData.firstName} ${finalData.lastName}`,
-                address: formattedAddress
+                firstName: finalData.firstName,
+                lastName: finalData.lastName,
+                address: formattedAddress,
+                city: finalData.address.city,
+                state: finalData.address.state,
+                zip: finalData.address.zip
             };
             
             // Submit to Airtable
