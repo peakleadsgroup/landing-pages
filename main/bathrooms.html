@@ -1002,21 +1002,39 @@
             try {
                 if (!adATID) return null;
                 
+                // If adATID looks like an Airtable record ID (starts with "rec"), try to fetch it directly
+                if (adATID.startsWith('rec')) {
+                    try {
+                        const directUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_ADS}/${adATID}`;
+                        const adData = await fetchAirtableData(directUrl);
+                        if (adData && adData.id) {
+                            console.log('Found ad by direct record ID:', adATID);
+                            return adData.id;
+                        }
+                    } catch (directError) {
+                        // If direct fetch fails, fall through to search by scriptATID
+                        console.log('Direct record ID lookup failed, trying scriptATID search:', directError.message);
+                    }
+                }
+                
                 // Fetch all ads and find by scriptATID
                 const adsUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_ADS}`;
                 const adsData = await fetchAirtableData(adsUrl);
                 
                 if (!adsData.records || adsData.records.length === 0) {
+                    console.log('No ads found in table');
                     return null;
                 }
                 
                 // Find ad where scriptATID matches
                 for (const ad of adsData.records) {
                     if (ad.fields.scriptATID === adATID) {
+                        console.log('Found ad by scriptATID:', adATID, '->', ad.id);
                         return ad.id; // Return record ID
                     }
                 }
                 
+                console.log('No ad found matching adATID:', adATID);
                 return null;
             } catch (error) {
                 // Don't send error webhook for ad lookup failures - it's optional
