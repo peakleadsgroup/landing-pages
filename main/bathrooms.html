@@ -800,9 +800,8 @@
             CAMPAIGNS: 'tbl6uhtOFzGzA7EMu',
             B2C_LEADS: 'tblPt6Wc79hTBSmcD',
             B2C_ADS: 'tbl7ungQGMMLYwshw',
+            FORM_LOGS: 'tbluz8Tdn7rwWwgRF',
         };
-        
-        const ERROR_WEBHOOK_URL = 'https://hook.us2.make.com/6gxa0e1tq1eyfbhjh6o2shvcg1lpsbzw';
         const CONTACT_NOTIFICATION_WEBHOOK_URL = 'https://hook.us2.make.com/16nbe9d7b8igymuas81euw3o124khm7s';
         
         // Calendar Configuration (defaults, will be overridden by client data)
@@ -842,27 +841,63 @@
         // AIRTABLE API FUNCTIONS
         // ============================================
         
-        async function sendErrorWebhook(errorMessage, errorDetails, formDataSnapshot) {
+        async function logToAirtable(eventType, eventCategory, errorMessage, errorDetails, formDataSnapshot, additionalData = {}) {
             try {
-                const errorData = {
-                    error_message: errorMessage,
-                    error_details: errorDetails,
-                    form_data: formDataSnapshot,
-                    timestamp: new Date().toISOString(),
-                    url: window.location.href,
-                    user_agent: navigator.userAgent
+                const logRecord = {
+                    fields: {
+                        'Timestamp': new Date().toISOString(),
+                        'Event Type': eventType,
+                        'Event Category': eventCategory,
+                        'Status': eventType === 'Error' ? 'Failure' : (eventType === 'Success' ? 'Success' : 'Info'),
+                        'URL': window.location.href,
+                        'User Agent': navigator.userAgent
+                    }
                 };
                 
-                await fetch(ERROR_WEBHOOK_URL, {
+                // Add error message if provided
+                if (errorMessage) {
+                    logRecord.fields['Error Message'] = errorMessage;
+                }
+                
+                // Add error details as JSON string if provided
+                if (errorDetails) {
+                    logRecord.fields['Error Details'] = JSON.stringify(errorDetails, null, 2);
+                }
+                
+                // Add form data as JSON string if provided
+                if (formDataSnapshot) {
+                    logRecord.fields['Form Data'] = JSON.stringify(formDataSnapshot, null, 2);
+                }
+                
+                // Add additional context fields
+                if (additionalData.campaignID) {
+                    logRecord.fields['Campaign ID'] = additionalData.campaignID;
+                }
+                if (additionalData.clientAirtableID) {
+                    logRecord.fields['Client Airtable ID'] = additionalData.clientAirtableID;
+                }
+                if (additionalData.leadAirtableID) {
+                    logRecord.fields['Lead Airtable ID'] = additionalData.leadAirtableID;
+                }
+                if (additionalData.adAirtableID) {
+                    logRecord.fields['Ad Airtable ID'] = additionalData.adAirtableID;
+                }
+                if (additionalData.notes) {
+                    logRecord.fields['Notes'] = additionalData.notes;
+                }
+                
+                // Submit to Airtable (silently fail if this doesn't work)
+                await fetch(`${AIRTABLE_BASE_URL}/${TABLES.FORM_LOGS}`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(errorData),
-                    mode: 'no-cors'
+                    body: JSON.stringify({ records: [logRecord] })
                 });
             } catch (err) {
-                console.error('Failed to send error webhook:', err);
+                // Silently fail - don't break the form if logging fails
+                console.error('Failed to log to Airtable (non-critical):', err);
             }
         }
 
@@ -908,6 +943,19 @@
                     campaignRecordId = campaign.id; // Store campaign record ID for Source Campaign linking
                     metaCampaignID = campaign.fields['Campaign ID'] || campaignID; // Store Meta campaign ID
                     console.log('Found campaign by Campaign ID field:', campaign.id);
+                    
+                    // Log successful campaign lookup by Campaign ID field
+                    await logToAirtable(
+                        'Info',
+                        'Campaign Load',
+                        null,
+                        null,
+                        {},
+                        {
+                            campaignID: campaignID,
+                            notes: 'Campaign found by Campaign ID field'
+                        }
+                    );
                 } else {
                     // If not found by Campaign ID field, try fetching directly by record ID
                     console.log('Campaign not found by Campaign ID field, trying direct record ID lookup');
@@ -918,12 +966,28 @@
                         campaignRecordId = campaign.id; // Store campaign record ID for Source Campaign linking
                         metaCampaignID = campaign.fields['Campaign ID'] || null; // Store Meta campaign ID if available
                         console.log('Found campaign by direct record ID:', campaign.id);
+                        
+                        // Log successful campaign lookup by record ID
+                        await logToAirtable(
+                            'Info',
+                            'Campaign Load',
+                            null,
+                            null,
+                            {},
+                            {
+                                campaignID: campaignID,
+                                notes: 'Campaign found by direct record ID lookup'
+                            }
+                        );
                     } catch (directError) {
                         console.error('Campaign not found by record ID either:', directError);
-                        await sendErrorWebhook(
+                        await logToAirtable(
+                            'Error',
+                            'Campaign Load',
                             'Campaign not found',
                             { campaignID, error: 'Campaign not found by Campaign ID field or record ID' },
-                            formData
+                            formData,
+                            { campaignID: campaignID }
                         );
                         return null;
                     }
@@ -932,10 +996,13 @@
                 // Get linked client record ID
                 if (!campaign.fields || !campaign.fields.Client || campaign.fields.Client.length === 0) {
                     console.error('Campaign has no linked Client');
-                    await sendErrorWebhook(
+                    await logToAirtable(
+                        'Error',
+                        'Campaign Load',
                         'Campaign has no linked client',
                         { campaignID, campaignId: campaign.id },
-                        formData
+                        formData,
+                        { campaignID: campaignID }
                     );
                     return null;
                 }
@@ -949,13 +1016,30 @@
                 
                 console.log('Loaded client data:', clientData.id, clientData.fields);
                 
+                // Log successful campaign and client load
+                await logToAirtable(
+                    'Info',
+                    'Campaign Load',
+                    null,
+                    null,
+                    {},
+                    {
+                        campaignID: campaignID,
+                        clientAirtableID: clientData.id,
+                        notes: 'Campaign and client loaded successfully'
+                    }
+                );
+                
                 return clientData;
             } catch (error) {
                 console.error('Error loading client from campaign:', error);
-                await sendErrorWebhook(
+                await logToAirtable(
+                    'Error',
+                    'Campaign Load',
                     'Error loading client from campaign',
                     { error: error.message, stack: error.stack },
-                    formData
+                    formData,
+                    { campaignID: campaignIDParam || initialCampaignID }
                 );
                 return null;
             }
@@ -992,10 +1076,13 @@
                 
                 return null;
             } catch (error) {
-                await sendErrorWebhook(
+                await logToAirtable(
+                    'Error',
+                    'Client Lookup',
                     'Error finding client by zip code',
                     { error: error.message, stack: error.stack, zipCode },
-                    formData
+                    formData,
+                    { notes: `Zip code: ${zipCode}` }
                 );
                 return null;
             }
@@ -1012,6 +1099,20 @@
                         const adData = await fetchAirtableData(directUrl);
                         if (adData && adData.id) {
                             console.log('Found ad by direct record ID:', adATID);
+                            
+                            // Log successful ad lookup by record ID
+                            await logToAirtable(
+                                'Info',
+                                'Ad Lookup',
+                                null,
+                                null,
+                                {},
+                                {
+                                    adAirtableID: adData.id,
+                                    notes: `Ad found by direct record ID: ${adATID}`
+                                }
+                            );
+                            
                             return adData.id;
                         }
                     } catch (directError) {
@@ -1033,6 +1134,20 @@
                 for (const ad of adsData.records) {
                     if (ad.fields.scriptATID === adATID) {
                         console.log('Found ad by scriptATID:', adATID, '->', ad.id);
+                        
+                        // Log successful ad lookup
+                        await logToAirtable(
+                            'Info',
+                            'Ad Lookup',
+                            null,
+                            null,
+                            {},
+                            {
+                                adAirtableID: ad.id,
+                                notes: `Ad found by scriptATID: ${adATID}`
+                            }
+                        );
+                        
                         return ad.id; // Return record ID
                     }
                 }
@@ -1156,19 +1271,42 @@
                 if (result.records && result.records.length > 0) {
                     leadRecordId = result.records[0].id;
                     console.log('Lead record ID stored:', leadRecordId);
+                    
+                    // Log successful lead submission
+                    await logToAirtable(
+                        'Success',
+                        'Lead Submission',
+                        null,
+                        null,
+                        formData,
+                        {
+                            campaignID: metaCampaignID || initialCampaignID,
+                            clientAirtableID: matchedClientData?.id || campaignClientData?.id,
+                            leadAirtableID: leadRecordId,
+                            adAirtableID: adRecordId,
+                            notes: 'Lead successfully submitted to Airtable'
+                        }
+                    );
                 }
                 
                 return result;
             } catch (error) {
-                // Send error webhook with full lead data
-                await sendErrorWebhook(
+                // Log error with full lead data
+                await logToAirtable(
+                    'Error',
+                    'Lead Submission',
                     'Error submitting lead to Airtable',
                     {
                         error: error.message,
                         stack: error.stack,
                         leadData: leadData
                     },
-                    formData
+                    formData,
+                    {
+                        campaignID: metaCampaignID || initialCampaignID,
+                        clientAirtableID: matchedClientData?.id || campaignClientData?.id,
+                        adAirtableID: adRecordId
+                    }
                 );
                 throw error;
             }
@@ -1281,10 +1419,13 @@
                 }
             } catch (error) {
                 console.error('Error initializing page:', error);
-                await sendErrorWebhook(
+                await logToAirtable(
+                    'Error',
+                    'Page Initialization',
                     'Error initializing page',
                     { error: error.message, stack: error.stack },
-                    {}
+                    {},
+                    { campaignID: initialCampaignID }
                 );
             }
         })();
@@ -2101,16 +2242,40 @@
                                 appointmentText
                             );
                         }
+                        
+                        // Log successful appointment booking
+                        await logToAirtable(
+                            'Success',
+                            'Appointment Booking',
+                            null,
+                            null,
+                            formData,
+                            {
+                                campaignID: metaCampaignID || initialCampaignID,
+                                clientAirtableID: matchedClientData?.id || campaignClientData?.id,
+                                leadAirtableID: leadRecordId,
+                                notes: `Appointment successfully booked: ${appointmentText}`
+                            }
+                        );
+                        
                         console.log('Appointment notifications sent');
                     } else {
                         console.log('No client found for appointment notifications');
                     }
                 } catch (error) {
                     console.error('Error updating appointment in Airtable:', error);
-                    await sendErrorWebhook(
+                    await logToAirtable(
+                        'Error',
+                        'Appointment Booking',
                         'Error updating appointment in Airtable',
                         { error: error.message, appointmentText, leadRecordId },
-                        formData
+                        formData,
+                        {
+                            campaignID: metaCampaignID || initialCampaignID,
+                            clientAirtableID: matchedClientData?.id || campaignClientData?.id,
+                            leadAirtableID: leadRecordId,
+                            notes: `Appointment: ${appointmentText}`
+                        }
                     );
                 }
             } else {
@@ -2137,10 +2302,18 @@
                     mode: 'no-cors'
                 });
             } catch (error) {
-                await sendErrorWebhook(
+                await logToAirtable(
+                    'Error',
+                    'Appointment Booking',
                     'Error sending calendar appointment',
                     { error: error.message, appointmentData },
-                    formData
+                    formData,
+                    {
+                        campaignID: metaCampaignID || initialCampaignID,
+                        clientAirtableID: matchedClientData?.id || campaignClientData?.id,
+                        leadAirtableID: leadRecordId,
+                        notes: 'Calendar webhook error (non-critical)'
+                    }
                 );
             }
             
@@ -2400,11 +2573,33 @@
             // Find client by zip code
             try {
                 matchedClientData = await findClientByZipCode(finalData.address.zip);
+                
+                // Log successful zip code match if found
+                if (matchedClientData && matchedClientData.id) {
+                    await logToAirtable(
+                        'Success',
+                        'Zip Code Match',
+                        null,
+                        null,
+                        formData,
+                        {
+                            campaignID: metaCampaignID || initialCampaignID,
+                            clientAirtableID: matchedClientData.id,
+                            notes: `Client matched by zip code: ${finalData.address.zip}`
+                        }
+                    );
+                }
             } catch (error) {
-                await sendErrorWebhook(
+                await logToAirtable(
+                    'Error',
+                    'Client Lookup',
                     'Error finding client by zip code',
                     { error: error.message, zipCode: finalData.address.zip },
-                    formData
+                    formData,
+                    {
+                        campaignID: metaCampaignID || initialCampaignID,
+                        notes: `Zip code: ${finalData.address.zip}`
+                    }
                 );
             }
             
@@ -2571,10 +2766,18 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             } catch (error) {
                 // Catch any unexpected errors that weren't caught by the Airtable submission catch
                 console.error('Unexpected error in submitFinalForm:', error);
-                await sendErrorWebhook(
+                await logToAirtable(
+                    'Error',
+                    'Other',
                     'Unexpected error in submitFinalForm',
                     { error: error.message, stack: error.stack },
-                    formData
+                    formData,
+                    {
+                        campaignID: metaCampaignID || initialCampaignID,
+                        clientAirtableID: matchedClientData?.id || campaignClientData?.id,
+                        leadAirtableID: leadRecordId,
+                        adAirtableID: adRecordId
+                    }
                 );
                 showConfirmationScreen();
                 // Reset submission flag and button on error
