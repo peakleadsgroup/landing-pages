@@ -832,6 +832,7 @@
         let clientAvailableDays = [1, 2, 3, 4, 5]; // Default: Monday-Friday
         let clientDaysOut = 14; // Default: 14 days out
         let isSubmitting = false; // Flag to prevent duplicate submissions
+        let formProgressLogId = null; // Track the form progress log record ID for updates
         
         // Get campaign ID immediately from URL (before DOM is ready)
         const urlParams = new URLSearchParams(window.location.search);
@@ -898,6 +899,94 @@
             } catch (err) {
                 // Silently fail - don't break the form if logging fails
                 console.error('Failed to log to Airtable (non-critical):', err);
+            }
+        }
+
+        async function createOrUpdateFormProgressLog(stepNumber, formDataSnapshot, isInitial = false) {
+            try {
+                const stepText = `Step ${stepNumber}`;
+                const formDataJSON = JSON.stringify(formDataSnapshot, null, 2);
+                
+                if (isInitial || !formProgressLogId) {
+                    // Create new log record
+                    const logRecord = {
+                        fields: {
+                            'Timestamp': new Date().toISOString(),
+                            'Event Type': 'Info',
+                            'Event Category': 'Form Progress',
+                            'Status': 'Info',
+                            'Current Step': stepText,
+                            'Form Progress Data': formDataJSON,
+                            'URL': window.location.href,
+                            'User Agent': navigator.userAgent
+                        }
+                    };
+                    
+                    // Add campaign ID if available
+                    if (initialCampaignID) {
+                        logRecord.fields['Campaign ID'] = initialCampaignID;
+                    }
+                    if (metaCampaignID) {
+                        logRecord.fields['Campaign ID'] = metaCampaignID;
+                    }
+                    if (campaignClientData?.id) {
+                        logRecord.fields['Client Airtable ID'] = campaignClientData.id;
+                    }
+                    
+                    const response = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.FORM_LOGS}`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ records: [logRecord] })
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.records && result.records.length > 0) {
+                            formProgressLogId = result.records[0].id;
+                            console.log('Form progress log created:', formProgressLogId);
+                        }
+                    }
+                } else {
+                    // Update existing log record
+                    const updateRecord = {
+                        fields: {
+                            'Current Step': stepText,
+                            'Form Progress Data': formDataJSON,
+                            'Timestamp': new Date().toISOString() // Update timestamp to show last activity
+                        }
+                    };
+                    
+                    // Update client/lead IDs if available now
+                    if (matchedClientData?.id) {
+                        updateRecord.fields['Client Airtable ID'] = matchedClientData.id;
+                    } else if (campaignClientData?.id) {
+                        updateRecord.fields['Client Airtable ID'] = campaignClientData.id;
+                    }
+                    if (leadRecordId) {
+                        updateRecord.fields['Lead Airtable ID'] = leadRecordId;
+                    }
+                    if (adRecordId) {
+                        updateRecord.fields['Ad Airtable ID'] = adRecordId;
+                    }
+                    if (metaCampaignID || initialCampaignID) {
+                        updateRecord.fields['Campaign ID'] = metaCampaignID || initialCampaignID;
+                    }
+                    
+                    await fetch(`${AIRTABLE_BASE_URL}/${TABLES.FORM_LOGS}/${formProgressLogId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updateRecord)
+                    });
+                }
+            } catch (err) {
+                // Silently fail - don't break the form if logging fails
+                console.error('Failed to update form progress log (non-critical):', err);
             }
         }
 
@@ -1417,6 +1506,9 @@
                         fbq('track', 'PageView');
                     }
                 }
+                
+                // Initialize form progress log (create initial record)
+                await createOrUpdateFormProgressLog(1, formData, true);
             } catch (error) {
                 console.error('Error initializing page:', error);
                 await logToAirtable(
@@ -1457,6 +1549,9 @@
             
             element.classList.add('selected');
             formData[field] = value;
+            
+            // Update form progress log with option selection
+            createOrUpdateFormProgressLog(currentStep, formData);
             
             if (!hasTrackedEngagement) {
                 if (typeof fbq !== 'undefined' && clientData && clientData.fields['Meta Pixel']) {
@@ -1514,6 +1609,8 @@
             
             if (street && city && state && zip && startsWithNumber) {
                 formData.address = { street, city, state, zip };
+                // Update form progress log with address data
+                createOrUpdateFormProgressLog(currentStep, formData);
             }
         }
 
@@ -1529,6 +1626,9 @@
                 currentStep++;
                 document.getElementById('step' + currentStep).classList.add('active');
                 updateProgress();
+                
+                // Update form progress log
+                createOrUpdateFormProgressLog(currentStep, formData);
             }
         }
 
@@ -1551,6 +1651,8 @@
             if (firstName && lastName) {
                 formData.firstName = firstName;
                 formData.lastName = lastName;
+                // Update form progress log with name data
+                createOrUpdateFormProgressLog(currentStep, formData);
             }
         }
 
@@ -1767,6 +1869,16 @@
 
             const phoneValid = p1.digits.length === 10 && validation.valid;
             const buttonShouldEnable = phoneValid && emailValid;
+            
+            // Update formData and log when phone/email are valid
+            if (phoneValid) {
+                formData.phone = p1.digits;
+                if (emailValid && emailInput) {
+                    formData.email = emailInput.value.trim();
+                }
+                // Update form progress log with phone/email data
+                createOrUpdateFormProgressLog(currentStep, formData);
+            }
             
             if (phoneSubmitBtn) {
                 phoneSubmitBtn.disabled = !buttonShouldEnable;
@@ -2678,11 +2790,17 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 zip: finalData.address.zip
             };
             
+            // Update form progress log with final submission data
+            await createOrUpdateFormProgressLog(currentStep, formData);
+            
             // Submit to Airtable
             let submissionSuccessful = false;
             try {
                 await submitLeadToAirtable(leadData);
                 submissionSuccessful = true;
+                
+                // Update form progress log to show submission completed
+                await createOrUpdateFormProgressLog(8, formData); // Step 8 = Submitted
                 
                 // Send webhook if client is linked
                 if (matchedClientData && matchedClientData.id && leadRecordId) {
