@@ -811,9 +811,6 @@
             minHoursInAdvance: 48,
             availableDaysOfWeek: [1, 2, 3, 4, 5] // Monday-Friday
         };
-        
-        // Webhook URL for calendar bookings
-        const CALENDAR_WEBHOOK_URL = 'https://hook.us2.make.com/nf9ec75cfxvqxe4i10ywqm7zboo8ogbo';
         // ============================================
 
         let currentStep = 1;
@@ -2716,41 +2713,6 @@
                 }
             } else {
                 console.warn('No lead record ID available to update with appointment');
-            }
-            
-            // Send webhook with appointment data
-            const appointmentData = {
-                ...formData,
-                phone: document.getElementById('phone_digits').value,
-                appointment_date: selectedDate.toISOString().split('T')[0],
-                appointment_time: slot.display,
-                appointment_datetime: slot.isoString,
-                appointment_full_text: appointmentText
-            };
-            
-            try {
-                await fetch(CALENDAR_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(appointmentData),
-                    mode: 'no-cors'
-                });
-            } catch (error) {
-                await logToAirtable(
-                    'Error',
-                    'Appointment Booking',
-                    'Error sending calendar appointment',
-                    { error: error.message, appointmentData },
-                    formData,
-                    {
-                        campaignID: metaCampaignID || initialCampaignID,
-                        clientAirtableID: matchedClientData?.id || campaignClientData?.id,
-                        leadAirtableID: leadRecordId,
-                        notes: 'Calendar webhook error (non-critical)'
-                    }
-                );
             }
             
             // Show confirmation screen
