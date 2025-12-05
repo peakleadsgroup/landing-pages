@@ -1885,6 +1885,11 @@
                 formData.address = { street, city, state, zip };
                 // Update form progress log with address data
                 createOrUpdateFormProgressLog(currentStep, formData);
+            } else {
+                // Clear address data if validation fails to prevent stale data
+                if (formData.address) {
+                    delete formData.address;
+                }
             }
         }
 
@@ -2992,6 +2997,11 @@
             
             // Find client by zip code
             try {
+                // Safety check: ensure address data exists
+                if (!finalData.address || !finalData.address.zip) {
+                    throw new Error('Address data is missing or incomplete. Address object: ' + JSON.stringify(finalData.address));
+                }
+                
                 matchedClientData = await findClientByZipCode(finalData.address.zip);
                 
                 // Log successful zip code match if found
@@ -3010,15 +3020,16 @@
                     );
                 }
             } catch (error) {
+                const zipCode = finalData.address?.zip || 'N/A';
                 await logToAirtable(
                     'Error',
                     'Client Lookup',
                     'Error finding client by zip code',
-                    { error: error.message, zipCode: finalData.address.zip },
+                    { error: error.message, zipCode: zipCode, addressData: finalData.address },
                     formData,
                     {
                         campaignID: metaCampaignID || initialCampaignID,
-                        notes: `Zip code: ${finalData.address.zip}`
+                        notes: `Zip code: ${zipCode}`
                     }
                 );
             }
@@ -3084,6 +3095,11 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             formData.fullSummaryHTML = fullSummaryHTML;
             
             // Prepare lead data for Airtable
+            // Safety check: ensure address data exists
+            if (!finalData.address) {
+                throw new Error('Address data is missing. Cannot submit lead without address information.');
+            }
+            
             const leadData = {
                 phone: finalData.phone,
                 email: finalData.email || '',
@@ -3093,9 +3109,9 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 firstName: finalData.firstName,
                 lastName: finalData.lastName,
                 address: formattedAddress,
-                city: finalData.address.city,
-                state: finalData.address.state,
-                zip: finalData.address.zip
+                city: finalData.address.city || '',
+                state: finalData.address.state || '',
+                zip: finalData.address.zip || ''
             };
             
             // Update form progress log with final submission data
