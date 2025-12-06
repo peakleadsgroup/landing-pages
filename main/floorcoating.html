@@ -1302,6 +1302,12 @@
                         continue;
                     }
                     
+                    // Only consider clients with "Floor Coating" niche
+                    const niche = client.fields['Niche'];
+                    if (niche !== 'Floor Coating') {
+                        continue;
+                    }
+                    
                     const zipList = client.fields['Expanded Area Raw Zips'];
                     if (!zipList) continue;
                     
