@@ -1294,30 +1294,45 @@
                     return null;
                 }
                 
+                console.log(`Searching for zip code: ${zipCode}`);
+                console.log(`Total clients in database: ${clientsData.records.length}`);
+                
                 // Search through each client's Expanded Area Raw Zips
                 for (const client of clientsData.records) {
-                    // Only consider clients with "Active" or "Paused" status
                     const status = client.fields['Status'];
-                    if (status !== 'Active' && status !== 'Paused') {
-                        continue;
-                    }
-                    
-                    // Only consider clients with "Floor Coating" niche
                     const niche = client.fields['Niche'];
-                    if (niche !== 'Floor Coating') {
+                    const zipList = client.fields['Expanded Area Raw Zips'];
+                    
+                    // Only consider clients with "Active" or "Paused" status
+                    if (status !== 'Active' && status !== 'Paused') {
+                        console.log(`Skipping client ${client.id}: Status="${status}" (needs Active or Paused)`);
                         continue;
                     }
                     
-                    const zipList = client.fields['Expanded Area Raw Zips'];
-                    if (!zipList) continue;
+                    // Only consider clients with "Floor Coating" niche (case-insensitive)
+                    if (!niche || niche.toString().trim().toLowerCase() !== 'floor coating') {
+                        console.log(`Skipping client ${client.id}: Niche="${niche}" (needs "Floor Coating")`);
+                        continue;
+                    }
+                    
+                    if (!zipList) {
+                        console.log(`Skipping client ${client.id}: No Expanded Area Raw Zips field`);
+                        continue;
+                    }
                     
                     // Parse comma-separated zip codes (handle spaces)
                     const zipCodes = zipList.split(',').map(z => z.trim());
+                    console.log(`Checking client ${client.id}: Zip codes=[${zipCodes.join(', ')}], Looking for="${zipCode}"`);
                     
                     if (zipCodes.includes(zipCode)) {
+                        console.log(`✓ MATCH FOUND! Client ${client.id} matches zip code ${zipCode}`);
                         return client;
+                    } else {
+                        console.log(`✗ Client ${client.id} does not have zip code ${zipCode}`);
                     }
                 }
+                
+                console.log(`No matching client found for zip code: ${zipCode}`);
                 
                 // No client found by zip code - log this
                 await logToAirtable(
