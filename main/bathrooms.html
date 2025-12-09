@@ -3316,7 +3316,13 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                     );
                 }
                 
-                // Log that submission completed successfully
+                // Log that submission completed successfully - use console.log first to ensure we see it
+                console.log('=== SUBMISSION SUCCESSFUL ===');
+                console.log('submissionSuccessful:', submissionSuccessful);
+                console.log('leadRecordId:', leadRecordId);
+                console.log('matchedClientData:', matchedClientData);
+                console.log('campaignClientData:', campaignClientData);
+                
                 try {
                     await logToAirtable(
                         'Info',
@@ -3335,6 +3341,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                             leadAirtableID: leadRecordId
                         }
                     );
+                    console.log('Log written to Airtable successfully');
                 } catch (logErr) {
                     console.error('Error logging submission completion:', logErr);
                 }
@@ -3353,7 +3360,10 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             }
             
             // Only proceed to show submit screen if submission was successful
-            console.log('Checking submissionSuccessful:', submissionSuccessful);
+            console.log('=== CHECKING SUBMISSION STATUS ===');
+            console.log('submissionSuccessful:', submissionSuccessful);
+            console.log('About to check if we should proceed to submit screen');
+            
             if (!submissionSuccessful) {
                 console.log('Submission not successful, showing confirmation screen');
                 try {
