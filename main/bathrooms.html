@@ -3331,8 +3331,42 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             
             // Only proceed to show submit screen if submission was successful
             if (!submissionSuccessful) {
+                try {
+                    await logToAirtable(
+                        'Warning',
+                        'Submit Screen',
+                        'Submission was not successful, showing confirmation screen',
+                        { submissionSuccessful: submissionSuccessful },
+                        {},
+                        {
+                            campaignID: metaCampaignID || initialCampaignID,
+                            clientAirtableID: matchedClientData?.id || campaignClientData?.id,
+                            leadAirtableID: leadRecordId
+                        }
+                    );
+                } catch (e) {
+                    console.error('Error logging submission failure:', e);
+                }
                 showConfirmationScreen();
                 return;
+            }
+            
+            // Log that we're proceeding to determine submit screen
+            try {
+                await logToAirtable(
+                    'Info',
+                    'Submit Screen',
+                    'Submission successful, determining submit screen',
+                    { submissionSuccessful: submissionSuccessful },
+                    {},
+                    {
+                        campaignID: metaCampaignID || initialCampaignID,
+                        clientAirtableID: matchedClientData?.id || campaignClientData?.id,
+                        leadAirtableID: leadRecordId
+                    }
+                );
+            } catch (e) {
+                console.error('Error logging submission success:', e);
             }
             
             // Determine which submit screen to show
@@ -3340,24 +3374,28 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             let activeClient = matchedClientData || campaignClientData;
             let submitScreenType = 'None'; // Default
             
-            // Log client determination for debugging
-            await logToAirtable(
-                'Info',
-                'Submit Screen',
-                'Determining submit screen type',
-                {
-                    matchedClientId: matchedClientData ? matchedClientData.id : null,
-                    campaignClientId: campaignClientData ? campaignClientData.id : null,
-                    matchedClientSubmitScreen: matchedClientData && matchedClientData.fields ? matchedClientData.fields['Submit Screen'] : null,
-                    campaignClientSubmitScreen: campaignClientData && campaignClientData.fields ? campaignClientData.fields['Submit Screen'] : null
-                },
-                {},
-                {
-                    campaignID: metaCampaignID || initialCampaignID,
-                    clientAirtableID: matchedClientData?.id || campaignClientData?.id,
-                    leadAirtableID: leadRecordId
-                }
-            );
+            try {
+                // Log client determination for debugging
+                await logToAirtable(
+                    'Info',
+                    'Submit Screen',
+                    'Determining submit screen type',
+                    {
+                        matchedClientId: matchedClientData ? matchedClientData.id : null,
+                        campaignClientId: campaignClientData ? campaignClientData.id : null,
+                        matchedClientSubmitScreen: matchedClientData && matchedClientData.fields ? matchedClientData.fields['Submit Screen'] : null,
+                        campaignClientSubmitScreen: campaignClientData && campaignClientData.fields ? campaignClientData.fields['Submit Screen'] : null
+                    },
+                    {},
+                    {
+                        campaignID: metaCampaignID || initialCampaignID,
+                        clientAirtableID: matchedClientData?.id || campaignClientData?.id,
+                        leadAirtableID: leadRecordId
+                    }
+                );
+            } catch (logError) {
+                console.error('Error logging submit screen determination:', logError);
+            }
             
             // Try to get Submit Screen from matched client first
             if (matchedClientData && matchedClientData.fields && matchedClientData.fields['Submit Screen']) {
@@ -3370,44 +3408,52 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 submitScreenType = String(campaignClientData.fields['Submit Screen']).trim();
             }
             
-            // Log final determination
-            await logToAirtable(
-                'Info',
-                'Submit Screen',
-                'Submit screen type determined',
-                {
-                    activeClientId: activeClient ? activeClient.id : null,
-                    submitScreenType: submitScreenType,
-                    normalizedType: submitScreenType.toLowerCase(),
-                    redirectUrl: activeClient && activeClient.fields ? activeClient.fields['Redirect URL'] : null
-                },
-                {},
-                {
-                    campaignID: metaCampaignID || initialCampaignID,
-                    clientAirtableID: activeClient ? activeClient.id : null,
-                    leadAirtableID: leadRecordId
-                }
-            );
+            try {
+                // Log final determination
+                await logToAirtable(
+                    'Info',
+                    'Submit Screen',
+                    'Submit screen type determined',
+                    {
+                        activeClientId: activeClient ? activeClient.id : null,
+                        submitScreenType: submitScreenType,
+                        normalizedType: submitScreenType.toLowerCase(),
+                        redirectUrl: activeClient && activeClient.fields ? activeClient.fields['Redirect URL'] : null
+                    },
+                    {},
+                    {
+                        campaignID: metaCampaignID || initialCampaignID,
+                        clientAirtableID: activeClient ? activeClient.id : null,
+                        leadAirtableID: leadRecordId
+                    }
+                );
+            } catch (logError) {
+                console.error('Error logging submit screen type:', logError);
+            }
             
             // Show appropriate screen based on submit screen type (case-insensitive comparison)
             const normalizedType = submitScreenType.toLowerCase();
             
-            // Log which path we're taking
-            await logToAirtable(
-                'Info',
-                'Submit Screen',
-                `Processing submit screen type: ${normalizedType}`,
-                {
-                    normalizedType: normalizedType,
-                    submitScreenType: submitScreenType
-                },
-                {},
-                {
-                    campaignID: metaCampaignID || initialCampaignID,
-                    clientAirtableID: activeClient ? activeClient.id : null,
-                    leadAirtableID: leadRecordId
-                }
-            );
+            try {
+                // Log which path we're taking
+                await logToAirtable(
+                    'Info',
+                    'Submit Screen',
+                    `Processing submit screen type: ${normalizedType}`,
+                    {
+                        normalizedType: normalizedType,
+                        submitScreenType: submitScreenType
+                    },
+                    {},
+                    {
+                        campaignID: metaCampaignID || initialCampaignID,
+                        clientAirtableID: activeClient ? activeClient.id : null,
+                        leadAirtableID: leadRecordId
+                    }
+                );
+            } catch (logError) {
+                console.error('Error logging submit screen processing:', logError);
+            }
             
             if (normalizedType === 'redirect') {
                 // Redirect to URL from Redirect URL field
