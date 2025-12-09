@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bathroom Remodeling Qualification</title>
+    <title>Bathroom Remodel Qualification</title>
     
     <!-- Meta Pixel Code - Will be dynamically set -->
     <script>
@@ -3315,6 +3315,29 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                         matchedClientData.id
                     );
                 }
+                
+                // Log that submission completed successfully
+                try {
+                    await logToAirtable(
+                        'Info',
+                        'Submit Screen',
+                        'Lead submission completed, about to determine submit screen',
+                        { 
+                            submissionSuccessful: submissionSuccessful,
+                            leadRecordId: leadRecordId,
+                            matchedClientId: matchedClientData?.id,
+                            campaignClientId: campaignClientData?.id
+                        },
+                        {},
+                        {
+                            campaignID: metaCampaignID || initialCampaignID,
+                            clientAirtableID: matchedClientData?.id || campaignClientData?.id,
+                            leadAirtableID: leadRecordId
+                        }
+                    );
+                } catch (logErr) {
+                    console.error('Error logging submission completion:', logErr);
+                }
             } catch (error) {
                 // Error webhook already sent in submitLeadToAirtable
                 // Show generic confirmation screen instead of calendar/phone options
@@ -3330,7 +3353,9 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             }
             
             // Only proceed to show submit screen if submission was successful
+            console.log('Checking submissionSuccessful:', submissionSuccessful);
             if (!submissionSuccessful) {
+                console.log('Submission not successful, showing confirmation screen');
                 try {
                     await logToAirtable(
                         'Warning',
@@ -3351,13 +3376,21 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 return;
             }
             
+            console.log('Submission successful, proceeding to determine submit screen');
+            console.log('matchedClientData:', matchedClientData);
+            console.log('campaignClientData:', campaignClientData);
+            
             // Log that we're proceeding to determine submit screen
             try {
                 await logToAirtable(
                     'Info',
                     'Submit Screen',
                     'Submission successful, determining submit screen',
-                    { submissionSuccessful: submissionSuccessful },
+                    { 
+                        submissionSuccessful: submissionSuccessful,
+                        matchedClientId: matchedClientData?.id,
+                        campaignClientId: campaignClientData?.id
+                    },
                     {},
                     {
                         campaignID: metaCampaignID || initialCampaignID,
