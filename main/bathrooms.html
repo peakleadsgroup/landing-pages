@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bathroom Remodel Qualifications</title>
+    <title>Bathroom Remodel Qualification</title>
     
     <!-- Meta Pixel Code - Will be dynamically set -->
     <script>
@@ -3502,38 +3502,48 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 // Redirect to URL from Redirect URL field
                 const redirectUrl = activeClient && activeClient.fields['Redirect URL'] ? activeClient.fields['Redirect URL'] : null;
                 if (redirectUrl) {
-                    // Fetch URL parameters for this client
                     const clientId = activeClient ? activeClient.id : null;
-                    
-                    // Prepare log data for URL parameter functions
-                    const logData = {
-                        campaignID: metaCampaignID || initialCampaignID,
-                        clientAirtableID: clientId,
-                        leadAirtableID: leadRecordId
-                    };
-                    
-                    const urlParameters = await fetchUrlParametersForClient(clientId, logData);
                     
                     // Use leadData if available, otherwise fall back to formData
                     const dataForParams = leadData || formData;
+                    const fullName = dataForParams.fullName || (dataForParams.firstName && dataForParams.lastName ? `${dataForParams.firstName} ${dataForParams.lastName}`.trim() : '');
+                    const phone = dataForParams.phone || '';
                     
-                    // Build redirect URL with parameters
-                    const finalRedirectUrl = await buildRedirectUrlWithParameters(redirectUrl, urlParameters, dataForParams, logData);
+                    let finalRedirectUrl = redirectUrl;
                     
-                    // Log final redirect
-                    await logToAirtable(
-                        'Info',
-                        'Redirect',
-                        'Redirecting with URL parameters',
-                        {
-                            redirectUrl: redirectUrl,
-                            finalRedirectUrl: finalRedirectUrl,
-                            clientId: clientId,
-                            urlParameterCount: urlParameters.length
-                        },
-                        dataForParams,
-                        logData
-                    );
+                    // Special handling for Elevated Kitchen & Bath
+                    if (clientId === 'receATe2XBIG7KSXS') {
+                        try {
+                            const url = new URL(redirectUrl);
+                            if (fullName) {
+                                url.searchParams.append('full_name', fullName);
+                            }
+                            if (phone) {
+                                url.searchParams.append('phone', phone);
+                            }
+                            finalRedirectUrl = url.toString();
+                        } catch (error) {
+                            console.error('Error building redirect URL:', error);
+                            // If URL parsing fails, try simple string concatenation
+                            const separator = redirectUrl.includes('?') ? '&' : '?';
+                            const params = [];
+                            if (fullName) params.push(`full_name=${encodeURIComponent(fullName)}`);
+                            if (phone) params.push(`phone=${encodeURIComponent(phone)}`);
+                            if (params.length > 0) {
+                                finalRedirectUrl = redirectUrl + separator + params.join('&');
+                            }
+                        }
+                    } else {
+                        // For other clients, use the dynamic URL parameters system
+                        const logData = {
+                            campaignID: metaCampaignID || initialCampaignID,
+                            clientAirtableID: clientId,
+                            leadAirtableID: leadRecordId
+                        };
+                        
+                        const urlParameters = await fetchUrlParametersForClient(clientId, logData);
+                        finalRedirectUrl = await buildRedirectUrlWithParameters(redirectUrl, urlParameters, dataForParams, logData);
+                    }
                     
                     window.location.href = finalRedirectUrl;
                 } else {
