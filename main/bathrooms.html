@@ -1146,14 +1146,29 @@
             }
         }
 
-        async function fetchUrlParametersForClient(clientId) {
+        async function fetchUrlParametersForClient(clientId, additionalLogData = {}) {
             try {
                 if (!clientId) {
-                    console.log('No clientId provided for URL parameters');
+                    await logToAirtable(
+                        'Info',
+                        'URL Parameters',
+                        'No clientId provided for URL parameters',
+                        {},
+                        {},
+                        additionalLogData
+                    );
                     return [];
                 }
                 
-                console.log('Fetching URL parameters for client:', clientId);
+                // Log start of URL parameter fetch
+                await logToAirtable(
+                    'Info',
+                    'URL Parameters',
+                    'Fetching URL parameters for client',
+                    { clientId: clientId },
+                    {},
+                    additionalLogData
+                );
                 
                 // Fetch URL parameters linked to this client
                 // Try multiple filter approaches for linked records
@@ -1161,45 +1176,77 @@
                 let filterFormula = encodeURIComponent(`{Clients}="${clientId}"`);
                 let urlParamsUrl = `${AIRTABLE_BASE_URL}/${TABLES.URL_PARAMETERS}?filterByFormula=${filterFormula}`;
                 
-                console.log('URL Parameters API URL (attempt 1):', urlParamsUrl);
                 let urlParamsData = await fetchAirtableData(urlParamsUrl);
                 
                 // If no results, try FIND with ARRAYJOIN (works for multiple linked records)
                 if (!urlParamsData.records || urlParamsData.records.length === 0) {
-                    console.log('No results with direct match, trying FIND with ARRAYJOIN');
+                    await logToAirtable(
+                        'Info',
+                        'URL Parameters',
+                        'No results with direct match, trying FIND with ARRAYJOIN',
+                        { clientId: clientId, attempt: 1 },
+                        {},
+                        additionalLogData
+                    );
                     filterFormula = encodeURIComponent(`FIND("${clientId}", ARRAYJOIN({Clients}))`);
                     urlParamsUrl = `${AIRTABLE_BASE_URL}/${TABLES.URL_PARAMETERS}?filterByFormula=${filterFormula}`;
-                    console.log('URL Parameters API URL (attempt 2):', urlParamsUrl);
                     urlParamsData = await fetchAirtableData(urlParamsUrl);
                 }
-                
-                console.log('URL Parameters response:', urlParamsData);
                 
                 if (urlParamsData.records && urlParamsData.records.length > 0) {
                     const params = urlParamsData.records.map(record => ({
                         parameter: record.fields['Parameter'] || '',
                         value: record.fields['Value'] || ''
                     }));
-                    console.log('Found URL parameters:', params);
+                    
+                    // Log successful fetch
+                    await logToAirtable(
+                        'Info',
+                        'URL Parameters',
+                        `Found ${params.length} URL parameter(s) for client`,
+                        { 
+                            clientId: clientId,
+                            parameters: params,
+                            recordCount: urlParamsData.records.length
+                        },
+                        {},
+                        additionalLogData
+                    );
+                    
                     return params;
                 }
                 
-                console.log('No URL parameters found for client');
+                // Log no parameters found
+                await logToAirtable(
+                    'Info',
+                    'URL Parameters',
+                    'No URL parameters found for client',
+                    { clientId: clientId },
+                    {},
+                    additionalLogData
+                );
+                
                 return [];
             } catch (error) {
-                console.error('Error fetching URL parameters:', error);
-                // Don't throw - just return empty array so redirect can still work
+                // Log error but don't throw - redirect should still work
+                await logToAirtable(
+                    'Error',
+                    'URL Parameters',
+                    'Error fetching URL parameters',
+                    { 
+                        error: error.message,
+                        stack: error.stack,
+                        clientId: clientId
+                    },
+                    {},
+                    additionalLogData
+                );
                 return [];
             }
         }
 
-        function buildRedirectUrlWithParameters(baseUrl, urlParameters, dataSource) {
+        async function buildRedirectUrlWithParameters(baseUrl, urlParameters, dataSource, additionalLogData = {}) {
             try {
-                console.log('Building redirect URL with parameters');
-                console.log('Base URL:', baseUrl);
-                console.log('URL Parameters:', urlParameters);
-                console.log('Data Source:', dataSource);
-                
                 const url = new URL(baseUrl);
                 
                 // Map form data values based on the Value field
@@ -1212,34 +1259,69 @@
                     'Phone': phone
                 };
                 
-                console.log('Value map:', valueMap);
+                const addedParams = [];
+                const skippedParams = [];
                 
                 // Add each URL parameter
                 urlParameters.forEach(param => {
                     const paramName = param.parameter;
                     const valueType = param.value;
                     
-                    console.log(`Processing parameter: ${paramName}, value type: ${valueType}`);
-                    
                     if (paramName && valueType && valueMap[valueType] !== undefined) {
                         const paramValue = valueMap[valueType];
                         if (paramValue) {
                             url.searchParams.append(paramName, paramValue);
-                            console.log(`Added parameter: ${paramName}=${paramValue}`);
+                            addedParams.push({ name: paramName, value: paramValue, type: valueType });
                         } else {
-                            console.warn(`Parameter ${paramName} has no value (${valueType} is empty)`);
+                            skippedParams.push({ name: paramName, reason: `${valueType} is empty`, type: valueType });
                         }
                     } else {
-                        console.warn(`Skipping parameter ${paramName} - valueType: ${valueType}, in map: ${valueMap[valueType] !== undefined}`);
+                        skippedParams.push({ 
+                            name: paramName, 
+                            reason: `valueType: ${valueType}, in map: ${valueMap[valueType] !== undefined}`,
+                            type: valueType
+                        });
                     }
                 });
                 
                 const finalUrl = url.toString();
-                console.log('Final redirect URL:', finalUrl);
+                
+                // Log URL building details
+                await logToAirtable(
+                    'Info',
+                    'URL Parameters',
+                    'Built redirect URL with parameters',
+                    {
+                        baseUrl: baseUrl,
+                        finalUrl: finalUrl,
+                        urlParameters: urlParameters,
+                        valueMap: valueMap,
+                        addedParams: addedParams,
+                        skippedParams: skippedParams,
+                        parameterCount: urlParameters.length,
+                        addedCount: addedParams.length,
+                        skippedCount: skippedParams.length
+                    },
+                    dataSource,
+                    additionalLogData
+                );
+                
                 return finalUrl;
             } catch (error) {
-                console.error('Error building redirect URL with parameters:', error);
-                // If URL parsing fails, return base URL
+                // Log error but return base URL so redirect still works
+                await logToAirtable(
+                    'Error',
+                    'URL Parameters',
+                    'Error building redirect URL with parameters',
+                    {
+                        error: error.message,
+                        stack: error.stack,
+                        baseUrl: baseUrl,
+                        urlParameters: urlParameters
+                    },
+                    dataSource,
+                    additionalLogData
+                );
                 return baseUrl;
             }
         }
@@ -3287,22 +3369,51 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 if (redirectUrl) {
                     // Fetch URL parameters for this client
                     const clientId = activeClient ? activeClient.id : null;
-                    console.log('Active client ID for URL parameters:', clientId);
-                    console.log('Current formData:', formData);
-                    console.log('Current leadData:', leadData);
                     
-                    const urlParameters = await fetchUrlParametersForClient(clientId);
+                    // Prepare log data for URL parameter functions
+                    const logData = {
+                        campaignID: metaCampaignID || initialCampaignID,
+                        clientAirtableID: clientId,
+                        leadAirtableID: leadRecordId
+                    };
+                    
+                    const urlParameters = await fetchUrlParametersForClient(clientId, logData);
                     
                     // Use leadData if available, otherwise fall back to formData
                     const dataForParams = leadData || formData;
                     
                     // Build redirect URL with parameters
-                    const finalRedirectUrl = buildRedirectUrlWithParameters(redirectUrl, urlParameters, dataForParams);
-                    console.log('Final redirect URL:', finalRedirectUrl);
+                    const finalRedirectUrl = await buildRedirectUrlWithParameters(redirectUrl, urlParameters, dataForParams, logData);
+                    
+                    // Log final redirect
+                    await logToAirtable(
+                        'Info',
+                        'Redirect',
+                        'Redirecting with URL parameters',
+                        {
+                            redirectUrl: redirectUrl,
+                            finalRedirectUrl: finalRedirectUrl,
+                            clientId: clientId,
+                            urlParameterCount: urlParameters.length
+                        },
+                        dataForParams,
+                        logData
+                    );
+                    
                     window.location.href = finalRedirectUrl;
                 } else {
                     // If no redirect URL, show confirmation screen
-                    console.warn('Redirect option selected but no Redirect URL found');
+                    await logToAirtable(
+                        'Warning',
+                        'Redirect',
+                        'Redirect option selected but no Redirect URL found',
+                        {},
+                        {},
+                        {
+                            campaignID: metaCampaignID || initialCampaignID,
+                            clientAirtableID: activeClient ? activeClient.id : null
+                        }
+                    );
                     showConfirmationScreen();
                 }
             } else if (normalizedType === 'calendar') {
