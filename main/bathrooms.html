@@ -3340,29 +3340,75 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             let activeClient = matchedClientData || campaignClientData;
             let submitScreenType = 'None'; // Default
             
-            console.log('Matched client:', matchedClientData);
-            console.log('Campaign client:', campaignClientData);
+            // Log client determination for debugging
+            await logToAirtable(
+                'Info',
+                'Submit Screen',
+                'Determining submit screen type',
+                {
+                    matchedClientId: matchedClientData ? matchedClientData.id : null,
+                    campaignClientId: campaignClientData ? campaignClientData.id : null,
+                    matchedClientSubmitScreen: matchedClientData && matchedClientData.fields ? matchedClientData.fields['Submit Screen'] : null,
+                    campaignClientSubmitScreen: campaignClientData && campaignClientData.fields ? campaignClientData.fields['Submit Screen'] : null
+                },
+                {},
+                {
+                    campaignID: metaCampaignID || initialCampaignID,
+                    clientAirtableID: matchedClientData?.id || campaignClientData?.id,
+                    leadAirtableID: leadRecordId
+                }
+            );
             
             // Try to get Submit Screen from matched client first
             if (matchedClientData && matchedClientData.fields && matchedClientData.fields['Submit Screen']) {
                 activeClient = matchedClientData;
                 submitScreenType = String(matchedClientData.fields['Submit Screen']).trim();
-                console.log('Using Submit Screen from matched client:', submitScreenType);
             } 
             // Fall back to campaign client if matched client doesn't have Submit Screen
             else if (campaignClientData && campaignClientData.fields && campaignClientData.fields['Submit Screen']) {
                 activeClient = campaignClientData;
                 submitScreenType = String(campaignClientData.fields['Submit Screen']).trim();
-                console.log('Using Submit Screen from campaign client:', submitScreenType);
             }
             
-            console.log('Active client:', activeClient);
-            console.log('Submit screen type determined:', submitScreenType);
-            
-            console.log('Submit screen type determined:', submitScreenType);
+            // Log final determination
+            await logToAirtable(
+                'Info',
+                'Submit Screen',
+                'Submit screen type determined',
+                {
+                    activeClientId: activeClient ? activeClient.id : null,
+                    submitScreenType: submitScreenType,
+                    normalizedType: submitScreenType.toLowerCase(),
+                    redirectUrl: activeClient && activeClient.fields ? activeClient.fields['Redirect URL'] : null
+                },
+                {},
+                {
+                    campaignID: metaCampaignID || initialCampaignID,
+                    clientAirtableID: activeClient ? activeClient.id : null,
+                    leadAirtableID: leadRecordId
+                }
+            );
             
             // Show appropriate screen based on submit screen type (case-insensitive comparison)
             const normalizedType = submitScreenType.toLowerCase();
+            
+            // Log which path we're taking
+            await logToAirtable(
+                'Info',
+                'Submit Screen',
+                `Processing submit screen type: ${normalizedType}`,
+                {
+                    normalizedType: normalizedType,
+                    submitScreenType: submitScreenType
+                },
+                {},
+                {
+                    campaignID: metaCampaignID || initialCampaignID,
+                    clientAirtableID: activeClient ? activeClient.id : null,
+                    leadAirtableID: leadRecordId
+                }
+            );
+            
             if (normalizedType === 'redirect') {
                 // Redirect to URL from Redirect URL field
                 const redirectUrl = activeClient && activeClient.fields['Redirect URL'] ? activeClient.fields['Redirect URL'] : null;
