@@ -1149,21 +1149,42 @@
         async function fetchUrlParametersForClient(clientId) {
             try {
                 if (!clientId) {
+                    console.log('No clientId provided for URL parameters');
                     return [];
                 }
                 
+                console.log('Fetching URL parameters for client:', clientId);
+                
                 // Fetch URL parameters linked to this client
-                // Filter by linked Clients field - works for both single and multiple linked records
-                const urlParamsUrl = `${AIRTABLE_BASE_URL}/${TABLES.URL_PARAMETERS}?filterByFormula={Clients}="${clientId}"`;
-                const urlParamsData = await fetchAirtableData(urlParamsUrl);
+                // Try multiple filter approaches for linked records
+                // First try: direct record ID match (works for single linked records)
+                let filterFormula = encodeURIComponent(`{Clients}="${clientId}"`);
+                let urlParamsUrl = `${AIRTABLE_BASE_URL}/${TABLES.URL_PARAMETERS}?filterByFormula=${filterFormula}`;
+                
+                console.log('URL Parameters API URL (attempt 1):', urlParamsUrl);
+                let urlParamsData = await fetchAirtableData(urlParamsUrl);
+                
+                // If no results, try FIND with ARRAYJOIN (works for multiple linked records)
+                if (!urlParamsData.records || urlParamsData.records.length === 0) {
+                    console.log('No results with direct match, trying FIND with ARRAYJOIN');
+                    filterFormula = encodeURIComponent(`FIND("${clientId}", ARRAYJOIN({Clients}))`);
+                    urlParamsUrl = `${AIRTABLE_BASE_URL}/${TABLES.URL_PARAMETERS}?filterByFormula=${filterFormula}`;
+                    console.log('URL Parameters API URL (attempt 2):', urlParamsUrl);
+                    urlParamsData = await fetchAirtableData(urlParamsUrl);
+                }
+                
+                console.log('URL Parameters response:', urlParamsData);
                 
                 if (urlParamsData.records && urlParamsData.records.length > 0) {
-                    return urlParamsData.records.map(record => ({
+                    const params = urlParamsData.records.map(record => ({
                         parameter: record.fields['Parameter'] || '',
                         value: record.fields['Value'] || ''
                     }));
+                    console.log('Found URL parameters:', params);
+                    return params;
                 }
                 
+                console.log('No URL parameters found for client');
                 return [];
             } catch (error) {
                 console.error('Error fetching URL parameters:', error);
@@ -1172,30 +1193,50 @@
             }
         }
 
-        function buildRedirectUrlWithParameters(baseUrl, urlParameters, formData) {
+        function buildRedirectUrlWithParameters(baseUrl, urlParameters, dataSource) {
             try {
+                console.log('Building redirect URL with parameters');
+                console.log('Base URL:', baseUrl);
+                console.log('URL Parameters:', urlParameters);
+                console.log('Data Source:', dataSource);
+                
                 const url = new URL(baseUrl);
                 
                 // Map form data values based on the Value field
+                // Try to get fullName and phone from dataSource (could be leadData or formData)
+                const fullName = dataSource.fullName || (dataSource.firstName && dataSource.lastName ? `${dataSource.firstName} ${dataSource.lastName}`.trim() : '');
+                const phone = dataSource.phone || '';
+                
                 const valueMap = {
-                    'Full Name': formData.fullName || '',
-                    'Phone': formData.phone || ''
+                    'Full Name': fullName,
+                    'Phone': phone
                 };
+                
+                console.log('Value map:', valueMap);
                 
                 // Add each URL parameter
                 urlParameters.forEach(param => {
                     const paramName = param.parameter;
                     const valueType = param.value;
                     
+                    console.log(`Processing parameter: ${paramName}, value type: ${valueType}`);
+                    
                     if (paramName && valueType && valueMap[valueType] !== undefined) {
                         const paramValue = valueMap[valueType];
                         if (paramValue) {
                             url.searchParams.append(paramName, paramValue);
+                            console.log(`Added parameter: ${paramName}=${paramValue}`);
+                        } else {
+                            console.warn(`Parameter ${paramName} has no value (${valueType} is empty)`);
                         }
+                    } else {
+                        console.warn(`Skipping parameter ${paramName} - valueType: ${valueType}, in map: ${valueMap[valueType] !== undefined}`);
                     }
                 });
                 
-                return url.toString();
+                const finalUrl = url.toString();
+                console.log('Final redirect URL:', finalUrl);
+                return finalUrl;
             } catch (error) {
                 console.error('Error building redirect URL with parameters:', error);
                 // If URL parsing fails, return base URL
@@ -3246,11 +3287,18 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 if (redirectUrl) {
                     // Fetch URL parameters for this client
                     const clientId = activeClient ? activeClient.id : null;
+                    console.log('Active client ID for URL parameters:', clientId);
+                    console.log('Current formData:', formData);
+                    console.log('Current leadData:', leadData);
+                    
                     const urlParameters = await fetchUrlParametersForClient(clientId);
                     
+                    // Use leadData if available, otherwise fall back to formData
+                    const dataForParams = leadData || formData;
+                    
                     // Build redirect URL with parameters
-                    const finalRedirectUrl = buildRedirectUrlWithParameters(redirectUrl, urlParameters, formData);
-                    console.log('Redirecting to:', finalRedirectUrl);
+                    const finalRedirectUrl = buildRedirectUrlWithParameters(redirectUrl, urlParameters, dataForParams);
+                    console.log('Final redirect URL:', finalRedirectUrl);
                     window.location.href = finalRedirectUrl;
                 } else {
                     // If no redirect URL, show confirmation screen
