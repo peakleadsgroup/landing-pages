@@ -801,6 +801,7 @@
             B2C_LEADS: 'tblPt6Wc79hTBSmcD',
             B2C_ADS: 'tbl7ungQGMMLYwshw',
             FORM_LOGS: 'tbluz8Tdn7rwWwgRF',
+            URL_PARAMETERS: 'tbl5JDBRhTzuxzsc4',
         };
         const CONTACT_NOTIFICATION_WEBHOOK_URL = 'https://hook.us2.make.com/16nbe9d7b8igymuas81euw3o124khm7s';
         
@@ -1142,6 +1143,63 @@
                 }
                 console.error('Airtable fetch error:', error);
                 throw error;
+            }
+        }
+
+        async function fetchUrlParametersForClient(clientId) {
+            try {
+                if (!clientId) {
+                    return [];
+                }
+                
+                // Fetch URL parameters linked to this client
+                // Filter by linked Clients field - works for both single and multiple linked records
+                const urlParamsUrl = `${AIRTABLE_BASE_URL}/${TABLES.URL_PARAMETERS}?filterByFormula={Clients}="${clientId}"`;
+                const urlParamsData = await fetchAirtableData(urlParamsUrl);
+                
+                if (urlParamsData.records && urlParamsData.records.length > 0) {
+                    return urlParamsData.records.map(record => ({
+                        parameter: record.fields['Parameter'] || '',
+                        value: record.fields['Value'] || ''
+                    }));
+                }
+                
+                return [];
+            } catch (error) {
+                console.error('Error fetching URL parameters:', error);
+                // Don't throw - just return empty array so redirect can still work
+                return [];
+            }
+        }
+
+        function buildRedirectUrlWithParameters(baseUrl, urlParameters, formData) {
+            try {
+                const url = new URL(baseUrl);
+                
+                // Map form data values based on the Value field
+                const valueMap = {
+                    'Full Name': formData.fullName || '',
+                    'Phone': formData.phone || ''
+                };
+                
+                // Add each URL parameter
+                urlParameters.forEach(param => {
+                    const paramName = param.parameter;
+                    const valueType = param.value;
+                    
+                    if (paramName && valueType && valueMap[valueType] !== undefined) {
+                        const paramValue = valueMap[valueType];
+                        if (paramValue) {
+                            url.searchParams.append(paramName, paramValue);
+                        }
+                    }
+                });
+                
+                return url.toString();
+            } catch (error) {
+                console.error('Error building redirect URL with parameters:', error);
+                // If URL parsing fails, return base URL
+                return baseUrl;
             }
         }
 
@@ -3186,7 +3244,14 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 // Redirect to URL from Redirect URL field
                 const redirectUrl = activeClient && activeClient.fields['Redirect URL'] ? activeClient.fields['Redirect URL'] : null;
                 if (redirectUrl) {
-                    window.location.href = redirectUrl;
+                    // Fetch URL parameters for this client
+                    const clientId = activeClient ? activeClient.id : null;
+                    const urlParameters = await fetchUrlParametersForClient(clientId);
+                    
+                    // Build redirect URL with parameters
+                    const finalRedirectUrl = buildRedirectUrlWithParameters(redirectUrl, urlParameters, formData);
+                    console.log('Redirecting to:', finalRedirectUrl);
+                    window.location.href = finalRedirectUrl;
                 } else {
                     // If no redirect URL, show confirmation screen
                     console.warn('Redirect option selected but no Redirect URL found');
