@@ -79,15 +79,34 @@
 
         /* Hero Section */
         .hero {
-            background: linear-gradient(135deg, #4a6fa5 0%, #3a5f95 100%);
-            padding: 6rem 2rem;
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.5)), url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/marketer.jpg?raw=true');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 70vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
             color: white;
+            position: relative;
         }
 
         .hero-content {
             max-width: 1000px;
-            margin: 0 auto;
+            padding: 2rem;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .hero-content h1 {
@@ -95,12 +114,14 @@
             margin-bottom: 1.5rem;
             font-weight: 700;
             line-height: 1.2;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
         }
 
         .hero-content p {
             font-size: 1.5rem;
             opacity: 0.95;
             line-height: 1.6;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
         }
 
         /* Process Section */
@@ -327,7 +348,8 @@
             }
 
             .hero {
-                padding: 4rem 2rem;
+                min-height: 60vh;
+                background-attachment: scroll;
             }
 
             .hero-content h1 {
