@@ -79,15 +79,34 @@
 
         /* Hero Section */
         .hero {
-            background: linear-gradient(135deg, #4a6fa5 0%, #3a5f95 100%);
-            padding: 6rem 2rem;
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.5)), url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/bathroomremodeler.jpg?raw=true');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 70vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
             color: white;
+            position: relative;
         }
 
         .hero-content {
             max-width: 1000px;
-            margin: 0 auto;
+            padding: 2rem;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .hero-content h1 {
@@ -95,12 +114,14 @@
             margin-bottom: 1.5rem;
             font-weight: 700;
             line-height: 1.2;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
         }
 
         .hero-content p {
             font-size: 1.5rem;
             opacity: 0.95;
             line-height: 1.6;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
         }
 
         /* Main Content Section */
@@ -131,6 +152,95 @@
             font-size: 1.3rem;
             color: #666;
             line-height: 1.8;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Why It Matters Section */
+        .why-section {
+            padding: 6rem 2rem;
+            background: #f8f9fa;
+        }
+
+        .why-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .why-container h2 {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #333;
+            font-weight: 700;
+        }
+
+        .why-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .why-text {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: #555;
+        }
+
+        .why-text p {
+            margin-bottom: 1.5rem;
+        }
+
+        .why-text ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .why-text ul li {
+            padding-left: 2rem;
+            margin-bottom: 1rem;
+            position: relative;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #666;
+        }
+
+        .why-text ul li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #4a6fa5;
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+
+        .why-stats {
+            background: white;
+            padding: 3rem;
+            border-radius: 16px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 2rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #4a6fa5;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            color: #666;
         }
 
         /* Features Grid */
@@ -268,6 +378,11 @@
             .hero-content h1 {
                 font-size: 3rem;
             }
+
+            .why-content {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
         }
 
         @media (max-width: 768px) {
@@ -277,6 +392,11 @@
 
             .hero {
                 padding: 4rem 2rem;
+            }
+
+            .hero {
+                min-height: 60vh;
+                background-attachment: scroll;
             }
 
             .hero-content h1 {
@@ -293,6 +413,18 @@
 
             .intro-text p {
                 font-size: 1.1rem;
+            }
+
+            .why-container h2 {
+                font-size: 2.5rem;
+            }
+
+            .why-stats {
+                padding: 2rem;
+            }
+
+            .stat-value {
+                font-size: 2.5rem;
             }
 
             .booking-section h2 {
@@ -326,13 +458,18 @@
     <section class="hero">
         <div class="hero-content">
             <h1>Who We Serve</h1>
-            <p>Not everyone is built to work with us. Our most successful partners look like this:</p>
+            <p>We partner with enterprise-level bath remodelers who have the systems and infrastructure to maximize every lead we deliver</p>
         </div>
     </section>
 
     <!-- Main Content -->
     <section class="main-content">
         <div class="content-container">
+            <div class="intro-text">
+                <h2>Not Everyone Is Built to Work With Us</h2>
+                <p>Our lead generation model is designed for scale. We produce high volumes of qualified, ready-to-book leads - but that volume only translates to revenue when you have the right infrastructure in place.</p>
+                <p>Our most successful partners share these three critical components:</p>
+            </div>
             <div class="features-grid">
                 <div class="feature-card">
                     <div class="feature-icon">
@@ -354,6 +491,39 @@
                     </div>
                     <h3>CRM & Automation Software</h3>
                     <p>You're not just buying leads, you're buying highly valuable customer data. Our clients understand that a robust CRM ensures you capture the most value possible from each lead</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why It Matters Section -->
+    <section class="why-section">
+        <div class="why-container">
+            <h2>Why These Requirements Matter</h2>
+            <div class="why-content">
+                <div class="why-text">
+                    <p>When you have the right infrastructure in place, our leads don't just fill your calendar - they drive measurable revenue growth. Here's what sets our successful partners apart:</p>
+                    <ul>
+                        <li>They convert leads at 2-3x the industry average because they respond fast</li>
+                        <li>Their sales teams can handle volume without dropping leads or compromising quality</li>
+                        <li>They track every touchpoint, allowing them to optimize their entire customer journey</li>
+                        <li>They scale predictably because their systems can handle growth without breaking</li>
+                    </ul>
+                    <p>If you're still building these systems, that's okay - but you'll get the most value from our partnership once they're in place. We're here to help you get there.</p>
+                </div>
+                <div class="why-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">60%</div>
+                        <div class="stat-label">Average Connect Rate</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">30%</div>
+                        <div class="stat-label">Average Set Rate</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">2-3x</div>
+                        <div class="stat-label">Industry Average Conversion</div>
+                    </div>
                 </div>
             </div>
         </div>
