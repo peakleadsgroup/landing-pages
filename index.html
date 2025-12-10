@@ -146,6 +146,54 @@
             box-shadow: 0 6px 20px rgba(0,0,0,0.3);
         }
 
+        /* Features Section */
+        .features {
+            padding: 5rem 2rem;
+            background: white;
+        }
+
+        .features-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+        }
+
+        .feature {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .feature-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 2rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feature-icon img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+
+        .feature h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .feature p {
+            color: #666;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
         /* How We Do It Section */
         .how-section {
             padding: 6rem 2rem;
@@ -578,6 +626,33 @@
             <h1>Bath Remodel Leads for Enterprises</h1>
             <h2>We help our clients get the most out of their marketing spend - keeping their sales team booked and busy without the hassles of the traditional agency model</h2>
             <a href="Contact.html" class="cta-btn">GET STARTED</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="features-container">
+            <div class="feature">
+                <div class="feature-icon">
+                    <img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/ReadyToBook.png" alt="Ready to Book">
+                </div>
+                <h3>Ready to Book</h3>
+                <p>These aren't "maybe" leads. They're ready-to-go homeowners actively looking for your services. Our system fills your calendar with jobs, not dead ends.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">
+                    <img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/Pay%20per%20result.png" alt="Pay Per Result">
+                </div>
+                <h3>Pay Per Result</h3>
+                <p>You only pay when we deliver real, qualified leads. No upfront costs or long term contracts. We cut out the fluff and focus on what matters: getting your team out in the field.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">
+                    <img src="https://github.com/peakleadsgroup/landing-pages/blob/main/Images/Our%20guarantee%20Actual.png?raw=true" alt="Our Guarantee">
+                </div>
+                <h3>Our Guarantee</h3>
+                <p>If we send you a lead that is out of your service area, has fake contact information, or an incorrect address then you get your money back. Period.</p>
+            </div>
         </div>
     </section>
 
