@@ -127,7 +127,10 @@
         /* Main Content Section */
         .main-content {
             padding: 6rem 2rem;
-            background: white;
+            background: linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)), url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
         }
 
         .content-container {
@@ -158,7 +161,10 @@
         /* Why It Matters Section */
         .why-section {
             padding: 6rem 2rem;
-            background: #f8f9fa;
+            background: linear-gradient(rgba(248,249,250,0.85), rgba(248,249,250,0.85)), url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
         }
 
         .why-container {
@@ -396,6 +402,11 @@
 
             .hero {
                 min-height: 60vh;
+                background-attachment: scroll;
+            }
+
+            .main-content,
+            .why-section {
                 background-attachment: scroll;
             }
 
