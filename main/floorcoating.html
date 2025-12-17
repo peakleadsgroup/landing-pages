@@ -2287,6 +2287,25 @@
             return date <= maxDate;
         }
         
+        function isHoliday(date) {
+            const month = date.getMonth(); // 0-11 (Jan = 0, Dec = 11)
+            const day = date.getDate();
+            
+            // Christmas Eve (December 24)
+            if (month === 11 && day === 24) return true;
+            
+            // Christmas (December 25)
+            if (month === 11 && day === 25) return true;
+            
+            // New Year's Eve (December 31)
+            if (month === 11 && day === 31) return true;
+            
+            // New Year's Day (January 1)
+            if (month === 0 && day === 1) return true;
+            
+            return false;
+        }
+        
         async function getAvailableTimesForDate(date) {
             if (!date || !clientAvailability || clientAvailability.length === 0) return [];
             
@@ -2461,7 +2480,7 @@
                 date.setDate(startDate.getDate() + i);
                 
                 // Check if day is available (time slot availability checked when day is selected)
-                const isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date);
+                const isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date);
                 
                 const dayCell = document.createElement('div');
                 dayCell.className = 'calendar-day';
