@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ad Creation Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin { animation: spin 1s linear infinite; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen p-6">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                    <div class="flex items-center gap-4">
+                        <img src="https://github.com/peakleadsgroup/landing-pages/blob/main/Images/Peak%20Leads%20Flattened%20Logo.png?raw=true" alt="Peak Leads Logo" class="h-10 w-auto">
+                        <h1 class="text-2xl font-bold text-gray-900">Ad Creation Dashboard</h1>
+                    </div>
+                    <button onclick="fetchRecords()" id="refreshBtn" class="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <svg id="refreshIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="relative">
+                    <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Search records..."
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        oninput="filterRecords()"
+                    />
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 hidden">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <div>
+                        <h3 class="font-semibold text-red-900 mb-1">Error Loading Records</h3>
+                        <p class="text-sm text-red-800" id="errorText"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="bg-white rounded-lg shadow-sm p-12 text-center hidden">
+                <svg class="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                <p class="text-gray-600">Loading records...</p>
+            </div>
+
+            <!-- Records Container -->
+            <div id="recordsContainer" class="hidden">
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="p-4 bg-gray-50 border-b border-gray-200 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                        </svg>
+                        <span class="font-semibold text-gray-700" id="recordCount">0 records found</span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">B2C Ads</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="tableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No Records State -->
+            <div id="noRecordsState" class="bg-white rounded-lg shadow-sm p-12 text-center hidden">
+                <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                </svg>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">No Records Found</h3>
+                <p class="text-gray-600">There are no records in this table yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            baseId: 'appmBb0lzqRK9dI8v',
+            tableId: 'tblc7NnCCKHfH1Aul',
+            b2cAdsTable: 'B2C Ads',
+            campaignsTable: 'Campaigns',
+            apiKey: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589'
+        };
+
+        let allRecords = [];
+        let filteredRecords = [];
+        let linkedRecordsCache = {
+            b2cAds: {},
+            campaigns: {}
+        };
+
+        async function fetchLinkedRecord(tableName, recordId) {
+            // Check cache first
+            const cacheKey = tableName === CONFIG.b2cAdsTable ? 'b2cAds' : 'campaigns';
+            if (linkedRecordsCache[cacheKey][recordId]) {
+                return linkedRecordsCache[cacheKey][recordId];
+            }
+
+            try {
+                const url = `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(tableName)}/${recordId}`;
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
+                });
+
+                if (!response.ok) {
+                    return null;
+                }
+
+                const data = await response.json();
+                const name = data.fields['Name'] || data.fields['Campaign ID'] || data.fields['Ad Name'] || recordId;
+                
+                // Cache it
+                linkedRecordsCache[cacheKey][recordId] = name;
+                return name;
+            } catch (error) {
+                console.error(`Error fetching ${tableName} record:`, error);
+                return null;
+            }
+        }
+
+        async function fetchRecords() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            const refreshIcon = document.getElementById('refreshIcon');
+            const loadingState = document.getElementById('loadingState');
+            const errorMessage = document.getElementById('errorMessage');
+            const recordsContainer = document.getElementById('recordsContainer');
+            const noRecordsState = document.getElementById('noRecordsState');
+
+            errorMessage.classList.add('hidden');
+            recordsContainer.classList.add('hidden');
+            noRecordsState.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+            refreshBtn.disabled = true;
+            refreshIcon.classList.add('animate-spin');
+
+            try {
+                allRecords = [];
+                let offset = null;
+
+                do {
+                    let url = `https://api.airtable.com/v0/${CONFIG.baseId}/${CONFIG.tableId}`;
+                    if (offset) {
+                        url += `?offset=${offset}`;
+                    }
+
+                    const response = await fetch(url, {
+                        headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('Response error:', errorText);
+                        throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    allRecords = allRecords.concat(data.records || []);
+                    offset = data.offset;
+
+                } while (offset);
+
+                // Fetch linked records for all records
+                for (const record of allRecords) {
+                    // Fetch B2C Ads linked records
+                    if (record.fields['B2C Ads'] && Array.isArray(record.fields['B2C Ads'])) {
+                        for (const adId of record.fields['B2C Ads']) {
+                            await fetchLinkedRecord(CONFIG.b2cAdsTable, adId);
+                        }
+                    }
+
+                    // Fetch Campaign linked records
+                    if (record.fields['Campaign'] && Array.isArray(record.fields['Campaign'])) {
+                        for (const campaignId of record.fields['Campaign']) {
+                            await fetchLinkedRecord(CONFIG.campaignsTable, campaignId);
+                        }
+                    }
+                }
+
+                filteredRecords = [...allRecords];
+                filteredRecords.sort((a, b) => {
+                    const nameA = (a.fields['Name'] || '').toLowerCase();
+                    const nameB = (b.fields['Name'] || '').toLowerCase();
+                    return nameA.localeCompare(nameB);
+                });
+
+                displayRecords();
+            } catch (err) {
+                document.getElementById('errorText').textContent = err.message;
+                errorMessage.classList.remove('hidden');
+            } finally {
+                loadingState.classList.add('hidden');
+                refreshBtn.disabled = false;
+                refreshIcon.classList.remove('animate-spin');
+            }
+        }
+
+        function displayRecords() {
+            const recordsContainer = document.getElementById('recordsContainer');
+            const noRecordsState = document.getElementById('noRecordsState');
+            const tableBody = document.getElementById('tableBody');
+            const recordCount = document.getElementById('recordCount');
+
+            if (filteredRecords.length === 0) {
+                recordsContainer.classList.add('hidden');
+                noRecordsState.classList.remove('hidden');
+                return;
+            }
+
+            recordsContainer.classList.remove('hidden');
+            noRecordsState.classList.add('hidden');
+
+            recordCount.textContent = filteredRecords.length + ' record' + (filteredRecords.length !== 1 ? 's' : '') + ' found';
+
+            tableBody.innerHTML = filteredRecords.map(record => {
+                const name = record.fields['Name'] || '';
+                
+                // Handle B2C Ads linked records
+                let b2cAdsDisplay = '';
+                if (record.fields['B2C Ads'] && Array.isArray(record.fields['B2C Ads']) && record.fields['B2C Ads'].length > 0) {
+                    const adNames = record.fields['B2C Ads'].map(adId => {
+                        return linkedRecordsCache.b2cAds[adId] || adId;
+                    });
+                    b2cAdsDisplay = adNames.join(', ');
+                } else {
+                    b2cAdsDisplay = '<span class="text-gray-400">—</span>';
+                }
+
+                // Handle Campaign linked records
+                let campaignDisplay = '';
+                if (record.fields['Campaign'] && Array.isArray(record.fields['Campaign']) && record.fields['Campaign'].length > 0) {
+                    const campaignNames = record.fields['Campaign'].map(campaignId => {
+                        return linkedRecordsCache.campaigns[campaignId] || campaignId;
+                    });
+                    campaignDisplay = campaignNames.join(', ');
+                } else {
+                    campaignDisplay = '<span class="text-gray-400">—</span>';
+                }
+
+                // Handle Created checkbox
+                const created = record.fields['Created'];
+                let createdDisplay = '';
+                if (created === true) {
+                    createdDisplay = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">✓ Created</span>';
+                } else {
+                    createdDisplay = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Not Created</span>';
+                }
+
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 text-sm text-gray-900">${name || '<span class="text-gray-400">—</span>'}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${b2cAdsDisplay}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${campaignDisplay}</td>
+                        <td class="px-6 py-4 text-sm">${createdDisplay}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterRecords() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            filteredRecords = allRecords.filter(record => {
+                const name = (record.fields['Name'] || '').toLowerCase();
+                
+                // Check B2C Ads
+                let b2cAdsMatch = false;
+                if (record.fields['B2C Ads'] && Array.isArray(record.fields['B2C Ads'])) {
+                    b2cAdsMatch = record.fields['B2C Ads'].some(adId => {
+                        const adName = (linkedRecordsCache.b2cAds[adId] || adId).toLowerCase();
+                        return adName.includes(searchTerm);
+                    });
+                }
+
+                // Check Campaign
+                let campaignMatch = false;
+                if (record.fields['Campaign'] && Array.isArray(record.fields['Campaign'])) {
+                    campaignMatch = record.fields['Campaign'].some(campaignId => {
+                        const campaignName = (linkedRecordsCache.campaigns[campaignId] || campaignId).toLowerCase();
+                        return campaignName.includes(searchTerm);
+                    });
+                }
+
+                return name.includes(searchTerm) || b2cAdsMatch || campaignMatch;
+            });
+
+            displayRecords();
+        }
+
+        // Initialize on page load
+        fetchRecords();
+    </script>
+</body>
+</html>
+
