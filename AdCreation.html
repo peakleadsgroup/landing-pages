@@ -74,8 +74,8 @@
                     <button onclick="setActiveTab('templates')" id="tab-templates" class="flex-1 px-6 py-4 text-sm font-medium text-blue-600 border-b-2 border-blue-600 bg-blue-50 transition-colors">
                         TEMPLATES
                     </button>
-                    <button onclick="setActiveTab('all')" id="tab-all" class="flex-1 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-b-2 border-transparent transition-colors">
-                        All Records
+                    <button onclick="setActiveTab('duplicate')" id="tab-duplicate" class="flex-1 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-b-2 border-transparent transition-colors">
+                        DUPLICATE
                     </button>
                 </div>
             </div>
@@ -97,27 +97,17 @@
                     </div>
                 </div>
 
-                <!-- All Records Tab Content -->
-                <div id="allTabContent" class="hidden">
+                <!-- DUPLICATE Tab Content -->
+                <div id="duplicateTabContent" class="hidden">
                     <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                         <div class="p-4 bg-gray-50 border-b border-gray-200 flex items-center gap-2">
                             <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
                             </svg>
-                            <span class="font-semibold text-gray-700" id="allRecordCount">0 records found</span>
+                            <span class="font-semibold text-gray-700" id="duplicateRecordCount">0 records found</span>
                         </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
-                                <thead class="bg-gray-50 border-b border-gray-200">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">B2C Ads</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200" id="allTableBody"></tbody>
-                            </table>
+                        <div id="duplicateTableBody" class="divide-y divide-gray-200">
+                            <!-- Duplicate records will be populated here -->
                         </div>
                     </div>
                 </div>
@@ -169,7 +159,7 @@
             
             // Update tab content visibility
             document.getElementById('templatesTabContent').classList.toggle('hidden', tab !== 'templates');
-            document.getElementById('allTabContent').classList.toggle('hidden', tab !== 'all');
+            document.getElementById('duplicateTabContent').classList.toggle('hidden', tab !== 'duplicate');
             
             displayRecords();
         }
@@ -381,8 +371,8 @@
 
             if (activeTab === 'templates') {
                 displayTemplatesTab();
-            } else {
-                displayAllTab();
+            } else if (activeTab === 'duplicate') {
+                displayDuplicateTab();
             }
         }
 
@@ -460,48 +450,48 @@
             }).join('');
         }
 
-        function displayAllTab() {
-            const allTableBody = document.getElementById('allTableBody');
-            const allRecordCount = document.getElementById('allRecordCount');
+        function displayDuplicateTab() {
+            const duplicateTableBody = document.getElementById('duplicateTableBody');
+            const duplicateRecordCount = document.getElementById('duplicateRecordCount');
 
-            allRecordCount.textContent = filteredRecords.length + ' record' + (filteredRecords.length !== 1 ? 's' : '') + ' found';
+            duplicateRecordCount.textContent = filteredRecords.length + ' record' + (filteredRecords.length !== 1 ? 's' : '') + ' found';
 
-            allTableBody.innerHTML = filteredRecords.map(record => {
+            duplicateTableBody.innerHTML = filteredRecords.map((record, index) => {
                 const name = record.fields['Name'] || '';
                 const recordId = record.id;
-                
-                // Handle B2C Ads linked records
-                let b2cAdsDisplay = '';
-                if (record.fields['B2C Ads'] && Array.isArray(record.fields['B2C Ads']) && record.fields['B2C Ads'].length > 0) {
-                    const adNames = record.fields['B2C Ads'].map(adId => {
-                        const adData = linkedRecordsCache.b2cAds[adId];
-                        return adData ? adData.name : adId;
-                    });
-                    b2cAdsDisplay = adNames.join(', ');
-                } else {
-                    b2cAdsDisplay = '<span class="text-gray-400">—</span>';
-                }
-
-                // Handle Campaign linked records
-                let campaignDisplay = '';
-                if (record.fields['Campaign'] && Array.isArray(record.fields['Campaign']) && record.fields['Campaign'].length > 0) {
-                    const campaignNames = record.fields['Campaign'].map(campaignId => {
-                        return linkedRecordsCache.campaigns[campaignId] || campaignId;
-                    });
-                    campaignDisplay = campaignNames.join(', ');
-                } else {
-                    campaignDisplay = '<span class="text-gray-400">—</span>';
-                }
-
-                // Handle Created checkbox
                 const created = record.fields['Created'] === true;
+                
+                // Handle Campaign linked records
+                const campaigns = record.fields['Campaign'] && Array.isArray(record.fields['Campaign']) 
+                    ? record.fields['Campaign'] 
+                    : [];
+                
+                const campaignItems = campaigns.map(campaignId => {
+                    const campaignName = linkedRecordsCache.campaigns[campaignId] || campaignId;
+                    return `
+                        <div class="px-4 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-b-0">
+                            <span class="text-sm text-gray-900">${campaignName}</span>
+                        </div>
+                    `;
+                }).join('');
+
+                const hasCampaigns = campaigns.length > 0;
+                const dropdownId = `dropdown-duplicate-${recordId}`;
 
                 return `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 text-sm text-gray-900">${name || '<span class="text-gray-400">—</span>'}</td>
-                        <td class="px-6 py-4 text-sm text-gray-900">${b2cAdsDisplay}</td>
-                        <td class="px-6 py-4 text-sm text-gray-900">${campaignDisplay}</td>
-                        <td class="px-6 py-4 text-sm">
+                    <div class="border-b border-gray-200 last:border-b-0">
+                        <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50">
+                            <div class="flex items-center gap-4 flex-1">
+                                <button 
+                                    onclick="toggleDropdown('${dropdownId}')" 
+                                    class="flex items-center gap-2 text-gray-400 hover:text-gray-600 transition-colors"
+                                >
+                                    <svg id="icon-${dropdownId}" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </button>
+                                <span class="text-sm font-medium text-gray-900 flex-1">${name || '<span class="text-gray-400">—</span>'}</span>
+                            </div>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input 
                                     type="checkbox" 
@@ -509,10 +499,13 @@
                                     onchange="toggleCreated('${recordId}', ${created})"
                                     class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                 />
-                                <span class="text-sm text-gray-700">${created ? 'Created' : 'Not Created'}</span>
+                                <span class="text-sm text-gray-700">Created</span>
                             </label>
-                        </td>
-                    </tr>
+                        </div>
+                        <div id="${dropdownId}" class="hidden bg-gray-50 border-t border-gray-200">
+                            ${hasCampaigns ? campaignItems : '<div class="px-4 py-2 text-sm text-gray-400">No Campaigns linked</div>'}
+                        </div>
+                    </div>
                 `;
             }).join('');
         }
