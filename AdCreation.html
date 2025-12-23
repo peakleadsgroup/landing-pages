@@ -417,6 +417,27 @@
             }
         });
 
+        function getOpenDropdowns() {
+            const openDropdowns = [];
+            document.querySelectorAll('[id^="dropdown-"]').forEach(dropdown => {
+                if (!dropdown.classList.contains('hidden')) {
+                    openDropdowns.push(dropdown.id);
+                }
+            });
+            return openDropdowns;
+        }
+
+        function restoreOpenDropdowns(openDropdownIds) {
+            openDropdownIds.forEach(dropdownId => {
+                const dropdown = document.getElementById(dropdownId);
+                const icon = document.getElementById('icon-' + dropdownId);
+                if (dropdown && icon) {
+                    dropdown.classList.remove('hidden');
+                    icon.classList.add('rotate-180');
+                }
+            });
+        }
+
         function displayRecords() {
             const recordsContainer = document.getElementById('recordsContainer');
             const noRecordsState = document.getElementById('noRecordsState');
@@ -430,11 +451,17 @@
             recordsContainer.classList.remove('hidden');
             noRecordsState.classList.add('hidden');
 
+            // Save which dropdowns are currently open
+            const openDropdowns = getOpenDropdowns();
+
             if (activeTab === 'templates') {
                 displayTemplatesTab();
             } else if (activeTab === 'duplicate') {
                 displayDuplicateTab();
             }
+
+            // Restore open dropdowns
+            restoreOpenDropdowns(openDropdowns);
         }
 
         function displayTemplatesTab() {
@@ -452,7 +479,13 @@
                     ? record.fields['B2C Ads'] 
                     : [];
                 
-                const adItems = b2cAds.map(adId => {
+                // Filter to only show ads where Moved to FB is unchecked
+                const uncheckedAds = b2cAds.filter(adId => {
+                    const adData = linkedRecordsCache.b2cAds[adId];
+                    return !adData || adData.movedToFB !== true;
+                });
+
+                const adItems = uncheckedAds.map(adId => {
                     const adData = linkedRecordsCache.b2cAds[adId];
                     if (!adData) {
                         return `<div class="px-4 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 text-sm text-gray-400">Loading...</div>`;
@@ -469,8 +502,9 @@
                         </div>
                     `;
                 }).join('');
+                
+                const hasAds = uncheckedAds.length > 0;
 
-                const hasAds = b2cAds.length > 0;
                 const dropdownId = `dropdown-${recordId}`;
 
                 return `
