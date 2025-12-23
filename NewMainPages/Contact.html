@@ -119,98 +119,15 @@
             padding: 3rem;
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            min-height: 500px;
         }
 
-        .form-group {
-            margin-bottom: 2rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: #333;
-            font-size: 1rem;
-        }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 1rem;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-family: inherit;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #4a6fa5;
-            box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.1);
-        }
-
-        .form-group select {
-            cursor: pointer;
-            background: white;
-        }
-
-        .submit-btn {
-            width: 100%;
-            background: #4a6fa5;
-            color: white;
-            padding: 1.2rem;
+        .form-container iframe {
             border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 1rem;
+            width: 100%;
+            min-height: 500px;
         }
 
-        .submit-btn:hover {
-            background: #3a5f95;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(74, 111, 165, 0.3);
-        }
-
-        .submit-btn:active {
-            transform: translateY(0);
-        }
-
-        /* Success Message */
-        .success-message {
-            display: none;
-            text-align: center;
-            padding: 3rem 2rem;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-
-        .success-message.show {
-            display: block;
-        }
-
-        .success-message h2 {
-            font-size: 2.5rem;
-            margin-bottom: 1.5rem;
-            color: #4a6fa5;
-            font-weight: 700;
-        }
-
-        .success-message p {
-            font-size: 1.3rem;
-            color: #666;
-            line-height: 1.8;
-        }
-
-        .success-icon {
-            font-size: 4rem;
-            margin-bottom: 1.5rem;
-        }
 
         /* Footer */
         .footer {
@@ -257,14 +174,6 @@
             .form-container {
                 padding: 2rem 1.5rem;
             }
-
-            .success-message h2 {
-                font-size: 2rem;
-            }
-
-            .success-message p {
-                font-size: 1.1rem;
-            }
         }
     </style>
 </head>
@@ -296,43 +205,16 @@
     <!-- Form Section -->
     <section class="form-section">
         <div class="form-container" id="contactForm">
-            <form id="contactFormElement">
-                <div class="form-group">
-                    <label for="name">Your Name *</label>
-                    <input type="text" id="name" name="name" required>
-                </div>
-                <div class="form-group">
-                    <label for="phone">Your Phone *</label>
-                    <input type="tel" id="phone" name="phone" required>
-                </div>
-                <div class="form-group">
-                    <label for="businessName">Business Name *</label>
-                    <input type="text" id="businessName" name="businessName" required>
-                </div>
-                <div class="form-group">
-                    <label for="businessWebsite">Business Website</label>
-                    <input type="text" id="businessWebsite" name="businessWebsite" placeholder="example.com" pattern="^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?\.([a-zA-Z]{2,}|xn--[a-zA-Z0-9]+)" title="Enter a valid domain name (e.g., example.com)">
-                </div>
-                <div class="form-group">
-                    <label for="revenue">Estimated Yearly Revenue *</label>
-                    <select id="revenue" name="revenue" required>
-                        <option value="">Select an option</option>
-                        <option value="under-500k">Under $500,000</option>
-                        <option value="500k-1m">$500,000 - $1,000,000</option>
-                        <option value="1m-5m">$1,000,000 - $5,000,000</option>
-                        <option value="5m-10m">$5,000,000 - $10,000,000</option>
-                        <option value="10m-plus">$10,000,000+</option>
-                    </select>
-                </div>
-                <button type="submit" class="submit-btn">Submit</button>
-            </form>
-        </div>
-
-        <!-- Success Message -->
-        <div class="success-message" id="successMessage">
-            <div class="success-icon">✓</div>
-            <h2>Thank You!</h2>
-            <p>If we believe you are a good fit for this program we will call you soon to schedule a quick discovery meeting</p>
+            <iframe 
+                src="https://tally.so/embed/xXj6B5?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1" 
+                width="100%" 
+                height="100%" 
+                frameborder="0" 
+                marginheight="0" 
+                marginwidth="0" 
+                title="Contact Us Form"
+                id="tallyForm">
+            </iframe>
         </div>
     </section>
 
@@ -346,49 +228,6 @@
         </div>
     </footer>
 
-    <script>
-        document.getElementById('contactFormElement').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            // Get form data
-            const formData = {
-                name: document.getElementById('name').value,
-                phone: document.getElementById('phone').value,
-                businessName: document.getElementById('businessName').value,
-                businessWebsite: document.getElementById('businessWebsite').value,
-                revenue: document.getElementById('revenue').value
-            };
-
-            try {
-                // Send webhook to Make.com
-                const webhookUrl = 'https://hook.us2.make.com/oj5ut5xqj969dtie91bfa3uverr8vued';
-                
-                const response = await fetch(webhookUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                // Show success message regardless of webhook response
-                // (In production, you might want to check response.ok)
-                document.getElementById('contactForm').style.display = 'none';
-                document.getElementById('successMessage').classList.add('show');
-                
-                // Scroll to success message
-                document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth', block: 'center' });
-                
-            } catch (error) {
-                // Even if webhook fails, show success message to user
-                // (You can log the error for debugging)
-                console.error('Error submitting form:', error);
-                document.getElementById('contactForm').style.display = 'none';
-                document.getElementById('successMessage').classList.add('show');
-                document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        });
-    </script>
 </body>
 </html>
 
