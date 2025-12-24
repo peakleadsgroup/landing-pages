@@ -183,6 +183,67 @@
             await displayRecords();
         }
 
+        async function fetchAllCreationTrackerRecords(adCreationRecordId) {
+            // Fallback: fetch all Creation Tracker records and filter client-side
+            // Check if we already have all records cached globally
+            if (!creationTrackerCache._allRecords) {
+                try {
+                    let allTrackerRecords = [];
+                    let offset = null;
+
+                    do {
+                        let url = `https://api.airtable.com/v0/${CONFIG.baseId}/${CONFIG.creationTrackerTable}`;
+                        if (offset) {
+                            url += `?offset=${offset}`;
+                        }
+
+                        const response = await fetch(url, {
+                            headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
+                        });
+
+                        if (!response.ok) {
+                            console.error(`Failed to fetch all Creation Tracker records: ${response.status}`);
+                            return [];
+                        }
+
+                        const data = await response.json();
+                        allTrackerRecords = allTrackerRecords.concat(data.records || []);
+                        offset = data.offset;
+
+                    } while (offset);
+
+                    // Cache all records globally
+                    creationTrackerCache._allRecords = allTrackerRecords;
+                    console.log(`Cached ${allTrackerRecords.length} total Creation Tracker records`);
+                } catch (error) {
+                    console.error('Error fetching all Creation Tracker records:', error);
+                    return [];
+                }
+            }
+
+            // Filter client-side to find records linked to this Ad Creation record
+            const allRecords = creationTrackerCache._allRecords || [];
+            const filteredRecords = allRecords.filter(tracker => {
+                const adsets = tracker.fields['Adsets'];
+                if (Array.isArray(adsets)) {
+                    return adsets.includes(adCreationRecordId);
+                }
+                return false;
+            });
+
+            // Fetch campaign names for each tracker record
+            for (const trackerRecord of filteredRecords) {
+                const campaignId = trackerRecord.fields['Campaign'];
+                if (campaignId && Array.isArray(campaignId) && campaignId.length > 0) {
+                    await fetchLinkedRecord(CONFIG.campaignsTable, campaignId[0]);
+                }
+            }
+
+            creationTrackerCache[adCreationRecordId] = filteredRecords;
+            console.log(`Fetched ${filteredRecords.length} Creation Tracker records (client-side filter) for ${adCreationRecordId}`);
+            return filteredRecords;
+        }
+
         async function fetchCreationTrackerRecords(adCreationRecordId) {
             // Check cache first
             if (creationTrackerCache[adCreationRecordId]) {
@@ -191,8 +252,8 @@
 
             try {
                 // Fetch Creation Tracker records filtered by Ad Creation record ID
-                // Note: Airtable filter formula for linked records uses FIND or RECORD_ID()
-                const filterFormula = `FIND("${adCreationRecordId}", ARRAYJOIN({Adsets}))`;
+                // For linked records, we need to use the record ID directly in the filter
+                const filterFormula = `{Adsets} = "${adCreationRecordId}"`;
                 const url = `https://api.airtable.com/v0/${CONFIG.baseId}/${CONFIG.creationTrackerTable}?filterByFormula=${encodeURIComponent(filterFormula)}`;
                 
                 let allTrackerRecords = [];
@@ -211,9 +272,10 @@
                     if (!response.ok) {
                         const errorText = await response.text();
                         console.error(`Failed to fetch Creation Tracker records: ${response.status}`, errorText);
-                        // Cache empty array so we don't keep trying
-                        creationTrackerCache[adCreationRecordId] = [];
-                        return [];
+                        console.error(`Filter formula used: ${filterFormula}`);
+                        // Try alternative: fetch all and filter client-side
+                        console.log('Attempting to fetch all Creation Tracker records and filter client-side...');
+                        return await fetchAllCreationTrackerRecords(adCreationRecordId);
                     }
 
                     const data = await response.json();
@@ -221,6 +283,12 @@
                     offset = data.offset;
 
                 } while (offset);
+                
+                // If no records found with direct filter, try fetching all and filtering
+                if (allTrackerRecords.length === 0) {
+                    console.log(`No records found with filter, trying to fetch all and filter client-side for ${adCreationRecordId}`);
+                    return await fetchAllCreationTrackerRecords(adCreationRecordId);
+                }
 
                 // Fetch campaign names for each tracker record
                 for (const trackerRecord of allTrackerRecords) {
