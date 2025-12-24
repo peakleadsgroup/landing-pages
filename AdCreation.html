@@ -147,7 +147,7 @@
             baseId: 'appmBb0lzqRK9dI8v',
             tableId: 'tblc7NnCCKHfH1Aul',
             b2cAdsTable: 'B2C Ads',
-            campaignsTable: 'Campaigns',
+            campaignsTable: 'Campaign',
             creationTrackerTable: 'tblOhXnYlWio4GvD6',
             apiKey: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589'
         };
@@ -329,6 +329,8 @@
                 });
 
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`Failed to fetch ${tableName} record ${recordId}: ${response.status}`, errorText);
                     return null;
                 }
 
