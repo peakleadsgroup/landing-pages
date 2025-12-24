@@ -24,12 +24,20 @@
                         <img src="https://github.com/peakleadsgroup/landing-pages/blob/main/Images/Peak%20Leads%20Flattened%20Logo.png?raw=true" alt="Peak Leads Logo" class="h-10 w-auto">
                         <h1 class="text-2xl font-bold text-gray-900">Ad Creation Dashboard</h1>
                     </div>
-                    <button onclick="fetchRecords()" id="refreshBtn" class="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                        <svg id="refreshIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                        </svg>
-                        Refresh
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <a href="https://drive.google.com/drive/folders/1ybQy73Z71mOG3ZNgVYQSHrkUrDkeSS4d?usp=sharing" target="_blank" class="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            All Ads
+                        </a>
+                        <button onclick="fetchRecords()" id="refreshBtn" class="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <svg id="refreshIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Search Bar -->
@@ -71,11 +79,13 @@
             <!-- Tabs -->
             <div class="bg-white rounded-lg shadow-sm mb-6 overflow-hidden">
                 <div class="flex border-b border-gray-200">
-                    <button onclick="setActiveTab('templates')" id="tab-templates" class="flex-1 px-6 py-4 text-sm font-medium text-blue-600 border-b-2 border-blue-600 bg-blue-50 transition-colors">
+                    <button onclick="setActiveTab('templates')" id="tab-templates" class="relative flex-1 px-6 py-4 text-sm font-medium text-blue-600 border-b-2 border-blue-600 bg-blue-50 transition-colors">
                         TEMPLATES
+                        <span id="badge-templates" class="absolute top-2 right-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold text-white bg-red-600 rounded-full hidden">0</span>
                     </button>
-                    <button onclick="setActiveTab('duplicate')" id="tab-duplicate" class="flex-1 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-b-2 border-transparent transition-colors">
+                    <button onclick="setActiveTab('duplicate')" id="tab-duplicate" class="relative flex-1 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-b-2 border-transparent transition-colors">
                         DUPLICATE
+                        <span id="badge-duplicate" class="absolute top-2 right-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold text-white bg-red-600 rounded-full hidden">0</span>
                     </button>
                 </div>
             </div>
@@ -545,11 +555,11 @@
             content.innerHTML = `
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">scriptATID</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Ad Name</label>
                         <div class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-900 font-mono">${scriptATID}</div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Linked Primary Text</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Primary Text</label>
                         <div class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-900 whitespace-pre-wrap min-h-[60px]">${linkedPrimaryText}</div>
                     </div>
                     <div>
@@ -656,6 +666,17 @@
             });
 
             templatesRecordCount.textContent = visibleRecords.length + ' record' + (visibleRecords.length !== 1 ? 's' : '') + ' found';
+            
+            // Update badge count
+            const templatesBadge = document.getElementById('badge-templates');
+            if (templatesBadge) {
+                templatesBadge.textContent = visibleRecords.length;
+                if (visibleRecords.length > 0) {
+                    templatesBadge.classList.remove('hidden');
+                } else {
+                    templatesBadge.classList.add('hidden');
+                }
+            }
 
             templatesTableBody.innerHTML = visibleRecords.map((record, index) => {
                 const name = record.fields['Name'] || '';
@@ -726,12 +747,31 @@
                 await fetchCreationTrackerRecords(record.id);
             }
 
-            // Filter to only show records with unchecked campaigns
+            // Filter to only show records where ALL B2C Ads are marked as "Moved to FB"
             const visibleRecords = filteredRecords.filter(record => {
-                const trackerRecords = creationTrackerCache[record.id] || [];
-                console.log(`Record ${record.id} has ${trackerRecords.length} tracker records`);
+                // Check B2C Ads - only show if ALL are marked as "Moved to FB"
+                const b2cAds = record.fields['B2C Ads'] && Array.isArray(record.fields['B2C Ads']) 
+                    ? record.fields['B2C Ads'] 
+                    : [];
                 
-                // If no tracker records, don't show this record
+                // If no B2C Ads linked, don't show this record
+                if (b2cAds.length === 0) {
+                    return false;
+                }
+                
+                // Check if ALL B2C Ads are marked as "Moved to FB"
+                const allMovedToFB = b2cAds.every(adId => {
+                    const adData = linkedRecordsCache.b2cAds[adId];
+                    return adData && adData.movedToFB === true;
+                });
+                
+                // Only show if all ads are moved to FB
+                if (!allMovedToFB) {
+                    return false;
+                }
+                
+                // Also check that there are unchecked campaigns to show
+                const trackerRecords = creationTrackerCache[record.id] || [];
                 if (trackerRecords.length === 0) {
                     return false;
                 }
@@ -740,12 +780,24 @@
                 const uncheckedTrackers = trackerRecords.filter(tracker => {
                     return tracker.fields['Duplicated'] !== true;
                 });
-                console.log(`Record ${record.id} has ${uncheckedTrackers.length} unchecked campaigns`);
+                
+                // Only show if there are unchecked campaigns
                 return uncheckedTrackers.length > 0;
             });
 
             console.log(`Total visible records: ${visibleRecords.length} out of ${filteredRecords.length}`);
             duplicateRecordCount.textContent = visibleRecords.length + ' record' + (visibleRecords.length !== 1 ? 's' : '') + ' found';
+            
+            // Update badge count
+            const duplicateBadge = document.getElementById('badge-duplicate');
+            if (duplicateBadge) {
+                duplicateBadge.textContent = visibleRecords.length;
+                if (visibleRecords.length > 0) {
+                    duplicateBadge.classList.remove('hidden');
+                } else {
+                    duplicateBadge.classList.add('hidden');
+                }
+            }
 
             duplicateTableBody.innerHTML = visibleRecords.map((record, index) => {
                 const name = record.fields['Name'] || '';
