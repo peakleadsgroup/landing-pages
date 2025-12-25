@@ -353,13 +353,17 @@
                     const scriptATID = data.fields['scriptATID'] || '';
                     const linkedPrimaryText = data.fields['Linked Primary Text'] || '';
                     const headline = data.fields['Headline'] || '';
+                    const link = data.fields['Link'] || '';
+                    const urlParameters = data.fields['URL Parameters'] || '';
                     const adData = {
                         name: name,
                         movedToFB: movedToFB,
                         recordId: recordId,
                         scriptATID: scriptATID,
                         linkedPrimaryText: linkedPrimaryText,
-                        headline: headline
+                        headline: headline,
+                        link: link,
+                        urlParameters: urlParameters
                     };
                     linkedRecordsCache[cacheKey][recordId] = adData;
                     return adData;
@@ -550,6 +554,8 @@
             const scriptATID = adData.scriptATID || '—';
             const linkedPrimaryText = adData.linkedPrimaryText || '—';
             const headline = adData.headline || '—';
+            const link = adData.link || '—';
+            const urlParameters = adData.urlParameters || '—';
             const movedToFB = adData.movedToFB === true;
 
             content.innerHTML = `
@@ -565,6 +571,16 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Headline</label>
                         <div class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-900 whitespace-pre-wrap min-h-[60px]">${headline}</div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Link</label>
+                        <div class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-900">
+                            ${link !== '—' ? `<a href="${link}" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline break-all">${link}</a>` : link}
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">URL Parameters</label>
+                        <div class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-900 font-mono break-all">${urlParameters}</div>
                     </div>
                     <div>
                         <label class="flex items-center gap-2 cursor-pointer">
