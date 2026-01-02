@@ -70,6 +70,16 @@
     .notification-checkbox-item input[type="checkbox"] { width:18px; height:18px; margin-right:0.5rem; cursor:pointer; }
     .notification-checkbox-item label { margin:0; font-weight:500; cursor:pointer; }
 
+    .radius-entry { background:#f8f9fa; padding:1.5rem; border-radius:8px; margin-bottom:1rem; border:2px solid #e9ecef; position:relative; }
+    .radius-entry:first-child .remove-radius-btn { display:none; }
+    .radius-entry-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+    .radius-entry-title { font-weight:600; color:#333; font-size:1rem; }
+    .remove-radius-btn { background:#dc3545; color:white; border:none; padding:0.4rem 0.8rem; border-radius:4px; cursor:pointer; font-size:0.85rem; }
+    .remove-radius-btn:hover { background:#c82333; }
+    .radius-fields { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .radius-fields input { width:100%; padding:.8rem; border:2px solid #e9ecef; border-radius:8px; font-size:1rem; transition:border-color .3s; }
+    .radius-fields input:focus { outline:none; border-color:#4a6fa5; }
+
     .conditional-fields { margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid #e9ecef; display:none; }
     .conditional-fields.active { display:block; }
 
@@ -104,6 +114,7 @@
       .header { padding:1rem; }
       .header h1 { font-size:1.5rem; }
       .checkbox-grid { grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:0.6rem; }
+      .radius-fields { grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -417,10 +428,64 @@
 
         <div class="form-navigation">
           <button type="button" class="btn btn-secondary" onclick="goBackToPostSubmitScreen()" style="margin-right:1rem;">Back</button>
-          <button type="submit" class="btn btn-primary" id="finalSubmitBtn">Submit</button>
+          <button type="button" class="btn btn-primary" id="nextToServiceAreaBtn" onclick="goToServiceAreaScreen()">Next</button>
         </div>
 
         <div class="success-message" id="contactsSuccessMessage">
+          <strong>Success!</strong> Your onboarding information has been saved.
+        </div>
+      </form>
+
+      <!-- Service Area Screen -->
+      <form class="form-step" id="serviceAreaForm" style="display:none;">
+        <div class="form-question">
+          <h2 style="font-size:1.8rem; color:#333; margin-bottom:0.5rem; text-align:center;">Service Area</h2>
+          <p style="font-size:1.1rem; color:#666; margin-bottom:2rem; text-align:center;">This is the area we'll be targeting with our ads. Please note that this will service as your official service area when determining lead qualification</p>
+          
+          <label style="display:block; font-weight:600; margin-bottom:1rem; color:#333; font-size:1.1rem; text-align:center;">Which would you prefer to provide?</label>
+          <div class="radio-options" style="margin-top:1rem;">
+            <div class="radio-option" onclick="selectRadio(this, 'serviceAreaType')">
+              <input type="radio" name="serviceAreaType" value="Radius" id="serviceAreaRadius">
+              <div class="option-text">
+                <span class="option-label">Radius</span>
+              </div>
+            </div>
+            <div class="radio-option" onclick="selectRadio(this, 'serviceAreaType')">
+              <input type="radio" name="serviceAreaType" value="Zip Codes" id="serviceAreaZipCodes">
+              <div class="option-text">
+                <span class="option-label">Zip Codes</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conditional Zip Codes Field (shown when Zip Codes is selected) -->
+        <div class="conditional-fields" id="zipCodesFields">
+          <div class="form-question">
+            <label for="targetZipCodes">Enter your zip codes</label>
+            <input type="text" id="targetZipCodes" name="targetZipCodes" placeholder="e.g., 12345, 67890, 11111" style="width:100%; padding:.8rem; border:2px solid #e9ecef; border-radius:8px; font-size:1rem; transition:border-color .3s;">
+          </div>
+        </div>
+
+        <!-- Conditional Radius Fields (shown when Radius is selected) -->
+        <div class="conditional-fields" id="radiusFields">
+          <div class="form-question">
+            <label>Service Area (Radius)</label>
+            <div id="radiusEntriesContainer">
+              <!-- Radius entries will be added here dynamically -->
+            </div>
+            <button type="button" class="btn btn-secondary" id="addRadiusBtn" onclick="addRadiusEntry()" style="margin-top:1rem; width:100%;">
+              + Add another zip code / radius
+            </button>
+          </div>
+        </div>
+
+        <div class="form-navigation">
+          <button type="button" class="btn btn-secondary" onclick="goBackToContactsScreen()" style="margin-right:1rem;">Back</button>
+          <button type="submit" class="btn btn-primary" id="finalSubmitBtn">Submit</button>
+        </div>
+
+        <div class="success-message" id="serviceAreaSuccessMessage">
           <strong>Success!</strong> Your onboarding information has been saved.
         </div>
       </form>
@@ -559,6 +624,39 @@
           const redirectValue = document.getElementById('redirectUrl').value.trim();
           if (redirectValue) {
             formData['Redirect URL'] = redirectValue;
+          }
+        }
+      }
+
+      // Service Area Type - single select field
+      const selectedServiceAreaType = document.querySelector('input[name="serviceAreaType"]:checked');
+      if (selectedServiceAreaType && selectedServiceAreaType.value) {
+        formData['Service Area Type'] = selectedServiceAreaType.value;
+        
+        // If Zip Codes is selected, include TARGET field
+        if (selectedServiceAreaType.value === 'Zip Codes') {
+          const targetValue = document.getElementById('targetZipCodes').value.trim();
+          if (targetValue) {
+            formData['TARGET'] = targetValue;
+          }
+        }
+        
+        // If Radius is selected, include Service Area field (long text with newlines)
+        if (selectedServiceAreaType.value === 'Radius') {
+          const radiusEntries = document.querySelectorAll('.radius-entry');
+          const serviceAreaEntries = [];
+          
+          for (const entry of radiusEntries) {
+            const zipCode = entry.querySelector(`input[id^="radius-zip-"]`).value.trim();
+            const radius = entry.querySelector(`input[id^="radius-miles-"]`).value.trim();
+            
+            if (zipCode && radius) {
+              serviceAreaEntries.push(`${zipCode} - ${radius} miles`);
+            }
+          }
+          
+          if (serviceAreaEntries.length > 0) {
+            formData['Service Area'] = serviceAreaEntries.join('\n');
           }
         }
       }
@@ -832,10 +930,63 @@
             }
           }
 
+          // Pre-fill Service Area Type if it exists
+          if (clientRecord.fields['Service Area Type']) {
+            const serviceAreaTypeValue = clientRecord.fields['Service Area Type'];
+            if (serviceAreaTypeValue === 'Radius') {
+              document.getElementById('serviceAreaRadius').checked = true;
+              document.querySelector('#serviceAreaRadius').closest('.radio-option').classList.add('selected');
+              document.getElementById('radiusFields').classList.add('active');
+              
+              // Pre-fill Service Area (radius entries)
+              document.getElementById('radiusEntriesContainer').innerHTML = '';
+              if (clientRecord.fields['Service Area']) {
+                const serviceAreaValue = clientRecord.fields['Service Area'];
+                // Parse entries separated by newlines (format: "zipcode - X miles")
+                const entries = serviceAreaValue.split('\n').filter(e => e.trim());
+                entries.forEach((entry) => {
+                  const match = entry.match(/^(.+?)\s*-\s*(\d+)\s*miles?$/i);
+                  if (match) {
+                    const zipCode = match[1].trim();
+                    const miles = match[2].trim();
+                    addRadiusEntry();
+                    const lastEntry = document.querySelector('.radius-entry:last-child');
+                    if (lastEntry) {
+                      const zipInput = lastEntry.querySelector(`input[id^="radius-zip-"]`);
+                      const milesInput = lastEntry.querySelector(`input[id^="radius-miles-"]`);
+                      if (zipInput) zipInput.value = zipCode;
+                      if (milesInput) milesInput.value = miles;
+                    }
+                  }
+                });
+                // If no entries were parsed, add one empty entry
+                if (document.getElementById('radiusEntriesContainer').children.length === 0) {
+                  addRadiusEntry();
+                }
+              } else {
+                // No data, add one empty entry
+                addRadiusEntry();
+              }
+            } else if (serviceAreaTypeValue === 'Zip Codes') {
+              document.getElementById('serviceAreaZipCodes').checked = true;
+              document.querySelector('#serviceAreaZipCodes').closest('.radio-option').classList.add('selected');
+              document.getElementById('zipCodesFields').classList.add('active');
+              document.getElementById('targetZipCodes').required = true;
+              
+              // Pre-fill TARGET field
+              if (clientRecord.fields['TARGET']) {
+                document.getElementById('targetZipCodes').value = clientRecord.fields['TARGET'];
+              }
+            }
+          }
+
           // Determine which screen to show
-          // If Submit Screen is already filled, show post-submit screen
+          // If Service Area Type is filled, show service area screen
+          // Else if Submit Screen is filled, show post-submit screen
           // Otherwise show main form
-          if (clientRecord.fields['Submit Screen']) {
+          if (clientRecord.fields['Service Area Type']) {
+            document.getElementById('serviceAreaForm').style.display = 'block';
+          } else if (clientRecord.fields['Submit Screen']) {
             document.getElementById('postSubmitForm').style.display = 'block';
           } else {
             document.getElementById('onboardingForm').style.display = 'block';
@@ -910,6 +1061,35 @@
       // Handle CRM Integration change
       if (name === 'crmIntegration') {
         handleCrmIntegrationChange();
+      }
+
+      // Handle Service Area Type change - show/hide conditional fields
+      if (name === 'serviceAreaType') {
+        const zipCodesFields = document.getElementById('zipCodesFields');
+        const radiusFields = document.getElementById('radiusFields');
+        
+        if (radio.value === 'Zip Codes') {
+          zipCodesFields.classList.add('active');
+          radiusFields.classList.remove('active');
+          document.getElementById('targetZipCodes').required = true;
+          // Clear radius entries
+          document.getElementById('radiusEntriesContainer').innerHTML = '';
+        } else if (radio.value === 'Radius') {
+          radiusFields.classList.add('active');
+          zipCodesFields.classList.remove('active');
+          document.getElementById('targetZipCodes').required = false;
+          document.getElementById('targetZipCodes').value = '';
+          // Initialize with one radius entry if empty
+          if (document.getElementById('radiusEntriesContainer').children.length === 0) {
+            addRadiusEntry();
+          }
+        } else {
+          zipCodesFields.classList.remove('active');
+          radiusFields.classList.remove('active');
+          document.getElementById('targetZipCodes').required = false;
+          document.getElementById('targetZipCodes').value = '';
+          document.getElementById('radiusEntriesContainer').innerHTML = '';
+        }
       }
 
       // Handle Submit Screen change - show/hide conditional fields
@@ -1090,6 +1270,23 @@
         });
       });
 
+      // Service Area Type radio buttons - immediate save
+      document.querySelectorAll('input[name="serviceAreaType"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          if (clientRecordId) {
+            saveToAirtable(false);
+          }
+        });
+      });
+
+      // TARGET (Zip Codes) - debounced save
+      const targetZipCodesInput = document.getElementById('targetZipCodes');
+      if (targetZipCodesInput) {
+        targetZipCodesInput.addEventListener('input', () => {
+          debouncedSave(false);
+        });
+      }
+
       // Timezone select - immediate save
       const timezoneSelect = document.getElementById('timezone');
       timezoneSelect.addEventListener('change', () => {
@@ -1244,6 +1441,117 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // Go to service area screen
+    function goToServiceAreaScreen() {
+      // Validate notification requirements
+      const contactEntries = document.querySelectorAll('.contact-entry');
+      if (contactEntries.length === 0) {
+        alert('Please add at least one contact');
+        return;
+      }
+
+      let hasNewLead = false;
+      let hasBilling = false;
+
+      for (const entry of contactEntries) {
+        const newLeadCheckbox = entry.querySelector(`input[id^="contact-notif-newlead-"]`);
+        const billingCheckbox = entry.querySelector(`input[id^="contact-notif-billing-"]`);
+        
+        if (newLeadCheckbox && newLeadCheckbox.checked) {
+          hasNewLead = true;
+        }
+        if (billingCheckbox && billingCheckbox.checked) {
+          hasBilling = true;
+        }
+      }
+
+      if (!hasNewLead) {
+        alert('At least one contact must be selected for "New Lead" notifications. Please select "New Lead" for at least one contact.');
+        return;
+      }
+
+      if (!hasBilling) {
+        alert('At least one contact must be selected for "Billing" notifications. Please select "Billing" for at least one contact.');
+        return;
+      }
+
+      // Hide contacts form and show service area form
+      document.getElementById('contactsForm').style.display = 'none';
+      document.getElementById('serviceAreaForm').style.display = 'block';
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Go back to contacts screen
+    function goBackToContactsScreen() {
+      document.getElementById('serviceAreaForm').style.display = 'none';
+      document.getElementById('contactsForm').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Add a new radius entry
+    let radiusCounter = 0;
+    function addRadiusEntry() {
+      radiusCounter++;
+      const container = document.getElementById('radiusEntriesContainer');
+      const radiusDiv = document.createElement('div');
+      radiusDiv.className = 'radius-entry';
+      radiusDiv.id = `radius-${radiusCounter}`;
+      
+      radiusDiv.innerHTML = `
+        <div class="radius-entry-header">
+          <div class="radius-entry-title">Entry ${radiusCounter}</div>
+          <button type="button" class="remove-radius-btn" onclick="removeRadiusEntry(${radiusCounter})">Remove</button>
+        </div>
+        <div class="radius-fields">
+          <input type="text" id="radius-zip-${radiusCounter}" name="radius-zip-${radiusCounter}" placeholder="Zip Code" required>
+          <input type="number" id="radius-miles-${radiusCounter}" name="radius-miles-${radiusCounter}" placeholder="Radius (miles)" min="0" step="1" required>
+        </div>
+      `;
+      
+      container.appendChild(radiusDiv);
+      
+      // Add event listeners for real-time saving
+      const zipInput = radiusDiv.querySelector(`input[id^="radius-zip-"]`);
+      const milesInput = radiusDiv.querySelector(`input[id^="radius-miles-"]`);
+
+      const saveHandler = () => {
+        if (clientRecordId) {
+          debouncedSave(false);
+        }
+      };
+      
+      zipInput.addEventListener('input', saveHandler);
+      milesInput.addEventListener('input', saveHandler);
+      
+      // Update entry numbers
+      updateRadiusEntryNumbers();
+    }
+
+    // Remove a radius entry
+    function removeRadiusEntry(id) {
+      const radiusDiv = document.getElementById(`radius-${id}`);
+      if (radiusDiv) {
+        radiusDiv.remove();
+        updateRadiusEntryNumbers();
+        // Save after removal
+        if (clientRecordId) {
+          debouncedSave(false);
+        }
+      }
+    }
+
+    // Update radius entry numbers after add/remove
+    function updateRadiusEntryNumbers() {
+      const entries = document.querySelectorAll('.radius-entry');
+      entries.forEach((entry, index) => {
+        const title = entry.querySelector('.radius-entry-title');
+        if (title) {
+          title.textContent = `Entry ${index + 1}`;
+        }
+      });
+    }
+
     // Add a new contact entry
     let contactCounter = 0;
     function addContact() {
@@ -1280,14 +1588,46 @@
       
       container.appendChild(contactDiv);
       
+      // Add event listeners for real-time saving
+      const nameInput = contactDiv.querySelector(`input[id^="contact-name-"]`);
+      const emailInput = contactDiv.querySelector(`input[id^="contact-email-"]`);
+      const phoneInput = contactDiv.querySelector(`input[id^="contact-phone-"]`);
+      const newLeadCheckbox = contactDiv.querySelector(`input[id^="contact-notif-newlead-"]`);
+      const billingCheckbox = contactDiv.querySelector(`input[id^="contact-notif-billing-"]`);
+
+      const saveHandler = () => saveContact(contactDiv, contactCounter);
+      
+      nameInput.addEventListener('input', saveHandler);
+      emailInput.addEventListener('input', saveHandler);
+      phoneInput.addEventListener('input', saveHandler);
+      newLeadCheckbox.addEventListener('change', saveHandler);
+      billingCheckbox.addEventListener('change', saveHandler);
+      
       // Update contact numbers
       updateContactNumbers();
     }
 
     // Remove a contact entry
-    function removeContact(id) {
+    async function removeContact(id) {
       const contactDiv = document.getElementById(`contact-${id}`);
       if (contactDiv) {
+        // Delete from Airtable if it exists
+        const existingRecordId = contactDiv.getAttribute('data-airtable-id');
+        if (existingRecordId) {
+          try {
+            await deleteContactFromAirtable(existingRecordId);
+            console.log(`Contact ${id} deleted from Airtable`);
+          } catch (error) {
+            console.error(`Error deleting contact ${id}:`, error);
+          }
+        }
+        
+        // Clear timeout if exists
+        if (contactSaveTimeouts[id]) {
+          clearTimeout(contactSaveTimeouts[id]);
+          delete contactSaveTimeouts[id];
+        }
+        
         contactDiv.remove();
         updateContactNumbers();
       }
@@ -1334,89 +1674,198 @@
       }
     }
 
-    // Handle final form submission (contacts form)
-    document.getElementById('contactsForm').addEventListener('submit', async function(e) {
+    // Update contact in Airtable
+    async function updateContactInAirtable(recordId, contactData) {
+      try {
+        const response = await fetch(
+          `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_CONTACTS_TABLE_ID}/${recordId}`,
+          {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              fields: contactData
+            })
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error?.message || `Failed to update contact: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error('Error updating contact:', error);
+        throw error;
+      }
+    }
+
+    // Delete contact from Airtable
+    async function deleteContactFromAirtable(recordId) {
+      try {
+        const response = await fetch(
+          `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_CONTACTS_TABLE_ID}/${recordId}`,
+          {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error?.message || `Failed to delete contact: ${response.status}`);
+        }
+
+        return true;
+      } catch (error) {
+        console.error('Error deleting contact:', error);
+        throw error;
+      }
+    }
+
+    // Check if contact is ready to be saved (all fields filled + at least one notification)
+    function isContactReady(contactDiv) {
+      const name = contactDiv.querySelector(`input[id^="contact-name-"]`).value.trim();
+      const email = contactDiv.querySelector(`input[id^="contact-email-"]`).value.trim();
+      const phone = contactDiv.querySelector(`input[id^="contact-phone-"]`).value.trim();
+      const newLeadCheckbox = contactDiv.querySelector(`input[id^="contact-notif-newlead-"]`);
+      const billingCheckbox = contactDiv.querySelector(`input[id^="contact-notif-billing-"]`);
+      
+      const hasNotification = (newLeadCheckbox && newLeadCheckbox.checked) || 
+                              (billingCheckbox && billingCheckbox.checked);
+      
+      return name && email && phone && hasNotification;
+    }
+
+    // Get contact data from DOM
+    function getContactData(contactDiv) {
+      const name = contactDiv.querySelector(`input[id^="contact-name-"]`).value.trim();
+      const email = contactDiv.querySelector(`input[id^="contact-email-"]`).value.trim();
+      const phone = contactDiv.querySelector(`input[id^="contact-phone-"]`).value.trim();
+      
+      const notifications = [];
+      const newLeadCheckbox = contactDiv.querySelector(`input[id^="contact-notif-newlead-"]`);
+      const billingCheckbox = contactDiv.querySelector(`input[id^="contact-notif-billing-"]`);
+      
+      if (newLeadCheckbox && newLeadCheckbox.checked) {
+        notifications.push('New Lead');
+      }
+      if (billingCheckbox && billingCheckbox.checked) {
+        notifications.push('Billing');
+      }
+
+      return {
+        name,
+        email,
+        phone,
+        notifications
+      };
+    }
+
+    // Save or update contact in real-time
+    let contactSaveTimeouts = {};
+    async function saveContact(contactDiv, contactId) {
+      if (!isContactReady(contactDiv)) {
+        return; // Don't save if not ready
+      }
+
+      // Clear existing timeout for this contact
+      if (contactSaveTimeouts[contactId]) {
+        clearTimeout(contactSaveTimeouts[contactId]);
+      }
+
+      // Debounce the save
+      contactSaveTimeouts[contactId] = setTimeout(async () => {
+        try {
+          const contactData = getContactData(contactDiv);
+          const airtableData = {
+            'Name': contactData.name,
+            'Client': [clientRecordId],
+            'Email': contactData.email,
+            'Phone': contactData.phone
+          };
+
+          if (contactData.notifications.length > 0) {
+            airtableData['Notifications'] = contactData.notifications;
+          }
+
+          const existingRecordId = contactDiv.getAttribute('data-airtable-id');
+          
+          if (existingRecordId) {
+            // Update existing contact
+            await updateContactInAirtable(existingRecordId, airtableData);
+            console.log(`Contact ${contactId} updated in Airtable`);
+          } else {
+            // Create new contact
+            const result = await createContactInAirtable(airtableData);
+            contactDiv.setAttribute('data-airtable-id', result.id);
+            console.log(`Contact ${contactId} created in Airtable`);
+          }
+        } catch (error) {
+          console.error(`Error saving contact ${contactId}:`, error);
+        }
+      }, 1000); // 1 second debounce
+    }
+
+    // Handle final form submission (service area form)
+    document.getElementById('serviceAreaForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
       const submitBtn = document.getElementById('finalSubmitBtn');
       submitBtn.disabled = true;
       submitBtn.textContent = 'Submitting...';
 
-      // Collect all contacts
-      const contactEntries = document.querySelectorAll('.contact-entry');
-      if (contactEntries.length === 0) {
-        alert('Please add at least one contact');
+      // Validate service area type selection
+      const selectedServiceAreaType = document.querySelector('input[name="serviceAreaType"]:checked');
+      if (!selectedServiceAreaType) {
+        alert('Please select a service area type (Radius or Zip Codes)');
         submitBtn.disabled = false;
         submitBtn.textContent = 'Submit';
         return;
       }
 
-      const contacts = [];
-      let hasError = false;
-
-      for (let i = 0; i < contactEntries.length; i++) {
-        const entry = contactEntries[i];
-        const name = entry.querySelector(`input[id^="contact-name-"]`).value.trim();
-        const email = entry.querySelector(`input[id^="contact-email-"]`).value.trim();
-        const phone = entry.querySelector(`input[id^="contact-phone-"]`).value.trim();
+      // Validate based on selection
+      if (selectedServiceAreaType.value === 'Zip Codes') {
+        const targetValue = document.getElementById('targetZipCodes').value.trim();
+        if (!targetValue) {
+          alert('Please enter your zip codes');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit';
+          return;
+        }
+      } else if (selectedServiceAreaType.value === 'Radius') {
+        const radiusEntries = document.querySelectorAll('.radius-entry');
+        if (radiusEntries.length === 0) {
+          alert('Please add at least one zip code and radius entry');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit';
+          return;
+        }
         
-        if (!name || !email || !phone) {
-          alert('Please fill in all fields for all contacts');
-          hasError = true;
-          break;
+        // Validate all radius entries have both zip and miles
+        let hasInvalidEntry = false;
+        for (const entry of radiusEntries) {
+          const zipCode = entry.querySelector(`input[id^="radius-zip-"]`).value.trim();
+          const miles = entry.querySelector(`input[id^="radius-miles-"]`).value.trim();
+          if (!zipCode || !miles) {
+            alert('Please fill in both zip code and radius for all entries');
+            hasInvalidEntry = true;
+            break;
+          }
         }
-
-        // Get notifications
-        const notifications = [];
-        const newLeadCheckbox = entry.querySelector(`input[id^="contact-notif-newlead-"]`);
-        const billingCheckbox = entry.querySelector(`input[id^="contact-notif-billing-"]`);
         
-        if (newLeadCheckbox && newLeadCheckbox.checked) {
-          notifications.push('New Lead');
+        if (hasInvalidEntry) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit';
+          return;
         }
-        if (billingCheckbox && billingCheckbox.checked) {
-          notifications.push('Billing');
-        }
-
-        contacts.push({
-          name,
-          email,
-          phone,
-          notifications
-        });
-      }
-
-      if (hasError) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Submit';
-        return;
-      }
-
-      // Validate notification requirements
-      let hasNewLead = false;
-      let hasBilling = false;
-
-      for (const contact of contacts) {
-        if (contact.notifications.includes('New Lead')) {
-          hasNewLead = true;
-        }
-        if (contact.notifications.includes('Billing')) {
-          hasBilling = true;
-        }
-      }
-
-      if (!hasNewLead) {
-        alert('At least one contact must be selected for "New Lead" notifications. Please select "New Lead" for at least one contact.');
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Submit';
-        return;
-      }
-
-      if (!hasBilling) {
-        alert('At least one contact must be selected for "Billing" notifications. Please select "Billing" for at least one contact.');
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Submit';
-        return;
       }
 
       try {
@@ -1433,33 +1882,16 @@
         // Final save with completion flag
         await saveToAirtable(true);
 
-        // Create all contacts in Airtable
-        for (const contact of contacts) {
-          const contactData = {
-            'Name': contact.name,
-            'Client': [clientRecordId], // Link to client record
-            'Email': contact.email,
-            'Phone': contact.phone
-          };
-
-          // Add notifications if any are selected
-          if (contact.notifications.length > 0) {
-            contactData['Notifications'] = contact.notifications;
-          }
-
-          await createContactInAirtable(contactData);
-        }
-
         // Show success message
-        document.getElementById('contactsSuccessMessage').classList.add('active');
+        document.getElementById('serviceAreaSuccessMessage').classList.add('active');
         submitBtn.textContent = 'Submitted';
 
         // Scroll to success message
-        document.getElementById('contactsSuccessMessage').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        document.getElementById('serviceAreaSuccessMessage').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
         // After 3 seconds, show completed screen
         setTimeout(() => {
-          document.getElementById('contactsForm').style.display = 'none';
+          document.getElementById('serviceAreaForm').style.display = 'none';
           document.getElementById('completedScreen').style.display = 'block';
         }, 3000);
 
