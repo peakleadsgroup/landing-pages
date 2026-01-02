@@ -64,6 +64,8 @@
     .btn-primary { background:#4a6fa5; color:white; }
     .btn-primary:hover { background:#3a5f95; transform:translateY(-2px); }
     .btn-primary:disabled { background:#ccc; cursor:not-allowed; transform:none; }
+    .btn-secondary { background:#6c757d; color:white; }
+    .btn-secondary:hover { background:#5a6268; transform:translateY(-2px); }
 
     .success-message { display:none; text-align:center; padding:2rem; background:#d4edda; border:1px solid #c3e6cb; border-radius:8px; color:#155724; margin-top:1.5rem; }
     .success-message.active { display:block; }
@@ -166,7 +168,58 @@
         </div>
 
         <div class="form-navigation">
-          <button type="submit" class="btn btn-primary" id="submitBtn">Submit</button>
+          <button type="button" class="btn btn-primary" id="nextBtn" onclick="goToPostSubmitScreen()">Next</button>
+        </div>
+      </form>
+
+      <!-- Post-Submit Screen -->
+      <form class="form-step" id="postSubmitForm" style="display:none;">
+        <div class="form-question">
+          <h2 style="font-size:1.8rem; color:#333; margin-bottom:0.5rem; text-align:center;">Post-Submit Screen</h2>
+          <p style="font-size:1.1rem; color:#666; margin-bottom:2rem; text-align:center;">Select what happens after someone submits their contact information</p>
+          <div class="radio-options">
+            <div class="radio-option" onclick="selectRadio(this, 'submitScreen')">
+              <input type="radio" name="submitScreen" value="Calendar" id="submitCalendar">
+              <div class="option-text">
+                <span class="option-label">Calendar</span>
+              </div>
+            </div>
+            <div class="radio-option" onclick="selectRadio(this, 'submitScreen')">
+              <input type="radio" name="submitScreen" value="Phone" id="submitPhone">
+              <div class="option-text">
+                <span class="option-label">Phone</span>
+              </div>
+            </div>
+            <div class="radio-option" onclick="selectRadio(this, 'submitScreen')">
+              <input type="radio" name="submitScreen" value="Text" id="submitText">
+              <div class="option-text">
+                <span class="option-label">Text</span>
+              </div>
+            </div>
+            <div class="radio-option" onclick="selectRadio(this, 'submitScreen')">
+              <input type="radio" name="submitScreen" value="Phone/Text" id="submitPhoneText">
+              <div class="option-text">
+                <span class="option-label">Phone/Text</span>
+              </div>
+            </div>
+            <div class="radio-option" onclick="selectRadio(this, 'submitScreen')">
+              <input type="radio" name="submitScreen" value="Redirect" id="submitRedirect">
+              <div class="option-text">
+                <span class="option-label">Redirect</span>
+              </div>
+            </div>
+            <div class="radio-option" onclick="selectRadio(this, 'submitScreen')">
+              <input type="radio" name="submitScreen" value="None" id="submitNone">
+              <div class="option-text">
+                <span class="option-label">None</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-navigation">
+          <button type="button" class="btn btn-secondary" onclick="goBackToMainForm()" style="margin-right:1rem;">Back</button>
+          <button type="submit" class="btn btn-primary" id="finalSubmitBtn">Submit</button>
         </div>
 
         <div class="success-message" id="successMessage">
@@ -254,6 +307,12 @@
         // Don't include the field at all if nothing is selected
       }
       // If CRM Integration is No, don't include CRM Name or Launch w/ CRM fields at all
+
+      // Submit Screen - single select field
+      const selectedSubmitScreen = document.querySelector('input[name="submitScreen"]:checked');
+      if (selectedSubmitScreen && selectedSubmitScreen.value) {
+        formData['Submit Screen'] = selectedSubmitScreen.value;
+      }
 
       // Only mark as completed on final submission
       if (includeCompleted) {
@@ -392,9 +451,6 @@
           // Show completed screen
           document.getElementById('completedScreen').style.display = 'block';
         } else {
-          // Show form
-          document.getElementById('onboardingForm').style.display = 'block';
-          
           // Pre-fill form if data exists
           if (clientRecord.fields['Website']) {
             document.getElementById('website').value = clientRecord.fields['Website'];
@@ -420,6 +476,34 @@
           } else if (clientRecord.fields['CRM Integration'] === false) {
             document.getElementById('crmNo').checked = true;
             document.querySelector('#crmNo').closest('.radio-option').classList.add('selected');
+          }
+
+          // Pre-fill Submit Screen if it exists
+          if (clientRecord.fields['Submit Screen']) {
+            const submitScreenValue = clientRecord.fields['Submit Screen'];
+            const submitScreenMap = {
+              'Calendar': 'submitCalendar',
+              'Phone': 'submitPhone',
+              'Text': 'submitText',
+              'Phone/Text': 'submitPhoneText',
+              'Redirect': 'submitRedirect',
+              'None': 'submitNone'
+            };
+            
+            const fieldId = submitScreenMap[submitScreenValue];
+            if (fieldId) {
+              document.getElementById(fieldId).checked = true;
+              document.querySelector(`#${fieldId}`).closest('.radio-option').classList.add('selected');
+            }
+          }
+
+          // Determine which screen to show
+          // If Submit Screen is already filled, show post-submit screen
+          // Otherwise show main form
+          if (clientRecord.fields['Submit Screen']) {
+            document.getElementById('postSubmitForm').style.display = 'block';
+          } else {
+            document.getElementById('onboardingForm').style.display = 'block';
           }
 
           // Set up real-time saving event listeners
@@ -505,6 +589,15 @@
         });
       });
 
+      // Submit Screen radio buttons - immediate save
+      document.querySelectorAll('input[name="submitScreen"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          if (clientRecordId) {
+            saveToAirtable(false);
+          }
+        });
+      });
+
       // Save on visibility change (when user switches tabs or minimizes)
       document.addEventListener('visibilitychange', () => {
         if (document.hidden && clientRecordId && !isSaving) {
@@ -513,13 +606,69 @@
       });
     }
 
-    // Handle form submission
-    document.getElementById('onboardingForm').addEventListener('submit', async function(e) {
+    // Go to post-submit screen
+    function goToPostSubmitScreen() {
+      // Validate required fields on first screen
+      const website = document.getElementById('website').value.trim();
+      if (!website) {
+        alert('Please enter your website URL');
+        return;
+      }
+
+      const selectedCrm = document.querySelector('input[name="crmIntegration"]:checked');
+      if (!selectedCrm) {
+        alert('Please select whether you want CRM integration');
+        return;
+      }
+
+      // If CRM Integration is Yes, validate CRM Name
+      if (selectedCrm.value === 'Yes') {
+        const crmName = document.getElementById('crmName').value.trim();
+        if (!crmName) {
+          alert('Please enter your CRM name');
+          return;
+        }
+        const selectedLaunch = document.querySelector('input[name="launchWithCRM"]:checked');
+        if (!selectedLaunch) {
+          alert('Please select a launch preference');
+          return;
+        }
+      }
+
+      // Save current progress
+      saveToAirtable(false);
+
+      // Hide main form and show post-submit form
+      document.getElementById('onboardingForm').style.display = 'none';
+      document.getElementById('postSubmitForm').style.display = 'block';
+      
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Go back to main form
+    function goBackToMainForm() {
+      document.getElementById('postSubmitForm').style.display = 'none';
+      document.getElementById('onboardingForm').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Handle final form submission
+    document.getElementById('postSubmitForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
-      const submitBtn = document.getElementById('submitBtn');
+      const submitBtn = document.getElementById('finalSubmitBtn');
       submitBtn.disabled = true;
       submitBtn.textContent = 'Submitting...';
+
+      // Validate submit screen selection
+      const selectedSubmitScreen = document.querySelector('input[name="submitScreen"]:checked');
+      if (!selectedSubmitScreen) {
+        alert('Please select what happens after someone submits their contact information');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit';
+        return;
+      }
 
       try {
         // Clear any pending debounced saves
@@ -544,7 +693,7 @@
 
         // After 3 seconds, show completed screen
         setTimeout(() => {
-          document.getElementById('onboardingForm').style.display = 'none';
+          document.getElementById('postSubmitForm').style.display = 'none';
           document.getElementById('completedScreen').style.display = 'block';
         }, 3000);
 
