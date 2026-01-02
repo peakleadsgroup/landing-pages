@@ -111,11 +111,22 @@
           <input type="url" id="website" name="website" placeholder="https://example.com" required>
         </div>
 
-        <!-- CRM Integration Checkbox -->
+        <!-- CRM Integration Yes/No -->
         <div class="form-question">
-          <div class="checkbox-option" onclick="toggleCheckbox(this)">
-            <input type="checkbox" id="crmIntegration" name="crmIntegration">
-            <label for="crmIntegration">Would you like us to integrate with your CRM system?</label>
+          <label>Would you like us to integrate with your CRM system?</label>
+          <div class="radio-options" style="margin-top:1rem;">
+            <div class="radio-option" onclick="selectRadio(this, 'crmIntegration')">
+              <input type="radio" name="crmIntegration" value="Yes" id="crmYes">
+              <div class="option-text">
+                <span class="option-label">Yes</span>
+              </div>
+            </div>
+            <div class="radio-option" onclick="selectRadio(this, 'crmIntegration')">
+              <input type="radio" name="crmIntegration" value="No" id="crmNo">
+              <div class="option-text">
+                <span class="option-label">No</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -268,7 +279,8 @@
             document.getElementById('website').value = clientRecord.fields['Website'];
           }
           if (clientRecord.fields['CRM Integration'] === true) {
-            document.getElementById('crmIntegration').checked = true;
+            document.getElementById('crmYes').checked = true;
+            document.querySelector('#crmYes').closest('.radio-option').classList.add('selected');
             document.getElementById('crmFields').classList.add('active');
             if (clientRecord.fields['CRM Name']) {
               document.getElementById('crmName').value = clientRecord.fields['CRM Name'];
@@ -283,6 +295,9 @@
                 document.querySelector('#launchNo').closest('.radio-option').classList.add('selected');
               }
             }
+          } else if (clientRecord.fields['CRM Integration'] === false) {
+            document.getElementById('crmNo').checked = true;
+            document.querySelector('#crmNo').closest('.radio-option').classList.add('selected');
           }
         }
       } catch (error) {
@@ -298,19 +313,18 @@
       document.getElementById('errorMessage').textContent = message;
     }
 
-    // Toggle checkbox and show/hide conditional fields
-    function toggleCheckbox(element) {
-      const checkbox = element.querySelector('input[type="checkbox"]');
-      checkbox.checked = !checkbox.checked;
-      
+    // Handle CRM Integration radio selection and show/hide conditional fields
+    function handleCrmIntegrationChange() {
+      const selectedCrm = document.querySelector('input[name="crmIntegration"]:checked');
       const crmFields = document.getElementById('crmFields');
-      if (checkbox.checked) {
+      
+      if (selectedCrm && selectedCrm.value === 'Yes') {
         crmFields.classList.add('active');
-        // Make CRM Name required when checked
+        // Make CRM Name required when Yes is selected
         document.getElementById('crmName').required = true;
       } else {
         crmFields.classList.remove('active');
-        // Remove required when unchecked
+        // Remove required when No is selected
         document.getElementById('crmName').required = false;
         document.getElementById('crmName').value = '';
         // Clear radio selections
@@ -331,6 +345,11 @@
         r.closest('.radio-option').classList.remove('selected');
       });
       element.classList.add('selected');
+      
+      // Handle CRM Integration change
+      if (name === 'crmIntegration') {
+        handleCrmIntegrationChange();
+      }
     }
 
     // Handle form submission
@@ -343,13 +362,16 @@
 
       try {
         // Collect form data
+        const selectedCrm = document.querySelector('input[name="crmIntegration"]:checked');
+        const crmIntegrationValue = selectedCrm ? selectedCrm.value === 'Yes' : false;
+        
         const formData = {
           'Website': document.getElementById('website').value,
-          'CRM Integration': document.getElementById('crmIntegration').checked
+          'CRM Integration': crmIntegrationValue
         };
 
-        // Add CRM fields if integration is checked
-        if (formData['CRM Integration']) {
+        // Add CRM fields if integration is Yes
+        if (crmIntegrationValue) {
           formData['CRM Name'] = document.getElementById('crmName').value;
           
           const selectedLaunch = document.querySelector('input[name="launchWithCRM"]:checked');
@@ -357,7 +379,7 @@
             formData['Launch w/ CRM'] = selectedLaunch.value;
           }
         } else {
-          // Clear CRM fields if unchecked
+          // Clear CRM fields if No is selected
           formData['CRM Name'] = '';
           formData['Launch w/ CRM'] = '';
         }
