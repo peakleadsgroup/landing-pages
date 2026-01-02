@@ -241,10 +241,15 @@
           formData['CRM Name'] = crmNameValue;
         }
         
-        // Launch w/ CRM - only include if a value is selected
-        const selectedLaunch = document.querySelector('input[name="launchWithCRM"]:checked');
-        if (selectedLaunch && selectedLaunch.value) {
-          formData['Launch w/ CRM'] = selectedLaunch.value;
+        // Launch w/ CRM - checkbox field, send as boolean
+        // true = "Start sending leads by email..." (launchYes)
+        // false = "Do not send any leads until..." (launchNo)
+        const launchYes = document.getElementById('launchYes').checked;
+        const launchNo = document.getElementById('launchNo').checked;
+        
+        if (launchYes || launchNo) {
+          // Send true if "Start sending leads" is selected, false if "Do not send" is selected
+          formData['Launch w/ CRM'] = launchYes;
         }
         // Don't include the field at all if nothing is selected
       }
@@ -401,15 +406,16 @@
             if (clientRecord.fields['CRM Name']) {
               document.getElementById('crmName').value = clientRecord.fields['CRM Name'];
             }
-            if (clientRecord.fields['Launch w/ CRM']) {
-              const launchValue = clientRecord.fields['Launch w/ CRM'];
-              if (launchValue === 'Start sending leads by email so we can begin as soon as possible') {
-                document.getElementById('launchYes').checked = true;
-                document.querySelector('#launchYes').closest('.radio-option').classList.add('selected');
-              } else if (launchValue === 'Do not send any leads until the CRM integration is completed (will take longer to launch)') {
-                document.getElementById('launchNo').checked = true;
-                document.querySelector('#launchNo').closest('.radio-option').classList.add('selected');
-              }
+            // Launch w/ CRM is a checkbox (boolean) field
+            const launchValue = clientRecord.fields['Launch w/ CRM'];
+            if (launchValue === true) {
+              // true means "Start sending leads by email..."
+              document.getElementById('launchYes').checked = true;
+              document.querySelector('#launchYes').closest('.radio-option').classList.add('selected');
+            } else if (launchValue === false) {
+              // false means "Do not send any leads until..."
+              document.getElementById('launchNo').checked = true;
+              document.querySelector('#launchNo').closest('.radio-option').classList.add('selected');
             }
           } else if (clientRecord.fields['CRM Integration'] === false) {
             document.getElementById('crmNo').checked = true;
