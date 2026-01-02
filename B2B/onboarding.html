@@ -68,6 +68,11 @@
     .success-message { display:none; text-align:center; padding:2rem; background:#d4edda; border:1px solid #c3e6cb; border-radius:8px; color:#155724; margin-top:1.5rem; }
     .success-message.active { display:block; }
 
+    .save-indicator { position:fixed; top:20px; right:20px; padding:0.5rem 1rem; background:#4a6fa5; color:white; border-radius:20px; font-size:0.85rem; display:none; z-index:1000; box-shadow:0 2px 10px rgba(0,0,0,0.2); }
+    .save-indicator.saving { display:block; }
+    .save-indicator.saved { background:#28a745; display:block; }
+    .save-indicator.error { background:#dc3545; display:block; }
+
     @media (max-width:768px) {
       body { padding:1rem; }
       .form-card { padding:1.5rem; }
@@ -77,6 +82,7 @@
   </style>
 </head>
 <body>
+  <div class="save-indicator" id="saveIndicator"></div>
   <div class="container">
     <div class="header">
       <img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Marketing Group" class="logo">
@@ -178,11 +184,114 @@
 
     let clientRecordId = null;
     let clientRecord = null;
+    let saveTimeout = null;
+    let isSaving = false;
+    let pendingSave = false;
 
     // Get record ID from URL parameter
     function getRecordIdFromUrl() {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get('id') || urlParams.get('recordId') || urlParams.get('record');
+    }
+
+    // Show save indicator
+    function showSaveIndicator(status) {
+      const indicator = document.getElementById('saveIndicator');
+      indicator.className = 'save-indicator';
+      
+      if (status === 'saving') {
+        indicator.classList.add('saving');
+        indicator.textContent = 'Saving...';
+      } else if (status === 'saved') {
+        indicator.classList.add('saved');
+        indicator.textContent = '✓ Saved';
+        setTimeout(() => {
+          indicator.classList.remove('saved');
+        }, 2000);
+      } else if (status === 'error') {
+        indicator.classList.add('error');
+        indicator.textContent = '✗ Save failed';
+        setTimeout(() => {
+          indicator.classList.remove('error');
+        }, 3000);
+      }
+    }
+
+    // Collect current form data
+    function collectFormData(includeCompleted = false) {
+      const selectedCrm = document.querySelector('input[name="crmIntegration"]:checked');
+      const crmIntegrationValue = selectedCrm ? selectedCrm.value === 'Yes' : false;
+      
+      const formData = {
+        'Website': document.getElementById('website').value || '',
+        'CRM Integration': crmIntegrationValue
+      };
+
+      // Add CRM fields if integration is Yes
+      if (crmIntegrationValue) {
+        formData['CRM Name'] = document.getElementById('crmName').value || '';
+        
+        const selectedLaunch = document.querySelector('input[name="launchWithCRM"]:checked');
+        if (selectedLaunch) {
+          formData['Launch w/ CRM'] = selectedLaunch.value;
+        } else {
+          formData['Launch w/ CRM'] = '';
+        }
+      } else {
+        // Clear CRM fields if No is selected
+        formData['CRM Name'] = '';
+        formData['Launch w/ CRM'] = '';
+      }
+
+      // Only mark as completed on final submission
+      if (includeCompleted) {
+        formData['Onboarding Completed'] = true;
+      }
+
+      return formData;
+    }
+
+    // Save to Airtable in real-time (without marking as completed)
+    async function saveToAirtable(includeCompleted = false) {
+      if (!clientRecordId) return;
+
+      // If already saving, mark that we need to save again after
+      if (isSaving) {
+        pendingSave = true;
+        return;
+      }
+
+      isSaving = true;
+      showSaveIndicator('saving');
+
+      try {
+        const formData = collectFormData(includeCompleted);
+        await updateClientRecord(clientRecordId, formData);
+        
+        showSaveIndicator('saved');
+        isSaving = false;
+
+        // If there was a pending save, do it now
+        if (pendingSave) {
+          pendingSave = false;
+          setTimeout(() => saveToAirtable(includeCompleted), 100);
+        }
+      } catch (error) {
+        console.error('Error saving to Airtable:', error);
+        showSaveIndicator('error');
+        isSaving = false;
+        pendingSave = false;
+      }
+    }
+
+    // Debounced save function for text inputs
+    function debouncedSave(includeCompleted = false) {
+      if (saveTimeout) {
+        clearTimeout(saveTimeout);
+      }
+      saveTimeout = setTimeout(() => {
+        saveToAirtable(includeCompleted);
+      }, 1000); // Wait 1 second after user stops typing
     }
 
     // Fetch client record from Airtable
@@ -299,6 +408,9 @@
             document.getElementById('crmNo').checked = true;
             document.querySelector('#crmNo').closest('.radio-option').classList.add('selected');
           }
+
+          // Set up real-time saving event listeners
+          setupRealtimeSaving();
         }
       } catch (error) {
         console.error('Error initializing:', error);
@@ -350,6 +462,42 @@
       if (name === 'crmIntegration') {
         handleCrmIntegrationChange();
       }
+
+      // Save to Airtable immediately for radio buttons
+      if (clientRecordId) {
+        saveToAirtable(false);
+      }
+    }
+
+    // Set up real-time saving for all form fields
+    function setupRealtimeSaving() {
+      // Website URL - debounced
+      const websiteInput = document.getElementById('website');
+      websiteInput.addEventListener('input', () => {
+        debouncedSave(false);
+      });
+
+      // CRM Name - debounced
+      const crmNameInput = document.getElementById('crmName');
+      crmNameInput.addEventListener('input', () => {
+        debouncedSave(false);
+      });
+
+      // Launch with CRM radio buttons - immediate save
+      document.querySelectorAll('input[name="launchWithCRM"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          if (clientRecordId) {
+            saveToAirtable(false);
+          }
+        });
+      });
+
+      // Save on visibility change (when user switches tabs or minimizes)
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden && clientRecordId && !isSaving) {
+          saveToAirtable(false);
+        }
+      });
     }
 
     // Handle form submission
@@ -361,34 +509,18 @@
       submitBtn.textContent = 'Submitting...';
 
       try {
-        // Collect form data
-        const selectedCrm = document.querySelector('input[name="crmIntegration"]:checked');
-        const crmIntegrationValue = selectedCrm ? selectedCrm.value === 'Yes' : false;
-        
-        const formData = {
-          'Website': document.getElementById('website').value,
-          'CRM Integration': crmIntegrationValue
-        };
-
-        // Add CRM fields if integration is Yes
-        if (crmIntegrationValue) {
-          formData['CRM Name'] = document.getElementById('crmName').value;
-          
-          const selectedLaunch = document.querySelector('input[name="launchWithCRM"]:checked');
-          if (selectedLaunch) {
-            formData['Launch w/ CRM'] = selectedLaunch.value;
-          }
-        } else {
-          // Clear CRM fields if No is selected
-          formData['CRM Name'] = '';
-          formData['Launch w/ CRM'] = '';
+        // Clear any pending debounced saves
+        if (saveTimeout) {
+          clearTimeout(saveTimeout);
         }
 
-        // Mark onboarding as completed
-        formData['Onboarding Completed'] = true;
+        // Wait for any in-progress save to complete
+        while (isSaving) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
 
-        // Update Airtable record
-        await updateClientRecord(clientRecordId, formData);
+        // Final save with completion flag
+        await saveToAirtable(true);
 
         // Show success message
         document.getElementById('successMessage').classList.add('active');
