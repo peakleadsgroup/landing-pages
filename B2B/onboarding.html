@@ -8,7 +8,7 @@
   <link rel="shortcut icon" type="image/x-icon" href="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/Peak%20Leads%20Flattened%20Logo.png">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family: Arial, sans-serif; line-height:1.6; color:#333; background:#f8f9fa; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; }
+    body { font-family: Arial, sans-serif; line-height:1.6; color:#333; background: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true'); background-size: cover; background-position: center; background-attachment: fixed; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; }
 
     .container { max-width:600px; width:100%; }
 
@@ -63,6 +63,8 @@
     .contact-fields { display:grid; grid-template-columns:1fr; gap:1rem; }
     .contact-fields input { width:100%; padding:.8rem; border:2px solid #e9ecef; border-radius:8px; font-size:1rem; transition:border-color .3s; }
     .contact-fields input:focus { outline:none; border-color:#4a6fa5; }
+    .contact-fields input.invalid { border-color:#dc3545; background-color:#fff5f5; }
+    .contact-fields input.invalid:focus { border-color:#dc3545; box-shadow:0 0 0 3px rgba(220, 53, 69, 0.1); }
     .notifications-section { margin-top:1rem; padding-top:1rem; border-top:1px solid #e9ecef; }
     .notifications-section label { display:block; font-weight:600; margin-bottom:0.8rem; color:#333; font-size:0.95rem; }
     .notification-checkboxes { display:flex; gap:1rem; }
@@ -79,6 +81,8 @@
     .radius-fields { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
     .radius-fields input { width:100%; padding:.8rem; border:2px solid #e9ecef; border-radius:8px; font-size:1rem; transition:border-color .3s; }
     .radius-fields input:focus { outline:none; border-color:#4a6fa5; }
+    .radius-fields input.invalid { border-color:#dc3545; background-color:#fff5f5; }
+    .radius-fields input.invalid:focus { border-color:#dc3545; box-shadow:0 0 0 3px rgba(220, 53, 69, 0.1); }
 
     .conditional-fields { margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid #e9ecef; display:none; }
     .conditional-fields.active { display:block; }
@@ -109,7 +113,7 @@
     .save-indicator.error { background:#dc3545; display:block; }
 
     @media (max-width:768px) {
-      body { padding:1rem; }
+      body { padding:1rem; background-attachment: scroll; }
       .form-card { padding:1.5rem; }
       .header { padding:1rem; }
       .header h1 { font-size:1.5rem; }
@@ -463,7 +467,7 @@
         <div class="conditional-fields" id="zipCodesFields">
           <div class="form-question">
             <label for="targetZipCodes">Enter your zip codes</label>
-            <input type="text" id="targetZipCodes" name="targetZipCodes" placeholder="e.g., 12345, 67890, 11111" style="width:100%; padding:.8rem; border:2px solid #e9ecef; border-radius:8px; font-size:1rem; transition:border-color .3s;">
+            <textarea id="targetZipCodes" name="targetZipCodes" placeholder="e.g., 12345, 67890, 11111" rows="4" style="width:100%; padding:.8rem; border:2px solid #e9ecef; border-radius:8px; font-size:1rem; transition:border-color .3s; resize:vertical; min-height:100px; font-family:inherit; overflow:hidden;"></textarea>
           </div>
         </div>
 
@@ -954,7 +958,14 @@
                     if (lastEntry) {
                       const zipInput = lastEntry.querySelector(`input[id^="radius-zip-"]`);
                       const milesInput = lastEntry.querySelector(`input[id^="radius-miles-"]`);
-                      if (zipInput) zipInput.value = zipCode;
+                      if (zipInput) {
+                        zipInput.value = zipCode;
+                        // Validate pre-filled zip code
+                        if (zipCode && !isValidZipCode(zipCode)) {
+                          zipInput.classList.add('invalid');
+                          zipInput.setAttribute('title', 'Please enter a valid 5-digit zip code');
+                        }
+                      }
                       if (milesInput) milesInput.value = miles;
                     }
                   }
@@ -975,7 +986,13 @@
               
               // Pre-fill TARGET field
               if (clientRecord.fields['TARGET']) {
-                document.getElementById('targetZipCodes').value = clientRecord.fields['TARGET'];
+                const targetInput = document.getElementById('targetZipCodes');
+                targetInput.value = clientRecord.fields['TARGET'];
+                // Trigger auto-resize after pre-filling
+                setTimeout(() => {
+                  targetInput.style.height = 'auto';
+                  targetInput.style.height = Math.max(100, targetInput.scrollHeight) + 'px';
+                }, 100);
               }
             }
           }
@@ -1279,12 +1296,28 @@
         });
       });
 
-      // TARGET (Zip Codes) - debounced save
+      // TARGET (Zip Codes) - debounced save with auto-resize
       const targetZipCodesInput = document.getElementById('targetZipCodes');
       if (targetZipCodesInput) {
+        // Auto-resize function
+        const autoResize = () => {
+          targetZipCodesInput.style.height = 'auto';
+          targetZipCodesInput.style.height = Math.max(100, targetZipCodesInput.scrollHeight) + 'px';
+        };
+        
+        // Auto-resize on input and paste
         targetZipCodesInput.addEventListener('input', () => {
+          autoResize();
           debouncedSave(false);
         });
+        
+        targetZipCodesInput.addEventListener('paste', () => {
+          // Use setTimeout to allow paste to complete before resizing
+          setTimeout(autoResize, 10);
+        });
+        
+        // Initial resize
+        autoResize();
       }
 
       // Timezone select - immediate save
@@ -1452,10 +1485,29 @@
 
       let hasNewLead = false;
       let hasBilling = false;
+      let invalidContacts = [];
 
       for (const entry of contactEntries) {
+        const name = entry.querySelector(`input[id^="contact-name-"]`).value.trim();
+        const email = entry.querySelector(`input[id^="contact-email-"]`).value.trim();
+        const phone = entry.querySelector(`input[id^="contact-phone-"]`).value.trim();
         const newLeadCheckbox = entry.querySelector(`input[id^="contact-notif-newlead-"]`);
         const billingCheckbox = entry.querySelector(`input[id^="contact-notif-billing-"]`);
+        
+        // Validate email format
+        if (email && !isValidEmail(email)) {
+          invalidContacts.push(`Contact "${name || 'Unnamed'}" has an invalid email address`);
+        }
+        
+        // Validate phone format
+        if (phone && !isValidPhone(phone)) {
+          invalidContacts.push(`Contact "${name || 'Unnamed'}" has an invalid phone number`);
+        }
+        
+        // Check if contact is complete
+        if (!name || !email || !phone) {
+          invalidContacts.push(`Contact "${name || 'Unnamed'}" is missing required fields`);
+        }
         
         if (newLeadCheckbox && newLeadCheckbox.checked) {
           hasNewLead = true;
@@ -1463,6 +1515,12 @@
         if (billingCheckbox && billingCheckbox.checked) {
           hasBilling = true;
         }
+      }
+
+      // Show validation errors if any
+      if (invalidContacts.length > 0) {
+        alert('Please fix the following errors:\n\n' + invalidContacts.join('\n'));
+        return;
       }
 
       if (!hasNewLead) {
@@ -1504,24 +1562,42 @@
           <button type="button" class="remove-radius-btn" onclick="removeRadiusEntry(${radiusCounter})">Remove</button>
         </div>
         <div class="radius-fields">
-          <input type="text" id="radius-zip-${radiusCounter}" name="radius-zip-${radiusCounter}" placeholder="Zip Code" required>
+          <input type="text" id="radius-zip-${radiusCounter}" name="radius-zip-${radiusCounter}" placeholder="Zip Code" pattern="[0-9]{5}" maxlength="5" required>
           <input type="number" id="radius-miles-${radiusCounter}" name="radius-miles-${radiusCounter}" placeholder="Radius (miles)" min="0" step="1" required>
         </div>
       `;
       
       container.appendChild(radiusDiv);
       
-      // Add event listeners for real-time saving
+      // Add event listeners for real-time saving and validation
       const zipInput = radiusDiv.querySelector(`input[id^="radius-zip-"]`);
       const milesInput = radiusDiv.querySelector(`input[id^="radius-miles-"]`);
 
+      // Validate zip code format
+      const validateZipCode = () => {
+        const zipValue = zipInput.value.trim();
+        if (zipValue && !isValidZipCode(zipValue)) {
+          zipInput.classList.add('invalid');
+          zipInput.setAttribute('title', 'Please enter a valid 5-digit zip code');
+        } else {
+          zipInput.classList.remove('invalid');
+          zipInput.removeAttribute('title');
+        }
+      };
+
       const saveHandler = () => {
+        validateZipCode();
         if (clientRecordId) {
           debouncedSave(false);
         }
       };
       
-      zipInput.addEventListener('input', saveHandler);
+      // Only allow numeric input for zip code
+      zipInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 5);
+        saveHandler();
+      });
+      zipInput.addEventListener('blur', validateZipCode);
       milesInput.addEventListener('input', saveHandler);
       
       // Update entry numbers
@@ -1529,14 +1605,38 @@
     }
 
     // Remove a radius entry
-    function removeRadiusEntry(id) {
+    async function removeRadiusEntry(id) {
       const radiusDiv = document.getElementById(`radius-${id}`);
       if (radiusDiv) {
         radiusDiv.remove();
         updateRadiusEntryNumbers();
-        // Save after removal
+        // Save updated Service Area to Airtable after removal
         if (clientRecordId) {
-          debouncedSave(false);
+          try {
+            const selectedServiceAreaType = document.querySelector('input[name="serviceAreaType"]:checked');
+            if (selectedServiceAreaType && selectedServiceAreaType.value === 'Radius') {
+              const radiusEntries = document.querySelectorAll('.radius-entry');
+              const serviceAreaEntries = [];
+              
+              for (const entry of radiusEntries) {
+                const zipCode = entry.querySelector(`input[id^="radius-zip-"]`).value.trim();
+                const radius = entry.querySelector(`input[id^="radius-miles-"]`).value.trim();
+                
+                if (zipCode && radius) {
+                  serviceAreaEntries.push(`${zipCode} - ${radius} miles`);
+                }
+              }
+              
+              const serviceAreaValue = serviceAreaEntries.length > 0 ? serviceAreaEntries.join('\n') : '';
+              
+              await updateClientRecord(clientRecordId, {
+                'Service Area': serviceAreaValue
+              });
+              console.log('Service Area updated in Airtable after radius entry removal');
+            }
+          } catch (error) {
+            console.error('Error updating Service Area in Airtable:', error);
+          }
         }
       }
     }
@@ -1588,18 +1688,30 @@
       
       container.appendChild(contactDiv);
       
-      // Add event listeners for real-time saving
+      // Add event listeners for real-time saving and validation
       const nameInput = contactDiv.querySelector(`input[id^="contact-name-"]`);
       const emailInput = contactDiv.querySelector(`input[id^="contact-email-"]`);
       const phoneInput = contactDiv.querySelector(`input[id^="contact-phone-"]`);
       const newLeadCheckbox = contactDiv.querySelector(`input[id^="contact-notif-newlead-"]`);
       const billingCheckbox = contactDiv.querySelector(`input[id^="contact-notif-billing-"]`);
 
-      const saveHandler = () => saveContact(contactDiv, contactCounter);
+      const saveHandler = () => {
+        // Validate and update visual feedback
+        isContactReady(contactDiv);
+        // Save if valid
+        saveContact(contactDiv, contactCounter);
+      };
+      
+      // Validate on blur for immediate feedback
+      const validateHandler = () => {
+        isContactReady(contactDiv);
+      };
       
       nameInput.addEventListener('input', saveHandler);
       emailInput.addEventListener('input', saveHandler);
+      emailInput.addEventListener('blur', validateHandler);
       phoneInput.addEventListener('input', saveHandler);
+      phoneInput.addEventListener('blur', validateHandler);
       newLeadCheckbox.addEventListener('change', saveHandler);
       billingCheckbox.addEventListener('change', saveHandler);
       
@@ -1731,6 +1843,26 @@
     }
 
     // Check if contact is ready to be saved (all fields filled + at least one notification)
+    // Validate email format
+    function isValidEmail(email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    }
+
+    // Validate phone number format (allows various formats)
+    function isValidPhone(phone) {
+      // Remove all non-digit characters for validation
+      const digitsOnly = phone.replace(/\D/g, '');
+      // Phone should have 10-15 digits (allows international formats)
+      return digitsOnly.length >= 10 && digitsOnly.length <= 15;
+    }
+
+    // Validate zip code format (must be exactly 5 digits)
+    function isValidZipCode(zipCode) {
+      const zipRegex = /^\d{5}$/;
+      return zipRegex.test(zipCode);
+    }
+
     function isContactReady(contactDiv) {
       const name = contactDiv.querySelector(`input[id^="contact-name-"]`).value.trim();
       const email = contactDiv.querySelector(`input[id^="contact-email-"]`).value.trim();
@@ -1741,7 +1873,32 @@
       const hasNotification = (newLeadCheckbox && newLeadCheckbox.checked) || 
                               (billingCheckbox && billingCheckbox.checked);
       
-      return name && email && phone && hasNotification;
+      // Validate email format
+      const emailValid = email && isValidEmail(email);
+      // Validate phone format
+      const phoneValid = phone && isValidPhone(phone);
+      
+      // Update visual feedback
+      const emailInput = contactDiv.querySelector(`input[id^="contact-email-"]`);
+      const phoneInput = contactDiv.querySelector(`input[id^="contact-phone-"]`);
+      
+      if (email && !emailValid) {
+        emailInput.classList.add('invalid');
+        emailInput.setAttribute('title', 'Please enter a valid email address');
+      } else {
+        emailInput.classList.remove('invalid');
+        emailInput.removeAttribute('title');
+      }
+      
+      if (phone && !phoneValid) {
+        phoneInput.classList.add('invalid');
+        phoneInput.setAttribute('title', 'Please enter a valid phone number (10-15 digits)');
+      } else {
+        phoneInput.classList.remove('invalid');
+        phoneInput.removeAttribute('title');
+      }
+      
+      return name && emailValid && phoneValid && hasNotification;
     }
 
     // Get contact data from DOM
@@ -1849,13 +2006,19 @@
           return;
         }
         
-        // Validate all radius entries have both zip and miles
+        // Validate all radius entries have both zip and miles, and zip is valid 5-digit code
         let hasInvalidEntry = false;
         for (const entry of radiusEntries) {
           const zipCode = entry.querySelector(`input[id^="radius-zip-"]`).value.trim();
           const miles = entry.querySelector(`input[id^="radius-miles-"]`).value.trim();
           if (!zipCode || !miles) {
             alert('Please fill in both zip code and radius for all entries');
+            hasInvalidEntry = true;
+            break;
+          }
+          // Validate zip code is exactly 5 digits
+          if (!isValidZipCode(zipCode)) {
+            alert('Please enter a valid 5-digit zip code for all entries');
             hasInvalidEntry = true;
             break;
           }
