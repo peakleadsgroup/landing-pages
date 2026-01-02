@@ -2052,10 +2052,9 @@
         // Scroll to success message
         document.getElementById('serviceAreaSuccessMessage').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-        // After 3 seconds, show completed screen
+        // After 3 seconds, redirect to Cal.com booking
         setTimeout(() => {
-          document.getElementById('serviceAreaForm').style.display = 'none';
-          document.getElementById('completedScreen').style.display = 'block';
+          window.location.href = 'https://cal.com/daniel-wellish-plg/onboarding-call';
         }, 3000);
 
       } catch (error) {
