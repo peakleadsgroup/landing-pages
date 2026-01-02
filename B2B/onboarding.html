@@ -222,26 +222,33 @@
       const selectedCrm = document.querySelector('input[name="crmIntegration"]:checked');
       const crmIntegrationValue = selectedCrm ? selectedCrm.value === 'Yes' : false;
       
-      const formData = {
-        'Website': document.getElementById('website').value || '',
-        'CRM Integration': crmIntegrationValue
-      };
+      const formData = {};
 
-      // Add CRM fields if integration is Yes
-      if (crmIntegrationValue) {
-        formData['CRM Name'] = document.getElementById('crmName').value || '';
-        
-        const selectedLaunch = document.querySelector('input[name="launchWithCRM"]:checked');
-        if (selectedLaunch) {
-          formData['Launch w/ CRM'] = selectedLaunch.value;
-        } else {
-          formData['Launch w/ CRM'] = '';
-        }
-      } else {
-        // Clear CRM fields if No is selected
-        formData['CRM Name'] = '';
-        formData['Launch w/ CRM'] = '';
+      // Website - only include if not empty
+      const websiteValue = document.getElementById('website').value.trim();
+      if (websiteValue) {
+        formData['Website'] = websiteValue;
       }
+
+      // CRM Integration - always include as boolean for checkbox field
+      formData['CRM Integration'] = crmIntegrationValue;
+
+      // Add CRM fields only if integration is Yes
+      if (crmIntegrationValue) {
+        // CRM Name - only include if not empty
+        const crmNameValue = document.getElementById('crmName').value.trim();
+        if (crmNameValue) {
+          formData['CRM Name'] = crmNameValue;
+        }
+        
+        // Launch w/ CRM - only include if a value is selected
+        const selectedLaunch = document.querySelector('input[name="launchWithCRM"]:checked');
+        if (selectedLaunch && selectedLaunch.value) {
+          formData['Launch w/ CRM'] = selectedLaunch.value;
+        }
+        // Don't include the field at all if nothing is selected
+      }
+      // If CRM Integration is No, don't include CRM Name or Launch w/ CRM fields at all
 
       // Only mark as completed on final submission
       if (includeCompleted) {
