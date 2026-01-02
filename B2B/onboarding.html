@@ -47,6 +47,29 @@
     .checkbox-option input[type="checkbox"] { width:20px; height:20px; margin-right:1rem; cursor:pointer; }
     .checkbox-option label { margin:0; font-weight:500; cursor:pointer; }
 
+    .checkbox-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:0.8rem; margin-top:1rem; }
+    .checkbox-item { display:flex; align-items:center; padding:0.8rem; border:2px solid #e9ecef; border-radius:8px; cursor:pointer; transition:all .3s; }
+    .checkbox-item:hover { border-color:#4a6fa5; background:#f8f9fa; }
+    .checkbox-item.checked { border-color:#4a6fa5; background:#e8f4f8; }
+    .checkbox-item input[type="checkbox"] { width:18px; height:18px; margin-right:0.8rem; cursor:pointer; }
+    .checkbox-item label { margin:0; font-weight:500; cursor:pointer; flex:1; }
+
+    .contact-entry { background:#f8f9fa; padding:1.5rem; border-radius:8px; margin-bottom:1.5rem; border:2px solid #e9ecef; position:relative; }
+    .contact-entry:first-child .remove-contact-btn { display:none; }
+    .contact-entry-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+    .contact-entry-title { font-weight:600; color:#333; font-size:1.1rem; }
+    .remove-contact-btn { background:#dc3545; color:white; border:none; padding:0.4rem 0.8rem; border-radius:4px; cursor:pointer; font-size:0.85rem; }
+    .remove-contact-btn:hover { background:#c82333; }
+    .contact-fields { display:grid; grid-template-columns:1fr; gap:1rem; }
+    .contact-fields input { width:100%; padding:.8rem; border:2px solid #e9ecef; border-radius:8px; font-size:1rem; transition:border-color .3s; }
+    .contact-fields input:focus { outline:none; border-color:#4a6fa5; }
+    .notifications-section { margin-top:1rem; padding-top:1rem; border-top:1px solid #e9ecef; }
+    .notifications-section label { display:block; font-weight:600; margin-bottom:0.8rem; color:#333; font-size:0.95rem; }
+    .notification-checkboxes { display:flex; gap:1rem; }
+    .notification-checkbox-item { display:flex; align-items:center; }
+    .notification-checkbox-item input[type="checkbox"] { width:18px; height:18px; margin-right:0.5rem; cursor:pointer; }
+    .notification-checkbox-item label { margin:0; font-weight:500; cursor:pointer; }
+
     .conditional-fields { margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid #e9ecef; display:none; }
     .conditional-fields.active { display:block; }
 
@@ -80,6 +103,7 @@
       .form-card { padding:1.5rem; }
       .header { padding:1rem; }
       .header h1 { font-size:1.5rem; }
+      .checkbox-grid { grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:0.6rem; }
     }
   </style>
 </head>
@@ -113,6 +137,12 @@
 
       <!-- Onboarding Form -->
       <form class="form-step" id="onboardingForm" style="display:none;">
+        <!-- Business Name -->
+        <div class="form-question">
+          <label for="businessName">Business Name</label>
+          <input type="text" id="businessName" name="businessName" placeholder="Enter your business name" required>
+        </div>
+
         <!-- Website URL -->
         <div class="form-question">
           <label for="website">Your Website URL</label>
@@ -223,12 +253,174 @@
           </div>
         </div>
 
+        <!-- Conditional Timezone Field (shown when Calendar is selected) -->
+        <div class="conditional-fields" id="timezoneFields">
+          <div class="form-question">
+            <label for="timezone">Timezone</label>
+            <select id="timezone" name="timezone" style="width:100%; padding:.8rem; border:2px solid #e9ecef; border-radius:8px; font-size:1rem; transition:border-color .3s;">
+              <option value="">Select a timezone</option>
+              <option value="America/Chicago">America/Chicago</option>
+              <option value="America/New_York">America/New_York</option>
+              <option value="America/Denver">America/Denver</option>
+              <option value="America/Los_Angeles">America/Los_Angeles</option>
+              <option value="America/Phoenix">America/Phoenix</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Conditional Availability Fields (shown when Calendar is selected) -->
+        <div class="conditional-fields" id="availabilityFields">
+          <!-- Days of the Week -->
+          <div class="form-question">
+            <label>Days</label>
+            <div class="checkbox-grid">
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="dayMonday" name="days" value="Monday">
+                <label for="dayMonday">Monday</label>
+              </div>
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="dayTuesday" name="days" value="Tuesday">
+                <label for="dayTuesday">Tuesday</label>
+              </div>
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="dayWednesday" name="days" value="Wednesday">
+                <label for="dayWednesday">Wednesday</label>
+              </div>
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="dayThursday" name="days" value="Thursday">
+                <label for="dayThursday">Thursday</label>
+              </div>
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="dayFriday" name="days" value="Friday">
+                <label for="dayFriday">Friday</label>
+              </div>
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="daySaturday" name="days" value="Saturday">
+                <label for="daySaturday">Saturday</label>
+              </div>
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="daySunday" name="days" value="Sunday">
+                <label for="daySunday">Sunday</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Times -->
+          <div class="form-question">
+            <label>Availability</label>
+            <div class="checkbox-grid">
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="time8am" name="availability" value="8:00 AM">
+                <label for="time8am">8:00 AM</label>
+              </div>
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="time9am" name="availability" value="9:00 AM">
+                <label for="time9am">9:00 AM</label>
+              </div>
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="time10am" name="availability" value="10:00 AM">
+                <label for="time10am">10:00 AM</label>
+              </div>
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="time11am" name="availability" value="11:00 AM">
+                <label for="time11am">11:00 AM</label>
+              </div>
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="time12pm" name="availability" value="12:00 PM">
+                <label for="time12pm">12:00 PM</label>
+              </div>
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="time1pm" name="availability" value="1:00 PM">
+                <label for="time1pm">1:00 PM</label>
+              </div>
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="time2pm" name="availability" value="2:00 PM">
+                <label for="time2pm">2:00 PM</label>
+              </div>
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="time3pm" name="availability" value="3:00 PM">
+                <label for="time3pm">3:00 PM</label>
+              </div>
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="time4pm" name="availability" value="4:00 PM">
+                <label for="time4pm">4:00 PM</label>
+              </div>
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="time5pm" name="availability" value="5:00 PM">
+                <label for="time5pm">5:00 PM</label>
+              </div>
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="time6pm" name="availability" value="6:00 PM">
+                <label for="time6pm">6:00 PM</label>
+              </div>
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="time7pm" name="availability" value="7:00 PM">
+                <label for="time7pm">7:00 PM</label>
+              </div>
+              <div class="checkbox-item" onclick="toggleCheckboxItem(this)">
+                <input type="checkbox" id="time8pm" name="availability" value="8:00 PM">
+                <label for="time8pm">8:00 PM</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conditional Phone Number Field (shown when Phone is selected) -->
+        <div class="conditional-fields" id="phoneFields">
+          <div class="form-question">
+            <label for="phoneNumber">What phone number should leads call?</label>
+            <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="(555) 123-4567" style="width:100%; padding:.8rem; border:2px solid #e9ecef; border-radius:8px; font-size:1rem; transition:border-color .3s;">
+          </div>
+        </div>
+
+        <!-- Conditional Text Number Field (shown when Text is selected) -->
+        <div class="conditional-fields" id="textFields">
+          <div class="form-question">
+            <label for="textNumber">What phone number should leads text?</label>
+            <input type="tel" id="textNumber" name="textNumber" placeholder="(555) 123-4567" style="width:100%; padding:.8rem; border:2px solid #e9ecef; border-radius:8px; font-size:1rem; transition:border-color .3s;">
+          </div>
+        </div>
+
+        <!-- Conditional Redirect URL Field (shown when Redirect is selected) -->
+        <div class="conditional-fields" id="redirectFields">
+          <div class="form-question">
+            <label for="redirectUrl">Redirect URL</label>
+            <input type="url" id="redirectUrl" name="redirectUrl" placeholder="https://example.com" style="width:100%; padding:.8rem; border:2px solid #e9ecef; border-radius:8px; font-size:1rem; transition:border-color .3s;">
+          </div>
+        </div>
+
         <div class="form-navigation">
           <button type="button" class="btn btn-secondary" onclick="goBackToMainForm()" style="margin-right:1rem;">Back</button>
-          <button type="submit" class="btn btn-primary" id="finalSubmitBtn">Submit</button>
+          <button type="button" class="btn btn-primary" id="nextToContactsBtn" onclick="goToContactsScreen()">Next</button>
         </div>
 
         <div class="success-message" id="successMessage">
+          <strong>Success!</strong> Your onboarding information has been saved.
+        </div>
+      </form>
+
+      <!-- Contacts Screen -->
+      <form class="form-step" id="contactsForm" style="display:none;">
+        <div class="form-question">
+          <h2 style="font-size:1.8rem; color:#333; margin-bottom:0.5rem; text-align:center;">Contacts</h2>
+          <p style="font-size:1.1rem; color:#666; margin-bottom:1rem; text-align:center;">Choose who receives instant emails and texts with lead information</p>
+          <p style="font-size:0.95rem; color:#dc3545; margin-bottom:2rem; text-align:center; font-weight:600;">⚠️ At least one contact must be selected for "New Lead" notifications and at least one contact must be selected for "Billing" notifications</p>
+          
+          <div id="contactsContainer">
+            <!-- Contacts will be added here dynamically -->
+          </div>
+
+          <button type="button" class="btn btn-secondary" id="addContactBtn" onclick="addContact()" style="margin-top:1.5rem; width:100%;">
+            + Add another contact
+          </button>
+        </div>
+
+        <div class="form-navigation">
+          <button type="button" class="btn btn-secondary" onclick="goBackToPostSubmitScreen()" style="margin-right:1rem;">Back</button>
+          <button type="submit" class="btn btn-primary" id="finalSubmitBtn">Submit</button>
+        </div>
+
+        <div class="success-message" id="contactsSuccessMessage">
           <strong>Success!</strong> Your onboarding information has been saved.
         </div>
       </form>
@@ -239,6 +431,7 @@
     // Airtable Configuration
     const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
     const AIRTABLE_TABLE_ID = 'tblMl8Y97cMSbricC';
+    const AIRTABLE_CONTACTS_TABLE_ID = 'tblzbIWvSdazhesWf';
     const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
 
     let clientRecordId = null;
@@ -283,6 +476,12 @@
       
       const formData = {};
 
+      // Business Name - only include if not empty
+      const businessNameValue = document.getElementById('businessName').value.trim();
+      if (businessNameValue) {
+        formData['Name'] = businessNameValue;
+      }
+
       // Website - only include if not empty
       const websiteValue = document.getElementById('website').value.trim();
       if (websiteValue) {
@@ -318,6 +517,50 @@
       const selectedSubmitScreen = document.querySelector('input[name="submitScreen"]:checked');
       if (selectedSubmitScreen && selectedSubmitScreen.value) {
         formData['Submit Screen'] = selectedSubmitScreen.value;
+        
+        // If Calendar is selected, include Timezone, Days, and Availability
+        if (selectedSubmitScreen.value === 'Calendar') {
+          const timezoneValue = document.getElementById('timezone').value;
+          if (timezoneValue) {
+            formData['Timezone'] = timezoneValue;
+          }
+          
+          // Days - multiple select (array)
+          const selectedDays = Array.from(document.querySelectorAll('input[name="days"]:checked')).map(cb => cb.value);
+          if (selectedDays.length > 0) {
+            formData['Days'] = selectedDays;
+          }
+          
+          // Availability - multiple select (array)
+          const selectedAvailability = Array.from(document.querySelectorAll('input[name="availability"]:checked')).map(cb => cb.value);
+          if (selectedAvailability.length > 0) {
+            formData['Availability'] = selectedAvailability;
+          }
+        }
+        
+        // If Phone or Phone/Text is selected, include Phone number
+        if (selectedSubmitScreen.value === 'Phone' || selectedSubmitScreen.value === 'Phone/Text') {
+          const phoneValue = document.getElementById('phoneNumber').value.trim();
+          if (phoneValue) {
+            formData['Phone'] = phoneValue;
+          }
+        }
+        
+        // If Text or Phone/Text is selected, include Text number
+        if (selectedSubmitScreen.value === 'Text' || selectedSubmitScreen.value === 'Phone/Text') {
+          const textValue = document.getElementById('textNumber').value.trim();
+          if (textValue) {
+            formData['Text'] = textValue;
+          }
+        }
+        
+        // If Redirect is selected, include Redirect URL
+        if (selectedSubmitScreen.value === 'Redirect') {
+          const redirectValue = document.getElementById('redirectUrl').value.trim();
+          if (redirectValue) {
+            formData['Redirect URL'] = redirectValue;
+          }
+        }
       }
 
       // Only mark as completed on final submission
@@ -458,6 +701,9 @@
           document.getElementById('completedScreen').style.display = 'block';
         } else {
           // Pre-fill form if data exists
+          if (clientRecord.fields['Name']) {
+            document.getElementById('businessName').value = clientRecord.fields['Name'];
+          }
           if (clientRecord.fields['Website']) {
             document.getElementById('website').value = clientRecord.fields['Website'];
           }
@@ -500,6 +746,89 @@
             if (fieldId) {
               document.getElementById(fieldId).checked = true;
               document.querySelector(`#${fieldId}`).closest('.radio-option').classList.add('selected');
+              
+              // If Calendar is selected, show timezone and availability fields and pre-fill them
+              if (submitScreenValue === 'Calendar') {
+                document.getElementById('timezoneFields').classList.add('active');
+                document.getElementById('availabilityFields').classList.add('active');
+                document.getElementById('timezone').required = true;
+                if (clientRecord.fields['Timezone']) {
+                  document.getElementById('timezone').value = clientRecord.fields['Timezone'];
+                }
+                
+                // Pre-fill Days (multiple select)
+                if (clientRecord.fields['Days'] && Array.isArray(clientRecord.fields['Days'])) {
+                  clientRecord.fields['Days'].forEach(day => {
+                    const dayMap = {
+                      'Monday': 'dayMonday',
+                      'Tuesday': 'dayTuesday',
+                      'Wednesday': 'dayWednesday',
+                      'Thursday': 'dayThursday',
+                      'Friday': 'dayFriday',
+                      'Saturday': 'daySaturday',
+                      'Sunday': 'daySunday'
+                    };
+                    const fieldId = dayMap[day];
+                    if (fieldId) {
+                      document.getElementById(fieldId).checked = true;
+                      document.getElementById(fieldId).closest('.checkbox-item').classList.add('checked');
+                    }
+                  });
+                }
+                
+                // Pre-fill Availability (multiple select)
+                if (clientRecord.fields['Availability'] && Array.isArray(clientRecord.fields['Availability'])) {
+                  clientRecord.fields['Availability'].forEach(time => {
+                    const timeMap = {
+                      '8:00 AM': 'time8am',
+                      '9:00 AM': 'time9am',
+                      '10:00 AM': 'time10am',
+                      '11:00 AM': 'time11am',
+                      '12:00 PM': 'time12pm',
+                      '1:00 PM': 'time1pm',
+                      '2:00 PM': 'time2pm',
+                      '3:00 PM': 'time3pm',
+                      '4:00 PM': 'time4pm',
+                      '5:00 PM': 'time5pm',
+                      '6:00 PM': 'time6pm',
+                      '7:00 PM': 'time7pm',
+                      '8:00 PM': 'time8pm'
+                    };
+                    const fieldId = timeMap[time];
+                    if (fieldId) {
+                      document.getElementById(fieldId).checked = true;
+                      document.getElementById(fieldId).closest('.checkbox-item').classList.add('checked');
+                    }
+                  });
+                }
+              }
+              
+              // If Phone or Phone/Text is selected, show phone field and pre-fill it
+              if (submitScreenValue === 'Phone' || submitScreenValue === 'Phone/Text') {
+                document.getElementById('phoneFields').classList.add('active');
+                document.getElementById('phoneNumber').required = true;
+                if (clientRecord.fields['Phone']) {
+                  document.getElementById('phoneNumber').value = clientRecord.fields['Phone'];
+                }
+              }
+              
+              // If Text or Phone/Text is selected, show text field and pre-fill it
+              if (submitScreenValue === 'Text' || submitScreenValue === 'Phone/Text') {
+                document.getElementById('textFields').classList.add('active');
+                document.getElementById('textNumber').required = true;
+                if (clientRecord.fields['Text']) {
+                  document.getElementById('textNumber').value = clientRecord.fields['Text'];
+                }
+              }
+              
+              // If Redirect is selected, show redirect URL field and pre-fill it
+              if (submitScreenValue === 'Redirect') {
+                document.getElementById('redirectFields').classList.add('active');
+                document.getElementById('redirectUrl').required = true;
+                if (clientRecord.fields['Redirect URL']) {
+                  document.getElementById('redirectUrl').value = clientRecord.fields['Redirect URL'];
+                }
+              }
             }
           }
 
@@ -526,6 +855,23 @@
       document.getElementById('loadingScreen').style.display = 'none';
       document.getElementById('errorScreen').style.display = 'block';
       document.getElementById('errorMessage').textContent = message;
+    }
+
+    // Toggle checkbox item and update visual state
+    function toggleCheckboxItem(element) {
+      const checkbox = element.querySelector('input[type="checkbox"]');
+      checkbox.checked = !checkbox.checked;
+      
+      if (checkbox.checked) {
+        element.classList.add('checked');
+      } else {
+        element.classList.remove('checked');
+      }
+      
+      // Save to Airtable immediately
+      if (clientRecordId) {
+        saveToAirtable(false);
+      }
     }
 
     // Handle CRM Integration radio selection and show/hide conditional fields
@@ -566,6 +912,140 @@
         handleCrmIntegrationChange();
       }
 
+      // Handle Submit Screen change - show/hide conditional fields
+      if (name === 'submitScreen') {
+        const timezoneFields = document.getElementById('timezoneFields');
+        const availabilityFields = document.getElementById('availabilityFields');
+        const phoneFields = document.getElementById('phoneFields');
+        const textFields = document.getElementById('textFields');
+        const redirectFields = document.getElementById('redirectFields');
+        
+        if (radio.value === 'Calendar') {
+          timezoneFields.classList.add('active');
+          availabilityFields.classList.add('active');
+          phoneFields.classList.remove('active');
+          textFields.classList.remove('active');
+          redirectFields.classList.remove('active');
+          document.getElementById('timezone').required = true;
+          document.getElementById('phoneNumber').required = false;
+          document.getElementById('textNumber').required = false;
+          document.getElementById('redirectUrl').required = false;
+          document.getElementById('phoneNumber').value = '';
+          document.getElementById('textNumber').value = '';
+          document.getElementById('redirectUrl').value = '';
+        } else if (radio.value === 'Phone') {
+          phoneFields.classList.add('active');
+          textFields.classList.remove('active');
+          redirectFields.classList.remove('active');
+          timezoneFields.classList.remove('active');
+          availabilityFields.classList.remove('active');
+          document.getElementById('phoneNumber').required = true;
+          document.getElementById('textNumber').required = false;
+          document.getElementById('redirectUrl').required = false;
+          document.getElementById('timezone').required = false;
+          document.getElementById('timezone').value = '';
+          document.getElementById('textNumber').value = '';
+          document.getElementById('redirectUrl').value = '';
+          // Clear all day and time checkboxes
+          document.querySelectorAll('input[name="days"]').forEach(cb => {
+            cb.checked = false;
+            cb.closest('.checkbox-item').classList.remove('checked');
+          });
+          document.querySelectorAll('input[name="availability"]').forEach(cb => {
+            cb.checked = false;
+            cb.closest('.checkbox-item').classList.remove('checked');
+          });
+        } else if (radio.value === 'Text') {
+          textFields.classList.add('active');
+          phoneFields.classList.remove('active');
+          redirectFields.classList.remove('active');
+          timezoneFields.classList.remove('active');
+          availabilityFields.classList.remove('active');
+          document.getElementById('textNumber').required = true;
+          document.getElementById('phoneNumber').required = false;
+          document.getElementById('redirectUrl').required = false;
+          document.getElementById('timezone').required = false;
+          document.getElementById('timezone').value = '';
+          document.getElementById('phoneNumber').value = '';
+          document.getElementById('redirectUrl').value = '';
+          // Clear all day and time checkboxes
+          document.querySelectorAll('input[name="days"]').forEach(cb => {
+            cb.checked = false;
+            cb.closest('.checkbox-item').classList.remove('checked');
+          });
+          document.querySelectorAll('input[name="availability"]').forEach(cb => {
+            cb.checked = false;
+            cb.closest('.checkbox-item').classList.remove('checked');
+          });
+        } else if (radio.value === 'Phone/Text') {
+          phoneFields.classList.add('active');
+          textFields.classList.add('active');
+          redirectFields.classList.remove('active');
+          timezoneFields.classList.remove('active');
+          availabilityFields.classList.remove('active');
+          document.getElementById('phoneNumber').required = true;
+          document.getElementById('textNumber').required = true;
+          document.getElementById('redirectUrl').required = false;
+          document.getElementById('timezone').required = false;
+          document.getElementById('timezone').value = '';
+          document.getElementById('redirectUrl').value = '';
+          // Clear all day and time checkboxes
+          document.querySelectorAll('input[name="days"]').forEach(cb => {
+            cb.checked = false;
+            cb.closest('.checkbox-item').classList.remove('checked');
+          });
+          document.querySelectorAll('input[name="availability"]').forEach(cb => {
+            cb.checked = false;
+            cb.closest('.checkbox-item').classList.remove('checked');
+          });
+        } else if (radio.value === 'Redirect') {
+          redirectFields.classList.add('active');
+          phoneFields.classList.remove('active');
+          textFields.classList.remove('active');
+          timezoneFields.classList.remove('active');
+          availabilityFields.classList.remove('active');
+          document.getElementById('redirectUrl').required = true;
+          document.getElementById('phoneNumber').required = false;
+          document.getElementById('textNumber').required = false;
+          document.getElementById('timezone').required = false;
+          document.getElementById('timezone').value = '';
+          document.getElementById('phoneNumber').value = '';
+          document.getElementById('textNumber').value = '';
+          // Clear all day and time checkboxes
+          document.querySelectorAll('input[name="days"]').forEach(cb => {
+            cb.checked = false;
+            cb.closest('.checkbox-item').classList.remove('checked');
+          });
+          document.querySelectorAll('input[name="availability"]').forEach(cb => {
+            cb.checked = false;
+            cb.closest('.checkbox-item').classList.remove('checked');
+          });
+        } else {
+          timezoneFields.classList.remove('active');
+          availabilityFields.classList.remove('active');
+          phoneFields.classList.remove('active');
+          textFields.classList.remove('active');
+          redirectFields.classList.remove('active');
+          document.getElementById('timezone').required = false;
+          document.getElementById('phoneNumber').required = false;
+          document.getElementById('textNumber').required = false;
+          document.getElementById('redirectUrl').required = false;
+          document.getElementById('timezone').value = '';
+          document.getElementById('phoneNumber').value = '';
+          document.getElementById('textNumber').value = '';
+          document.getElementById('redirectUrl').value = '';
+          // Clear all day and time checkboxes
+          document.querySelectorAll('input[name="days"]').forEach(cb => {
+            cb.checked = false;
+            cb.closest('.checkbox-item').classList.remove('checked');
+          });
+          document.querySelectorAll('input[name="availability"]').forEach(cb => {
+            cb.checked = false;
+            cb.closest('.checkbox-item').classList.remove('checked');
+          });
+        }
+      }
+
       // Save to Airtable immediately for radio buttons
       if (clientRecordId) {
         saveToAirtable(false);
@@ -574,6 +1054,12 @@
 
     // Set up real-time saving for all form fields
     function setupRealtimeSaving() {
+      // Business Name - debounced
+      const businessNameInput = document.getElementById('businessName');
+      businessNameInput.addEventListener('input', () => {
+        debouncedSave(false);
+      });
+
       // Website URL - debounced
       const websiteInput = document.getElementById('website');
       websiteInput.addEventListener('input', () => {
@@ -604,6 +1090,32 @@
         });
       });
 
+      // Timezone select - immediate save
+      const timezoneSelect = document.getElementById('timezone');
+      timezoneSelect.addEventListener('change', () => {
+        if (clientRecordId) {
+          saveToAirtable(false);
+        }
+      });
+
+      // Phone number - debounced save
+      const phoneNumberInput = document.getElementById('phoneNumber');
+      phoneNumberInput.addEventListener('input', () => {
+        debouncedSave(false);
+      });
+
+      // Text number - debounced save
+      const textNumberInput = document.getElementById('textNumber');
+      textNumberInput.addEventListener('input', () => {
+        debouncedSave(false);
+      });
+
+      // Redirect URL - debounced save
+      const redirectUrlInput = document.getElementById('redirectUrl');
+      redirectUrlInput.addEventListener('input', () => {
+        debouncedSave(false);
+      });
+
       // Save on visibility change (when user switches tabs or minimizes)
       document.addEventListener('visibilitychange', () => {
         if (document.hidden && clientRecordId && !isSaving) {
@@ -615,6 +1127,12 @@
     // Go to post-submit screen
     function goToPostSubmitScreen() {
       // Validate required fields on first screen
+      const businessName = document.getElementById('businessName').value.trim();
+      if (!businessName) {
+        alert('Please enter your business name');
+        return;
+      }
+
       const website = document.getElementById('website').value.trim();
       if (!website) {
         alert('Please enter your website URL');
@@ -659,18 +1177,243 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Handle final form submission
-    document.getElementById('postSubmitForm').addEventListener('submit', async function(e) {
+    // Go to contacts screen
+    function goToContactsScreen() {
+      // Validate required fields on post-submit screen
+      const selectedSubmitScreen = document.querySelector('input[name="submitScreen"]:checked');
+      if (!selectedSubmitScreen) {
+        alert('Please select what happens after someone submits their contact information');
+        return;
+      }
+
+      // If Calendar is selected, validate timezone
+      if (selectedSubmitScreen.value === 'Calendar') {
+        const timezone = document.getElementById('timezone').value;
+        if (!timezone) {
+          alert('Please select a timezone');
+          return;
+        }
+      }
+
+      // If Phone or Phone/Text is selected, validate phone number
+      if (selectedSubmitScreen.value === 'Phone' || selectedSubmitScreen.value === 'Phone/Text') {
+        const phoneNumber = document.getElementById('phoneNumber').value.trim();
+        if (!phoneNumber) {
+          alert('Please enter a phone number');
+          return;
+        }
+      }
+
+      // If Text or Phone/Text is selected, validate text number
+      if (selectedSubmitScreen.value === 'Text' || selectedSubmitScreen.value === 'Phone/Text') {
+        const textNumber = document.getElementById('textNumber').value.trim();
+        if (!textNumber) {
+          alert('Please enter a text number');
+          return;
+        }
+      }
+
+      // If Redirect is selected, validate redirect URL
+      if (selectedSubmitScreen.value === 'Redirect') {
+        const redirectUrl = document.getElementById('redirectUrl').value.trim();
+        if (!redirectUrl) {
+          alert('Please enter a redirect URL');
+          return;
+        }
+      }
+
+      // Save current progress
+      saveToAirtable(false);
+
+      // Hide post-submit form and show contacts form
+      document.getElementById('postSubmitForm').style.display = 'none';
+      document.getElementById('contactsForm').style.display = 'block';
+      
+      // Initialize contacts if not already done
+      if (document.getElementById('contactsContainer').children.length === 0) {
+        addContact();
+      }
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Go back to post-submit screen
+    function goBackToPostSubmitScreen() {
+      document.getElementById('contactsForm').style.display = 'none';
+      document.getElementById('postSubmitForm').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Add a new contact entry
+    let contactCounter = 0;
+    function addContact() {
+      contactCounter++;
+      const container = document.getElementById('contactsContainer');
+      const contactDiv = document.createElement('div');
+      contactDiv.className = 'contact-entry';
+      contactDiv.id = `contact-${contactCounter}`;
+      
+      contactDiv.innerHTML = `
+        <div class="contact-entry-header">
+          <div class="contact-entry-title">Contact ${contactCounter}</div>
+          <button type="button" class="remove-contact-btn" onclick="removeContact(${contactCounter})">Remove</button>
+        </div>
+        <div class="contact-fields">
+          <input type="text" id="contact-name-${contactCounter}" name="contact-name-${contactCounter}" placeholder="Name" required>
+          <input type="email" id="contact-email-${contactCounter}" name="contact-email-${contactCounter}" placeholder="Email" required>
+          <input type="tel" id="contact-phone-${contactCounter}" name="contact-phone-${contactCounter}" placeholder="Phone" required>
+        </div>
+        <div class="notifications-section">
+          <label>Notifications</label>
+          <div class="notification-checkboxes">
+            <div class="notification-checkbox-item">
+              <input type="checkbox" id="contact-notif-newlead-${contactCounter}" name="contact-notif-${contactCounter}" value="New Lead">
+              <label for="contact-notif-newlead-${contactCounter}">New Lead</label>
+            </div>
+            <div class="notification-checkbox-item">
+              <input type="checkbox" id="contact-notif-billing-${contactCounter}" name="contact-notif-${contactCounter}" value="Billing">
+              <label for="contact-notif-billing-${contactCounter}">Billing</label>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      container.appendChild(contactDiv);
+      
+      // Update contact numbers
+      updateContactNumbers();
+    }
+
+    // Remove a contact entry
+    function removeContact(id) {
+      const contactDiv = document.getElementById(`contact-${id}`);
+      if (contactDiv) {
+        contactDiv.remove();
+        updateContactNumbers();
+      }
+    }
+
+    // Update contact numbers after add/remove
+    function updateContactNumbers() {
+      const contacts = document.querySelectorAll('.contact-entry');
+      contacts.forEach((contact, index) => {
+        const title = contact.querySelector('.contact-entry-title');
+        if (title) {
+          title.textContent = `Contact ${index + 1}`;
+        }
+      });
+    }
+
+    // Create contact in Airtable
+    async function createContactInAirtable(contactData) {
+      try {
+        const response = await fetch(
+          `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_CONTACTS_TABLE_ID}`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              fields: contactData
+            })
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error?.message || `Failed to create contact: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error('Error creating contact:', error);
+        throw error;
+      }
+    }
+
+    // Handle final form submission (contacts form)
+    document.getElementById('contactsForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
       const submitBtn = document.getElementById('finalSubmitBtn');
       submitBtn.disabled = true;
       submitBtn.textContent = 'Submitting...';
 
-      // Validate submit screen selection
-      const selectedSubmitScreen = document.querySelector('input[name="submitScreen"]:checked');
-      if (!selectedSubmitScreen) {
-        alert('Please select what happens after someone submits their contact information');
+      // Collect all contacts
+      const contactEntries = document.querySelectorAll('.contact-entry');
+      if (contactEntries.length === 0) {
+        alert('Please add at least one contact');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit';
+        return;
+      }
+
+      const contacts = [];
+      let hasError = false;
+
+      for (let i = 0; i < contactEntries.length; i++) {
+        const entry = contactEntries[i];
+        const name = entry.querySelector(`input[id^="contact-name-"]`).value.trim();
+        const email = entry.querySelector(`input[id^="contact-email-"]`).value.trim();
+        const phone = entry.querySelector(`input[id^="contact-phone-"]`).value.trim();
+        
+        if (!name || !email || !phone) {
+          alert('Please fill in all fields for all contacts');
+          hasError = true;
+          break;
+        }
+
+        // Get notifications
+        const notifications = [];
+        const newLeadCheckbox = entry.querySelector(`input[id^="contact-notif-newlead-"]`);
+        const billingCheckbox = entry.querySelector(`input[id^="contact-notif-billing-"]`);
+        
+        if (newLeadCheckbox && newLeadCheckbox.checked) {
+          notifications.push('New Lead');
+        }
+        if (billingCheckbox && billingCheckbox.checked) {
+          notifications.push('Billing');
+        }
+
+        contacts.push({
+          name,
+          email,
+          phone,
+          notifications
+        });
+      }
+
+      if (hasError) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit';
+        return;
+      }
+
+      // Validate notification requirements
+      let hasNewLead = false;
+      let hasBilling = false;
+
+      for (const contact of contacts) {
+        if (contact.notifications.includes('New Lead')) {
+          hasNewLead = true;
+        }
+        if (contact.notifications.includes('Billing')) {
+          hasBilling = true;
+        }
+      }
+
+      if (!hasNewLead) {
+        alert('At least one contact must be selected for "New Lead" notifications. Please select "New Lead" for at least one contact.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit';
+        return;
+      }
+
+      if (!hasBilling) {
+        alert('At least one contact must be selected for "Billing" notifications. Please select "Billing" for at least one contact.');
         submitBtn.disabled = false;
         submitBtn.textContent = 'Submit';
         return;
@@ -690,16 +1433,33 @@
         // Final save with completion flag
         await saveToAirtable(true);
 
+        // Create all contacts in Airtable
+        for (const contact of contacts) {
+          const contactData = {
+            'Name': contact.name,
+            'Client': [clientRecordId], // Link to client record
+            'Email': contact.email,
+            'Phone': contact.phone
+          };
+
+          // Add notifications if any are selected
+          if (contact.notifications.length > 0) {
+            contactData['Notifications'] = contact.notifications;
+          }
+
+          await createContactInAirtable(contactData);
+        }
+
         // Show success message
-        document.getElementById('successMessage').classList.add('active');
+        document.getElementById('contactsSuccessMessage').classList.add('active');
         submitBtn.textContent = 'Submitted';
 
         // Scroll to success message
-        document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        document.getElementById('contactsSuccessMessage').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
         // After 3 seconds, show completed screen
         setTimeout(() => {
-          document.getElementById('postSubmitForm').style.display = 'none';
+          document.getElementById('contactsForm').style.display = 'none';
           document.getElementById('completedScreen').style.display = 'block';
         }, 3000);
 
