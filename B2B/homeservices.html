@@ -154,7 +154,7 @@
   <section class="hero" id="home">
     <div class="hero-container">
       <div class="hero-content">
-        <h1><span class="highlight">Home Services Leads</span> That Actually Convert</h1>
+        <h1><span class="highlight">$99 Home Service Leads</span> That Actually Convert</h1>
         <p>Stop wasting money on leads that never answer the phone. Our partners are closing deals and scaling their businesses with qualified leads.</p>
       </div>
 
@@ -622,21 +622,27 @@
     }
 
     try {
-      // Prepare Airtable data
+      // Prepare Airtable data - only include fields with values
+      const airtableFields = {
+        "Source": "Meta Ads",
+        "Unique Meta ID": uniqueMetaID
+      };
+
+      // Add fields only if they have values
+      if (data.zipcode) airtableFields["Location"] = data.zipcode;
+      if (data.monthly_revenue) airtableFields["Estimated monthly revenue"] = data.monthly_revenue;
+      if (data.phone) airtableFields["Phone"] = data.phone;
+      if (data.business_website) airtableFields["Website"] = data.business_website;
+      if (data.contact_name) airtableFields["Contact Name"] = data.contact_name;
+      if (data.email) airtableFields["Contact Email"] = data.email;
+      if (data.interest_reason) airtableFields["Interest Reason"] = data.interest_reason;
+      
+      // Always include these even if empty (as per user requirements)
+      airtableFields["Niche(s)"] = [];
+      airtableFields["Other Services"] = "";
+
       const airtableData = {
-        fields: {
-          "Source": "Meta Ads",
-          "Location": data.zipcode || "",
-          "Estimated monthly revenue": data.monthly_revenue || "",
-          "Phone": data.phone || "",
-          "Website": data.business_website || "",
-          "Contact Name": data.contact_name || "",
-          "Contact Email": data.email || "",
-          "Niche(s)": [], // This will be empty as we don't have niche selection in the form
-          "Other Services": "", // Empty as not collected
-          "Unique Meta ID": uniqueMetaID,
-          "Interest Reason": data.interest_reason || ""
-        }
+        fields: airtableFields
       };
 
       // Submit to Airtable
@@ -652,6 +658,15 @@
       if (!airtableResponse.ok) {
         const errorText = await airtableResponse.text();
         console.error('Airtable submission failed:', errorText);
+        // Try to parse and show a more helpful error
+        try {
+          const errorJson = JSON.parse(errorText);
+          if (errorJson.error && errorJson.error.message) {
+            console.error('Airtable error details:', errorJson.error.message);
+          }
+        } catch (e) {
+          // If parsing fails, just log the raw error
+        }
       }
 
       // Fire Facebook Pixel conversion event with unique Meta ID
