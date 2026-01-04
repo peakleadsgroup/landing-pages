@@ -220,7 +220,6 @@
               <input type="text" name="business_website" placeholder="example.com" pattern=".*\..+" title="Please enter a valid website (e.g., example.com)">
             </div>
             <div class="form-navigation">
-              <button type="button" class="btn btn-secondary" onclick="goToPreviousStep()">Back</button>
               <button type="button" class="btn btn-primary" onclick="goToNextStep()">Continue</button>
             </div>
           </div>
@@ -232,7 +231,6 @@
               <input type="text" name="contact_name" required>
             </div>
             <div class="form-navigation">
-              <button type="button" class="btn btn-secondary" onclick="goToPreviousStep()">Back</button>
               <button type="button" class="btn btn-primary" onclick="goToNextStep()">Continue</button>
             </div>
           </div>
@@ -244,7 +242,6 @@
               <input type="tel" name="phone" required>
             </div>
             <div class="form-navigation">
-              <button type="button" class="btn btn-secondary" onclick="goToPreviousStep()">Back</button>
               <button type="button" class="btn btn-primary" onclick="goToNextStep()">Continue</button>
             </div>
           </div>
@@ -256,7 +253,6 @@
               <input type="email" name="email" required>
             </div>
             <div class="form-navigation">
-              <button type="button" class="btn btn-secondary" onclick="goToPreviousStep()">Back</button>
               <button type="submit" class="btn btn-primary">Submit</button>
             </div>
           </div>
@@ -392,7 +388,6 @@
               <input type="text" name="business_website" placeholder="example.com" pattern=".*\..+" title="Please enter a valid website (e.g., example.com)">
             </div>
             <div class="form-navigation">
-              <button type="button" class="btn btn-secondary" onclick="goToBottomPreviousStep()">Back</button>
               <button type="button" class="btn btn-primary" onclick="goToBottomNextStep()">Continue</button>
             </div>
           </div>
@@ -404,7 +399,6 @@
               <input type="text" name="contact_name" required>
             </div>
             <div class="form-navigation">
-              <button type="button" class="btn btn-secondary" onclick="goToBottomPreviousStep()">Back</button>
               <button type="button" class="btn btn-primary" onclick="goToBottomNextStep()">Continue</button>
             </div>
           </div>
@@ -416,7 +410,6 @@
               <input type="tel" name="phone" required>
             </div>
             <div class="form-navigation">
-              <button type="button" class="btn btn-secondary" onclick="goToBottomPreviousStep()">Back</button>
               <button type="button" class="btn btn-primary" onclick="goToBottomNextStep()">Continue</button>
             </div>
           </div>
@@ -428,7 +421,6 @@
               <input type="email" name="email" required>
             </div>
             <div class="form-navigation">
-              <button type="button" class="btn btn-secondary" onclick="goToBottomPreviousStep()">Back</button>
               <button type="submit" class="btn btn-primary">Submit</button>
             </div>
           </div>
@@ -631,7 +623,7 @@
       // Add fields only if they have values
       if (data.zipcode) airtableFields["Location"] = data.zipcode;
       if (data.monthly_revenue) airtableFields["Estimated monthly revenue"] = data.monthly_revenue;
-      if (data.phone) airtableFields["Phone"] = data.phone;
+      if (data.phone) airtableFields["Phone Number"] = data.phone;
       if (data.business_website) airtableFields["Website"] = data.business_website;
       if (data.contact_name) airtableFields["Contact Name"] = data.contact_name;
       if (data.email) airtableFields["Contact Email"] = data.email;
