@@ -66,6 +66,12 @@
     .radio-option.selected { border-color:#4a6fa5; background:#e8f4f8; color:#4a6fa5; }
     .radio-option input[type="radio"] { display:none; }
 
+    .checkbox-options { display:flex; flex-direction:column; gap:.8rem; }
+    .checkbox-option { display:flex; align-items:center; justify-content:center; padding:1.2rem; border:2px solid #e9ecef; border-radius:8px; cursor:pointer; transition:all .3s; font-size:1.1rem; font-weight:500; }
+    .checkbox-option:hover { border-color:#4a6fa5; background:#f8f9fa; transform:translateY(-2px); }
+    .checkbox-option.selected { border-color:#4a6fa5; background:#e8f4f8; color:#4a6fa5; }
+    .checkbox-option input[type="checkbox"] { display:none; }
+
     .form-navigation { display:flex; justify-content:center; gap:1rem; margin-top:2rem; }
     .btn { padding:.8rem 1.5rem; border:none; border-radius:8px; font-size:1rem; font-weight:600; cursor:pointer; transition:all .3s; min-width:120px; }
     .btn-primary { background:#4a6fa5; color:white; }
@@ -213,8 +219,38 @@
             </div>
           </div>
 
-          <!-- Step 5: Website -->
+          <!-- Step 5: Services -->
           <div class="form-step" id="step5">
+            <div class="form-question">
+              <label>What service(s) do you offer?</label>
+              <div class="checkbox-options">
+                <div class="checkbox-option" onclick="toggleCheckbox(this, 'niches', 'Bathroom Remodeling')"><input type="checkbox" name="niches" value="Bathroom Remodeling">Bathroom Remodeling</div>
+                <div class="checkbox-option" onclick="toggleCheckbox(this, 'niches', 'Kitchen Remodeling')"><input type="checkbox" name="niches" value="Kitchen Remodeling">Kitchen Remodeling</div>
+                <div class="checkbox-option" onclick="toggleCheckbox(this, 'niches', 'Windows')"><input type="checkbox" name="niches" value="Windows">Windows</div>
+                <div class="checkbox-option" onclick="toggleCheckbox(this, 'niches', 'Concrete/Coatings')"><input type="checkbox" name="niches" value="Concrete/Coatings">Concrete/Coatings</div>
+                <div class="checkbox-option" onclick="toggleCheckbox(this, 'niches', 'Painting')"><input type="checkbox" name="niches" value="Painting">Painting</div>
+                <div class="checkbox-option" onclick="toggleCheckbox(this, 'niches', 'Interior Flooring')"><input type="checkbox" name="niches" value="Interior Flooring">Interior Flooring</div>
+                <div class="checkbox-option" onclick="toggleCheckbox(this, 'niches', 'Other')"><input type="checkbox" name="niches" value="Other">Other</div>
+              </div>
+            </div>
+            <div class="form-navigation">
+              <button type="button" class="btn btn-primary" onclick="goToNextStep()">Continue</button>
+            </div>
+          </div>
+
+          <!-- Step 6: Business Name -->
+          <div class="form-step" id="step6">
+            <div class="form-question">
+              <label>Business Name</label>
+              <input type="text" name="business_name" required>
+            </div>
+            <div class="form-navigation">
+              <button type="button" class="btn btn-primary" onclick="goToNextStep()">Continue</button>
+            </div>
+          </div>
+
+          <!-- Step 7: Website -->
+          <div class="form-step" id="step7">
             <div class="form-question">
               <label>Business website</label>
               <input type="text" name="business_website" placeholder="example.com" pattern=".*\..+" title="Please enter a valid website (e.g., example.com)">
@@ -224,8 +260,8 @@
             </div>
           </div>
 
-          <!-- Step 6: Name -->
-          <div class="form-step" id="step6">
+          <!-- Step 8: Name -->
+          <div class="form-step" id="step8">
             <div class="form-question">
               <label>Your Name</label>
               <input type="text" name="contact_name" required>
@@ -235,8 +271,8 @@
             </div>
           </div>
 
-          <!-- Step 7: Phone -->
-          <div class="form-step" id="step7">
+          <!-- Step 9: Phone -->
+          <div class="form-step" id="step9">
             <div class="form-question">
               <label>Your Phone</label>
               <input type="tel" name="phone" required>
@@ -246,14 +282,14 @@
             </div>
           </div>
 
-          <!-- Step 8: Email -->
-          <div class="form-step" id="step8">
+          <!-- Step 10: Email -->
+          <div class="form-step" id="step10">
             <div class="form-question">
               <label>Your Email</label>
               <input type="email" name="email" required>
             </div>
             <div class="form-navigation">
-              <button type="submit" class="btn btn-primary">Submit</button>
+              <button type="submit" class="btn btn-primary">Get Leads!</button>
             </div>
           </div>
 
@@ -381,8 +417,38 @@
             </div>
           </div>
 
-          <!-- Step 5: Website -->
+          <!-- Step 5: Services -->
           <div class="form-step" id="bottomStep5">
+            <div class="form-question">
+              <label>What service(s) do you offer?</label>
+              <div class="checkbox-options">
+                <div class="checkbox-option" onclick="toggleBottomCheckbox(this, 'niches', 'Bathroom Remodeling')"><input type="checkbox" name="niches" value="Bathroom Remodeling">Bathroom Remodeling</div>
+                <div class="checkbox-option" onclick="toggleBottomCheckbox(this, 'niches', 'Kitchen Remodeling')"><input type="checkbox" name="niches" value="Kitchen Remodeling">Kitchen Remodeling</div>
+                <div class="checkbox-option" onclick="toggleBottomCheckbox(this, 'niches', 'Windows')"><input type="checkbox" name="niches" value="Windows">Windows</div>
+                <div class="checkbox-option" onclick="toggleBottomCheckbox(this, 'niches', 'Concrete/Coatings')"><input type="checkbox" name="niches" value="Concrete/Coatings">Concrete/Coatings</div>
+                <div class="checkbox-option" onclick="toggleBottomCheckbox(this, 'niches', 'Painting')"><input type="checkbox" name="niches" value="Painting">Painting</div>
+                <div class="checkbox-option" onclick="toggleBottomCheckbox(this, 'niches', 'Interior Flooring')"><input type="checkbox" name="niches" value="Interior Flooring">Interior Flooring</div>
+                <div class="checkbox-option" onclick="toggleBottomCheckbox(this, 'niches', 'Other')"><input type="checkbox" name="niches" value="Other">Other</div>
+              </div>
+            </div>
+            <div class="form-navigation">
+              <button type="button" class="btn btn-primary" onclick="goToBottomNextStep()">Continue</button>
+            </div>
+          </div>
+
+          <!-- Step 6: Business Name -->
+          <div class="form-step" id="bottomStep6">
+            <div class="form-question">
+              <label>Business Name</label>
+              <input type="text" name="business_name" required>
+            </div>
+            <div class="form-navigation">
+              <button type="button" class="btn btn-primary" onclick="goToBottomNextStep()">Continue</button>
+            </div>
+          </div>
+
+          <!-- Step 7: Website -->
+          <div class="form-step" id="bottomStep7">
             <div class="form-question">
               <label>Business website</label>
               <input type="text" name="business_website" placeholder="example.com" pattern=".*\..+" title="Please enter a valid website (e.g., example.com)">
@@ -392,8 +458,8 @@
             </div>
           </div>
 
-          <!-- Step 6: Name -->
-          <div class="form-step" id="bottomStep6">
+          <!-- Step 8: Name -->
+          <div class="form-step" id="bottomStep8">
             <div class="form-question">
               <label>Your Name</label>
               <input type="text" name="contact_name" required>
@@ -403,8 +469,8 @@
             </div>
           </div>
 
-          <!-- Step 7: Phone -->
-          <div class="form-step" id="bottomStep7">
+          <!-- Step 9: Phone -->
+          <div class="form-step" id="bottomStep9">
             <div class="form-question">
               <label>Your Phone</label>
               <input type="tel" name="phone" required>
@@ -414,14 +480,14 @@
             </div>
           </div>
 
-          <!-- Step 8: Email -->
-          <div class="form-step" id="bottomStep8">
+          <!-- Step 10: Email -->
+          <div class="form-step" id="bottomStep10">
             <div class="form-question">
               <label>Your Email</label>
               <input type="email" name="email" required>
             </div>
             <div class="form-navigation">
-              <button type="submit" class="btn btn-primary">Submit</button>
+              <button type="submit" class="btn btn-primary">Get Leads!</button>
             </div>
           </div>
         </form>
@@ -442,11 +508,11 @@
   const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
 
   // ------------------ State ------------------
-  const formData = {};
-  const bottomFormData = {};
+  const formData = { niches: [] };
+  const bottomFormData = { niches: [] };
   let currentStep = 0;
   let bottomCurrentStep = 0;
-  const totalSteps = 8;
+  const totalSteps = 10;
 
   // Initialize progress
   updateProgress();
@@ -465,10 +531,29 @@
     formData[name] = value;
     el.querySelector('input[type="radio"]').checked = true;
 
-    // Auto-advance for steps 1, 2, and 4 (revenue step) - but not step 3 (zip code has Continue button)
-    if (currentStep < 2 || currentStep === 3) {
+    // Auto-advance for steps 1 and 2 - but not step 3 (zip code has Continue button) or step 4 (revenue step, next is checkbox)
+    if (currentStep < 2) {
       currentStep++;
       goToStep(currentStep + 1);
+    }
+  }
+
+  // Toggle checkbox for services
+  function toggleCheckbox(el, name, value) {
+    const checkbox = el.querySelector('input[type="checkbox"]');
+    checkbox.checked = !checkbox.checked;
+    
+    if (checkbox.checked) {
+      el.classList.add('selected');
+      if (!formData[name]) formData[name] = [];
+      if (!formData[name].includes(value)) {
+        formData[name].push(value);
+      }
+    } else {
+      el.classList.remove('selected');
+      if (formData[name]) {
+        formData[name] = formData[name].filter(v => v !== value);
+      }
     }
   }
 
@@ -518,10 +603,29 @@
     bottomFormData[name] = value;
     el.querySelector('input[type="radio"]').checked = true;
 
-    // Auto-advance for steps 1, 2, and 4 (revenue step) - but not step 3 (zip code has Continue button)
-    if (bottomCurrentStep < 2 || bottomCurrentStep === 3) {
+    // Auto-advance for steps 1 and 2 - but not step 3 (zip code has Continue button) or step 4 (revenue step, next is checkbox)
+    if (bottomCurrentStep < 2) {
       bottomCurrentStep++;
       goToBottomStep(bottomCurrentStep + 1);
+    }
+  }
+
+  // Toggle checkbox for bottom form services
+  function toggleBottomCheckbox(el, name, value) {
+    const checkbox = el.querySelector('input[type="checkbox"]');
+    checkbox.checked = !checkbox.checked;
+    
+    if (checkbox.checked) {
+      el.classList.add('selected');
+      if (!bottomFormData[name]) bottomFormData[name] = [];
+      if (!bottomFormData[name].includes(value)) {
+        bottomFormData[name].push(value);
+      }
+    } else {
+      el.classList.remove('selected');
+      if (bottomFormData[name]) {
+        bottomFormData[name] = bottomFormData[name].filter(v => v !== value);
+      }
     }
   }
 
@@ -578,6 +682,7 @@
   async function handleFormSubmission(form, data) {
     // Collect contact fields
     const formElements = form.elements;
+    data.business_name = formElements.business_name.value;
     data.business_website = formElements.business_website.value;
     data.contact_name = formElements.contact_name.value;
     data.phone = formElements.phone.value;
@@ -624,13 +729,14 @@
       if (data.zipcode) airtableFields["Location"] = data.zipcode;
       if (data.monthly_revenue) airtableFields["Estimated monthly revenue"] = data.monthly_revenue;
       if (data.phone) airtableFields["Phone Number"] = data.phone;
+      if (data.business_name) airtableFields["Business Name"] = data.business_name;
       if (data.business_website) airtableFields["Website"] = data.business_website;
       if (data.contact_name) airtableFields["Contact Name"] = data.contact_name;
       if (data.email) airtableFields["Contact Email"] = data.email;
       if (data.interest_reason) airtableFields["Interest Reason"] = data.interest_reason;
       
-      // Always include these even if empty (as per user requirements)
-      airtableFields["Niche(s)"] = [];
+      // Include niches array (will be empty array if none selected)
+      airtableFields["Niche(s)"] = data.niches || [];
       airtableFields["Other Services"] = "";
 
       const airtableData = {
