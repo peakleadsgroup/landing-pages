@@ -531,8 +531,8 @@
     formData[name] = value;
     el.querySelector('input[type="radio"]').checked = true;
 
-    // Auto-advance for steps 1 and 2 - but not step 3 (zip code has Continue button) or step 4 (revenue step, next is checkbox)
-    if (currentStep < 2) {
+    // Auto-advance for steps 1, 2, and 4 (revenue step) - but not step 3 (zip code has Continue button)
+    if (currentStep < 2 || currentStep === 3) {
       currentStep++;
       goToStep(currentStep + 1);
     }
@@ -603,8 +603,8 @@
     bottomFormData[name] = value;
     el.querySelector('input[type="radio"]').checked = true;
 
-    // Auto-advance for steps 1 and 2 - but not step 3 (zip code has Continue button) or step 4 (revenue step, next is checkbox)
-    if (bottomCurrentStep < 2) {
+    // Auto-advance for steps 1, 2, and 4 (revenue step) - but not step 3 (zip code has Continue button)
+    if (bottomCurrentStep < 2 || bottomCurrentStep === 3) {
       bottomCurrentStep++;
       goToBottomStep(bottomCurrentStep + 1);
     }
