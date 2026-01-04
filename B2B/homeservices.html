@@ -722,10 +722,77 @@
     }
 
     try {
+      // Create full summary for Notes field
+      const summaryParts = [];
+      summaryParts.push("=== LEAD INFORMATION SUMMARY ===");
+      summaryParts.push("");
+      
+      summaryParts.push("CONTRACTOR STATUS:");
+      summaryParts.push(`Are you a home services contractor? ${data.contractor === 'yes' ? 'Yes' : 'No'}`);
+      summaryParts.push("");
+      
+      if (data.interest_reason) {
+        summaryParts.push("INTEREST REASON:");
+        summaryParts.push(data.interest_reason);
+        summaryParts.push("");
+      }
+      
+      if (data.zipcode) {
+        summaryParts.push("LOCATION:");
+        summaryParts.push(`Zip Code: ${data.zipcode}`);
+        summaryParts.push("");
+      }
+      
+      if (data.monthly_revenue) {
+        summaryParts.push("ESTIMATED MONTHLY REVENUE:");
+        summaryParts.push(data.monthly_revenue);
+        summaryParts.push("");
+      }
+      
+      if (data.niches && data.niches.length > 0) {
+        summaryParts.push("SERVICES OFFERED:");
+        data.niches.forEach(niche => {
+          summaryParts.push(`- ${niche}`);
+        });
+        summaryParts.push("");
+      }
+      
+      if (data.business_name) {
+        summaryParts.push("BUSINESS INFORMATION:");
+        summaryParts.push(`Business Name: ${data.business_name}`);
+        if (data.business_website) {
+          summaryParts.push(`Website: ${data.business_website}`);
+        }
+        summaryParts.push("");
+      }
+      
+      summaryParts.push("CONTACT INFORMATION:");
+      if (data.contact_name) summaryParts.push(`Name: ${data.contact_name}`);
+      if (data.phone) summaryParts.push(`Phone: ${data.phone}`);
+      if (data.email) summaryParts.push(`Email: ${data.email}`);
+      summaryParts.push("");
+      
+      summaryParts.push("METADATA:");
+      summaryParts.push(`Unique Meta ID: ${uniqueMetaID}`);
+      summaryParts.push(`Source: Meta Ads`);
+      summaryParts.push(`Submitted: ${new Date().toLocaleString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'America/New_York'
+      })} EST`);
+      
+      const fullSummary = summaryParts.join('\n');
+
       // Prepare Airtable data - only include fields with values
       const airtableFields = {
         "Source": "Meta Ads",
-        "Unique Meta ID": uniqueMetaID
+        "Unique Meta ID": uniqueMetaID,
+        "Notes": fullSummary
       };
 
       // Add fields only if they have values
