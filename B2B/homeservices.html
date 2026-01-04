@@ -259,7 +259,7 @@
               <input type="text" name="business_website" placeholder="example.com" pattern=".*\..+" title="Please enter a valid website (e.g., example.com)">
             </div>
             <div class="form-navigation">
-              <button type="button" class="btn btn-primary" onclick="goToNextStep()">Continue</button>
+              <button type="button" class="btn btn-primary" onclick="validateWebsiteAndContinue()">Continue</button>
             </div>
           </div>
 
@@ -278,10 +278,10 @@
           <div class="form-step" id="step9">
             <div class="form-question">
               <label>Your Phone</label>
-              <input type="tel" name="phone" required>
+              <input type="tel" name="phone" placeholder="(555) 123-4567" pattern="[\d\s\-\(\)\.\+]{10,}" required>
             </div>
             <div class="form-navigation">
-              <button type="button" class="btn btn-primary" onclick="goToNextStep()">Continue</button>
+              <button type="button" class="btn btn-primary" onclick="validatePhoneAndContinue()">Continue</button>
             </div>
           </div>
 
@@ -457,7 +457,7 @@
               <input type="text" name="business_website" placeholder="example.com" pattern=".*\..+" title="Please enter a valid website (e.g., example.com)">
             </div>
             <div class="form-navigation">
-              <button type="button" class="btn btn-primary" onclick="goToBottomNextStep()">Continue</button>
+              <button type="button" class="btn btn-primary" onclick="validateBottomWebsiteAndContinue()">Continue</button>
             </div>
           </div>
 
@@ -476,10 +476,10 @@
           <div class="form-step" id="bottomStep9">
             <div class="form-question">
               <label>Your Phone</label>
-              <input type="tel" name="phone" required>
+              <input type="tel" name="phone" placeholder="(555) 123-4567" pattern="[\d\s\-\(\)\.\+]{10,}" required>
             </div>
             <div class="form-navigation">
-              <button type="button" class="btn btn-primary" onclick="goToBottomNextStep()">Continue</button>
+              <button type="button" class="btn btn-primary" onclick="validateBottomPhoneAndContinue()">Continue</button>
             </div>
           </div>
 
@@ -593,6 +593,85 @@
     goToStep(4);
   }
 
+  // Validate phone number (accepts various formats, normalizes to 10 digits)
+  function validatePhoneNumber(phone) {
+    // Remove all non-digit characters
+    const digits = phone.replace(/\D/g, '');
+    
+    // Check if it's 10 digits (US phone) or 11 digits starting with 1
+    if (digits.length === 11 && digits[0] === '1') {
+      return digits.substring(1); // Return last 10 digits
+    } else if (digits.length === 10) {
+      return digits;
+    }
+    
+    return null; // Invalid phone number
+  }
+
+  // Validate and normalize website URL
+  function validateWebsite(website) {
+    if (!website || !website.trim()) {
+      return null; // Empty is allowed (not required field)
+    }
+    
+    let url = website.trim();
+    
+    // Remove http:// or https:// if present (we'll add it later if needed)
+    url = url.replace(/^https?:\/\//i, '');
+    
+    // Remove trailing slash
+    url = url.replace(/\/$/, '');
+    
+    // Basic validation: should contain at least one dot and valid characters
+    // Valid characters: letters, numbers, dots, hyphens
+    const urlPattern = /^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/i;
+    
+    if (!urlPattern.test(url)) {
+      return null; // Invalid format
+    }
+    
+    // Return normalized URL (without protocol)
+    return url;
+  }
+
+  function validatePhoneAndContinue() {
+    const phoneInput = document.querySelector('#step9 input[name="phone"]');
+    const phoneValue = phoneInput.value.trim();
+    
+    if (!phoneValue) {
+      alert('Please enter a phone number');
+      return;
+    }
+    
+    const validPhone = validatePhoneNumber(phoneValue);
+    if (!validPhone) {
+      alert('Please enter a valid 10-digit phone number (e.g., (555) 123-4567)');
+      return;
+    }
+    
+    formData.phone = validPhone;
+    currentStep = 8;
+    goToNextStep();
+  }
+
+  function validateWebsiteAndContinue() {
+    const websiteInput = document.querySelector('#step7 input[name="business_website"]');
+    const websiteValue = websiteInput.value.trim();
+    
+    // Website is optional, but if provided, must be valid
+    if (websiteValue) {
+      const validWebsite = validateWebsite(websiteValue);
+      if (!validWebsite) {
+        alert('Please enter a valid website (e.g., example.com or www.example.com)');
+        return;
+      }
+      formData.business_website = validWebsite;
+    }
+    
+    currentStep = 6;
+    goToNextStep();
+  }
+
   function updateProgress() {
     const progress = ((currentStep + 1) / totalSteps) * 100;
     document.getElementById('progressBar').style.width = progress + '%';
@@ -665,6 +744,44 @@
     goToBottomStep(4);
   }
 
+  function validateBottomPhoneAndContinue() {
+    const phoneInput = document.querySelector('#bottomStep9 input[name="phone"]');
+    const phoneValue = phoneInput.value.trim();
+    
+    if (!phoneValue) {
+      alert('Please enter a phone number');
+      return;
+    }
+    
+    const validPhone = validatePhoneNumber(phoneValue);
+    if (!validPhone) {
+      alert('Please enter a valid 10-digit phone number (e.g., (555) 123-4567)');
+      return;
+    }
+    
+    bottomFormData.phone = validPhone;
+    bottomCurrentStep = 8;
+    goToBottomNextStep();
+  }
+
+  function validateBottomWebsiteAndContinue() {
+    const websiteInput = document.querySelector('#bottomStep7 input[name="business_website"]');
+    const websiteValue = websiteInput.value.trim();
+    
+    // Website is optional, but if provided, must be valid
+    if (websiteValue) {
+      const validWebsite = validateWebsite(websiteValue);
+      if (!validWebsite) {
+        alert('Please enter a valid website (e.g., example.com or www.example.com)');
+        return;
+      }
+      bottomFormData.business_website = validWebsite;
+    }
+    
+    bottomCurrentStep = 6;
+    goToBottomNextStep();
+  }
+
   function updateBottomProgress() {
     const progress = ((bottomCurrentStep + 1) / totalSteps) * 100;
     document.getElementById('bottomProgressBar').style.width = progress + '%';
@@ -686,9 +803,31 @@
     // Collect contact fields
     const formElements = form.elements;
     data.business_name = formElements.business_name.value;
-    data.business_website = formElements.business_website.value;
+    
+    // Validate and normalize website if provided
+    const websiteInput = formElements.business_website.value.trim();
+    if (websiteInput) {
+      const validWebsite = validateWebsite(websiteInput);
+      if (!validWebsite) {
+        alert('Please enter a valid website (e.g., example.com or www.example.com)');
+        return;
+      }
+      data.business_website = validWebsite;
+    } else {
+      data.business_website = '';
+    }
+    
     data.contact_name = formElements.contact_name.value;
-    data.phone = formElements.phone.value;
+    
+    // Validate and normalize phone number
+    const phoneInput = formElements.phone.value.trim();
+    const validPhone = validatePhoneNumber(phoneInput);
+    if (!validPhone) {
+      alert('Please enter a valid 10-digit phone number (e.g., (555) 123-4567)');
+      return;
+    }
+    data.phone = validPhone;
+    
     data.email = formElements.email.value;
 
     // Guard: ensure a revenue tier is selected
