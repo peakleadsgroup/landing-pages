@@ -70,22 +70,34 @@
                 <!-- Legend -->
                 <div class="bg-white rounded-lg shadow-sm p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Legend</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-4 h-4 rounded" style="background-color: rgb(59, 130, 246);"></div>
-                            <span class="text-gray-700 font-medium">Tangible Cash</span>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="flex gap-3">
+                            <div class="w-4 h-4 rounded flex-shrink-0 mt-1" style="background-color: rgb(59, 130, 246);"></div>
+                            <div>
+                                <span class="text-gray-700 font-medium block mb-1">Tangible Cash</span>
+                                <p class="text-sm text-gray-600">Total cash in the bank that we can currently touch and use</p>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <div class="w-4 h-4 rounded" style="background-color: rgb(16, 185, 129);"></div>
-                            <span class="text-gray-700 font-medium">Tangible Cash + Reserve</span>
+                        <div class="flex gap-3">
+                            <div class="w-4 h-4 rounded flex-shrink-0 mt-1" style="background-color: rgb(16, 185, 129);"></div>
+                            <div>
+                                <span class="text-gray-700 font-medium block mb-1">Tangible Cash + Reserve</span>
+                                <p class="text-sm text-gray-600">Tangible cash plus amount in stripe reserve</p>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <div class="w-4 h-4 rounded" style="background-color: rgb(245, 158, 11);"></div>
-                            <span class="text-gray-700 font-medium">Realized Cash</span>
+                        <div class="flex gap-3">
+                            <div class="w-4 h-4 rounded flex-shrink-0 mt-1" style="background-color: rgb(245, 158, 11);"></div>
+                            <div>
+                                <span class="text-gray-700 font-medium block mb-1">Realized Cash</span>
+                                <p class="text-sm text-gray-600">Total cash in the bank that we have a right to because we've already generated the leads. Think about this as total tangible cash minus money owed to clients</p>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <div class="w-4 h-4 rounded" style="background-color: rgb(239, 68, 68);"></div>
-                            <span class="text-gray-700 font-medium">Realized Cash + Reserve</span>
+                        <div class="flex gap-3">
+                            <div class="w-4 h-4 rounded flex-shrink-0 mt-1" style="background-color: rgb(239, 68, 68);"></div>
+                            <div>
+                                <span class="text-gray-700 font-medium block mb-1">Realized Cash + Reserve</span>
+                                <p class="text-sm text-gray-600">Realized cash plus amount in stripe reserve</p>
+                            </div>
                         </div>
                     </div>
                 </div>
