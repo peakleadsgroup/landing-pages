@@ -974,106 +974,146 @@
                 let chargesHTML = '';
                 if (paymentLinks && paymentLinks.length > 0) {
                     try {
-                        // Fetch charges with proper error handling for rate limiting
-                        const chargePromises = paymentLinks.map(async (chargeId) => {
-                            try {
-                                const response = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.chargesTableName)}/${chargeId}`, {
-                                    headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
-                                });
+                        // Helper function to fetch with retry logic
+                        const fetchChargeWithRetry = async (chargeId, retries = 3) => {
+                            for (let attempt = 0; attempt < retries; attempt++) {
+                                try {
+                                    const response = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.chargesTableName)}/${chargeId}`, {
+                                        headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
+                                    });
 
-                                if (!response.ok) {
-                                    // Handle rate limiting and other errors
                                     if (response.status === 429) {
-                                        console.warn(`Rate limited for charge ${chargeId}, skipping...`);
+                                        // Rate limited - wait with exponential backoff
+                                        const waitTime = Math.min(1000 * Math.pow(2, attempt), 10000); // Max 10 seconds
+                                        if (attempt < retries - 1) {
+                                            console.warn(`Rate limited for charge ${chargeId}, retrying in ${waitTime}ms... (attempt ${attempt + 1}/${retries})`);
+                                            await new Promise(resolve => setTimeout(resolve, waitTime));
+                                            continue;
+                                        } else {
+                                            console.warn(`Rate limited for charge ${chargeId}, max retries reached`);
+                                            return null;
+                                        }
+                                    }
+
+                                    if (!response.ok) {
+                                        console.warn(`Failed to fetch charge ${chargeId}: ${response.status}`);
                                         return null;
                                     }
-                                    console.warn(`Failed to fetch charge ${chargeId}: ${response.status}`);
+
+                                    const data = await response.json();
+                                    // Validate that the response has the expected structure
+                                    if (data && data.fields) {
+                                        return data;
+                                    }
                                     return null;
+                                } catch (err) {
+                                    if (attempt < retries - 1) {
+                                        const waitTime = Math.min(1000 * Math.pow(2, attempt), 5000);
+                                        console.warn(`Error fetching charge ${chargeId}, retrying in ${waitTime}ms... (attempt ${attempt + 1}/${retries})`);
+                                        await new Promise(resolve => setTimeout(resolve, waitTime));
+                                        continue;
+                                    } else {
+                                        console.warn(`Error fetching charge ${chargeId} after ${retries} attempts:`, err);
+                                        return null;
+                                    }
                                 }
-
-                                const data = await response.json();
-                                // Validate that the response has the expected structure
-                                if (data && data.fields) {
-                                    return data;
-                                }
-                                return null;
-                            } catch (err) {
-                                console.warn(`Error fetching charge ${chargeId}:`, err);
-                                return null;
                             }
-                        });
+                            return null;
+                        };
 
-                        const chargesData = await Promise.all(chargePromises);
+                        // Fetch charges sequentially with delays to avoid rate limiting
+                        const validCharges = [];
+                        const delayBetweenRequests = 200; // 200ms delay between requests
+                        const totalCharges = paymentLinks.length;
                         
-                        // Filter out null/undefined values and invalid records
-                        const validCharges = chargesData.filter(charge => 
-                            charge !== null && 
-                            charge !== undefined && 
-                            charge.fields && 
-                            typeof charge.fields === 'object'
-                        );
+                        // Update loading message with progress
+                        const updateProgress = (current, total) => {
+                            content.innerHTML = `<div class="text-center py-8"><svg class="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg><p class="text-gray-600">Loading payment history... (${current}/${total})</p></div>`;
+                        };
+                        
+                        for (let i = 0; i < paymentLinks.length; i++) {
+                            updateProgress(i + 1, totalCharges);
+                            const chargeId = paymentLinks[i];
+                            const charge = await fetchChargeWithRetry(chargeId);
+                            
+                            if (charge !== null && charge !== undefined && charge.fields && typeof charge.fields === 'object') {
+                                validCharges.push(charge);
+                            }
+                            
+                            // Add delay between requests (except for the last one)
+                            if (i < paymentLinks.length - 1) {
+                                await new Promise(resolve => setTimeout(resolve, delayBetweenRequests));
+                            }
+                        }
 
                         if (validCharges.length === 0) {
                             chargesHTML = '<div class="mt-6 text-sm text-gray-500">Unable to load payment history</div>';
                         } else {
+                            // Sort charges by Created date (newest first)
+                            validCharges.sort((a, b) => {
+                                const dateA = new Date(a.fields['Created'] || 0);
+                                const dateB = new Date(b.fields['Created'] || 0);
+                                return dateB - dateA;
+                            });
+                            
                             const chargesRows = validCharges.map(charge => {
-                            const model = charge.fields['Model'] || '';
-                            const created = charge.fields['Created'] || '';
-                            const status = charge.fields['Status'] || '';
-                            const price = charge.fields['Price'];
-                            const number = charge.fields['Number'] || '';
+                                const model = charge.fields['Model'] || '';
+                                const created = charge.fields['Created'] || '';
+                                const status = charge.fields['Status'] || '';
+                                const price = charge.fields['Price'];
+                                const number = charge.fields['Number'] || '';
 
-                            let formattedCreated = created;
-                            if (created) {
-                                try {
-                                    const date = new Date(created);
-                                    if (!isNaN(date.getTime())) {
-                                        formattedCreated = date.toLocaleString('en-US', {
-                                            month: 'short',
-                                            day: 'numeric',
-                                            year: 'numeric',
-                                            hour: 'numeric',
-                                            minute: '2-digit',
-                                            hour12: true
-                                        });
-                                    }
-                                } catch (e) {}
-                            }
-
-                            let formattedPrice = '$0.00';
-                            if (price !== null && price !== undefined) {
-                                const num = Number(price);
-                                formattedPrice = Number.isFinite(num)
-                                    ? `${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                    : '$0.00';
-                            }
-
-                            let statusBadge = status;
-                            if (status) {
-                                const statusLower = status.toLowerCase();
-                                let badgeColor = 'bg-gray-100 text-gray-800';
-
-                                if (statusLower === 'succeeded' || statusLower === 'paid') {
-                                    badgeColor = 'bg-green-100 text-green-800';
-                                } else if (statusLower === 'pending') {
-                                    badgeColor = 'bg-yellow-100 text-yellow-800';
-                                } else if (statusLower === 'failed' || statusLower === 'declined') {
-                                    badgeColor = 'bg-red-100 text-red-800';
+                                let formattedCreated = created;
+                                if (created) {
+                                    try {
+                                        const date = new Date(created);
+                                        if (!isNaN(date.getTime())) {
+                                            formattedCreated = date.toLocaleString('en-US', {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                year: 'numeric',
+                                                hour: 'numeric',
+                                                minute: '2-digit',
+                                                hour12: true
+                                            });
+                                        }
+                                    } catch (e) {}
                                 }
 
-                                statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badgeColor}">${status}</span>`;
-                            }
+                                let formattedPrice = '$0.00';
+                                if (price !== null && price !== undefined) {
+                                    const num = Number(price);
+                                    formattedPrice = Number.isFinite(num)
+                                        ? `${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                        : '$0.00';
+                                }
 
-                            return `
-                                <tr class="border-t border-gray-200">
-                                    <td class="px-4 py-3 text-sm text-gray-900">${model}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-600">${formattedCreated}</td>
-                                    <td class="px-4 py-3 text-sm">${statusBadge}</td>
-                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">${formattedPrice}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-600">${number}</td>
-                                </tr>
-                            `;
-                        }).join('');
+                                let statusBadge = status;
+                                if (status) {
+                                    const statusLower = status.toLowerCase();
+                                    let badgeColor = 'bg-gray-100 text-gray-800';
+
+                                    if (statusLower === 'succeeded' || statusLower === 'paid') {
+                                        badgeColor = 'bg-green-100 text-green-800';
+                                    } else if (statusLower === 'pending') {
+                                        badgeColor = 'bg-yellow-100 text-yellow-800';
+                                    } else if (statusLower === 'failed' || statusLower === 'declined') {
+                                        badgeColor = 'bg-red-100 text-red-800';
+                                    }
+
+                                    statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badgeColor}">${status}</span>`;
+                                }
+
+                                return `
+                                    <tr class="border-t border-gray-200">
+                                        <td class="px-4 py-3 text-sm text-gray-900">${model}</td>
+                                        <td class="px-4 py-3 text-sm text-gray-600">${formattedCreated}</td>
+                                        <td class="px-4 py-3 text-sm">${statusBadge}</td>
+                                        <td class="px-4 py-3 text-sm font-medium text-gray-900">${formattedPrice}</td>
+                                        <td class="px-4 py-3 text-sm text-gray-600">${number}</td>
+                                    </tr>
+                                `;
+                            }).join('');
 
                         chargesHTML = `
                             <div class="mt-6">
