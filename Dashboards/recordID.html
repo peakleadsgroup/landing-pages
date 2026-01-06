@@ -974,21 +974,49 @@
                 let chargesHTML = '';
                 if (paymentLinks && paymentLinks.length > 0) {
                     try {
-                        const chargePromises = paymentLinks.map(chargeId =>
-                            fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.chargesTableName)}/${chargeId}`, {
-                                headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
-                            }).then(res => res.json())
-                        );
+                        // Fetch charges with proper error handling for rate limiting
+                        const chargePromises = paymentLinks.map(async (chargeId) => {
+                            try {
+                                const response = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.chargesTableName)}/${chargeId}`, {
+                                    headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
+                                });
 
-                        const chargesData = await Promise.all(chargePromises);
+                                if (!response.ok) {
+                                    // Handle rate limiting and other errors
+                                    if (response.status === 429) {
+                                        console.warn(`Rate limited for charge ${chargeId}, skipping...`);
+                                        return null;
+                                    }
+                                    console.warn(`Failed to fetch charge ${chargeId}: ${response.status}`);
+                                    return null;
+                                }
 
-                        chargesData.sort((a, b) => {
-                            const dateA = new Date(a.fields['Created'] || 0);
-                            const dateB = new Date(b.fields['Created'] || 0);
-                            return dateB - dateA;
+                                const data = await response.json();
+                                // Validate that the response has the expected structure
+                                if (data && data.fields) {
+                                    return data;
+                                }
+                                return null;
+                            } catch (err) {
+                                console.warn(`Error fetching charge ${chargeId}:`, err);
+                                return null;
+                            }
                         });
 
-                        const chargesRows = chargesData.map(charge => {
+                        const chargesData = await Promise.all(chargePromises);
+                        
+                        // Filter out null/undefined values and invalid records
+                        const validCharges = chargesData.filter(charge => 
+                            charge !== null && 
+                            charge !== undefined && 
+                            charge.fields && 
+                            typeof charge.fields === 'object'
+                        );
+
+                        if (validCharges.length === 0) {
+                            chargesHTML = '<div class="mt-6 text-sm text-gray-500">Unable to load payment history</div>';
+                        } else {
+                            const chargesRows = validCharges.map(charge => {
                             const model = charge.fields['Model'] || '';
                             const created = charge.fields['Created'] || '';
                             const status = charge.fields['Status'] || '';
@@ -1068,6 +1096,7 @@
                                 </div>
                             </div>
                         `;
+                        }
                     } catch (chargeError) {
                         console.error('Error fetching charges:', chargeError);
                         chargesHTML = '<div class="mt-6 text-sm text-gray-500">Unable to load payment history</div>';
