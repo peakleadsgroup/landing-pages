@@ -677,7 +677,7 @@
 
         <!-- STEP 6: NAME -->
         <div class="form-step" id="step6">
-            <div class="question">Who will we be making this quote out to?</div>
+            <div class="question">Who will we be speaking with?</div>
             <div class="name-grid">
                 <div>
                     <label for="firstName" style="margin-bottom: 10px; display: block; color: #2c3e50; text-align: center;">First Name</label>
@@ -695,7 +695,7 @@
 
         <!-- STEP 7: PHONE -->
         <div class="form-step" id="step7">
-            <div class="question">Where can we reach you with your quote?</div>
+            <div class="question">Where can we reach you?</div>
             <div class="row">
                 <div id="phoneWrap">
                     <label for="phone">Phone</label>
@@ -709,7 +709,7 @@
                 </div>
             </div>
             <div class="nav-buttons">
-                <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Get My Quote</button>
+                <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Book My Quote</button>
             </div>
         </div>
 
@@ -2553,7 +2553,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 isSubmitting = false;
                 if (phoneSubmitBtn) {
                     phoneSubmitBtn.disabled = false;
-                    phoneSubmitBtn.textContent = 'Get My Quote';
+                    phoneSubmitBtn.textContent = 'Book My Quote';
                 }
                 return; // Exit early - don't show calendar/phone options
             }
@@ -2666,7 +2666,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 isSubmitting = false;
                 if (phoneSubmitBtn) {
                     phoneSubmitBtn.disabled = false;
-                    phoneSubmitBtn.textContent = 'Get My Quote';
+                    phoneSubmitBtn.textContent = 'Book My Quote';
                 }
             }
         }
