@@ -597,7 +597,7 @@
 
         <div id="mainHeading">
             <h1 class="main-heading">
-                Take our 30 second quiz to get a <span class="highlight">fast and free quote</span>
+                Take our 30 second quiz to book a <span class="highlight">fast and free quote</span>
             </h1>
         </div>
 
@@ -781,7 +781,7 @@
                     </svg>
                 </div>
                 <div style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
-                <div style="font-size: 18px; color: #666; line-height: 1.6;">We'll give you a call soon to schedule your free estimate.</div>
+                <div id="confirmationMessage" style="font-size: 18px; color: #666; line-height: 1.6;">We'll give you a call soon to schedule your free estimate.</div>
             </div>
         </div>
     </div>
@@ -799,7 +799,6 @@
             CAMPAIGNS: 'tbl6uhtOFzGzA7EMu',
             B2C_LEADS: 'tblPt6Wc79hTBSmcD',
             B2C_ADS: 'tbl7ungQGMMLYwshw',
-            FORM_LOGS: 'tbluz8Tdn7rwWwgRF',
             URL_PARAMETERS: 'tbl5JDBRhTzuxzsc4',
         };
         const CONTACT_NOTIFICATION_WEBHOOK_URL = 'https://hook.us2.make.com/16nbe9d7b8igymuas81euw3o124khm7s';
@@ -829,8 +828,6 @@
         let clientAvailableDays = [1, 2, 3, 4, 5]; // Default: Monday-Friday
         let clientDaysOut = 14; // Default: 14 days out
         let isSubmitting = false; // Flag to prevent duplicate submissions
-        let formProgressLogId = null; // Track the form progress log record ID for updates
-        let sessionUniqueID = null; // Unique ID for tracking user journey across all log records
         
         // Get campaign ID immediately from URL (before DOM is ready)
         const urlParams = new URLSearchParams(window.location.search);
@@ -848,243 +845,6 @@
                    userAgent.includes('facebookexternalhit/1.1');
         }
 
-        async function logToAirtable(eventType, eventCategory, errorMessage, errorDetails, formDataSnapshot, additionalData = {}) {
-            // Skip logging for Facebook/Instagram crawlers
-            if (isFacebookCrawler()) {
-                return;
-            }
-            
-            try {
-                const logRecord = {
-                    fields: {
-                        'Timestamp': new Date().toISOString(),
-                        'Event Type': eventType,
-                        'Event Category': eventCategory,
-                        'URL': window.location.href,
-                        'User Agent': navigator.userAgent
-                    }
-                };
-                
-                // Add Unique ID if available
-                if (sessionUniqueID) {
-                    logRecord.fields['Unique ID'] = sessionUniqueID;
-                }
-                
-                // Add error message if provided
-                if (errorMessage) {
-                    logRecord.fields['Error Message'] = errorMessage;
-                }
-                
-                // Add error details as JSON string if provided
-                if (errorDetails) {
-                    logRecord.fields['Error Details'] = JSON.stringify(errorDetails, null, 2);
-                }
-                
-                // Add form data as JSON string if provided
-                if (formDataSnapshot) {
-                    logRecord.fields['Form Data'] = JSON.stringify(formDataSnapshot, null, 2);
-                }
-                
-                // Add additional context fields
-                if (additionalData.campaignID) {
-                    logRecord.fields['Campaign ID'] = additionalData.campaignID;
-                }
-                if (additionalData.clientAirtableID) {
-                    logRecord.fields['Client Airtable ID'] = additionalData.clientAirtableID;
-                }
-                if (additionalData.leadAirtableID) {
-                    logRecord.fields['Lead Airtable ID'] = additionalData.leadAirtableID;
-                }
-                if (additionalData.adAirtableID) {
-                    logRecord.fields['Ad Airtable ID'] = additionalData.adAirtableID;
-                }
-                if (additionalData.notes) {
-                    logRecord.fields['Notes'] = additionalData.notes;
-                }
-                
-                // Submit to Airtable (silently fail if this doesn't work)
-                const response = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.FORM_LOGS}`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ records: [logRecord] })
-                });
-                
-                if (!response.ok) {
-                    // Log the error response for debugging
-                    const errorText = await response.text();
-                    console.error('Failed to log to Airtable:', response.status, errorText);
-                }
-            } catch (err) {
-                // Silently fail - don't break the form if logging fails
-                console.error('Failed to log to Airtable (non-critical):', err);
-            }
-        }
-
-        async function createOrUpdateFormProgressLog(stepNumber, formDataSnapshot, isInitial = false) {
-            // Skip logging for Facebook/Instagram crawlers
-            if (isFacebookCrawler()) {
-                return;
-            }
-            
-            try {
-                const stepText = `Step ${stepNumber}`;
-                const formDataJSON = JSON.stringify(formDataSnapshot, null, 2);
-                const currentTimestamp = new Date().toISOString();
-                
-                if (isInitial || !formProgressLogId) {
-                    // Create new log record
-                    const logRecord = {
-                        fields: {
-                            'Timestamp': currentTimestamp,
-                            'Current Step': stepText,
-                            'Form Progress Data': formDataJSON,
-                            'Event Type': 'Info',
-                            'Event Category': 'Tracker'
-                        }
-                    };
-                    
-                    // Add Unique ID if available
-                    if (sessionUniqueID) {
-                        logRecord.fields['Unique ID'] = sessionUniqueID;
-                    }
-                    
-                    // Add campaign ID if available
-                    if (metaCampaignID || initialCampaignID) {
-                        logRecord.fields['Campaign ID'] = metaCampaignID || initialCampaignID;
-                    }
-                    
-                    // Add client ID if available
-                    if (campaignClientData?.id) {
-                        logRecord.fields['Client Airtable ID'] = campaignClientData.id;
-                    }
-                    
-                    const response = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.FORM_LOGS}`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ records: [logRecord] })
-                    });
-                    
-                    if (response.ok) {
-                        const result = await response.json();
-                        if (result.records && result.records.length > 0) {
-                            formProgressLogId = result.records[0].id;
-                            console.log('Form progress log created:', formProgressLogId);
-                        }
-                    } else {
-                        // Log the error response for debugging
-                        const errorText = await response.text();
-                        console.error('Failed to create form progress log:', response.status, errorText);
-                        
-                        // Log this Airtable error to Airtable
-                        await logToAirtable(
-                            'Error',
-                            'Form Progress',
-                            'Failed to create form progress log',
-                            { 
-                                status: response.status, 
-                                statusText: response.statusText,
-                                error: errorText,
-                                stepNumber: stepNumber
-                            },
-                            formDataSnapshot,
-                            {
-                                campaignID: metaCampaignID || initialCampaignID,
-                                clientAirtableID: campaignClientData?.id,
-                                notes: 'Error occurred while creating form progress log record'
-                            }
-                        );
-                    }
-                } else {
-                    // Update existing log record
-                    const updateRecord = {
-                        fields: {
-                            'Timestamp': currentTimestamp, // Update timestamp on each action
-                            'Current Step': stepText,
-                            'Form Progress Data': formDataJSON
-                        }
-                    };
-                    
-                    // Update campaign ID if available now
-                    if (metaCampaignID || initialCampaignID) {
-                        updateRecord.fields['Campaign ID'] = metaCampaignID || initialCampaignID;
-                    }
-                    
-                    // Update client ID if available now (prefer matched client, fall back to campaign client)
-                    if (matchedClientData?.id) {
-                        updateRecord.fields['Client Airtable ID'] = matchedClientData.id;
-                    } else if (campaignClientData?.id) {
-                        updateRecord.fields['Client Airtable ID'] = campaignClientData.id;
-                    }
-                    
-                    // Update lead ID if available now
-                    if (leadRecordId) {
-                        updateRecord.fields['Lead Airtable ID'] = leadRecordId;
-                    }
-                    
-                    const updateResponse = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.FORM_LOGS}/${formProgressLogId}`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(updateRecord)
-                    });
-                    
-                    if (!updateResponse.ok) {
-                        // Log the error response for debugging
-                        const errorText = await updateResponse.text();
-                        console.error('Failed to update form progress log:', updateResponse.status, errorText);
-                        
-                        // Log this Airtable error to Airtable
-                        await logToAirtable(
-                            'Error',
-                            'Form Progress',
-                            'Failed to update form progress log',
-                            { 
-                                status: updateResponse.status, 
-                                statusText: updateResponse.statusText,
-                                error: errorText,
-                                stepNumber: stepNumber,
-                                logRecordId: formProgressLogId
-                            },
-                            formDataSnapshot,
-                            {
-                                campaignID: metaCampaignID || initialCampaignID,
-                                clientAirtableID: matchedClientData?.id || campaignClientData?.id,
-                                leadAirtableID: leadRecordId,
-                                notes: 'Error occurred while updating form progress log record'
-                            }
-                        );
-                    }
-                }
-            } catch (err) {
-                // Log any unexpected errors to Airtable
-                console.error('Failed to update form progress log (non-critical):', err);
-                await logToAirtable(
-                    'Error',
-                    'Form Progress',
-                    'Unexpected error in createOrUpdateFormProgressLog',
-                    { 
-                        error: err.message, 
-                        stack: err.stack,
-                        stepNumber: stepNumber
-                    },
-                    formDataSnapshot,
-                    {
-                        campaignID: metaCampaignID || initialCampaignID,
-                        clientAirtableID: matchedClientData?.id || campaignClientData?.id,
-                        leadAirtableID: leadRecordId,
-                        notes: 'Unexpected exception in form progress logging'
-                    }
-                );
-            }
-        }
 
         async function fetchAirtableData(url) {
             try {
@@ -1098,48 +858,11 @@
                 if (!response.ok) {
                     const errorText = await response.text();
                     const error = new Error(`Airtable API error: ${response.status} ${response.statusText}`);
-                    
-                    // Log Airtable API errors to Airtable
-                    await logToAirtable(
-                        'Error',
-                        'Airtable API',
-                        'Airtable API request failed',
-                        { 
-                            status: response.status, 
-                            statusText: response.statusText,
-                            error: errorText,
-                            url: url
-                        },
-                        {},
-                        {
-                            campaignID: metaCampaignID || initialCampaignID,
-                            notes: `Airtable API fetch failed: ${url}`
-                        }
-                    );
-                    
                     throw error;
                 }
                 
                 return await response.json();
             } catch (error) {
-                // Only log to Airtable if it's not already an Airtable API error (to avoid double logging)
-                if (!error.message || !error.message.includes('Airtable API error')) {
-                    await logToAirtable(
-                        'Error',
-                        'Airtable API',
-                        'Unexpected error in fetchAirtableData',
-                        { 
-                            error: error.message, 
-                            stack: error.stack,
-                            url: url
-                        },
-                        {},
-                        {
-                            campaignID: metaCampaignID || initialCampaignID,
-                            notes: `Unexpected error fetching from Airtable: ${url}`
-                        }
-                    );
-                }
                 console.error('Airtable fetch error:', error);
                 throw error;
             }
@@ -1148,26 +871,8 @@
         async function fetchUrlParametersForClient(clientId, additionalLogData = {}) {
             try {
                 if (!clientId) {
-                    await logToAirtable(
-                        'Info',
-                        'URL Parameters',
-                        'No clientId provided for URL parameters',
-                        {},
-                        {},
-                        additionalLogData
-                    );
                     return [];
                 }
-                
-                // Log start of URL parameter fetch
-                await logToAirtable(
-                    'Info',
-                    'URL Parameters',
-                    'Fetching URL parameters for client',
-                    { clientId: clientId },
-                    {},
-                    additionalLogData
-                );
                 
                 // Fetch URL parameters linked to this client
                 // Try multiple filter approaches for linked records
@@ -1179,14 +884,6 @@
                 
                 // If no results, try FIND with ARRAYJOIN (works for multiple linked records)
                 if (!urlParamsData.records || urlParamsData.records.length === 0) {
-                    await logToAirtable(
-                        'Info',
-                        'URL Parameters',
-                        'No results with direct match, trying FIND with ARRAYJOIN',
-                        { clientId: clientId, attempt: 1 },
-                        {},
-                        additionalLogData
-                    );
                     filterFormula = encodeURIComponent(`FIND("${clientId}", ARRAYJOIN({Clients}))`);
                     urlParamsUrl = `${AIRTABLE_BASE_URL}/${TABLES.URL_PARAMETERS}?filterByFormula=${filterFormula}`;
                     urlParamsData = await fetchAirtableData(urlParamsUrl);
@@ -1198,48 +895,12 @@
                         value: record.fields['Value'] || ''
                     }));
                     
-                    // Log successful fetch
-                    await logToAirtable(
-                        'Info',
-                        'URL Parameters',
-                        `Found ${params.length} URL parameter(s) for client`,
-                        { 
-                            clientId: clientId,
-                            parameters: params,
-                            recordCount: urlParamsData.records.length
-                        },
-                        {},
-                        additionalLogData
-                    );
-                    
                     return params;
                 }
                 
-                // Log no parameters found
-                await logToAirtable(
-                    'Info',
-                    'URL Parameters',
-                    'No URL parameters found for client',
-                    { clientId: clientId },
-                    {},
-                    additionalLogData
-                );
-                
                 return [];
             } catch (error) {
-                // Log error but don't throw - redirect should still work
-                await logToAirtable(
-                    'Error',
-                    'URL Parameters',
-                    'Error fetching URL parameters',
-                    { 
-                        error: error.message,
-                        stack: error.stack,
-                        clientId: clientId
-                    },
-                    {},
-                    additionalLogData
-                );
+                console.error('Error fetching URL parameters:', error);
                 return [];
             }
         }
@@ -1258,9 +919,6 @@
                     'Phone': phone
                 };
                 
-                const addedParams = [];
-                const skippedParams = [];
-                
                 // Add each URL parameter
                 urlParameters.forEach(param => {
                     const paramName = param.parameter;
@@ -1270,75 +928,21 @@
                         const paramValue = valueMap[valueType];
                         if (paramValue) {
                             url.searchParams.append(paramName, paramValue);
-                            addedParams.push({ name: paramName, value: paramValue, type: valueType });
-                        } else {
-                            skippedParams.push({ name: paramName, reason: `${valueType} is empty`, type: valueType });
                         }
-                    } else {
-                        skippedParams.push({ 
-                            name: paramName, 
-                            reason: `valueType: ${valueType}, in map: ${valueMap[valueType] !== undefined}`,
-                            type: valueType
-                        });
                     }
                 });
                 
                 const finalUrl = url.toString();
-                
-                // Log URL building details
-                await logToAirtable(
-                    'Info',
-                    'URL Parameters',
-                    'Built redirect URL with parameters',
-                    {
-                        baseUrl: baseUrl,
-                        finalUrl: finalUrl,
-                        urlParameters: urlParameters,
-                        valueMap: valueMap,
-                        addedParams: addedParams,
-                        skippedParams: skippedParams,
-                        parameterCount: urlParameters.length,
-                        addedCount: addedParams.length,
-                        skippedCount: skippedParams.length
-                    },
-                    dataSource,
-                    additionalLogData
-                );
-                
                 return finalUrl;
             } catch (error) {
-                // Log error but return base URL so redirect still works
-                await logToAirtable(
-                    'Error',
-                    'URL Parameters',
-                    'Error building redirect URL with parameters',
-                    {
-                        error: error.message,
-                        stack: error.stack,
-                        baseUrl: baseUrl,
-                        urlParameters: urlParameters
-                    },
-                    dataSource,
-                    additionalLogData
-                );
+                console.error('Error building redirect URL:', error);
                 return baseUrl;
             }
         }
 
-        function generateUniqueID() {
-            // Generate a unique ID using timestamp and random string
-            const timestamp = Date.now();
-            const random = Math.random().toString(36).substring(2, 11);
-            return `session_${timestamp}_${random}`;
-        }
 
         async function loadClientFromCampaign(campaignIDParam = null) {
             try {
-                // Generate unique ID for this session if not already generated
-                if (!sessionUniqueID) {
-                    sessionUniqueID = generateUniqueID();
-                    console.log('Generated session Unique ID:', sessionUniqueID);
-                }
                 
                 // Use provided param or get from URL
                 const campaignID = campaignIDParam || initialCampaignID || new URLSearchParams(window.location.search).get('campaignID');
@@ -1360,19 +964,6 @@
                     campaignRecordId = campaign.id; // Store campaign record ID for Source Campaign linking
                     metaCampaignID = campaign.fields['Campaign ID'] || campaignID; // Store Meta campaign ID
                     console.log('Found campaign by Campaign ID field:', campaign.id);
-                    
-                    // Log successful campaign lookup by Campaign ID field
-                    await logToAirtable(
-                        'Info',
-                        'Campaign Load',
-                        null,
-                        null,
-                        {},
-                        {
-                            campaignID: campaignID,
-                            notes: 'Campaign found by Campaign ID field'
-                        }
-                    );
                 } else {
                     // If not found by Campaign ID field, try fetching directly by record ID
                     console.log('Campaign not found by Campaign ID field, trying direct record ID lookup');
@@ -1383,29 +974,8 @@
                         campaignRecordId = campaign.id; // Store campaign record ID for Source Campaign linking
                         metaCampaignID = campaign.fields['Campaign ID'] || null; // Store Meta campaign ID if available
                         console.log('Found campaign by direct record ID:', campaign.id);
-                        
-                        // Log successful campaign lookup by record ID
-                        await logToAirtable(
-                            'Info',
-                            'Campaign Load',
-                            null,
-                            null,
-                            {},
-                            {
-                                campaignID: campaignID,
-                                notes: 'Campaign found by direct record ID lookup'
-                            }
-                        );
                     } catch (directError) {
                         console.error('Campaign not found by record ID either:', directError);
-                        await logToAirtable(
-                            'Error',
-                            'Campaign Load',
-                            'Campaign not found',
-                            { campaignID, error: 'Campaign not found by Campaign ID field or record ID' },
-                            formData,
-                            { campaignID: campaignID }
-                        );
                         return null;
                     }
                 }
@@ -1413,14 +983,6 @@
                 // Get linked client record ID
                 if (!campaign.fields || !campaign.fields.Client || campaign.fields.Client.length === 0) {
                     console.error('Campaign has no linked Client');
-                    await logToAirtable(
-                        'Error',
-                        'Campaign Load',
-                        'Campaign has no linked client',
-                        { campaignID, campaignId: campaign.id },
-                        formData,
-                        { campaignID: campaignID }
-                    );
                     return null;
                 }
                 
@@ -1433,31 +995,9 @@
                 
                 console.log('Loaded client data:', clientData.id, clientData.fields);
                 
-                // Log successful campaign and client load
-                await logToAirtable(
-                    'Info',
-                    'Campaign Load',
-                    null,
-                    null,
-                    {},
-                    {
-                        campaignID: campaignID,
-                        clientAirtableID: clientData.id,
-                        notes: 'Campaign and client loaded successfully'
-                    }
-                );
-                
                 return clientData;
             } catch (error) {
                 console.error('Error loading client from campaign:', error);
-                await logToAirtable(
-                    'Error',
-                    'Campaign Load',
-                    'Error loading client from campaign',
-                    { error: error.message, stack: error.stack },
-                    formData,
-                    { campaignID: campaignIDParam || initialCampaignID }
-                );
                 return null;
             }
         }
@@ -1491,30 +1031,9 @@
                     }
                 }
                 
-                // No client found by zip code - log this
-                await logToAirtable(
-                    'Error',
-                    'Zip Code Match',
-                    'No client found by zip code',
-                    { zipCode: zipCode },
-                    {},
-                    {
-                        campaignID: metaCampaignID || initialCampaignID,
-                        clientAirtableID: campaignClientData?.id,
-                        notes: `No matching client found for zip code: ${zipCode}`
-                    }
-                );
-                
                 return null;
             } catch (error) {
-                await logToAirtable(
-                    'Error',
-                    'Client Lookup',
-                    'Error finding client by zip code',
-                    { error: error.message, stack: error.stack, zipCode },
-                    formData,
-                    { notes: `Zip code: ${zipCode}` }
-                );
+                console.error('Error finding client by zip code:', error);
                 return null;
             }
         }
@@ -1530,21 +1049,6 @@
                         const adData = await fetchAirtableData(directUrl);
                         if (adData && adData.id) {
                             console.log('Found ad by direct record ID:', adATID);
-                            
-                            // Log successful ad lookup by record ID
-                            await logToAirtable(
-                                'Success',
-                                'Ad Lookup',
-                                null,
-                                null,
-                                {},
-                                {
-                                    campaignID: metaCampaignID || initialCampaignID,
-                                    adAirtableID: adData.id,
-                                    notes: `Ad found by direct record ID: ${adATID}`
-                                }
-                            );
-                            
                             return adData.id;
                         }
                     } catch (directError) {
@@ -1559,20 +1063,6 @@
                 
                 if (!adsData.records || adsData.records.length === 0) {
                     console.log('No ads found in table');
-                    
-                    // Log error when no ads found in table
-                    await logToAirtable(
-                        'Error',
-                        'Ad Lookup',
-                        'No ads found in table',
-                        { adATID: adATID },
-                        {},
-                        {
-                            campaignID: metaCampaignID || initialCampaignID,
-                            notes: `Ad lookup failed - no ads exist in table for: ${adATID}`
-                        }
-                    );
-                    
                     return null;
                 }
                 
@@ -1580,61 +1070,14 @@
                 for (const ad of adsData.records) {
                     if (ad.fields.scriptATID === adATID) {
                         console.log('Found ad by scriptATID:', adATID, '->', ad.id);
-                        
-                        // Log successful ad lookup
-                        await logToAirtable(
-                            'Success',
-                            'Ad Lookup',
-                            null,
-                            null,
-                            {},
-                            {
-                                campaignID: metaCampaignID || initialCampaignID,
-                                adAirtableID: ad.id,
-                                notes: `Ad found by scriptATID: ${adATID}`
-                            }
-                        );
-                        
                         return ad.id; // Return record ID
                     }
                 }
                 
                 console.log('No ad found matching adATID:', adATID);
-                
-                // Log error when no ad is found
-                await logToAirtable(
-                    'Error',
-                    'Ad Lookup',
-                    'No ad found matching adATID',
-                    { adATID: adATID },
-                    {},
-                    {
-                        campaignID: metaCampaignID || initialCampaignID,
-                        notes: `Ad lookup failed - no matching ad found for: ${adATID}`
-                    }
-                );
-                
                 return null;
             } catch (error) {
-                // Log error when ad lookup fails
                 console.log('Ad lookup failed (non-critical):', error.message);
-                
-                await logToAirtable(
-                    'Error',
-                    'Ad Lookup',
-                    'Error during ad lookup',
-                    { 
-                        error: error.message, 
-                        stack: error.stack,
-                        adATID: adATID
-                    },
-                    {},
-                    {
-                        campaignID: metaCampaignID || initialCampaignID,
-                        notes: `Ad lookup error for: ${adATID}`
-                    }
-                );
-                
                 return null;
             }
         }
@@ -1749,43 +1192,11 @@
                 if (result.records && result.records.length > 0) {
                     leadRecordId = result.records[0].id;
                     console.log('Lead record ID stored:', leadRecordId);
-                    
-                    // Log successful lead submission
-                    await logToAirtable(
-                        'Success',
-                        'Lead Submission',
-                        null,
-                        null,
-                        formData,
-                        {
-                            campaignID: metaCampaignID || initialCampaignID,
-                            clientAirtableID: matchedClientData?.id || campaignClientData?.id,
-                            leadAirtableID: leadRecordId,
-                            adAirtableID: adRecordId,
-                            notes: 'Lead successfully submitted to Airtable'
-                        }
-                    );
                 }
                 
                 return result;
             } catch (error) {
-                // Log error with full lead data
-                await logToAirtable(
-                    'Error',
-                    'Lead Submission',
-                    'Error submitting lead to Airtable',
-                    {
-                        error: error.message,
-                        stack: error.stack,
-                        leadData: leadData
-                    },
-                    formData,
-                    {
-                        campaignID: metaCampaignID || initialCampaignID,
-                        clientAirtableID: matchedClientData?.id || campaignClientData?.id,
-                        adAirtableID: adRecordId
-                    }
-                );
+                console.error('Error submitting lead to Airtable:', error);
                 throw error;
             }
         }
@@ -1797,20 +1208,6 @@
                 fbq('init', pixelId);
                 fbq('track', 'PageView');
                 
-                // Log Meta conversion event
-                logToAirtable(
-                    'Info',
-                    'Meta Conversion',
-                    'Meta Pixel PageView event sent',
-                    { pixelId: pixelId, eventType: 'PageView' },
-                    {},
-                    {
-                        campaignID: metaCampaignID || initialCampaignID,
-                        clientAirtableID: campaignClientData?.id,
-                        notes: `Meta Pixel initialized and PageView tracked`
-                    }
-                );
-                
                 // Update noscript tag
                 const noscript = document.getElementById('metaPixelNoscript');
                 if (noscript) {
@@ -1818,19 +1215,6 @@
                 }
             } catch (error) {
                 console.error('Meta Pixel initialization error:', error);
-                // Log Meta Pixel error
-                logToAirtable(
-                    'Error',
-                    'Meta Conversion',
-                    'Meta Pixel initialization error',
-                    { error: error.message, stack: error.stack, pixelId: pixelId },
-                    {},
-                    {
-                        campaignID: metaCampaignID || initialCampaignID,
-                        clientAirtableID: campaignClientData?.id,
-                        notes: 'Error initializing Meta Pixel'
-                    }
-                );
             }
         }
 
@@ -1873,12 +1257,6 @@
             } else {
                 console.log('No logo URL or logo element not found', { logoUrl, logoImg: !!logoImg });
             }
-        }
-
-        // Generate unique ID immediately when page loads (before campaign load)
-        if (!sessionUniqueID) {
-            sessionUniqueID = generateUniqueID();
-            console.log('Generated session Unique ID on page load:', sessionUniqueID);
         }
 
         // Start loading client data immediately (don't wait for DOM)
@@ -1926,34 +1304,10 @@
                     // For now, we'll just track PageView without pixel ID
                     if (typeof fbq !== 'undefined') {
                         fbq('track', 'PageView');
-                        
-                        // Log Meta conversion event (no pixel ID available)
-                        logToAirtable(
-                            'Info',
-                            'Meta Conversion',
-                            'Meta Pixel PageView event sent (no pixel ID)',
-                            { eventType: 'PageView', pixelId: null },
-                            {},
-                            {
-                                campaignID: initialCampaignID,
-                                notes: 'PageView tracked but no client/pixel ID available'
-                            }
-                        );
                     }
                 }
-                
-                // Initialize form progress log (create initial record)
-                await createOrUpdateFormProgressLog(1, formData, true);
             } catch (error) {
                 console.error('Error initializing page:', error);
-                await logToAirtable(
-                    'Error',
-                    'Page Initialization',
-                    'Error initializing page',
-                    { error: error.message, stack: error.stack },
-                    {},
-                    { campaignID: initialCampaignID }
-                );
             }
         })();
         
@@ -1985,34 +1339,12 @@
             element.classList.add('selected');
             formData[field] = value;
             
-            // Update form progress log with option selection
-            createOrUpdateFormProgressLog(currentStep, formData);
-            
             if (!hasTrackedEngagement) {
                 if (typeof fbq !== 'undefined' && clientData && clientData.fields['Meta Pixel']) {
                     fbq('track', 'ViewContent', {
                         content_category: 'home_improvement',
                         content_name: 'bathroom_remodel_quiz_start'
                     });
-                    
-                    // Log Meta conversion event
-                    logToAirtable(
-                        'Info',
-                        'Meta Conversion',
-                        'Meta Pixel ViewContent event sent',
-                        { 
-                            pixelId: clientData.fields['Meta Pixel'],
-                            eventType: 'ViewContent',
-                            content_category: 'home_improvement',
-                            content_name: 'bathroom_remodel_quiz_start'
-                        },
-                        formData,
-                        {
-                            campaignID: metaCampaignID || initialCampaignID,
-                            clientAirtableID: clientData?.id,
-                            notes: 'User engaged with form - ViewContent event tracked'
-                        }
-                    );
                 }
                 hasTrackedEngagement = true;
             }
@@ -2063,8 +1395,6 @@
             
             if (street && city && state && zip && startsWithNumber) {
                 formData.address = { street, city, state, zip };
-                // Update form progress log with address data
-                createOrUpdateFormProgressLog(currentStep, formData);
             } else {
                 // Clear address data if validation fails to prevent stale data
                 if (formData.address) {
@@ -2085,9 +1415,6 @@
                 currentStep++;
                 document.getElementById('step' + currentStep).classList.add('active');
                 updateProgress();
-                
-                // Update form progress log
-                createOrUpdateFormProgressLog(currentStep, formData);
             }
         }
 
@@ -2110,8 +1437,6 @@
             if (firstName && lastName) {
                 formData.firstName = firstName;
                 formData.lastName = lastName;
-                // Update form progress log with name data
-                createOrUpdateFormProgressLog(currentStep, formData);
             }
         }
 
@@ -2329,14 +1654,12 @@
             const phoneValid = p1.digits.length === 10 && validation.valid;
             const buttonShouldEnable = phoneValid && emailValid;
             
-            // Update formData and log when phone/email are valid
+            // Update formData when phone/email are valid
             if (phoneValid) {
                 formData.phone = p1.digits;
                 if (emailValid && emailInput) {
                     formData.email = emailInput.value.trim();
                 }
-                // Update form progress log with phone/email data
-                createOrUpdateFormProgressLog(currentStep, formData);
             }
             
             if (phoneSubmitBtn) {
@@ -2581,22 +1904,6 @@
                 return bookedTimes;
             } catch (error) {
                 console.error('Error fetching booked appointments:', error);
-                // Log error to Airtable
-                await logToAirtable(
-                    'Error',
-                    'Appointment Booking',
-                    'Error fetching booked appointments',
-                    { 
-                        error: error.message, 
-                        stack: error.stack
-                    },
-                    {},
-                    {
-                        campaignID: metaCampaignID || initialCampaignID,
-                        clientAirtableID: matchedClientData?.id || campaignClientData?.id,
-                        notes: 'Error occurred while fetching booked appointments for calendar'
-                    }
-                );
                 // Return empty array on error so we don't block availability
                 return [];
             }
@@ -2812,28 +2119,6 @@
                     if (!updateResponse.ok) {
                         const errorText = await updateResponse.text();
                         const error = new Error(`Failed to update appointment: ${errorText}`);
-                        
-                        // Log Airtable error to Airtable
-                        await logToAirtable(
-                            'Error',
-                            'Appointment Booking',
-                            'Failed to update appointment in Airtable',
-                            { 
-                                status: updateResponse.status, 
-                                statusText: updateResponse.statusText,
-                                error: errorText,
-                                appointmentText: appointmentText,
-                                leadRecordId: leadRecordId
-                            },
-                            formData,
-                            {
-                                campaignID: metaCampaignID || initialCampaignID,
-                                clientAirtableID: matchedClientData?.id || campaignClientData?.id,
-                                leadAirtableID: leadRecordId,
-                                notes: `Failed to update appointment: ${appointmentText}`
-                            }
-                        );
-                        
                         throw error;
                     }
                     console.log('Appointment saved to Airtable:', appointmentText);
@@ -2872,54 +2157,22 @@
                             );
                         }
                         
-                        // Log successful appointment booking
-                        await logToAirtable(
-                            'Success',
-                            'Appointment Booking',
-                            null,
-                            null,
-                            formData,
-                            {
-                                campaignID: metaCampaignID || initialCampaignID,
-                                clientAirtableID: matchedClientData?.id || campaignClientData?.id,
-                                leadAirtableID: leadRecordId,
-                                notes: `Appointment successfully booked: ${appointmentText}`
-                            }
-                        );
-                        
                         console.log('Appointment notifications sent');
                     } else {
                         console.log('No client found for appointment notifications');
                     }
                 } catch (error) {
                     console.error('Error updating appointment in Airtable:', error);
-                    // Only log if it's not already logged (to avoid duplicate logs)
-                    if (!error.message || !error.message.includes('Failed to update appointment')) {
-                        await logToAirtable(
-                            'Error',
-                            'Appointment Booking',
-                            'Error updating appointment in Airtable',
-                            { 
-                                error: error.message, 
-                                stack: error.stack,
-                                appointmentText: appointmentText, 
-                                leadRecordId: leadRecordId 
-                            },
-                            formData,
-                            {
-                                campaignID: metaCampaignID || initialCampaignID,
-                                clientAirtableID: matchedClientData?.id || campaignClientData?.id,
-                                leadAirtableID: leadRecordId,
-                                notes: `Unexpected error updating appointment: ${appointmentText}`
-                            }
-                        );
-                    }
                 }
             } else {
                 console.warn('No lead record ID available to update with appointment');
             }
             
-            // Show confirmation screen
+            // Show confirmation screen with appointment-specific message
+            const confirmationMessage = document.getElementById('confirmationMessage');
+            if (confirmationMessage) {
+                confirmationMessage.textContent = "We'll give you a call soon to confirm your appointment time!";
+            }
             document.getElementById('calendarStep').classList.remove('active');
             document.getElementById('confirmationStep').classList.add('active');
         }
@@ -3089,6 +2342,11 @@
 
         function showConfirmationScreen() {
             // Show the confirmation/thank you screen
+            // Reset to default message for non-appointment bookings
+            const confirmationMessage = document.getElementById('confirmationMessage');
+            if (confirmationMessage) {
+                confirmationMessage.textContent = "We'll give you a call soon to schedule your free estimate.";
+            }
             document.getElementById('step7').classList.remove('active');
             document.getElementById('confirmationStep').classList.add('active');
             document.getElementById('progressBarContainer').style.display = 'none';
@@ -3171,26 +2429,6 @@
                 fbq('track', 'Lead', leadEventData, {
                     eventID: eventId
                 });
-                
-                // Log Meta conversion event
-                await logToAirtable(
-                    'Info',
-                    'Meta Conversion',
-                    'Meta Pixel Lead event sent',
-                    { 
-                        pixelId: clientData.fields['Meta Pixel'],
-                        eventType: 'Lead',
-                        eventID: eventId,
-                        eventData: leadEventData
-                    },
-                    formData,
-                    {
-                        campaignID: metaCampaignID || initialCampaignID,
-                        clientAirtableID: matchedClientData?.id || campaignClientData?.id,
-                        leadAirtableID: leadRecordId,
-                        notes: 'Lead conversion event tracked to Meta Pixel'
-                    }
-                );
             }
             
             // Find client by zip code
@@ -3201,35 +2439,8 @@
                 }
                 
                 matchedClientData = await findClientByZipCode(finalData.address.zip);
-                
-                // Log successful zip code match if found
-                if (matchedClientData && matchedClientData.id) {
-                    await logToAirtable(
-                        'Success',
-                        'Zip Code Match',
-                        null,
-                        null,
-                        formData,
-                        {
-                            campaignID: metaCampaignID || initialCampaignID,
-                            clientAirtableID: matchedClientData.id,
-                            notes: `Client matched by zip code: ${finalData.address.zip}`
-                        }
-                    );
-                }
             } catch (error) {
-                const zipCode = finalData.address?.zip || 'N/A';
-                await logToAirtable(
-                    'Error',
-                    'Client Lookup',
-                    'Error finding client by zip code',
-                    { error: error.message, zipCode: zipCode, addressData: finalData.address },
-                    formData,
-                    {
-                        campaignID: metaCampaignID || initialCampaignID,
-                        notes: `Zip code: ${zipCode}`
-                    }
-                );
+                console.error('Error finding client by zip code:', error);
             }
             
             // Find ad by adATID from URL
@@ -3312,17 +2523,11 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 zip: finalData.address.zip || ''
             };
             
-            // Update form progress log with final submission data
-            await createOrUpdateFormProgressLog(currentStep, formData);
-            
             // Submit to Airtable
             let submissionSuccessful = false;
             try {
                 await submitLeadToAirtable(leadData);
                 submissionSuccessful = true;
-                
-                // Update form progress log to show submission completed
-                await createOrUpdateFormProgressLog(8, formData); // Step 8 = Submitted
                 
                 // Send webhook if client is linked
                 if (matchedClientData && matchedClientData.id && leadRecordId) {
@@ -3333,35 +2538,12 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                     );
                 }
                 
-                // Log that submission completed successfully - use console.log first to ensure we see it
+                // Log that submission completed successfully
                 console.log('=== SUBMISSION SUCCESSFUL ===');
                 console.log('submissionSuccessful:', submissionSuccessful);
                 console.log('leadRecordId:', leadRecordId);
                 console.log('matchedClientData:', matchedClientData);
                 console.log('campaignClientData:', campaignClientData);
-                
-                try {
-                    await logToAirtable(
-                        'Info',
-                        'Submit Screen',
-                        'Lead submission completed, about to determine submit screen',
-                        { 
-                            submissionSuccessful: submissionSuccessful,
-                            leadRecordId: leadRecordId,
-                            matchedClientId: matchedClientData?.id,
-                            campaignClientId: campaignClientData?.id
-                        },
-                        {},
-                        {
-                            campaignID: metaCampaignID || initialCampaignID,
-                            clientAirtableID: matchedClientData?.id || campaignClientData?.id,
-                            leadAirtableID: leadRecordId
-                        }
-                    );
-                    console.log('Log written to Airtable successfully');
-                } catch (logErr) {
-                    console.error('Error logging submission completion:', logErr);
-                }
             } catch (error) {
                 // Error webhook already sent in submitLeadToAirtable
                 // Show generic confirmation screen instead of calendar/phone options
@@ -3383,22 +2565,6 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             
             if (!submissionSuccessful) {
                 console.log('Submission not successful, showing confirmation screen');
-                try {
-                    await logToAirtable(
-                        'Warning',
-                        'Submit Screen',
-                        'Submission was not successful, showing confirmation screen',
-                        { submissionSuccessful: submissionSuccessful },
-                        {},
-                        {
-                            campaignID: metaCampaignID || initialCampaignID,
-                            clientAirtableID: matchedClientData?.id || campaignClientData?.id,
-                            leadAirtableID: leadRecordId
-                        }
-                    );
-                } catch (e) {
-                    console.error('Error logging submission failure:', e);
-                }
                 showConfirmationScreen();
                 return;
             }
@@ -3407,55 +2573,10 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             console.log('matchedClientData:', matchedClientData);
             console.log('campaignClientData:', campaignClientData);
             
-            // Log that we're proceeding to determine submit screen
-            try {
-                await logToAirtable(
-                    'Info',
-                    'Submit Screen',
-                    'Submission successful, determining submit screen',
-                    { 
-                        submissionSuccessful: submissionSuccessful,
-                        matchedClientId: matchedClientData?.id,
-                        campaignClientId: campaignClientData?.id
-                    },
-                    {},
-                    {
-                        campaignID: metaCampaignID || initialCampaignID,
-                        clientAirtableID: matchedClientData?.id || campaignClientData?.id,
-                        leadAirtableID: leadRecordId
-                    }
-                );
-            } catch (e) {
-                console.error('Error logging submission success:', e);
-            }
-            
             // Determine which submit screen to show
             // Use matched client first, but fall back to campaign client if matched client doesn't have Submit Screen
             let activeClient = matchedClientData || campaignClientData;
             let submitScreenType = 'None'; // Default
-            
-            try {
-                // Log client determination for debugging
-                await logToAirtable(
-                    'Info',
-                    'Submit Screen',
-                    'Determining submit screen type',
-                    {
-                        matchedClientId: matchedClientData ? matchedClientData.id : null,
-                        campaignClientId: campaignClientData ? campaignClientData.id : null,
-                        matchedClientSubmitScreen: matchedClientData && matchedClientData.fields ? matchedClientData.fields['Submit Screen'] : null,
-                        campaignClientSubmitScreen: campaignClientData && campaignClientData.fields ? campaignClientData.fields['Submit Screen'] : null
-                    },
-                    {},
-                    {
-                        campaignID: metaCampaignID || initialCampaignID,
-                        clientAirtableID: matchedClientData?.id || campaignClientData?.id,
-                        leadAirtableID: leadRecordId
-                    }
-                );
-            } catch (logError) {
-                console.error('Error logging submit screen determination:', logError);
-            }
             
             // Try to get Submit Screen from matched client first
             if (matchedClientData && matchedClientData.fields && matchedClientData.fields['Submit Screen']) {
@@ -3468,52 +2589,8 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 submitScreenType = String(campaignClientData.fields['Submit Screen']).trim();
             }
             
-            try {
-                // Log final determination
-                await logToAirtable(
-                    'Info',
-                    'Submit Screen',
-                    'Submit screen type determined',
-                    {
-                        activeClientId: activeClient ? activeClient.id : null,
-                        submitScreenType: submitScreenType,
-                        normalizedType: submitScreenType.toLowerCase(),
-                        redirectUrl: activeClient && activeClient.fields ? activeClient.fields['Redirect URL'] : null
-                    },
-                    {},
-                    {
-                        campaignID: metaCampaignID || initialCampaignID,
-                        clientAirtableID: activeClient ? activeClient.id : null,
-                        leadAirtableID: leadRecordId
-                    }
-                );
-            } catch (logError) {
-                console.error('Error logging submit screen type:', logError);
-            }
-            
             // Show appropriate screen based on submit screen type (case-insensitive comparison)
             const normalizedType = submitScreenType.toLowerCase();
-            
-            try {
-                // Log which path we're taking
-                await logToAirtable(
-                    'Info',
-                    'Submit Screen',
-                    `Processing submit screen type: ${normalizedType}`,
-                    {
-                        normalizedType: normalizedType,
-                        submitScreenType: submitScreenType
-                    },
-                    {},
-                    {
-                        campaignID: metaCampaignID || initialCampaignID,
-                        clientAirtableID: activeClient ? activeClient.id : null,
-                        leadAirtableID: leadRecordId
-                    }
-                );
-            } catch (logError) {
-                console.error('Error logging submit screen processing:', logError);
-            }
             
             if (normalizedType === 'redirect') {
                 // Redirect to URL from Redirect URL field
@@ -3565,17 +2642,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                     window.location.href = finalRedirectUrl;
                 } else {
                     // If no redirect URL, show confirmation screen
-                    await logToAirtable(
-                        'Warning',
-                        'Redirect',
-                        'Redirect option selected but no Redirect URL found',
-                        {},
-                        {},
-                        {
-                            campaignID: metaCampaignID || initialCampaignID,
-                            clientAirtableID: activeClient ? activeClient.id : null
-                        }
-                    );
+                    console.warn('Redirect option selected but no Redirect URL found');
                     showConfirmationScreen();
                 }
             } else if (normalizedType === 'calendar') {
@@ -3594,19 +2661,6 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             } catch (error) {
                 // Catch any unexpected errors that weren't caught by the Airtable submission catch
                 console.error('Unexpected error in submitFinalForm:', error);
-                await logToAirtable(
-                    'Error',
-                    'Other',
-                    'Unexpected error in submitFinalForm',
-                    { error: error.message, stack: error.stack },
-                    formData,
-                    {
-                        campaignID: metaCampaignID || initialCampaignID,
-                        clientAirtableID: matchedClientData?.id || campaignClientData?.id,
-                        leadAirtableID: leadRecordId,
-                        adAirtableID: adRecordId
-                    }
-                );
                 showConfirmationScreen();
                 // Reset submission flag and button on error
                 isSubmitting = false;
