@@ -784,7 +784,7 @@
                     </svg>
                 </div>
                 <div style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
-                <div style="font-size: 18px; color: #666; line-height: 1.6;">We'll give you a call soon to schedule your free estimate.</div>
+                <div id="confirmationMessage" style="font-size: 18px; color: #666; line-height: 1.6;">We'll give you a call soon to schedule your free estimate.</div>
             </div>
         </div>
     </div>
@@ -2118,7 +2118,11 @@
                 console.warn('No lead record ID available to update with appointment');
             }
             
-            // Show confirmation screen
+            // Show confirmation screen with appointment-specific message
+            const confirmationMessage = document.getElementById('confirmationMessage');
+            if (confirmationMessage) {
+                confirmationMessage.textContent = "We'll give you a call soon to confirm your appointment time!";
+            }
             document.getElementById('calendarStep').classList.remove('active');
             document.getElementById('confirmationStep').classList.add('active');
         }
@@ -2288,6 +2292,11 @@
 
         function showConfirmationScreen() {
             // Show the confirmation/thank you screen
+            // Reset to default message for non-appointment bookings
+            const confirmationMessage = document.getElementById('confirmationMessage');
+            if (confirmationMessage) {
+                confirmationMessage.textContent = "We'll give you a call soon to schedule your free estimate.";
+            }
             document.getElementById('step7').classList.remove('active');
             document.getElementById('confirmationStep').classList.add('active');
             document.getElementById('progressBarContainer').style.display = 'none';
