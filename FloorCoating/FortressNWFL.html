@@ -231,6 +231,27 @@
             transform: none;
         }
 
+        .privacy-policy-text {
+            margin-top: 20px;
+            font-size: 10px;
+            color: #666;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .privacy-policy-text p {
+            margin-bottom: 8px;
+        }
+
+        .privacy-policy-text a {
+            color: #2196f3;
+            text-decoration: underline;
+        }
+
+        .privacy-policy-text a:hover {
+            color: #1976d2;
+        }
+
         .name-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -651,7 +672,7 @@
 
         <!-- STEP 6: NAME -->
         <div class="form-step" id="step6">
-            <div class="question">Who will we be making this quote out to?</div>
+            <div class="question">Who will we be speaking with?</div>
             <div class="name-grid">
                 <div>
                     <label for="firstName" style="margin-bottom: 10px; display: block; color: #2c3e50; text-align: center;">First Name</label>
@@ -685,6 +706,10 @@
             </div>
             <div class="nav-buttons">
                 <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Get My Quote</button>
+            </div>
+            <div class="privacy-policy-text" id="privacyPolicyText">
+                <p>By clicking "NEXT STEP" and submitting this form, (i) I agree that Fortress Floor Coatings of NWFL may use automated technology to call or text my phone number (provided above) or email me regarding my request, and I may revoke this consent at any time, and (ii) I agree to the <a href="../main/privacypolicy.html" target="_blank">Terms & Conditions and Privacy Policy</a>.</p>
+                <p>I understand that my authorization to receive calls, texts, and emails via automated technology is not a condition of purchasing any goods or services. Message frequency may vary. Msg & data rates may apply. Reply STOP to cancel. Reply HELP for assistance.</p>
             </div>
         </div>
 
