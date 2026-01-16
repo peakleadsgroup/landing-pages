@@ -270,6 +270,27 @@
             text-align: left;
         }
 
+        .privacy-policy-text {
+            margin-top: 20px;
+            font-size: 10px;
+            color: #666;
+            line-height: 1.4;
+            text-align: left;
+        }
+
+        .privacy-policy-text p {
+            margin-bottom: 8px;
+        }
+
+        .privacy-policy-text a {
+            color: #2196f3;
+            text-decoration: underline;
+        }
+
+        .privacy-policy-text a:hover {
+            color: #1976d2;
+        }
+
         .row {
             display: grid;
             gap: 15px;
@@ -711,6 +732,10 @@
             </div>
             <div class="nav-buttons">
                 <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Book My Quote</button>
+            </div>
+            <div class="privacy-policy-text" id="privacyPolicyText">
+                <p>By clicking "NEXT STEP" and submitting this form, (i) I agree that <span id="partnerBusinessName">Peak Leads Group and it's marketing partners</span> may use automated technology to call or text my phone number (provided above) or email me regarding my request, and I may revoke this consent at any time, and (ii) I agree to the <a href="privacypolicy.html" target="_blank">Terms & Conditions and Privacy Policy</a>.</p>
+                <p>I understand that my authorization to receive calls, texts, and emails via automated technology is not a condition of purchasing any goods or services. Message frequency may vary. Msg & data rates may apply. Reply STOP to cancel. Reply HELP for assistance.</p>
             </div>
         </div>
 
@@ -1300,6 +1325,9 @@
                     } else {
                         console.log('No Meta Pixel found in client data');
                     }
+                    
+                    // Update partner name in privacy policy
+                    updatePartnerNameInPrivacyPolicy();
                 } else {
                     console.warn('No client data loaded from campaign');
                     // Initialize default Meta Pixel (if needed)
@@ -1307,11 +1335,38 @@
                     if (typeof fbq !== 'undefined') {
                         fbq('track', 'PageView');
                     }
+                    // Update partner name with default
+                    updatePartnerNameInPrivacyPolicy();
                 }
             } catch (error) {
                 console.error('Error initializing page:', error);
+                // Update partner name with default on error
+                updatePartnerNameInPrivacyPolicy();
             }
         })();
+        
+        // Function to update partner name in privacy policy
+        function updatePartnerNameInPrivacyPolicy() {
+            const partnerNameElement = document.getElementById('partnerBusinessName');
+            if (!partnerNameElement) return;
+            
+            // Try to get partner name from matched client first, then campaign client
+            let partnerName = null;
+            if (matchedClientData && matchedClientData.fields && matchedClientData.fields['Name']) {
+                partnerName = matchedClientData.fields['Name'];
+            } else if (campaignClientData && campaignClientData.fields && campaignClientData.fields['Name']) {
+                partnerName = campaignClientData.fields['Name'];
+            } else if (clientData && clientData.fields && clientData.fields['Name']) {
+                partnerName = clientData.fields['Name'];
+            }
+            
+            // Update the text if we found a partner name, otherwise use default
+            if (partnerName) {
+                partnerNameElement.textContent = partnerName;
+            } else {
+                partnerNameElement.textContent = "Peak Leads Group and it's marketing partners";
+            }
+        }
         
         // Also ensure logo loads when DOM is ready (backup)
         if (document.readyState === 'loading') {
@@ -2442,6 +2497,8 @@
                 }
                 
                 matchedClientData = await findClientByZipCode(finalData.address.zip);
+                // Update partner name in privacy policy if client was matched
+                updatePartnerNameInPrivacyPolicy();
             } catch (error) {
                 console.error('Error finding client by zip code:', error);
             }
