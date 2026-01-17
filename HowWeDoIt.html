@@ -203,7 +203,7 @@
             transform: rotate(-45deg) translate(7px, -7px);
         }
 
-        .mobile-menu {
+.mobile-menu {
             display: none;
             position: absolute;
             top: 100%;
@@ -611,6 +611,7 @@
     <!-- Header -->
     <header class="header">
         <div class="nav-container">
+            <a href="Contact.html" class="contact-btn">CONTACT</a>
             <a href="https://peakleadsgroup.com"><img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Marketing Group" class="logo"></a>
             <nav>
                 <ul class="nav-links">
@@ -620,7 +621,20 @@
                     <li><a href="Integrations.html">Integrations</a></li>
                 </ul>
             </nav>
-            <a href="Contact.html" class="contact-btn">CONTACT US</a>
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="mobile-menu" id="mobileMenu">
+                <ul>
+                    <li><a href="About.html">About</a></li>
+                    <li><a href="WhoWeServe.html">Who We Serve</a></li>
+                    <li><a href="HowWeDoIt.html">How We Do It</a></li>
+                    <li><a href="Integrations.html">Integrations</a></li>
+                    <li><a href="Contact.html">Contact</a></li>
+                </ul>
+            </div>
         </div>
     </header>
 
@@ -718,7 +732,7 @@
         <div class="cta-container">
             <h2>Ready to Get Started?</h2>
             <p>Let's talk about how we can help fill your calendar with qualified leads.</p>
-            <a href="Contact.html" class="cta-btn">CONTACT US TODAY</a>
+            <a href="Contact.html" class="cta-btn">CONTACT TODAY</a>
         </div>
     </section>
 
