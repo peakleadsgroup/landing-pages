@@ -879,12 +879,52 @@
                 display: none;
             }
 
-            .mobile-menu-toggle {
-                display: flex;
+            .header {
+                position: sticky !important;
+                top: 0;
+                z-index: 100;
             }
 
-            .header {
+            .mobile-menu-toggle {
+                display: flex;
+                order: 3;
+            }
+
+            .nav-container {
                 position: relative;
+                display: grid;
+                grid-template-columns: 1fr auto 1fr;
+                gap: 1rem;
+                align-items: center;
+            }
+
+            .nav-container .contact-btn {
+                grid-column: 1;
+                justify-self: start;
+                padding: 0.75rem 1.5rem;
+                font-size: 0.85rem;
+            }
+
+            .nav-container .logo {
+                grid-column: 2;
+                justify-self: center;
+            }
+
+            .nav-container nav {
+                grid-column: 1 / -1;
+            }
+
+            .mobile-menu-toggle {
+                grid-column: 3;
+                justify-self: end;
+            }
+
+            .mobile-menu {
+                position: fixed;
+                top: 80px;
+                left: 0;
+                right: 0;
+                z-index: 99;
             }
 
             .nav-container {
@@ -961,6 +1001,7 @@
     <!-- Header -->
     <header class="header">
         <div class="nav-container">
+            <a href="Contact.html" class="contact-btn">CONTACT US</a>
             <a href="https://peakleadsgroup.com"><img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Marketing Group" class="logo"></a>
             <nav>
                 <ul class="nav-links">
@@ -975,7 +1016,6 @@
                 <span></span>
                 <span></span>
             </button>
-            <a href="Contact.html" class="contact-btn">CONTACT US</a>
             <div class="mobile-menu" id="mobileMenu">
                 <ul>
                     <li><a href="About.html">About</a></li>
