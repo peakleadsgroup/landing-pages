@@ -1,0 +1,28 @@
+# robots.txt for Peak Leads Group
+# Allow all search engines to crawl our public pages
+
+User-agent: *
+
+# Disallow private/internal directories
+Disallow: /Agreements/
+Disallow: /Dashboards/
+Disallow: /InternalApps/
+Disallow: /B2B/
+Disallow: /main/
+Disallow: /FloorCoating/
+
+# Disallow specific private pages
+Disallow: /agreement.html
+Disallow: /thank-you.html
+
+# Allow the main public pages (explicitly, though they're in root)
+Allow: /index.html
+Allow: /About.html
+Allow: /Contact.html
+Allow: /HowWeDoIt.html
+Allow: /WhoWeServe.html
+Allow: /
+
+# Sitemap location
+Sitemap: https://peakleadsgroup.com/sitemap.xml
+
