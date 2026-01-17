@@ -907,7 +907,7 @@
 
             .nav-container {
                 display: grid !important;
-                grid-template-columns: auto 1fr auto !important;
+                grid-template-columns: 1fr 1fr 1fr !important;
                 grid-template-rows: auto !important;
                 gap: 0.75rem;
                 align-items: center;
@@ -936,6 +936,9 @@
                 height: auto;
                 margin: 0 auto;
                 display: block !important;
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
             }
 
             .nav-container > nav {
