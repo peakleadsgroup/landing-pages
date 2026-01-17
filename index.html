@@ -141,6 +141,26 @@
             justify-content: space-between;
             align-items: center;
             padding: 0 2rem;
+            position: relative;
+        }
+
+        .nav-container .logo {
+            order: 1;
+        }
+
+        .nav-container nav {
+            order: 2;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+
+        .nav-container .contact-btn {
+            order: 3;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
         }
 
         .logo {
@@ -523,7 +543,7 @@
         }
 
         .about-link::after {
-            content: '→';
+            content: '';
             transition: transform 0.3s;
         }
 
@@ -885,50 +905,48 @@
                 z-index: 100;
             }
 
-            .mobile-menu-toggle {
-                display: flex;
-                order: 3;
-            }
-
             .nav-container {
-                position: relative;
                 display: grid;
-                grid-template-columns: 1fr auto 1fr;
+                grid-template-columns: auto 1fr auto;
                 gap: 1rem;
                 align-items: center;
-            }
-
-            .nav-container .contact-btn {
-                grid-column: 1;
-                justify-self: start;
-                padding: 0.75rem 1.5rem;
-                font-size: 0.85rem;
+                padding: 0 1.5rem;
             }
 
             .nav-container .logo {
+                order: 2;
                 grid-column: 2;
                 justify-self: center;
             }
 
             .nav-container nav {
-                grid-column: 1 / -1;
+                display: none;
+            }
+
+            .nav-container .contact-btn {
+                order: 1;
+                grid-column: 1;
+                justify-self: start;
+                padding: 0.75rem 1.25rem;
+                font-size: 0.85rem;
             }
 
             .mobile-menu-toggle {
+                display: flex;
+                order: 3;
                 grid-column: 3;
                 justify-self: end;
+                padding: 0.5rem;
             }
 
             .mobile-menu {
                 position: fixed;
-                top: 80px;
+                top: 75px;
                 left: 0;
                 right: 0;
                 z-index: 99;
-            }
-
-            .nav-container {
-                position: relative;
+                background: white;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             }
 
             .hero {
@@ -1001,7 +1019,6 @@
     <!-- Header -->
     <header class="header">
         <div class="nav-container">
-            <a href="Contact.html" class="contact-btn">CONTACT</a>
             <a href="https://peakleadsgroup.com"><img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Marketing Group" class="logo"></a>
             <nav>
                 <ul class="nav-links">
@@ -1011,6 +1028,7 @@
                     <li><a href="Integrations.html">Integrations</a></li>
                 </ul>
             </nav>
+            <a href="Contact.html" class="contact-btn">CONTACT</a>
             <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
                 <span></span>
                 <span></span>

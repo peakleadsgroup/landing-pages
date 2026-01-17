@@ -579,11 +579,6 @@
                 z-index: 100;
             }
 
-            .mobile-menu-toggle {
-                display: flex;
-                order: 3;
-            }
-
             .nav-container {
                 position: relative;
                 display: grid;
@@ -606,19 +601,6 @@
 
             .nav-container nav {
                 grid-column: 1 / -1;
-            }
-
-            .mobile-menu-toggle {
-                grid-column: 3;
-                justify-self: end;
-            }
-
-            .mobile-menu {
-                position: fixed;
-                top: 80px;
-                left: 0;
-                right: 0;
-                z-index: 99;
             }
 
             .nav-container {
@@ -694,7 +676,6 @@
     <!-- Header -->
     <header class="header">
         <div class="nav-container">
-            <a href="Contact.html" class="contact-btn">CONTACT</a>
             <a href="https://peakleadsgroup.com"><img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Marketing Group" class="logo"></a>
             <nav>
                 <ul class="nav-links">
@@ -704,6 +685,7 @@
                     <li><a href="Integrations.html">Integrations</a></li>
                 </ul>
             </nav>
+            <a href="Contact.html" class="contact-btn">CONTACT</a>
             <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
                 <span></span>
                 <span></span>
@@ -754,7 +736,7 @@
                         <img src="https://peakleadsgroup.com/Images/integrations/2.png" alt="Work Within Your System Icon">
                     </div>
                     <h3>Work Within Your System</h3>
-                    <p>Use your CRM's built-in automation to assign leads, create follow-up tasks, and track conversions—all on your terms.</p>
+                    <p>Use your CRM's built-in automation to assign leads, create follow-up tasks, and track conversionsall on your terms.</p>
                 </div>
                 <div class="benefit-item">
                     <div class="benefit-icon">
@@ -781,8 +763,10 @@
                 <h2>50+ Supported Platforms</h2>
                 <p>Choose from industry-leading CRMs, call center platforms, and business management tools. If you don't see your platform, we can build a custom integration.</p>
             </div>
-            
-            <!-- CRM Search Box -->
+        </div>
+    </header>
+
+    <!-- CRM Search Box -->
             <div class="crm-search-container">
                 <input type="text" 
                        id="crmSearch" 
@@ -1023,13 +1007,13 @@
             if (isFound) {
                 // Found - show success message
                 searchResult.className = 'search-result show success';
-                resultIcon.textContent = '✓';
+                resultIcon.textContent = '';
                 resultIcon.style.color = '#4caf50';
                 resultMessage.textContent = 'We can integrate with that! Book a call to get started.';
             } else {
                 // Not found - show info message
                 searchResult.className = 'search-result show info';
-                resultIcon.textContent = '💡';
+                resultIcon.textContent = '';
                 resultMessage.textContent = 'We haven\'t integrated with that before but we\'re 99% certain we can! Book a call to confirm.';
             }
         }

@@ -352,7 +352,7 @@
         }
 
         .why-text ul li::before {
-            content: '✓';
+            content: '';
             position: absolute;
             left: 0;
             color: #4a6fa5;
@@ -601,11 +601,6 @@
                 z-index: 100;
             }
 
-            .mobile-menu-toggle {
-                display: flex;
-                order: 3;
-            }
-
             .nav-container {
                 position: relative;
                 display: grid;
@@ -628,19 +623,6 @@
 
             .nav-container nav {
                 grid-column: 1 / -1;
-            }
-
-            .mobile-menu-toggle {
-                grid-column: 3;
-                justify-self: end;
-            }
-
-            .mobile-menu {
-                position: fixed;
-                top: 80px;
-                left: 0;
-                right: 0;
-                z-index: 99;
             }
 
             .nav-container {
@@ -716,7 +698,6 @@
     <!-- Header -->
     <header class="header">
         <div class="nav-container">
-            <a href="Contact.html" class="contact-btn">CONTACT</a>
             <a href="https://peakleadsgroup.com"><img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Marketing Group" class="logo"></a>
             <nav>
                 <ul class="nav-links">
@@ -726,6 +707,7 @@
                     <li><a href="Integrations.html">Integrations</a></li>
                 </ul>
             </nav>
+            <a href="Contact.html" class="contact-btn">CONTACT</a>
             <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
                 <span></span>
                 <span></span>
@@ -772,7 +754,7 @@
                         <img src="https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/Sales.png?raw=true" alt="Sales">
                     </div>
                     <h3>Strong Sales Team</h3>
-                    <p>We produce a lot of leads… having a sales team that can handle high lead flow ensure the pipeline doesn't bottleneck</p>
+                    <p>We produce a lot of leads having a sales team that can handle high lead flow ensure the pipeline doesn't bottleneck</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
