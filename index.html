@@ -258,6 +258,63 @@
             gap: 3rem;
         }
 
+        /* Industries Section */
+        .industries-section {
+            padding: 6rem 2rem;
+            background: #f8f9fa;
+        }
+
+        .industries-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .industries-container h2 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            color: #333;
+            font-weight: 700;
+        }
+
+        .industries-container > p {
+            font-size: 1.3rem;
+            color: #666;
+            margin-bottom: 3rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.8;
+        }
+
+        .industries-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .industry-item {
+            background: white;
+            padding: 1.5rem 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-align: center;
+        }
+
+        .industry-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        .industry-item h3 {
+            font-size: 1.1rem;
+            color: #333;
+            font-weight: 600;
+            margin: 0;
+        }
+
         .feature {
             text-align: center;
             padding: 2rem;
@@ -500,6 +557,81 @@
             margin: 0;
         }
 
+        /* FAQ Section */
+        .faq-section {
+            padding: 6rem 2rem;
+            background: white;
+        }
+
+        .faq-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .faq-container h2 {
+            font-size: 3.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #333;
+            font-weight: 700;
+        }
+
+        .faq-item {
+            margin-bottom: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: box-shadow 0.3s;
+        }
+
+        .faq-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .faq-question {
+            padding: 1.5rem 2rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .faq-question:hover {
+            background: #e9ecef;
+        }
+
+        .faq-answer {
+            padding: 0 2rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            color: #666;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 500px;
+            padding: 0 2rem 1.5rem 2rem;
+        }
+
+        .faq-toggle {
+            font-size: 1.5rem;
+            color: #4a6fa5;
+            transition: transform 0.3s;
+        }
+
+        .faq-item.active .faq-toggle {
+            transform: rotate(45deg);
+        }
+
         /* By The Numbers Section */
         .numbers-section {
             padding: 6rem 2rem;
@@ -673,7 +805,9 @@
             }
 
             .features,
+            .industries-section,
             .about-section,
+            .faq-section,
             .numbers-section {
                 background-attachment: scroll;
             }
@@ -690,8 +824,25 @@
             .about-content h2,
             .testimonials-container h2,
             .numbers-container h2,
-            .booking-section h2 {
+            .booking-section h2,
+            .industries-container h2,
+            .faq-container h2 {
                 font-size: 2.5rem;
+            }
+
+            .faq-question {
+                font-size: 1.1rem;
+                padding: 1.25rem 1.5rem;
+            }
+
+            .faq-answer {
+                font-size: 1rem;
+                padding: 0 1.5rem;
+            }
+
+            .industries-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 1rem;
             }
 
             .numbers-grid {
@@ -766,6 +917,38 @@
         </div>
     </section>
 
+    <!-- Industries Section -->
+    <section class="industries-section">
+        <div class="industries-container">
+            <h2>Home Service Industries We Serve</h2>
+            <p>We deliver qualified, ready-to-book leads for contractors and businesses across 22+ home service industries. From bathroom remodeling to HVAC services, we connect you with homeowners actively seeking your expertise.</p>
+            <div class="industries-grid">
+                <div class="industry-item"><h3>Basement Waterproofing</h3></div>
+                <div class="industry-item"><h3>Bathroom Remodeling</h3></div>
+                <div class="industry-item"><h3>Concrete Floor Coating</h3></div>
+                <div class="industry-item"><h3>Decking</h3></div>
+                <div class="industry-item"><h3>Electrical</h3></div>
+                <div class="industry-item"><h3>Exterior Doors</h3></div>
+                <div class="industry-item"><h3>Fencing</h3></div>
+                <div class="industry-item"><h3>Flooring</h3></div>
+                <div class="industry-item"><h3>Foundation Repair</h3></div>
+                <div class="industry-item"><h3>Heat Pumps</h3></div>
+                <div class="industry-item"><h3>HVAC</h3></div>
+                <div class="industry-item"><h3>Interior Doors</h3></div>
+                <div class="industry-item"><h3>Kitchen Cabinet Refacing</h3></div>
+                <div class="industry-item"><h3>Metal Roofing</h3></div>
+                <div class="industry-item"><h3>Roofing</h3></div>
+                <div class="industry-item"><h3>Siding</h3></div>
+                <div class="industry-item"><h3>Stairlifts</h3></div>
+                <div class="industry-item"><h3>Standby Generators</h3></div>
+                <div class="industry-item"><h3>Walk-in Showers</h3></div>
+                <div class="industry-item"><h3>Walk-in Tubs</h3></div>
+                <div class="industry-item"><h3>Water Treatment Systems</h3></div>
+                <div class="industry-item"><h3>Windows</h3></div>
+            </div>
+        </div>
+    </section>
+
     <!-- How We Do It Section -->
     <section class="how-section" id="how">
         <div class="how-container">
@@ -798,6 +981,7 @@
     <section class="testimonials-section">
         <div class="testimonials-container">
             <h2>From our Clients</h2>
+            <p style="margin-bottom: 2rem; font-size: 1.1rem; color: #666;">See real results from home service businesses that partner with us. <a href="WhoWeServe.html" class="about-link">Learn about our ideal partners</a></p>
             <div class="videos-grid">
                 <div class="video-card">
                     <div class="video-wrapper">
@@ -808,6 +992,104 @@
             </div>
         </div>
     </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="faq-container">
+            <h2>Frequently Asked Questions</h2>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>How do you qualify leads before sending them?</span>
+                    <span class="faq-toggle">+</span>
+                </button>
+                <div class="faq-answer">
+                    <p>Every lead goes through our rigorous multi-step qualification process. We verify intent, validate contact information (phone numbers, emails, addresses), confirm project readiness (timelines, budgets, decision-making authority), and ensure leads are within your specified service area before delivery.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>What makes your leads different from other lead generation companies?</span>
+                    <span class="faq-toggle">+</span>
+                </button>
+                <div class="faq-answer">
+                    <p>Our leads are pre-qualified and ready-to-book, not just contact information. We use a proprietary formula combining social media advertising with rigorous qualification processes. You only pay per result - no upfront costs, no monthly retainers, and no ad spend. Plus, we guarantee lead quality - if we send you a lead that's out of your service area, has fake contact information, or incorrect address, you get your money back.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>Do I need to sign a long-term contract?</span>
+                    <span class="faq-toggle">+</span>
+                </button>
+                <div class="faq-answer">
+                    <p>No long-term commitments required. We operate on a pay-per-result model, so you only pay for qualified leads you receive. No monthly retainers or long-term contracts.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>What geographic areas do you cover?</span>
+                    <span class="faq-toggle">+</span>
+                </button>
+                <div class="faq-answer">
+                    <p>We work with home service businesses across the United States. Our lead generation campaigns can be targeted to specific geographic areas based on your service coverage.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>How quickly will I receive leads after signing up?</span>
+                    <span class="faq-toggle">+</span>
+                </button>
+                <div class="faq-answer">
+                    <p>After our initial strategy development and campaign launch, qualified leads typically start flowing to your pipeline within a short time frame. The exact timeline depends on your target market and campaign optimization, but we work quickly to get your calendar filling up.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>What information comes with each lead?</span>
+                    <span class="faq-toggle">+</span>
+                </button>
+                <div class="faq-answer">
+                    <p>Each qualified lead includes verified contact information (name, phone, email, address), project details, timeline, and budget information when available. Leads are delivered directly to your pipeline and can be integrated with your CRM and call center systems for seamless follow-up.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>Can I integrate your leads with my CRM system?</span>
+                    <span class="faq-toggle">+</span>
+                </button>
+                <div class="faq-answer">
+                    <p>Yes, we integrate with your existing CRM and call center systems to ensure seamless lead delivery. This allows for automated data entry and ensures your customer journey remains smooth from lead to close.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>What types of home service businesses do you work with?</span>
+                    <span class="faq-toggle">+</span>
+                </button>
+                <div class="faq-answer">
+                    <p>We serve over 22 home service industries including bathroom remodeling, HVAC, roofing, flooring, kitchen cabinet refacing, windows, doors, basement waterproofing, foundation repair, electrical, decking, fencing, and many more. We work best with enterprise-level businesses that have robust call centers, strong sales teams, and CRM automation systems.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // FAQ Accordion Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const faqItems = document.querySelectorAll('.faq-item');
+            faqItems.forEach(item => {
+                const question = item.querySelector('.faq-question');
+                question.addEventListener('click', function() {
+                    const isActive = item.classList.contains('active');
+                    // Close all items
+                    faqItems.forEach(faqItem => faqItem.classList.remove('active'));
+                    // Open clicked item if it wasn't already active
+                    if (!isActive) {
+                        item.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
 
     <!-- By The Numbers Section -->
     <section class="numbers-section">
