@@ -258,61 +258,28 @@
             gap: 3rem;
         }
 
-        /* Industries Section */
-        .industries-section {
-            padding: 6rem 2rem;
+        /* Industries Blip */
+        .industries-blip {
+            padding: 2.5rem 2rem;
             background: #f8f9fa;
         }
 
-        .industries-container {
-            max-width: 1400px;
+        .industries-blip-container {
+            max-width: 900px;
             margin: 0 auto;
             text-align: center;
         }
 
-        .industries-container h2 {
-            font-size: 3.5rem;
-            margin-bottom: 1.5rem;
-            color: #333;
-            font-weight: 700;
-        }
-
-        .industries-container > p {
-            font-size: 1.3rem;
-            color: #666;
-            margin-bottom: 3rem;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-            line-height: 1.8;
-        }
-
-        .industries-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2rem;
-        }
-
-        .industry-item {
-            background: white;
-            padding: 1.5rem 1rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            transition: transform 0.3s, box-shadow 0.3s;
-            text-align: center;
-        }
-
-        .industry-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-        }
-
-        .industry-item h3 {
+        .industries-blip-container p {
             font-size: 1.1rem;
+            color: #555;
+            line-height: 1.7;
+            margin: 0;
+        }
+
+        .industries-blip-container p strong {
             color: #333;
             font-weight: 600;
-            margin: 0;
         }
 
         .feature {
@@ -505,8 +472,26 @@
 
         .testimonials-container h2 {
             font-size: 3.5rem;
-            margin-bottom: 4rem;
+            margin-bottom: 2rem;
             font-weight: 700;
+            color: white;
+        }
+
+        .testimonials-container > p {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+        }
+
+        .testimonials-container > p a {
+            color: #ffeb3b;
+            text-decoration: underline;
+            font-weight: 600;
+            transition: opacity 0.3s;
+        }
+
+        .testimonials-container > p a:hover {
+            opacity: 0.8;
         }
 
         .videos-grid {
@@ -805,7 +790,6 @@
             }
 
             .features,
-            .industries-section,
             .about-section,
             .faq-section,
             .numbers-section {
@@ -825,9 +809,8 @@
             .testimonials-container h2,
             .numbers-container h2,
             .booking-section h2,
-            .industries-container h2,
             .faq-container h2 {
-                font-size: 2.5rem;
+                font-size: 1.75rem;
             }
 
             .faq-question {
@@ -840,9 +823,12 @@
                 padding: 0 1.5rem;
             }
 
-            .industries-grid {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-                gap: 1rem;
+            .industries-blip {
+                padding: 2rem 1.5rem;
+            }
+
+            .industries-blip-container p {
+                font-size: 1rem;
             }
 
             .numbers-grid {
@@ -917,35 +903,10 @@
         </div>
     </section>
 
-    <!-- Industries Section -->
-    <section class="industries-section">
-        <div class="industries-container">
-            <h2>Home Service Industries We Serve</h2>
-            <p>We deliver qualified, ready-to-book leads for contractors and businesses across 22+ home service industries. From bathroom remodeling to HVAC services, we connect you with homeowners actively seeking your expertise.</p>
-            <div class="industries-grid">
-                <div class="industry-item"><h3>Basement Waterproofing</h3></div>
-                <div class="industry-item"><h3>Bathroom Remodeling</h3></div>
-                <div class="industry-item"><h3>Concrete Floor Coating</h3></div>
-                <div class="industry-item"><h3>Decking</h3></div>
-                <div class="industry-item"><h3>Electrical</h3></div>
-                <div class="industry-item"><h3>Exterior Doors</h3></div>
-                <div class="industry-item"><h3>Fencing</h3></div>
-                <div class="industry-item"><h3>Flooring</h3></div>
-                <div class="industry-item"><h3>Foundation Repair</h3></div>
-                <div class="industry-item"><h3>Heat Pumps</h3></div>
-                <div class="industry-item"><h3>HVAC</h3></div>
-                <div class="industry-item"><h3>Interior Doors</h3></div>
-                <div class="industry-item"><h3>Kitchen Cabinet Refacing</h3></div>
-                <div class="industry-item"><h3>Metal Roofing</h3></div>
-                <div class="industry-item"><h3>Roofing</h3></div>
-                <div class="industry-item"><h3>Siding</h3></div>
-                <div class="industry-item"><h3>Stairlifts</h3></div>
-                <div class="industry-item"><h3>Standby Generators</h3></div>
-                <div class="industry-item"><h3>Walk-in Showers</h3></div>
-                <div class="industry-item"><h3>Walk-in Tubs</h3></div>
-                <div class="industry-item"><h3>Water Treatment Systems</h3></div>
-                <div class="industry-item"><h3>Windows</h3></div>
-            </div>
+    <!-- Industries Blip -->
+    <section class="industries-blip">
+        <div class="industries-blip-container">
+            <p>We deliver qualified leads for <strong>bathroom remodeling</strong>, <strong>kitchen remodeling</strong>, <strong>windows</strong>, <strong>concrete floor coatings</strong>, and 18+ other home service industries. <a href="WhoWeServe.html" class="about-link">See all industries we serve →</a></p>
         </div>
     </section>
 
@@ -981,7 +942,7 @@
     <section class="testimonials-section">
         <div class="testimonials-container">
             <h2>From our Clients</h2>
-            <p style="margin-bottom: 2rem; font-size: 1.1rem; color: #666;">See real results from home service businesses that partner with us. <a href="WhoWeServe.html" class="about-link">Learn about our ideal partners</a></p>
+            <p>See real results from home service businesses that partner with us. <a href="WhoWeServe.html">Learn about our ideal partners →</a></p>
             <div class="videos-grid">
                 <div class="video-card">
                     <div class="video-wrapper">
