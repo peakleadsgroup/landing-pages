@@ -572,13 +572,67 @@
 
 
 
-            .hero {
-                min-height: 60vh;
-                background-attachment: scroll;
+            
+            .nav-container {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr 1fr !important;
+                grid-template-rows: auto !important;
+                gap: 0.75rem;
+                align-items: center;
+                padding: 0 1rem;
+                position: relative;
+                height: auto;
             }
 
-            .process-section {
-                background-attachment: scroll;
+            .nav-container .contact-btn {
+                grid-column: 1 / 2 !important;
+                grid-row: 1 / 2 !important;
+                justify-self: start !important;
+                align-self: center !important;
+                padding: 0.7rem 1.2rem !important;
+                font-size: 0.8rem;
+                white-space: nowrap;
+                margin: 0 !important;
+            }
+
+            .nav-container > .logo {
+                grid-column: 2 / 3 !important;
+                grid-row: 1 / 2 !important;
+                justify-self: center !important;
+                align-self: center !important;
+                max-width: 150px;
+                height: auto;
+                margin: 0 auto;
+                display: block !important;
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            .nav-container > nav {
+                display: none !important;
+                grid-column: none !important;
+                grid-row: none !important;
+            }
+
+            .nav-container > .mobile-menu-toggle {
+                display: flex !important;
+                grid-column: 3 / 4 !important;
+                grid-row: 1 / 2 !important;
+                justify-self: end !important;
+                align-self: center !important;
+                padding: 0.5rem;
+                margin: 0 !important;
+            }
+
+            .mobile-menu {
+                position: fixed;
+                top: 72px;
+                left: 0;
+                right: 0;
+                z-index: 99;
+                background: white;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             }
 
             .hero-content h1 {
