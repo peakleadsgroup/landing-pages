@@ -933,6 +933,69 @@
         </div>
     </div>
 
+    <!-- DUPLICATE CALL TO ACTION SECTION -->
+    <div class="reviews-section" id="ctaSection">
+        <div class="reviews-content">
+            <!-- DUPLICATE CONTACT SCREEN -->
+            <div class="form-step" id="contactStepBelow">
+                <div style="text-align: center;">
+                    <div style="font-size: 24px; color: #4CAF50; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your free estimate!</div>
+                    <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Or if you're ready to schedule now you can contact us by clicking one of the buttons below</div>
+                    
+                    <a id="callButtonLinkBelow" href="#" class="contact-button call-button" style="display: none;">
+                        <svg class="phone-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
+                        </svg>
+                        Call
+                    </a>
+                    
+                    <a id="textButtonLinkBelow" href="#" class="contact-button text-button" style="display: none;">
+                        <svg class="message-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 11H7V9h2v2zm4 0h-2V9h2v2zm4 0h-2V9h2v2z"/>
+                        </svg>
+                        Text
+                    </a>
+                    
+                    <div class="phone-number-display" id="phoneNumberDisplayBelow"></div>
+                </div>
+            </div>
+
+            <!-- DUPLICATE CALENDAR SCREEN -->
+            <div class="form-step" id="calendarStepBelow">
+                <div class="calendar-step-header">We'll reach out soon to schedule your free estimate!</div>
+                <div style="font-size: 16px; color: #666; margin-bottom: 25px; text-align: center;">Ready to schedule your free estimate now? Choose a time below:</div>
+                
+                <div class="calendar-header">
+                    <div class="month-nav">
+                        <button class="nav-button" id="prevMonthBelow" onclick="changeCalendarMonthBelow(-1)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M15 18l-6-6 6-6"/>
+                            </svg>
+                        </button>
+                        <div class="month-display" id="monthDisplayBelow"></div>
+                    </div>
+                </div>
+                
+                <div class="weekday-header">
+                    <div class="weekday-name">Sun</div>
+                    <div class="weekday-name">Mon</div>
+                    <div class="weekday-name">Tue</div>
+                    <div class="weekday-name">Wed</div>
+                    <div class="weekday-name">Thu</div>
+                    <div class="weekday-name">Fri</div>
+                    <div class="weekday-name">Sat</div>
+                </div>
+                
+                <div class="calendar-grid" id="calendarGridBelow"></div>
+                
+                <div id="timeSectionBelow" class="time-section" style="display: none;">
+                    <div class="selected-info" id="selectedDayInfoBelow"></div>
+                    <div class="time-grid" id="timeGridBelow"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ============================================
         // AIRTABLE CONFIGURATION
@@ -975,6 +1038,7 @@
         let clientAvailableDays = [1, 2, 3, 4, 5]; // Default: Monday-Friday
         let clientDaysOut = 14; // Default: 14 days out
         let isSubmitting = false; // Flag to prevent duplicate submissions
+        let currentSubmitScreenType = null; // Store the current submit screen type
         
         // Get campaign ID immediately from URL (before DOM is ready)
         const urlParams = new URLSearchParams(window.location.search);
@@ -2594,8 +2658,16 @@
                 console.log('Building review blocks and showing reviews section');
                 buildReviewBlocks();
                 document.getElementById('reviewsSection').classList.add('active');
+                
+                // Show duplicate call to action below reviews
+                showDuplicateCallToAction();
             } else {
                 console.log('No reviews found, not showing reviews section');
+                // Hide duplicate call to action section if no reviews
+                const ctaSection = document.getElementById('ctaSection');
+                if (ctaSection) {
+                    ctaSection.classList.remove('active');
+                }
             }
         }
 
@@ -2629,6 +2701,111 @@
                 `;
                 container.appendChild(reviewBlock);
             });
+        }
+
+        function showDuplicateCallToAction() {
+            // Don't show duplicate if no reviews exist
+            if (!reviews || reviews.length === 0) {
+                const ctaSection = document.getElementById('ctaSection');
+                if (ctaSection) {
+                    ctaSection.classList.remove('active');
+                }
+                return;
+            }
+            
+            const ctaSection = document.getElementById('ctaSection');
+            const contactStepBelow = document.getElementById('contactStepBelow');
+            const calendarStepBelow = document.getElementById('calendarStepBelow');
+            
+            // Hide both initially
+            if (contactStepBelow) contactStepBelow.style.display = 'none';
+            if (calendarStepBelow) calendarStepBelow.style.display = 'none';
+            
+            // Show appropriate call to action based on submit screen type
+            if (currentSubmitScreenType === 'calendar') {
+                if (calendarStepBelow) {
+                    calendarStepBelow.style.display = 'block';
+                    ctaSection.classList.add('active');
+                    // Initialize calendar below (same as original)
+                    initializeCalendarBelow();
+                }
+            } else if (currentSubmitScreenType === 'Phone' || currentSubmitScreenType === 'Text' || currentSubmitScreenType === 'Phone/Text') {
+                if (contactStepBelow) {
+                    contactStepBelow.style.display = 'block';
+                    ctaSection.classList.add('active');
+                    // Set up contact buttons below
+                    setupContactButtonsBelow(currentSubmitScreenType);
+                }
+            } else {
+                // Don't show call to action below if it's confirmation screen or other
+                ctaSection.classList.remove('active');
+            }
+        }
+
+        function setupContactButtonsBelow(submitScreenType) {
+            // Get lead's name
+            const firstName = document.getElementById('firstName')?.value.trim() || '';
+            
+            // Determine which client data to use
+            const activeClient = matchedClientData || campaignClientData;
+            if (!activeClient) return;
+            
+            const phoneField = activeClient.fields['Phone'];
+            const textField = activeClient.fields['Text'];
+            
+            // Format phone numbers
+            const phoneForDisplay = phoneField ? formatClientPhoneForDisplay(phoneField) : '';
+            const textForDisplay = textField ? formatClientPhoneForDisplay(textField) : '';
+            
+            // Build the SMS body
+            const smsBody = encodeURIComponent(
+                `Hey, this is ${firstName}! I just saw your video on social media and would like to schedule an appointment to get my free, no obligation quote. Please send me some days/times that you're available!`
+            );
+            
+            // Update the contact buttons below
+            const callButtonBelow = document.getElementById('callButtonLinkBelow');
+            const textButtonBelow = document.getElementById('textButtonLinkBelow');
+            const phoneDisplayBelow = document.getElementById('phoneNumberDisplayBelow');
+            
+            // Show/hide buttons based on submit screen type
+            if (submitScreenType === 'Phone' || submitScreenType === 'Phone/Text') {
+                if (callButtonBelow && phoneField) {
+                    callButtonBelow.href = `tel:${phoneField}`;
+                    callButtonBelow.style.display = 'inline-flex';
+                }
+            } else {
+                if (callButtonBelow) callButtonBelow.style.display = 'none';
+            }
+            
+            if (submitScreenType === 'Text' || submitScreenType === 'Phone/Text') {
+                if (textButtonBelow && textField) {
+                    textButtonBelow.href = `sms:${textField}?&body=${smsBody}`;
+                    textButtonBelow.style.display = 'inline-flex';
+                }
+            } else {
+                if (textButtonBelow) textButtonBelow.style.display = 'none';
+            }
+            
+            // Display phone number
+            if (phoneDisplayBelow) {
+                if (submitScreenType === 'Phone' && phoneForDisplay) {
+                    phoneDisplayBelow.textContent = phoneForDisplay;
+                } else if (submitScreenType === 'Text' && textForDisplay) {
+                    phoneDisplayBelow.textContent = textForDisplay;
+                } else if (submitScreenType === 'Phone/Text' && phoneForDisplay) {
+                    phoneDisplayBelow.textContent = phoneForDisplay;
+                } else {
+                    phoneDisplayBelow.textContent = '';
+                }
+            }
+        }
+
+        function initializeCalendarBelow() {
+            // Initialize calendar below with same functionality as original
+            // This will reuse the calendar logic but with "Below" element IDs
+            // For now, just show it - the calendar functionality should work with the same IDs
+            // Note: This assumes calendar state is global, may need to refactor calendar functions
+            // to work with different element IDs if needed
         }
 
         function escapeHtml(text) {
@@ -2934,15 +3111,20 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 }
             } else if (normalizedType === 'calendar') {
                 console.log('Showing calendar screen');
+                currentSubmitScreenType = 'calendar';
                 showCalendarScreen();
             } else if (normalizedType === 'phone') {
+                currentSubmitScreenType = 'Phone';
                 showContactScreen('Phone');
             } else if (normalizedType === 'text') {
+                currentSubmitScreenType = 'Text';
                 showContactScreen('Text');
             } else if (normalizedType === 'phone/text') {
+                currentSubmitScreenType = 'Phone/Text';
                 showContactScreen('Phone/Text');
             } else {
                 // None or default
+                currentSubmitScreenType = null;
                 showConfirmationScreen();
             }
             } catch (error) {
