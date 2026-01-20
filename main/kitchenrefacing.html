@@ -48,11 +48,13 @@
             right: 0;
             bottom: 0;
             width: 100vw;
-            height: 100vh;
+            height: 100%;
+            min-height: 100vh;
             background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
-                        url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/KitchenRemodelBack.jpg?raw=true') center/cover no-repeat;
-            background-size: cover;
-            background-position: center;
+                        url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
+            background-size: 100% auto;
+            background-position: center top;
+            background-repeat: repeat-y;
             background-attachment: fixed;
             z-index: -1;
             transform: translateZ(0);
@@ -585,18 +587,18 @@
             }
 
             .reviews-content {
-                padding: 25px;
                 margin: 10px;
+                padding: 0;
             }
 
             .review-block {
                 padding: 25px;
-                margin: 10px;
+                margin: 0;
             }
 
             .cta-block {
                 padding: 25px;
-                margin: 10px;
+                margin: 0;
             }
 
             .address-row {
@@ -1570,8 +1572,51 @@
         }
         
         // Also ensure logo loads when DOM is ready (backup)
+        // Function to update background height to cover all content
+        function updateBackgroundHeight() {
+            const bodyBefore = document.querySelector('body::before');
+            const style = document.createElement('style');
+            style.id = 'dynamic-background-height';
+            const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.clientHeight,
+                document.documentElement.scrollHeight,
+                document.documentElement.offsetHeight
+            );
+            style.textContent = `
+                body::before {
+                    height: ${docHeight}px !important;
+                    min-height: ${docHeight}px !important;
+                }
+            `;
+            const existingStyle = document.getElementById('dynamic-background-height');
+            if (existingStyle) {
+                existingStyle.remove();
+            }
+            document.head.appendChild(style);
+        }
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function() {
+                updateBackgroundHeight();
+                
+                // Update background height when content changes
+                const observer = new MutationObserver(() => {
+                    updateBackgroundHeight();
+                });
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: true,
+                    attributes: true
+                });
+                
+                // Also update on window resize
+                window.addEventListener('resize', updateBackgroundHeight);
+                
+                // Initial update
+                setTimeout(updateBackgroundHeight, 100);
+                
                 // If client data is already loaded, ensure logo is displayed
                 if (clientData && clientData.fields && clientData.fields['Logo Link']) {
                     const logoImg = document.getElementById('logoImg');
@@ -1580,6 +1625,15 @@
                     }
                 }
             });
+        } else {
+            updateBackgroundHeight();
+            // If client data is already loaded, ensure logo is displayed
+            if (clientData && clientData.fields && clientData.fields['Logo Link']) {
+                const logoImg = document.getElementById('logoImg');
+                if (logoImg && !logoImg.src) {
+                    loadLogo(clientData.fields['Logo Link']);
+                }
+            }
         }
 
         // ============================================
@@ -2678,6 +2732,13 @@
                 
                 // Show duplicate call to action below reviews
                 showDuplicateCallToAction();
+                
+                // Update background height after reviews are displayed
+                setTimeout(() => {
+                    if (typeof updateBackgroundHeight === 'function') {
+                        updateBackgroundHeight();
+                    }
+                }, 300);
             } else {
                 console.log('No reviews found, not showing reviews section');
                 // Hide duplicate call to action section if no reviews
