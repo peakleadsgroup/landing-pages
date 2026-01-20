@@ -589,6 +589,11 @@
                 margin: 10px;
             }
 
+            .review-block {
+                padding: 25px;
+                margin: 10px;
+            }
+
             .address-row {
                 grid-template-columns: 1fr;
             }
@@ -624,38 +629,24 @@
         }
 
         .reviews-content {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             max-width: 500px;
             width: 100%;
             margin: 0 auto;
             position: relative;
+        }
+
+        .reviews-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .review-block {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             text-align: center;
-        }
-
-        .reviews-carousel {
-            position: relative;
-            min-height: 250px;
-        }
-
-        .review-item {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .review-item.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
         }
 
         .review-text {
@@ -706,86 +697,24 @@
             font-size: 16px;
             color: #666;
             font-weight: 600;
+            margin-bottom: 25px;
         }
 
-        .review-nav-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 20px 0;
-        }
-
-        .review-nav {
-            background: #4CAF50;
-            border: none;
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            flex-shrink: 0;
-        }
-
-        .review-nav:hover:not(:disabled) {
-            background: #45a049;
-            transform: scale(1.1);
-        }
-
-        .review-nav:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        .review-content-wrapper {
-            flex: 1;
-            margin: 0 15px;
-        }
-
-        .review-indicators {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 25px;
-        }
-
-        .review-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #ddd;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .review-indicator.active {
-            background: #4CAF50;
-            width: 24px;
-            border-radius: 4px;
+        .review-product-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-top: 20px;
         }
 
         @media (max-width: 768px) {
+            .review-block {
+                padding: 30px 20px;
+            }
+
             .review-text {
                 font-size: 16px;
                 padding: 0 10px;
-            }
-
-            .review-nav {
-                width: 35px;
-                height: 35px;
-                font-size: 18px;
-            }
-
-            .review-content-wrapper {
-                margin: 0 10px;
-            }
-
-            .review-nav-container {
-                margin: 15px 0;
             }
         }
     </style>
@@ -998,16 +927,9 @@
     <!-- REVIEWS SECTION -->
     <div class="reviews-section" id="reviewsSection">
         <div class="reviews-content">
-            <div class="review-nav-container">
-                <button class="review-nav prev" id="prevReview" onclick="navigateReview(-1)">&#8249;</button>
-                <div class="review-content-wrapper">
-                    <div class="reviews-carousel" id="reviewsCarousel">
-                        <!-- Review items will be dynamically added here -->
-                    </div>
-                </div>
-                <button class="review-nav next" id="nextReview" onclick="navigateReview(1)">&#8250;</button>
+            <div class="reviews-container" id="reviewsContainer">
+                <!-- Review blocks will be dynamically added here -->
             </div>
-            <div class="review-indicators" id="reviewIndicators"></div>
         </div>
     </div>
 
@@ -2623,8 +2545,7 @@
             }, 500); // Small delay to let the confirmation screen appear first
         }
 
-        // Reviews Modal Functions
-        let currentReviewIndex = 0;
+        // Reviews Section Functions
         let reviews = [];
 
         function showReviewsModal() {
@@ -2647,16 +2568,20 @@
             for (let i = 1; i <= 3; i++) {
                 const reviewTextField = `Review Text ${i}`;
                 const reviewNameField = `Review Name ${i}`;
+                const productUrlField = `Product URL ${i}`;
                 const reviewText = fields[reviewTextField];
                 const reviewName = fields[reviewNameField];
+                const productUrl = fields[productUrlField];
                 
                 console.log(`Review ${i} - Text field "${reviewTextField}":`, reviewText);
                 console.log(`Review ${i} - Name field "${reviewNameField}":`, reviewName);
+                console.log(`Review ${i} - Product URL field "${productUrlField}":`, productUrl);
                 
                 if (reviewText && reviewText.trim() && reviewName && reviewName.trim()) {
                     reviews.push({
                         text: reviewText.trim(),
-                        name: reviewName.trim()
+                        name: reviewName.trim(),
+                        productUrl: productUrl ? productUrl.trim() : null
                     });
                 }
             }
@@ -2666,29 +2591,31 @@
 
             // Only show reviews section if there are reviews
             if (reviews.length > 0) {
-                console.log('Building reviews carousel and showing reviews section');
-                buildReviewsCarousel();
+                console.log('Building review blocks and showing reviews section');
+                buildReviewBlocks();
                 document.getElementById('reviewsSection').classList.add('active');
-                currentReviewIndex = 0;
-                updateReviewDisplay();
             } else {
                 console.log('No reviews found, not showing reviews section');
             }
         }
 
-        function buildReviewsCarousel() {
-            const carousel = document.getElementById('reviewsCarousel');
-            const indicators = document.getElementById('reviewIndicators');
+        function buildReviewBlocks() {
+            const container = document.getElementById('reviewsContainer');
             
             // Clear existing content
-            carousel.innerHTML = '';
-            indicators.innerHTML = '';
+            container.innerHTML = '';
 
-            // Build review items
-            reviews.forEach((review, index) => {
-                const reviewItem = document.createElement('div');
-                reviewItem.className = `review-item ${index === 0 ? 'active' : ''}`;
-                reviewItem.innerHTML = `
+            // Build review blocks
+            reviews.forEach((review) => {
+                const reviewBlock = document.createElement('div');
+                reviewBlock.className = 'review-block';
+                
+                let imageHtml = '';
+                if (review.productUrl && review.productUrl.trim()) {
+                    imageHtml = `<img src="${escapeHtml(review.productUrl)}" alt="Product image" class="review-product-image" onerror="this.style.display='none'">`;
+                }
+                
+                reviewBlock.innerHTML = `
                     <div class="review-text">${escapeHtml(review.text)}</div>
                     <div class="review-stars">
                         <span class="review-star">★</span>
@@ -2698,72 +2625,10 @@
                         <span class="review-star">★</span>
                     </div>
                     <div class="review-name">${escapeHtml(review.name)}</div>
+                    ${imageHtml}
                 `;
-                carousel.appendChild(reviewItem);
-
-                // Build indicator
-                const indicator = document.createElement('div');
-                indicator.className = `review-indicator ${index === 0 ? 'active' : ''}`;
-                indicator.onclick = () => goToReview(index);
-                indicators.appendChild(indicator);
+                container.appendChild(reviewBlock);
             });
-
-            // Update navigation buttons
-            updateReviewNavigation();
-        }
-
-        function navigateReview(direction) {
-            const newIndex = currentReviewIndex + direction;
-            if (newIndex >= 0 && newIndex < reviews.length) {
-                goToReview(newIndex);
-            }
-        }
-
-        function goToReview(index) {
-            if (index < 0 || index >= reviews.length) return;
-            
-            // Hide current review
-            const currentItem = document.querySelectorAll('.review-item')[currentReviewIndex];
-            const currentIndicator = document.querySelectorAll('.review-indicator')[currentReviewIndex];
-            if (currentItem) currentItem.classList.remove('active');
-            if (currentIndicator) currentIndicator.classList.remove('active');
-
-            // Show new review
-            currentReviewIndex = index;
-            const newItem = document.querySelectorAll('.review-item')[currentReviewIndex];
-            const newIndicator = document.querySelectorAll('.review-indicator')[currentReviewIndex];
-            if (newItem) newItem.classList.add('active');
-            if (newIndicator) newIndicator.classList.add('active');
-
-            // Update navigation buttons
-            updateReviewNavigation();
-        }
-
-        function updateReviewDisplay() {
-            // Update indicators
-            document.querySelectorAll('.review-indicator').forEach((indicator, index) => {
-                indicator.classList.toggle('active', index === currentReviewIndex);
-            });
-
-            // Update review items
-            document.querySelectorAll('.review-item').forEach((item, index) => {
-                item.classList.toggle('active', index === currentReviewIndex);
-            });
-
-            // Update navigation buttons
-            updateReviewNavigation();
-        }
-
-        function updateReviewNavigation() {
-            const prevBtn = document.getElementById('prevReview');
-            const nextBtn = document.getElementById('nextReview');
-
-            if (prevBtn) {
-                prevBtn.disabled = currentReviewIndex === 0;
-            }
-            if (nextBtn) {
-                nextBtn.disabled = currentReviewIndex === reviews.length - 1;
-            }
         }
 
         function escapeHtml(text) {
