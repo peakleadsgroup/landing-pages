@@ -594,6 +594,11 @@
                 margin: 10px;
             }
 
+            .cta-block {
+                padding: 25px;
+                margin: 10px;
+            }
+
             .address-row {
                 grid-template-columns: 1fr;
             }
@@ -633,6 +638,14 @@
             width: 100%;
             margin: 0 auto;
             position: relative;
+        }
+
+        .cta-block {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
 
         .reviews-container {
@@ -709,6 +722,10 @@
 
         @media (max-width: 768px) {
             .review-block {
+                padding: 30px 20px;
+            }
+
+            .cta-block {
                 padding: 30px 20px;
             }
 
@@ -937,7 +954,7 @@
     <div class="reviews-section" id="ctaSection">
         <div class="reviews-content">
             <!-- DUPLICATE CONTACT SCREEN -->
-            <div class="form-step" id="contactStepBelow">
+            <div class="form-step cta-block" id="contactStepBelow">
                 <div style="text-align: center;">
                     <div style="font-size: 24px; color: #4CAF50; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your free estimate!</div>
                     <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Or if you're ready to schedule now you can contact us by clicking one of the buttons below</div>
@@ -961,7 +978,7 @@
             </div>
 
             <!-- DUPLICATE CALENDAR SCREEN -->
-            <div class="form-step" id="calendarStepBelow">
+            <div class="form-step cta-block" id="calendarStepBelow">
                 <div class="calendar-step-header">We'll reach out soon to schedule your free estimate!</div>
                 <div style="font-size: 16px; color: #666; margin-bottom: 25px; text-align: center;">Ready to schedule your free estimate now? Choose a time below:</div>
                 
