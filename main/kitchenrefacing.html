@@ -606,6 +606,193 @@
                 position: absolute;
             }
         }
+
+        /* Reviews Modal Styles */
+        .reviews-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .reviews-modal.active {
+            display: flex;
+        }
+
+        .reviews-modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .reviews-carousel {
+            position: relative;
+            min-height: 250px;
+        }
+
+        .review-item {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .review-item.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .review-text {
+            font-size: 18px;
+            color: #2c3e50;
+            line-height: 1.8;
+            margin-bottom: 25px;
+            font-style: italic;
+            padding: 0 40px;
+            position: relative;
+        }
+
+        .review-text::before,
+        .review-text::after {
+            content: '"';
+            font-size: 64px;
+            line-height: 1;
+            position: absolute;
+            color: #4CAF50;
+            font-family: Georgia, serif;
+            opacity: 0.6;
+        }
+
+        .review-text::before {
+            left: 0;
+            top: -10px;
+        }
+
+        .review-text::after {
+            right: 0;
+            bottom: -30px;
+        }
+
+        .review-stars {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .review-star {
+            color: #ffd700;
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .review-name {
+            font-size: 16px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .review-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #4CAF50;
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .review-nav:hover {
+            background: #45a049;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .review-nav.prev {
+            left: -20px;
+        }
+
+        .review-nav.next {
+            right: -20px;
+        }
+
+        .review-nav:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .review-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 25px;
+        }
+
+        .review-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ddd;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .review-indicator.active {
+            background: #4CAF50;
+            width: 24px;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .reviews-modal-content {
+                padding: 30px 20px;
+            }
+
+            .review-text {
+                font-size: 16px;
+                padding: 0 10px;
+            }
+
+            .review-nav {
+                width: 35px;
+                height: 35px;
+                font-size: 18px;
+            }
+
+            .review-nav.prev {
+                left: -15px;
+            }
+
+            .review-nav.next {
+                right: -15px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -810,6 +997,18 @@
                 <div style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
                 <div id="confirmationMessage" style="font-size: 18px; color: #666; line-height: 1.6;">We'll give you a call soon to schedule your free estimate.</div>
             </div>
+        </div>
+    </div>
+
+    <!-- REVIEWS MODAL -->
+    <div class="reviews-modal" id="reviewsModal" onclick="closeReviewsModal(event)">
+        <div class="reviews-modal-content" onclick="event.stopPropagation()">
+            <div class="reviews-carousel" id="reviewsCarousel">
+                <!-- Review items will be dynamically added here -->
+            </div>
+            <button class="review-nav prev" id="prevReview" onclick="navigateReview(-1)">&#8249;</button>
+            <button class="review-nav next" id="nextReview" onclick="navigateReview(1)">&#8250;</button>
+            <div class="review-indicators" id="reviewIndicators"></div>
         </div>
     </div>
 
@@ -2232,6 +2431,11 @@
             }
             document.getElementById('calendarStep').classList.remove('active');
             document.getElementById('confirmationStep').classList.add('active');
+            
+            // Show reviews modal if reviews exist
+            setTimeout(() => {
+                showReviewsModal();
+            }, 500); // Small delay to let the confirmation screen appear first
         }
         
         function showCalendarScreen() {
@@ -2408,6 +2612,150 @@
             document.getElementById('confirmationStep').classList.add('active');
             document.getElementById('progressBarContainer').style.display = 'none';
             document.getElementById('mainHeading').style.display = 'none';
+            
+            // Show reviews modal if reviews exist
+            setTimeout(() => {
+                showReviewsModal();
+            }, 500); // Small delay to let the confirmation screen appear first
+        }
+
+        // Reviews Modal Functions
+        let currentReviewIndex = 0;
+        let reviews = [];
+
+        function showReviewsModal() {
+            // Get reviews from client data
+            const activeClient = matchedClientData || campaignClientData;
+            if (!activeClient || !activeClient.fields) {
+                return;
+            }
+
+            reviews = [];
+            const fields = activeClient.fields;
+
+            // Collect reviews (up to 3)
+            for (let i = 1; i <= 3; i++) {
+                const reviewText = fields[`Review Text ${i}`];
+                const reviewName = fields[`Review Name ${i}`];
+                
+                if (reviewText && reviewText.trim() && reviewName && reviewName.trim()) {
+                    reviews.push({
+                        text: reviewText.trim(),
+                        name: reviewName.trim()
+                    });
+                }
+            }
+
+            // Only show modal if there are reviews
+            if (reviews.length > 0) {
+                buildReviewsCarousel();
+                document.getElementById('reviewsModal').classList.add('active');
+                currentReviewIndex = 0;
+                updateReviewDisplay();
+            }
+        }
+
+        function buildReviewsCarousel() {
+            const carousel = document.getElementById('reviewsCarousel');
+            const indicators = document.getElementById('reviewIndicators');
+            
+            // Clear existing content
+            carousel.innerHTML = '';
+            indicators.innerHTML = '';
+
+            // Build review items
+            reviews.forEach((review, index) => {
+                const reviewItem = document.createElement('div');
+                reviewItem.className = `review-item ${index === 0 ? 'active' : ''}`;
+                reviewItem.innerHTML = `
+                    <div class="review-text">${escapeHtml(review.text)}</div>
+                    <div class="review-stars">
+                        <span class="review-star">★</span>
+                        <span class="review-star">★</span>
+                        <span class="review-star">★</span>
+                        <span class="review-star">★</span>
+                        <span class="review-star">★</span>
+                    </div>
+                    <div class="review-name">${escapeHtml(review.name)}</div>
+                `;
+                carousel.appendChild(reviewItem);
+
+                // Build indicator
+                const indicator = document.createElement('div');
+                indicator.className = `review-indicator ${index === 0 ? 'active' : ''}`;
+                indicator.onclick = () => goToReview(index);
+                indicators.appendChild(indicator);
+            });
+
+            // Update navigation buttons
+            updateReviewNavigation();
+        }
+
+        function navigateReview(direction) {
+            const newIndex = currentReviewIndex + direction;
+            if (newIndex >= 0 && newIndex < reviews.length) {
+                goToReview(newIndex);
+            }
+        }
+
+        function goToReview(index) {
+            if (index < 0 || index >= reviews.length) return;
+            
+            // Hide current review
+            const currentItem = document.querySelectorAll('.review-item')[currentReviewIndex];
+            const currentIndicator = document.querySelectorAll('.review-indicator')[currentReviewIndex];
+            if (currentItem) currentItem.classList.remove('active');
+            if (currentIndicator) currentIndicator.classList.remove('active');
+
+            // Show new review
+            currentReviewIndex = index;
+            const newItem = document.querySelectorAll('.review-item')[currentReviewIndex];
+            const newIndicator = document.querySelectorAll('.review-indicator')[currentReviewIndex];
+            if (newItem) newItem.classList.add('active');
+            if (newIndicator) newIndicator.classList.add('active');
+
+            // Update navigation buttons
+            updateReviewNavigation();
+        }
+
+        function updateReviewDisplay() {
+            // Update indicators
+            document.querySelectorAll('.review-indicator').forEach((indicator, index) => {
+                indicator.classList.toggle('active', index === currentReviewIndex);
+            });
+
+            // Update review items
+            document.querySelectorAll('.review-item').forEach((item, index) => {
+                item.classList.toggle('active', index === currentReviewIndex);
+            });
+
+            // Update navigation buttons
+            updateReviewNavigation();
+        }
+
+        function updateReviewNavigation() {
+            const prevBtn = document.getElementById('prevReview');
+            const nextBtn = document.getElementById('nextReview');
+
+            if (prevBtn) {
+                prevBtn.disabled = currentReviewIndex === 0;
+            }
+            if (nextBtn) {
+                nextBtn.disabled = currentReviewIndex === reviews.length - 1;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function closeReviewsModal(event) {
+            // Close modal when clicking outside the content
+            if (event.target.id === 'reviewsModal') {
+                document.getElementById('reviewsModal').classList.remove('active');
+            }
         }
 
         function formatPhoneForDisplay(digits) {
