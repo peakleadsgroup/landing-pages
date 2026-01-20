@@ -33,6 +33,7 @@
             font-family: 'Arial', sans-serif;
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 20px;
@@ -607,33 +608,25 @@
             }
         }
 
-        /* Reviews Modal Styles */
-        .reviews-modal {
+        /* Reviews Section Styles */
+        .reviews-section {
             display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 10000;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            margin-top: 20px;
         }
 
-        .reviews-modal.active {
-            display: flex;
+        .reviews-section.active {
+            display: block;
         }
 
-        .reviews-modal-content {
+        .reviews-content {
             background: white;
             border-radius: 20px;
             padding: 40px;
-            max-width: 600px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
             width: 100%;
+            margin: 0 auto;
             position: relative;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             text-align: center;
         }
 
@@ -710,10 +703,14 @@
             font-weight: 600;
         }
 
+        .review-nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+        }
+
         .review-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
             background: #4CAF50;
             border: none;
             color: white;
@@ -726,25 +723,22 @@
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
-            z-index: 10;
+            flex-shrink: 0;
         }
 
-        .review-nav:hover {
+        .review-nav:hover:not(:disabled) {
             background: #45a049;
-            transform: translateY(-50%) scale(1.1);
-        }
-
-        .review-nav.prev {
-            left: -20px;
-        }
-
-        .review-nav.next {
-            right: -20px;
+            transform: scale(1.1);
         }
 
         .review-nav:disabled {
             opacity: 0.3;
             cursor: not-allowed;
+        }
+
+        .review-content-wrapper {
+            flex: 1;
+            margin: 0 15px;
         }
 
         .review-indicators {
@@ -770,7 +764,7 @@
         }
 
         @media (max-width: 768px) {
-            .reviews-modal-content {
+            .reviews-content {
                 padding: 30px 20px;
             }
 
@@ -785,12 +779,12 @@
                 font-size: 18px;
             }
 
-            .review-nav.prev {
-                left: -15px;
+            .review-content-wrapper {
+                margin: 0 10px;
             }
 
-            .review-nav.next {
-                right: -15px;
+            .review-nav-container {
+                margin: 15px 0;
             }
         }
     </style>
@@ -1000,14 +994,18 @@
         </div>
     </div>
 
-    <!-- REVIEWS MODAL -->
-    <div class="reviews-modal" id="reviewsModal" onclick="closeReviewsModal(event)">
-        <div class="reviews-modal-content" onclick="event.stopPropagation()">
-            <div class="reviews-carousel" id="reviewsCarousel">
-                <!-- Review items will be dynamically added here -->
+    <!-- REVIEWS SECTION -->
+    <div class="reviews-section" id="reviewsSection">
+        <div class="reviews-content">
+            <div class="review-nav-container">
+                <button class="review-nav prev" id="prevReview" onclick="navigateReview(-1)">&#8249;</button>
+                <div class="review-content-wrapper">
+                    <div class="reviews-carousel" id="reviewsCarousel">
+                        <!-- Review items will be dynamically added here -->
+                    </div>
+                </div>
+                <button class="review-nav next" id="nextReview" onclick="navigateReview(1)">&#8250;</button>
             </div>
-            <button class="review-nav prev" id="prevReview" onclick="navigateReview(-1)">&#8249;</button>
-            <button class="review-nav next" id="nextReview" onclick="navigateReview(1)">&#8250;</button>
             <div class="review-indicators" id="reviewIndicators"></div>
         </div>
     </div>
@@ -2665,15 +2663,15 @@
             console.log('Total reviews found:', reviews.length);
             console.log('Reviews array:', reviews);
 
-            // Only show modal if there are reviews
+            // Only show reviews section if there are reviews
             if (reviews.length > 0) {
-                console.log('Building reviews carousel and showing modal');
+                console.log('Building reviews carousel and showing reviews section');
                 buildReviewsCarousel();
-                document.getElementById('reviewsModal').classList.add('active');
+                document.getElementById('reviewsSection').classList.add('active');
                 currentReviewIndex = 0;
                 updateReviewDisplay();
             } else {
-                console.log('No reviews found, not showing modal');
+                console.log('No reviews found, not showing reviews section');
             }
         }
 
@@ -2773,12 +2771,6 @@
             return div.innerHTML;
         }
 
-        function closeReviewsModal(event) {
-            // Close modal when clicking outside the content
-            if (event.target.id === 'reviewsModal') {
-                document.getElementById('reviewsModal').classList.remove('active');
-            }
-        }
 
         function formatPhoneForDisplay(digits) {
             if (digits && digits.length === 10) {
