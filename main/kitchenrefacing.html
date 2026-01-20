@@ -2599,6 +2599,11 @@
             document.getElementById('contactStep').classList.add('active');
             document.getElementById('progressBarContainer').style.display = 'none';
             document.getElementById('mainHeading').style.display = 'none';
+            
+            // Show reviews modal if reviews exist
+            setTimeout(() => {
+                showReviewsModal();
+            }, 500); // Small delay to let the contact screen appear first
         }
 
         function showConfirmationScreen() {
@@ -2624,19 +2629,30 @@
         let reviews = [];
 
         function showReviewsModal() {
+            console.log('showReviewsModal called');
+            
             // Get reviews from client data
             const activeClient = matchedClientData || campaignClientData;
+            console.log('activeClient:', activeClient);
+            
             if (!activeClient || !activeClient.fields) {
+                console.log('No active client or fields found');
                 return;
             }
 
             reviews = [];
             const fields = activeClient.fields;
+            console.log('Client fields:', fields);
 
             // Collect reviews (up to 3)
             for (let i = 1; i <= 3; i++) {
-                const reviewText = fields[`Review Text ${i}`];
-                const reviewName = fields[`Review Name ${i}`];
+                const reviewTextField = `Review Text ${i}`;
+                const reviewNameField = `Review Name ${i}`;
+                const reviewText = fields[reviewTextField];
+                const reviewName = fields[reviewNameField];
+                
+                console.log(`Review ${i} - Text field "${reviewTextField}":`, reviewText);
+                console.log(`Review ${i} - Name field "${reviewNameField}":`, reviewName);
                 
                 if (reviewText && reviewText.trim() && reviewName && reviewName.trim()) {
                     reviews.push({
@@ -2646,12 +2662,18 @@
                 }
             }
 
+            console.log('Total reviews found:', reviews.length);
+            console.log('Reviews array:', reviews);
+
             // Only show modal if there are reviews
             if (reviews.length > 0) {
+                console.log('Building reviews carousel and showing modal');
                 buildReviewsCarousel();
                 document.getElementById('reviewsModal').classList.add('active');
                 currentReviewIndex = 0;
                 updateReviewDisplay();
+            } else {
+                console.log('No reviews found, not showing modal');
             }
         }
 
