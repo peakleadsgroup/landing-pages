@@ -290,22 +290,18 @@
             <img id="header-logo" src="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" alt="Logo">
             <h1>Client Zip Code Map</h1>
         </div>
-        <div id="header-info">
-            <div id="stats">
-                <div class="stat-item">
-                    <div class="stat-label">Clients</div>
-                    <div class="stat-value" id="client-count">0</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Total Zip Codes</div>
-                    <div class="stat-value" id="zip-count">0</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Unique Zip Codes</div>
-                    <div class="stat-value" id="unique-zip-count">0</div>
+            <div id="header-info">
+                <div id="stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Total Zip Codes</div>
+                        <div class="stat-value" id="zip-count">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Unique Zip Codes</div>
+                        <div class="stat-value" id="unique-zip-count">0</div>
+                    </div>
                 </div>
             </div>
-        </div>
     </div>
     
     <div id="map-container">
@@ -329,10 +325,6 @@
                 <div id="clients-list">
                     <!-- Client list will be populated here -->
                 </div>
-            </div>
-            <div class="control-buttons">
-                <button onclick="showAllZips()">Show All</button>
-                <button onclick="clearHighlight()" class="secondary">Clear Highlight</button>
             </div>
         </div>
         
@@ -491,8 +483,11 @@
             
             // Create popup with all clients that have this zip
             const clientDetails = clientNames.map((name, idx) => {
-                const niche = clientNiches[idx] || 'N/A';
-                return `${name} (${niche})`;
+                const niches = clientNiches[idx];
+                const nicheDisplay = Array.isArray(niches) && niches.length > 0 
+                    ? niches.join(', ') 
+                    : (niches || 'N/A');
+                return `${name} (${nicheDisplay})`;
             }).join('<br>');
             
             marker.bindPopup(`
@@ -594,6 +589,18 @@
             });
         }
         
+        // Check if a marker has the selected niche
+        function markerHasNiche(marker, niche) {
+            if (!marker.clientNiches || !niche) return false;
+            // marker.clientNiches is an array of arrays (each client can have multiple niches)
+            return marker.clientNiches.some(clientNiches => {
+                if (Array.isArray(clientNiches)) {
+                    return clientNiches.includes(niche);
+                }
+                return clientNiches === niche;
+            });
+        }
+        
         // Filter markers by niche
         function filterByNiche(niche) {
             selectedNiche = niche;
@@ -606,7 +613,7 @@
                     }
                 } else {
                     // Check if any client for this marker has the selected niche
-                    const hasMatchingNiche = marker.clientNiches && marker.clientNiches.includes(niche);
+                    const hasMatchingNiche = markerHasNiche(marker, niche);
                     if (hasMatchingNiche) {
                         if (marker._map === null) {
                             marker.addTo(map);
@@ -621,7 +628,7 @@
             
             // Update stats based on visible markers
             const visibleMarkers = niche && niche !== '' 
-                ? allMarkers.filter(m => m._map !== null && m.clientNiches && m.clientNiches.includes(niche))
+                ? allMarkers.filter(m => m._map !== null && markerHasNiche(m, niche))
                 : allMarkers.filter(m => m._map !== null);
             
             document.getElementById('zip-count').textContent = visibleMarkers.length;
@@ -638,7 +645,7 @@
             
             // Get visible markers based on filter
             const visibleMarkers = selectedNiche && selectedNiche !== '' 
-                ? allMarkers.filter(m => m._map !== null && m.clientNiches && m.clientNiches.includes(selectedNiche))
+                ? allMarkers.filter(m => m._map !== null && markerHasNiche(m, selectedNiche))
                 : allMarkers.filter(m => m._map !== null);
             
             if (visibleMarkers.length > 0) {
@@ -680,7 +687,9 @@
                     
                     const clientName = record.fields['Name'] || record.fields['Client'] || 'Unnamed Client';
                     const targetField = record.fields['TARGET'] || '';
-                    const niche = record.fields['Niche'] || '';
+                    // Handle Niche as array (multiple select) or string (single select)
+                    const nicheField = record.fields['Niche'];
+                    const niches = Array.isArray(nicheField) ? nicheField : (nicheField ? [nicheField] : []);
                     const zipCodes = parseZipCodes(targetField);
                     
                     if (zipCodes.length > 0) {
@@ -688,7 +697,7 @@
                             id: record.id,
                             name: clientName,
                             zipCodes: zipCodes,
-                            niche: niche
+                            niches: niches // Store as array
                         });
                         
                         // Assign color to client
@@ -703,7 +712,8 @@
                                 };
                             }
                             clientZipMap[zip].clientIds.push(record.id);
-                            clientZipMap[zip].niches.push(niche);
+                            // Store all niches for this client
+                            clientZipMap[zip].niches.push(niches);
                         });
                     }
                     
@@ -759,7 +769,6 @@
                 }
                 
                 // Update stats
-                document.getElementById('client-count').textContent = clientData.length;
                 document.getElementById('zip-count').textContent = allMarkers.length;
                 document.getElementById('unique-zip-count').textContent = allZipCodes.size;
                 
@@ -794,7 +803,10 @@
             // Filter by niche if selected
             let filteredClients = clientData;
             if (selectedNiche && selectedNiche !== '') {
-                filteredClients = clientData.filter(client => client.niche === selectedNiche);
+                filteredClients = clientData.filter(client => {
+                    // Check if client's niches array includes the selected niche
+                    return Array.isArray(client.niches) && client.niches.includes(selectedNiche);
+                });
             }
             
             if (filteredClients.length === 0) {
@@ -806,13 +818,18 @@
                 .sort((a, b) => a.name.localeCompare(b.name))
                 .map(client => {
                     const color = getClientColor(client.id);
-                    const nicheBadge = client.niche ? `<span class="niche-badge">${client.niche}</span>` : '';
+                    const nicheDisplay = Array.isArray(client.niches) && client.niches.length > 0
+                        ? client.niches.join(', ')
+                        : 'N/A';
+                    const nicheBadges = Array.isArray(client.niches) && client.niches.length > 0
+                        ? client.niches.map(n => `<span class="niche-badge">${n}</span>`).join(' ')
+                        : '';
                     return `
                         <div class="client-item" data-client-id="${client.id}" onclick="highlightClientZips('${client.id}')">
                             <div class="client-name">
                                 <span class="client-color-indicator" style="background-color: ${color};"></span>
                                 ${client.name}
-                                ${nicheBadge}
+                                ${nicheBadges}
                             </div>
                             <div class="client-zips">${client.zipCodes.length} zip code${client.zipCodes.length !== 1 ? 's' : ''}</div>
                         </div>
