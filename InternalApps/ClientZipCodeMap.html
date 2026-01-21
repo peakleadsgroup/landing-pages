@@ -159,30 +159,45 @@
         
         #loading {
             position: absolute;
-            top: 50%;
+            bottom: 20px;
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translateX(-50%);
             background: white;
-            padding: 2rem;
+            padding: 1rem 2rem;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             z-index: 2000;
             text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-width: 300px;
         }
         
         .spinner {
             border: 3px solid #f3f3f3;
             border-top: 3px solid #1a73e8;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 24px;
+            height: 24px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
+            flex-shrink: 0;
         }
         
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+        
+        #loading-text {
+            font-size: 0.875rem;
+            color: #202124;
+        }
+        
+        #loading-progress {
+            font-size: 0.75rem;
+            color: #5f6368;
+            margin-top: 0.25rem;
         }
         
         #error-message {
@@ -293,7 +308,10 @@
         
         <div id="loading">
             <div class="spinner"></div>
-            <div>Loading map and client data...</div>
+            <div>
+                <div id="loading-text">Loading client data...</div>
+                <div id="loading-progress"></div>
+            </div>
         </div>
         
         <div id="error-message"></div>
@@ -314,6 +332,7 @@
         let clientData = [];
         let activeClientId = null;
         let activeClientMarkers = [];
+        let allZipCodes = new Set();
         
         // Initialize the map
         function initMap() {
@@ -327,22 +346,37 @@
             }).addTo(map);
         }
         
-        // Fetch clients from Airtable
+        // Fetch clients from Airtable with pagination
         async function fetchClients() {
             try {
-                const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent('Clients')}?view=Grid%20view`;
-                const response = await fetch(url, {
-                    headers: {
-                        'Authorization': `Bearer ${AIRTABLE_API_KEY}`
+                let allRecords = [];
+                let offset = null;
+                
+                do {
+                    let url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}`;
+                    if (offset) {
+                        url += `?offset=${offset}`;
                     }
-                });
+                    
+                    const response = await fetch(url, {
+                        headers: {
+                            'Authorization': `Bearer ${AIRTABLE_API_KEY}`
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('Response error:', errorText);
+                        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                    }
+                    
+                    const data = await response.json();
+                    allRecords = allRecords.concat(data.records || []);
+                    offset = data.offset;
+                    
+                } while (offset);
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                return data.records;
+                return allRecords;
             } catch (error) {
                 console.error('Error fetching clients:', error);
                 throw error;
@@ -496,20 +530,31 @@
             clearHighlight();
         }
         
+        // Update loading text
+        function updateLoadingText(text, progress) {
+            const loadingText = document.getElementById('loading-text');
+            const loadingProgress = document.getElementById('loading-progress');
+            if (loadingText) loadingText.textContent = text;
+            if (loadingProgress) loadingProgress.textContent = progress;
+        }
+        
         // Process clients and create map
         async function processClients() {
             try {
+                updateLoadingText('Fetching clients from Airtable...', '');
                 const records = await fetchClients();
+                updateLoadingText(`Processing ${records.length} clients...`, '');
                 
-                const allZipCodes = new Set();
+                allZipCodes.clear(); // Reset for fresh load
                 const clientZipMap = {};
                 
                 // Process each client
-                records.forEach(record => {
+                let processedCount = 0;
+                for (const record of records) {
                     // Skip clients with "Churned" status
                     const status = record.fields['Status'];
                     if (status === 'Churned') {
-                        return; // Skip this client
+                        continue; // Skip this client
                     }
                     
                     const clientName = record.fields['Name'] || record.fields['Client'] || 'Unnamed Client';
@@ -531,24 +576,53 @@
                             clientZipMap[zip].push(record.id);
                         });
                     }
-                });
+                    
+                    processedCount++;
+                    if (processedCount % 10 === 0) {
+                        updateLoadingText(
+                            `Processing clients...`,
+                            `${processedCount} of ${records.length} clients`
+                        );
+                        await new Promise(resolve => setTimeout(resolve, 0));
+                    }
+                }
                 
-                // Create markers for each unique zip code
-                allZipCodes.forEach(zip => {
-                    // Get all clients that have this zip code
-                    const clientIds = clientZipMap[zip];
-                    const clientNames = clientIds.map(id => {
-                        const client = clientData.find(c => c.id === id);
-                        return client?.name || 'Unknown';
+                // Update loading text
+                updateLoadingText('Creating map markers...', '');
+                
+                // Create markers for each unique zip code (batch for performance)
+                const zipArray = Array.from(allZipCodes);
+                const batchSize = 100;
+                let processed = 0;
+                
+                for (let i = 0; i < zipArray.length; i += batchSize) {
+                    const batch = zipArray.slice(i, i + batchSize);
+                    
+                    batch.forEach(zip => {
+                        // Get all clients that have this zip code
+                        const clientIds = clientZipMap[zip];
+                        const clientNames = clientIds.map(id => {
+                            const client = clientData.find(c => c.id === id);
+                            return client?.name || 'Unknown';
+                        });
+                        
+                        const marker = createZipMarker(zip, clientIds, clientNames);
+                        
+                        if (marker) {
+                            marker.addTo(map);
+                            allMarkers.push(marker);
+                        }
                     });
                     
-                    const marker = createZipMarker(zip, clientIds, clientNames);
+                    processed += batch.length;
+                    updateLoadingText(
+                        'Creating map markers...',
+                        `${processed} of ${zipArray.length} zip codes`
+                    );
                     
-                    if (marker) {
-                        marker.addTo(map);
-                        allMarkers.push(marker);
-                    }
-                });
+                    // Allow UI to update
+                    await new Promise(resolve => setTimeout(resolve, 0));
+                }
                 
                 // Update stats
                 document.getElementById('client-count').textContent = clientData.length;
@@ -604,8 +678,14 @@
         // Initialize everything
         async function init() {
             try {
+                // Initialize map first so it shows immediately
                 initMap();
+                updateLoadingText('Loading zip code data...', '');
+                
+                // Load zip code data in background
                 await loadZipCodeData();
+                
+                // Process clients and create markers (this handles stats, rendering, and hiding loading)
                 await processClients();
             } catch (error) {
                 console.error('Initialization error:', error);
