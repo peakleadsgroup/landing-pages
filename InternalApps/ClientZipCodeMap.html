@@ -261,6 +261,27 @@
             color: #5f6368;
             margin-top: 0.25rem;
         }
+        
+        .client-color-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            border: 1px solid rgba(0,0,0,0.2);
+            vertical-align: middle;
+        }
+        
+        .niche-badge {
+            display: inline-block;
+            padding: 0.125rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.625rem;
+            font-weight: 500;
+            margin-left: 0.5rem;
+            background: #e8f0fe;
+            color: #1a73e8;
+        }
     </style>
 </head>
 <body>
@@ -296,6 +317,15 @@
                 <div class="zip-count">Click a client to highlight their zip codes</div>
             </div>
             <div id="sidebar-content">
+                <div id="filter-section" style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #dadce0;">
+                    <label for="niche-filter" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #202124; font-size: 0.875rem;">Filter by Niche:</label>
+                    <select id="niche-filter" style="width: 100%; padding: 0.625rem; border: 1px solid #dadce0; border-radius: 4px; font-size: 0.875rem; background: white;">
+                        <option value="">All Niches</option>
+                        <option value="Bathrooms">Bathrooms</option>
+                        <option value="Windows">Windows</option>
+                        <option value="Floor Coating">Floor Coating</option>
+                    </select>
+                </div>
                 <div id="clients-list">
                     <!-- Client list will be populated here -->
                 </div>
@@ -333,6 +363,17 @@
         let activeClientId = null;
         let activeClientMarkers = [];
         let allZipCodes = new Set();
+        let selectedNiche = '';
+        let clientColorMap = {}; // Maps client ID to color
+        let clientToMarkerMap = {}; // Maps client ID to array of markers
+        
+        // Color palette for clients
+        const clientColors = [
+            '#FF5252', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0', 
+            '#FF9800', '#00BCD4', '#E91E63', '#795548', '#607D8B',
+            '#F44336', '#3F51B5', '#009688', '#FFEB3B', '#9C27B0',
+            '#673AB7', '#FF5722', '#00ACC1', '#8BC34A', '#FF4081'
+        ];
         
         // Initialize the map
         function initMap() {
@@ -408,12 +449,24 @@
                 .map(zip => zip.substring(0, 5)); // Use only 5-digit zip codes
         }
         
+        // Get color for a client
+        function getClientColor(clientId) {
+            if (!clientColorMap[clientId]) {
+                const colorIndex = Object.keys(clientColorMap).length % clientColors.length;
+                clientColorMap[clientId] = clientColors[colorIndex];
+            }
+            return clientColorMap[clientId];
+        }
+        
         // Create marker for a zip code
-        function createZipMarker(zip, clientIds, clientNames) {
+        function createZipMarker(zip, clientIds, clientNames, clientNiches) {
             const zipData = zipCompleteData[zip];
             if (!zipData || !zipData.lat || !zipData.lng) {
                 return null;
             }
+            
+            // Use the first client's color (or blend if multiple)
+            const primaryColor = clientIds.length > 0 ? getClientColor(clientIds[0]) : '#1a73e8';
             
             // Add slight offset if multiple clients share this zip
             const offset = clientIds.length > 1 ? (Math.random() * 0.02 - 0.01) : 0;
@@ -424,7 +477,7 @@
                 icon: L.divIcon({
                     className: 'zip-marker',
                     html: `<div style="
-                        background-color: #1a73e8;
+                        background-color: ${primaryColor};
                         width: 12px;
                         height: 12px;
                         border-radius: 50%;
@@ -437,15 +490,28 @@
             });
             
             // Create popup with all clients that have this zip
-            const clientList = clientNames.join(', ');
+            const clientDetails = clientNames.map((name, idx) => {
+                const niche = clientNiches[idx] || 'N/A';
+                return `${name} (${niche})`;
+            }).join('<br>');
+            
             marker.bindPopup(`
                 <strong>Zip Code:</strong> ${zip}<br>
-                <strong>Client${clientNames.length > 1 ? 's' : ''}:</strong> ${clientList}<br>
+                <strong>Client${clientNames.length > 1 ? 's' : ''}:</strong><br>${clientDetails}<br>
                 ${zipData.pop ? `<strong>Population:</strong> ${zipData.pop.toLocaleString()}` : ''}
             `);
             
             marker.zipCode = zip;
             marker.clientIds = clientIds; // Array of client IDs
+            marker.clientNiches = clientNiches; // Array of niches
+            
+            // Track this marker for each client
+            clientIds.forEach(clientId => {
+                if (!clientToMarkerMap[clientId]) {
+                    clientToMarkerMap[clientId] = [];
+                }
+                clientToMarkerMap[clientId].push(marker);
+            });
             
             return marker;
         }
@@ -458,27 +524,30 @@
             activeClientId = clientId;
             activeClientMarkers = [];
             
+            // Get client color
+            const clientColor = getClientColor(clientId);
+            
             // Find all markers that include this client
-            allMarkers.forEach(marker => {
-                if (marker.clientIds && marker.clientIds.includes(clientId)) {
+            if (clientToMarkerMap[clientId]) {
+                clientToMarkerMap[clientId].forEach(marker => {
                     activeClientMarkers.push(marker);
                     // Change marker style to highlighted
                     marker.setIcon(L.divIcon({
                         className: 'zip-marker-highlighted',
                         html: `<div style="
-                            background-color: #ff5252;
+                            background-color: ${clientColor};
                             width: 16px;
                             height: 16px;
                             border-radius: 50%;
-                            border: 2px solid white;
-                            box-shadow: 0 2px 6px rgba(255,82,82,0.5);
+                            border: 3px solid white;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
                         "></div>`,
                         iconSize: [16, 16],
                         iconAnchor: [8, 8]
                     }));
                     marker.setZIndexOffset(1000);
-                }
-            });
+                });
+            }
             
             // Update sidebar UI
             document.querySelectorAll('.client-item').forEach(item => {
@@ -499,10 +568,14 @@
         function clearHighlight() {
             activeClientId = null;
             activeClientMarkers.forEach(marker => {
+                // Restore original color (use first client's color)
+                const originalColor = marker.clientIds && marker.clientIds.length > 0 
+                    ? getClientColor(marker.clientIds[0]) 
+                    : '#1a73e8';
                 marker.setIcon(L.divIcon({
                     className: 'zip-marker',
                     html: `<div style="
-                        background-color: #1a73e8;
+                        background-color: ${originalColor};
                         width: 12px;
                         height: 12px;
                         border-radius: 50%;
@@ -521,13 +594,61 @@
             });
         }
         
+        // Filter markers by niche
+        function filterByNiche(niche) {
+            selectedNiche = niche;
+            
+            allMarkers.forEach(marker => {
+                if (!niche || niche === '') {
+                    // Show all markers (but only add if not already on map)
+                    if (marker._map === null) {
+                        marker.addTo(map);
+                    }
+                } else {
+                    // Check if any client for this marker has the selected niche
+                    const hasMatchingNiche = marker.clientNiches && marker.clientNiches.includes(niche);
+                    if (hasMatchingNiche) {
+                        if (marker._map === null) {
+                            marker.addTo(map);
+                        }
+                    } else {
+                        if (marker._map !== null) {
+                            map.removeLayer(marker);
+                        }
+                    }
+                }
+            });
+            
+            // Update stats based on visible markers
+            const visibleMarkers = niche && niche !== '' 
+                ? allMarkers.filter(m => m._map !== null && m.clientNiches && m.clientNiches.includes(niche))
+                : allMarkers.filter(m => m._map !== null);
+            
+            document.getElementById('zip-count').textContent = visibleMarkers.length;
+            
+            // Clear highlight when filtering
+            if (activeClientId) {
+                clearHighlight();
+            }
+        }
+        
         // Show all zip codes (fit bounds)
         function showAllZips() {
-            if (allMarkers.length > 0) {
+            clearHighlight();
+            
+            // Get visible markers based on filter
+            const visibleMarkers = selectedNiche && selectedNiche !== '' 
+                ? allMarkers.filter(m => m._map !== null && m.clientNiches && m.clientNiches.includes(selectedNiche))
+                : allMarkers.filter(m => m._map !== null);
+            
+            if (visibleMarkers.length > 0) {
+                const group = new L.featureGroup(visibleMarkers);
+                map.fitBounds(group.getBounds().pad(0.1));
+            } else if (allMarkers.length > 0) {
+                // If no visible markers but we have markers, show all
                 const group = new L.featureGroup(allMarkers);
                 map.fitBounds(group.getBounds().pad(0.1));
             }
-            clearHighlight();
         }
         
         // Update loading text
@@ -559,21 +680,30 @@
                     
                     const clientName = record.fields['Name'] || record.fields['Client'] || 'Unnamed Client';
                     const targetField = record.fields['TARGET'] || '';
+                    const niche = record.fields['Niche'] || '';
                     const zipCodes = parseZipCodes(targetField);
                     
                     if (zipCodes.length > 0) {
                         clientData.push({
                             id: record.id,
                             name: clientName,
-                            zipCodes: zipCodes
+                            zipCodes: zipCodes,
+                            niche: niche
                         });
+                        
+                        // Assign color to client
+                        getClientColor(record.id);
                         
                         zipCodes.forEach(zip => {
                             allZipCodes.add(zip);
                             if (!clientZipMap[zip]) {
-                                clientZipMap[zip] = [];
+                                clientZipMap[zip] = {
+                                    clientIds: [],
+                                    niches: []
+                                };
                             }
-                            clientZipMap[zip].push(record.id);
+                            clientZipMap[zip].clientIds.push(record.id);
+                            clientZipMap[zip].niches.push(niche);
                         });
                     }
                     
@@ -600,13 +730,17 @@
                     
                     batch.forEach(zip => {
                         // Get all clients that have this zip code
-                        const clientIds = clientZipMap[zip];
+                        const zipData = clientZipMap[zip];
+                        if (!zipData) return;
+                        
+                        const clientIds = zipData.clientIds;
+                        const niches = zipData.niches;
                         const clientNames = clientIds.map(id => {
                             const client = clientData.find(c => c.id === id);
                             return client?.name || 'Unknown';
                         });
                         
-                        const marker = createZipMarker(zip, clientIds, clientNames);
+                        const marker = createZipMarker(zip, clientIds, clientNames, niches);
                         
                         if (marker) {
                             marker.addTo(map);
@@ -657,14 +791,33 @@
                 return;
             }
             
-            listContainer.innerHTML = clientData
+            // Filter by niche if selected
+            let filteredClients = clientData;
+            if (selectedNiche && selectedNiche !== '') {
+                filteredClients = clientData.filter(client => client.niche === selectedNiche);
+            }
+            
+            if (filteredClients.length === 0) {
+                listContainer.innerHTML = '<div style="padding: 1rem; text-align: center; color: #5f6368;">No clients found for selected niche.</div>';
+                return;
+            }
+            
+            listContainer.innerHTML = filteredClients
                 .sort((a, b) => a.name.localeCompare(b.name))
-                .map(client => `
-                    <div class="client-item" data-client-id="${client.id}" onclick="highlightClientZips('${client.id}')">
-                        <div class="client-name">${client.name}</div>
-                        <div class="client-zips">${client.zipCodes.length} zip code${client.zipCodes.length !== 1 ? 's' : ''}</div>
-                    </div>
-                `).join('');
+                .map(client => {
+                    const color = getClientColor(client.id);
+                    const nicheBadge = client.niche ? `<span class="niche-badge">${client.niche}</span>` : '';
+                    return `
+                        <div class="client-item" data-client-id="${client.id}" onclick="highlightClientZips('${client.id}')">
+                            <div class="client-name">
+                                <span class="client-color-indicator" style="background-color: ${color};"></span>
+                                ${client.name}
+                                ${nicheBadge}
+                            </div>
+                            <div class="client-zips">${client.zipCodes.length} zip code${client.zipCodes.length !== 1 ? 's' : ''}</div>
+                        </div>
+                    `;
+                }).join('');
         }
         
         // Show error message
@@ -687,6 +840,12 @@
                 
                 // Process clients and create markers (this handles stats, rendering, and hiding loading)
                 await processClients();
+                
+                // Add event listener for niche filter
+                document.getElementById('niche-filter').addEventListener('change', function(e) {
+                    filterByNiche(e.target.value);
+                    renderClientList(); // Re-render client list with filter applied
+                });
             } catch (error) {
                 console.error('Initialization error:', error);
                 showError('Failed to initialize: ' + error.message);
