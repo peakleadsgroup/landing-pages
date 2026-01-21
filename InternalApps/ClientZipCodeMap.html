@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
+    <title>Client Zip Code Map</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #header {
+            background: white;
+            color: #1a73e8;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        #header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        #header-logo {
+            height: 40px;
+            width: auto;
+        }
+        
+        #header h1 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin: 0;
+        }
+        
+        #header-info {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            font-size: 0.875rem;
+        }
+        
+        #stats {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .stat-item {
+            background: #f8f9fa;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+        }
+        
+        .stat-label {
+            color: #5f6368;
+            font-size: 0.75rem;
+        }
+        
+        .stat-value {
+            color: #202124;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        #map-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        
+        #sidebar {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 350px;
+            max-height: calc(100% - 20px);
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        #sidebar-header {
+            padding: 1rem;
+            border-bottom: 1px solid #dadce0;
+            background: #f8f9fa;
+        }
+        
+        #sidebar-header h2 {
+            font-size: 1.125rem;
+            font-weight: 500;
+            margin: 0 0 0.5rem 0;
+            color: #202124;
+        }
+        
+        #sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+        
+        .client-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .client-item:hover {
+            background: #f8f9fa;
+            border-color: #1a73e8;
+        }
+        
+        .client-item.active {
+            background: #e8f0fe;
+            border-color: #1a73e8;
+        }
+        
+        .client-name {
+            font-weight: 500;
+            color: #202124;
+            margin-bottom: 0.25rem;
+        }
+        
+        .client-zips {
+            font-size: 0.75rem;
+            color: #5f6368;
+        }
+        
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 2000;
+            text-align: center;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1a73e8;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #error-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fce8e6;
+            color: #c5221f;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 2000;
+            max-width: 500px;
+            display: none;
+        }
+        
+        #error-message.show {
+            display: block;
+        }
+        
+        .control-buttons {
+            padding: 1rem;
+            border-top: 1px solid #dadce0;
+            background: #f8f9fa;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        button {
+            flex: 1;
+            padding: 0.625rem;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        button:hover {
+            background: #1557b0;
+        }
+        
+        button:active {
+            background: #0d47a1;
+        }
+        
+        button.secondary {
+            background: #5f6368;
+        }
+        
+        button.secondary:hover {
+            background: #494c50;
+        }
+        
+        .zip-count {
+            font-size: 0.75rem;
+            color: #5f6368;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <div id="header-left">
+            <img id="header-logo" src="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" alt="Logo">
+            <h1>Client Zip Code Map</h1>
+        </div>
+        <div id="header-info">
+            <div id="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Clients</div>
+                    <div class="stat-value" id="client-count">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Total Zip Codes</div>
+                    <div class="stat-value" id="zip-count">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Unique Zip Codes</div>
+                    <div class="stat-value" id="unique-zip-count">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="map-container">
+        <div id="map"></div>
+        
+        <div id="sidebar">
+            <div id="sidebar-header">
+                <h2>Clients</h2>
+                <div class="zip-count">Click a client to highlight their zip codes</div>
+            </div>
+            <div id="sidebar-content">
+                <div id="clients-list">
+                    <!-- Client list will be populated here -->
+                </div>
+            </div>
+            <div class="control-buttons">
+                <button onclick="showAllZips()">Show All</button>
+                <button onclick="clearHighlight()" class="secondary">Clear Highlight</button>
+            </div>
+        </div>
+        
+        <div id="loading">
+            <div class="spinner"></div>
+            <div>Loading map and client data...</div>
+        </div>
+        
+        <div id="error-message"></div>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // Airtable Configuration
+        const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
+        const AIRTABLE_TABLE_ID = 'tblMl8Y97cMSbricC';
+        const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
+        
+        let map;
+        let zipCompleteData = {};
+        let allMarkers = [];
+        let clientData = [];
+        let activeClientId = null;
+        let activeClientMarkers = [];
+        
+        // Initialize the map
+        function initMap() {
+            // Create map centered on USA
+            map = L.map('map').setView([39.8283, -98.5795], 4);
+            
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+        }
+        
+        // Fetch clients from Airtable
+        async function fetchClients() {
+            try {
+                const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent('Clients')}?view=Grid%20view`;
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${AIRTABLE_API_KEY}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                return data.records;
+            } catch (error) {
+                console.error('Error fetching clients:', error);
+                throw error;
+            }
+        }
+        
+        // Load zip code data
+        async function loadZipCodeData() {
+            try {
+                const response = await fetch('us_zip_complete.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                zipCompleteData = await response.json();
+                console.log(`Loaded ${Object.keys(zipCompleteData).length} zip codes`);
+            } catch (error) {
+                console.error('Error loading zip code data:', error);
+                throw error;
+            }
+        }
+        
+        // Parse comma-separated zip codes from TARGET field
+        function parseZipCodes(targetField) {
+            if (!targetField) return [];
+            return targetField
+                .split(',')
+                .map(zip => zip.trim())
+                .filter(zip => /^\d{5}(-\d{4})?$/.test(zip))
+                .map(zip => zip.substring(0, 5)); // Use only 5-digit zip codes
+        }
+        
+        // Create marker for a zip code
+        function createZipMarker(zip, clientIds, clientNames) {
+            const zipData = zipCompleteData[zip];
+            if (!zipData || !zipData.lat || !zipData.lng) {
+                return null;
+            }
+            
+            // Add slight offset if multiple clients share this zip
+            const offset = clientIds.length > 1 ? (Math.random() * 0.02 - 0.01) : 0;
+            const lat = zipData.lat + offset;
+            const lng = zipData.lng + offset;
+            
+            const marker = L.marker([lat, lng], {
+                icon: L.divIcon({
+                    className: 'zip-marker',
+                    html: `<div style="
+                        background-color: #1a73e8;
+                        width: 12px;
+                        height: 12px;
+                        border-radius: 50%;
+                        border: 2px solid white;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                    "></div>`,
+                    iconSize: [12, 12],
+                    iconAnchor: [6, 6]
+                })
+            });
+            
+            // Create popup with all clients that have this zip
+            const clientList = clientNames.join(', ');
+            marker.bindPopup(`
+                <strong>Zip Code:</strong> ${zip}<br>
+                <strong>Client${clientNames.length > 1 ? 's' : ''}:</strong> ${clientList}<br>
+                ${zipData.pop ? `<strong>Population:</strong> ${zipData.pop.toLocaleString()}` : ''}
+            `);
+            
+            marker.zipCode = zip;
+            marker.clientIds = clientIds; // Array of client IDs
+            
+            return marker;
+        }
+        
+        // Highlight client's zip codes
+        function highlightClientZips(clientId) {
+            // Clear previous highlight
+            clearHighlight();
+            
+            activeClientId = clientId;
+            activeClientMarkers = [];
+            
+            // Find all markers that include this client
+            allMarkers.forEach(marker => {
+                if (marker.clientIds && marker.clientIds.includes(clientId)) {
+                    activeClientMarkers.push(marker);
+                    // Change marker style to highlighted
+                    marker.setIcon(L.divIcon({
+                        className: 'zip-marker-highlighted',
+                        html: `<div style="
+                            background-color: #ff5252;
+                            width: 16px;
+                            height: 16px;
+                            border-radius: 50%;
+                            border: 2px solid white;
+                            box-shadow: 0 2px 6px rgba(255,82,82,0.5);
+                        "></div>`,
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8]
+                    }));
+                    marker.setZIndexOffset(1000);
+                }
+            });
+            
+            // Update sidebar UI
+            document.querySelectorAll('.client-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.clientId === clientId) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Fit map to show highlighted markers
+            if (activeClientMarkers.length > 0) {
+                const group = new L.featureGroup(activeClientMarkers);
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+        }
+        
+        // Clear highlight
+        function clearHighlight() {
+            activeClientId = null;
+            activeClientMarkers.forEach(marker => {
+                marker.setIcon(L.divIcon({
+                    className: 'zip-marker',
+                    html: `<div style="
+                        background-color: #1a73e8;
+                        width: 12px;
+                        height: 12px;
+                        border-radius: 50%;
+                        border: 2px solid white;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                    "></div>`,
+                    iconSize: [12, 12],
+                    iconAnchor: [6, 6]
+                }));
+                marker.setZIndexOffset(0);
+            });
+            activeClientMarkers = [];
+            
+            document.querySelectorAll('.client-item').forEach(item => {
+                item.classList.remove('active');
+            });
+        }
+        
+        // Show all zip codes (fit bounds)
+        function showAllZips() {
+            if (allMarkers.length > 0) {
+                const group = new L.featureGroup(allMarkers);
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+            clearHighlight();
+        }
+        
+        // Process clients and create map
+        async function processClients() {
+            try {
+                const records = await fetchClients();
+                
+                const allZipCodes = new Set();
+                const clientZipMap = {};
+                
+                // Process each client
+                records.forEach(record => {
+                    // Skip clients with "Churned" status
+                    const status = record.fields['Status'];
+                    if (status === 'Churned') {
+                        return; // Skip this client
+                    }
+                    
+                    const clientName = record.fields['Name'] || record.fields['Client'] || 'Unnamed Client';
+                    const targetField = record.fields['TARGET'] || '';
+                    const zipCodes = parseZipCodes(targetField);
+                    
+                    if (zipCodes.length > 0) {
+                        clientData.push({
+                            id: record.id,
+                            name: clientName,
+                            zipCodes: zipCodes
+                        });
+                        
+                        zipCodes.forEach(zip => {
+                            allZipCodes.add(zip);
+                            if (!clientZipMap[zip]) {
+                                clientZipMap[zip] = [];
+                            }
+                            clientZipMap[zip].push(record.id);
+                        });
+                    }
+                });
+                
+                // Create markers for each unique zip code
+                allZipCodes.forEach(zip => {
+                    // Get all clients that have this zip code
+                    const clientIds = clientZipMap[zip];
+                    const clientNames = clientIds.map(id => {
+                        const client = clientData.find(c => c.id === id);
+                        return client?.name || 'Unknown';
+                    });
+                    
+                    const marker = createZipMarker(zip, clientIds, clientNames);
+                    
+                    if (marker) {
+                        marker.addTo(map);
+                        allMarkers.push(marker);
+                    }
+                });
+                
+                // Update stats
+                document.getElementById('client-count').textContent = clientData.length;
+                document.getElementById('zip-count').textContent = allMarkers.length;
+                document.getElementById('unique-zip-count').textContent = allZipCodes.size;
+                
+                // Render client list
+                renderClientList();
+                
+                // Fit map to show all markers
+                if (allMarkers.length > 0) {
+                    const group = new L.featureGroup(allMarkers);
+                    map.fitBounds(group.getBounds().pad(0.1));
+                }
+                
+                // Hide loading
+                document.getElementById('loading').style.display = 'none';
+                
+                console.log(`Loaded ${clientData.length} clients with ${allZipCodes.size} unique zip codes`);
+            } catch (error) {
+                console.error('Error processing clients:', error);
+                showError('Error loading client data: ' + error.message);
+            }
+        }
+        
+        // Render client list in sidebar
+        function renderClientList() {
+            const listContainer = document.getElementById('clients-list');
+            
+            if (clientData.length === 0) {
+                listContainer.innerHTML = '<div style="padding: 1rem; text-align: center; color: #5f6368;">No clients with zip codes found.</div>';
+                return;
+            }
+            
+            listContainer.innerHTML = clientData
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map(client => `
+                    <div class="client-item" data-client-id="${client.id}" onclick="highlightClientZips('${client.id}')">
+                        <div class="client-name">${client.name}</div>
+                        <div class="client-zips">${client.zipCodes.length} zip code${client.zipCodes.length !== 1 ? 's' : ''}</div>
+                    </div>
+                `).join('');
+        }
+        
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+        // Initialize everything
+        async function init() {
+            try {
+                initMap();
+                await loadZipCodeData();
+                await processClients();
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showError('Failed to initialize: ' + error.message);
+            }
+        }
+        
+        // Start the app
+        init();
+    </script>
+</body>
+</html>
