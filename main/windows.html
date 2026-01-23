@@ -625,7 +625,7 @@
         </div>
 
         <div class="progress-bar" id="progressBarContainer">
-            <div class="progress-fill" id="progressFill" style="width: 14.3%"></div>
+            <div class="progress-fill" id="progressFill" style="width: 16.7%"></div>
         </div>
 
         <!-- STEP 1: Homeowner -->
@@ -638,7 +638,7 @@
         </div>
 
         <!-- STEP 2: Window Count -->
-        <div class="form-step" id="step2">
+        <div class="form-step" id="step2" style="display: none;">
             <div class="question">How many windows will you be replacing?</div>
             <div class="options">
                 <div class="option" onclick="selectOptionAndAdvance(this, 'windowCount', 'less_than_3')">Less than 3</div>
@@ -1465,7 +1465,9 @@
 
         function updateProgress() {
             const progressFill = document.getElementById('progressFill');
-            const percentage = (currentStep / 7) * 100;
+            // Adjust step number for progress calculation (skip step 2)
+            const adjustedStep = currentStep > 2 ? currentStep - 1 : currentStep;
+            const percentage = (adjustedStep / 6) * 100;
             progressFill.style.width = percentage + '%';
         }
 
@@ -1473,6 +1475,10 @@
             if (currentStep < 7) {
                 document.getElementById('step' + currentStep).classList.remove('active');
                 currentStep++;
+                // Skip step 2 (window count question)
+                if (currentStep === 2) {
+                    currentStep = 3;
+                }
                 document.getElementById('step' + currentStep).classList.add('active');
                 updateProgress();
             }
@@ -2195,7 +2201,7 @@
                         let fullSummaryHTML = formData.fullSummaryHTML;
                         if (!fullSummaryHTML) {
                             const emailLineHTML = formData.email ? `Email: ${formData.email}<BR>` : '';
-                            fullSummaryHTML = `Windows Replacement Lead Information:<BR><BR>Name: ${leadFullName}<BR>Phone: ${formatPhoneForDisplay(formData.phone || '')}<BR>${emailLineHTML}Homeowner: ${formData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Window Count: ${getWindowCountDisplay(formData.windowCount)}<BR>Timeline: ${getTimelineDisplay(formData.timeline)}<BR>Priority: ${getPriorityDisplay(formData.priority)}<BR><BR>Address:<BR>${formData.address?.street || ''}<BR>${formData.address?.city || ''}, ${formData.address?.state || ''} ${formData.address?.zip || ''}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+                            fullSummaryHTML = `Windows Replacement Lead Information:<BR><BR>Name: ${leadFullName}<BR>Phone: ${formatPhoneForDisplay(formData.phone || '')}<BR>${emailLineHTML}Homeowner: ${formData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Timeline: ${getTimelineDisplay(formData.timeline)}<BR>Priority: ${getPriorityDisplay(formData.priority)}<BR><BR>Address:<BR>${formData.address?.street || ''}<BR>${formData.address?.city || ''}, ${formData.address?.state || ''} ${formData.address?.zip || ''}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
                                 weekday: 'long', 
                                 year: 'numeric', 
                                 month: 'long', 
@@ -2485,7 +2491,6 @@
                     value: 1.00,
                     currency: 'USD',
                     homeowner_status: finalData.homeowner,
-                    window_count: finalData.windowCount,
                     timeline: finalData.timeline,
                     priority: finalData.priority
                 };
@@ -2529,7 +2534,6 @@
 Name: ${finalData.firstName} ${finalData.lastName}
 Phone: ${formatPhoneForDisplay(finalData.phone)}
 ${emailLine}Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}
-Window Count: ${getWindowCountDisplay(finalData.windowCount)}
 Timeline: ${getTimelineDisplay(finalData.timeline)}
 Priority: ${getPriorityDisplay(finalData.priority)}
 
@@ -2553,7 +2557,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             
             // Build HTML version of full summary
             const emailLineHTML = finalData.email ? `Email: ${finalData.email}<BR>` : '';
-            const fullSummaryHTML = `Windows Replacement Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR>${emailLineHTML}Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Window Count: ${getWindowCountDisplay(finalData.windowCount)}<BR>Timeline: ${getTimelineDisplay(finalData.timeline)}<BR>Priority: ${getPriorityDisplay(finalData.priority)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+            const fullSummaryHTML = `Windows Replacement Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR>${emailLineHTML}Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Timeline: ${getTimelineDisplay(finalData.timeline)}<BR>Priority: ${getPriorityDisplay(finalData.priority)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
                 weekday: 'long', 
                 year: 'numeric', 
                 month: 'long', 
