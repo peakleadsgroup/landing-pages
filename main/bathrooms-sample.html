@@ -668,7 +668,7 @@
 
         <div id="mainHeading">
             <h1 class="main-heading">
-                Take our 30 second quiz to get a <span class="highlight">fast and free quote</span>
+                Take our 30 second quiz to book a <span class="highlight">fast and free quote</span>
             </h1>
         </div>
 
@@ -781,7 +781,7 @@
                 </div>
             </div>
             <div class="nav-buttons">
-                <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Book My Quote</button>
+                <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Book Quote</button>
             </div>
             <div class="privacy-policy-text" id="privacyPolicyText">
                 <p>By clicking "NEXT STEP" and submitting this form, (i) I agree that <span id="partnerBusinessName">Peak Leads Group and it's marketing partners</span> may use automated technology to call or text my phone number (provided above) or email me regarding my request, and I may revoke this consent at any time, and (ii) I agree to the <a href="privacypolicy.html" target="_blank">Terms & Conditions and Privacy Policy</a>.</p>
@@ -792,7 +792,7 @@
         <!-- ENDING SCREEN SELECTION -->
         <div class="form-step" id="endingSelectionStep">
             <div class="ending-selection-screen">
-                <div class="ending-selection-title">Thank you!</div>
+                <div class="ending-selection-title">Post-Submit Options</div>
                 <div class="ending-selection-subtitle">Choose how you'd like to proceed:</div>
                 <div class="ending-options">
                     <button class="ending-option-button" onclick="showEndingScreen('calendar')">Schedule Appointment</button>
@@ -807,7 +807,7 @@
         <!-- PHONE/TEXT CONTACT SCREEN -->
         <div class="form-step" id="contactStep">
             <div style="text-align: center;">
-                <div style="font-size: 24px; color: #4CAF50; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your free estimate!</div>
+                <div style="font-size: 24px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your free estimate!</div>
                 <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Or if you're ready to schedule now you can contact us by clicking one of the buttons below</div>
                 
                 <a id="callButtonLink" href="#" class="contact-button call-button" style="display: none;">
@@ -832,7 +832,7 @@
         <!-- CALENDAR BOOKING SCREEN -->
         <div class="form-step" id="calendarStep">
             <div class="calendar-step-header">We'll reach out soon to schedule your free estimate!</div>
-            <div style="font-size: 16px; color: #666; margin-bottom: 25px; text-align: center;">Ready to schedule your free estimate now? Choose a time below:</div>
+            <div style="font-size: 16px; color: #666; margin-bottom: 25px; text-align: center;">Ready to schedule your free estimate now? Request a time below and we will reach out to confirm</div>
             
             <div class="calendar-header">
                 <div class="month-nav">
@@ -903,7 +903,7 @@
         let formData = {};
         let b2bData = null;
         let clientTimezone = 'America/New_York';
-        let clientAvailability = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
+        let clientAvailability = ['10:00 AM', '2:00 PM', '6:00 PM'];
         let clientAvailableDays = [1, 2, 3, 4, 5]; // Monday-Friday
         let clientDaysOut = 14;
         
@@ -1735,6 +1735,9 @@
             const phoneForDisplay = '(123) 456-7890';
             const textForDisplay = '(123) 456-7890';
             
+            // Normalize the submit screen type to handle case variations
+            const normalizedType = submitScreenType ? submitScreenType.toLowerCase() : '';
+            
             // Build the SMS body with lead's name
             const smsBody = encodeURIComponent(
                 `Hey, this is ${firstName}! I just saw your video on social media and would like to schedule an appointment to get my free, no obligation quote. Please send me some days/times that you're available!`
@@ -1745,8 +1748,8 @@
             const textButton = document.getElementById('textButtonLink');
             const phoneDisplay = document.getElementById('phoneNumberDisplay');
             
-            // Show/hide buttons based on submit screen type
-            if (submitScreenType === 'Phone' || submitScreenType === 'Phone/Text') {
+            // Show/hide buttons based on submit screen type (case-insensitive)
+            if (normalizedType === 'phone' || normalizedType === 'phone/text') {
                 if (callButton) {
                     callButton.href = `tel:1234567890`;
                     callButton.style.display = 'inline-flex';
@@ -1755,7 +1758,7 @@
                 if (callButton) callButton.style.display = 'none';
             }
             
-            if (submitScreenType === 'Text' || submitScreenType === 'Phone/Text') {
+            if (normalizedType === 'text' || normalizedType === 'phone/text') {
                 if (textButton) {
                     textButton.href = `sms:1234567890?&body=${smsBody}`;
                     textButton.style.display = 'inline-flex';
@@ -1766,11 +1769,11 @@
             
             // Display phone number
             if (phoneDisplay) {
-                if (submitScreenType === 'Phone' && phoneForDisplay) {
+                if (normalizedType === 'phone' && phoneForDisplay) {
                     phoneDisplay.textContent = phoneForDisplay;
-                } else if (submitScreenType === 'Text' && textForDisplay) {
+                } else if (normalizedType === 'text' && textForDisplay) {
                     phoneDisplay.textContent = textForDisplay;
-                } else if (submitScreenType === 'Phone/Text' && phoneForDisplay) {
+                } else if (normalizedType === 'phone/text' && phoneForDisplay) {
                     phoneDisplay.textContent = phoneForDisplay;
                 } else {
                     phoneDisplay.textContent = '';
@@ -1826,7 +1829,7 @@
                 showConfirmationScreen();
                 if (phoneSubmitBtn) {
                     phoneSubmitBtn.disabled = false;
-                    phoneSubmitBtn.textContent = 'Book My Quote';
+                    phoneSubmitBtn.textContent = 'Book Quote';
                 }
             }
         }
