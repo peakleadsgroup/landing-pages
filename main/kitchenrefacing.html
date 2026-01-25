@@ -446,6 +446,24 @@
             margin-bottom: 8px;
         }
 
+        @media (max-width: 600px) {
+            .weekday-header {
+                gap: 4px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .weekday-header {
+                gap: 3px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .weekday-header {
+                gap: 2px;
+            }
+        }
+
         .weekday-name {
             text-align: center;
             font-size: 12px;
@@ -746,12 +764,12 @@
             /* Show only first letter - use narrow width with overflow hidden */
             .weekday-name {
                 font-size: 12px;
-                padding: 8px 3px;
-                width: 2ch;
+                padding: 8px 1px;
+                min-width: 0;
+                max-width: 100%;
                 overflow: hidden;
                 white-space: nowrap;
                 text-overflow: clip;
-                margin: 0 auto;
                 box-sizing: border-box;
                 text-align: center;
             }
@@ -805,12 +823,12 @@
         @media (max-width: 480px) {
             .weekday-name {
                 font-size: 11px;
-                padding: 6px 3px;
-                width: 2ch;
+                padding: 6px 1px;
+                min-width: 0;
+                max-width: 100%;
                 overflow: hidden;
                 white-space: nowrap;
                 text-overflow: clip;
-                margin: 0 auto;
                 box-sizing: border-box;
                 text-align: center;
             }
