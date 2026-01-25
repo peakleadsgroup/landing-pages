@@ -395,7 +395,7 @@
 
         .calendar-header {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             margin-bottom: 20px;
         }
@@ -2575,6 +2575,11 @@
             if (mainHeading) mainHeading.style.display = 'none';
             
             initializeCalendar();
+            
+            // Show reviews modal if reviews exist
+            setTimeout(() => {
+                showReviewsModal();
+            }, 500); // Small delay to let the calendar screen appear first
         }
         
         // ============================================
