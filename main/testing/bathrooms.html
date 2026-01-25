@@ -1436,8 +1436,16 @@
                     }
                     
                     // Check if client niche matches the landing page niche
+                    // Niche is a multiple select field (array), so check if array includes the niche
                     const clientNiche = client.fields['Niche'];
-                    if (!clientNiche || clientNiche !== landingPageNiche) {
+                    if (!clientNiche) {
+                        continue;
+                    }
+                    // Handle multiple select field (array) - check if array includes the niche
+                    const nicheMatches = Array.isArray(clientNiche) 
+                        ? clientNiche.includes(landingPageNiche)
+                        : clientNiche === landingPageNiche;
+                    if (!nicheMatches) {
                         continue;
                     }
                     
