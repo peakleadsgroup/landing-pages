@@ -911,6 +911,11 @@
                         </svg>
                     </button>
                     <div class="month-display" id="monthDisplay"></div>
+                    <button class="nav-button" id="nextMonth" onclick="changeCalendarMonth(1)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 18l6-6-6-6"/>
+                        </svg>
+                    </button>
                 </div>
             </div>
             
@@ -996,6 +1001,11 @@
                             </svg>
                         </button>
                         <div class="month-display" id="monthDisplayBelow"></div>
+                        <button class="nav-button" id="nextMonthBelow" onclick="changeCalendarMonthBelow(1)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
                 
@@ -2312,30 +2322,54 @@
         }
         
         function changeCalendarMonth(direction) {
-            if (direction < 0) {
-                currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
-                const firstAvailable = renderCalendar();
+            currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
+            const firstAvailable = renderCalendar();
+            
+            if (selectedDate) {
+                const now = getCurrentDateInTimezone();
+                now.setHours(0, 0, 0, 0);
+                const startDate = new Date(currentWeekStart);
+                const startDayOfWeek = startDate.getDay();
+                startDate.setDate(startDate.getDate() - startDayOfWeek);
+                const endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + 20);
                 
-                if (selectedDate) {
-                    const now = getCurrentDateInTimezone();
-                    now.setHours(0, 0, 0, 0);
-                    const startDate = new Date(currentWeekStart);
-                    const startDayOfWeek = startDate.getDay();
-                    startDate.setDate(startDate.getDate() - startDayOfWeek);
-                    const endDate = new Date(startDate);
-                    endDate.setDate(startDate.getDate() + 20);
-                    
-                    if (selectedDate < startDate || selectedDate > endDate) {
-                        if (firstAvailable.date && firstAvailable.formatted) {
-                            selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
-                        }
-                    } else {
-                        const formatted = formatDate(selectedDate);
-                        selectCalendarDay(selectedDate, formatted.fullDate);
+                if (selectedDate < startDate || selectedDate > endDate) {
+                    if (firstAvailable.date && firstAvailable.formatted) {
+                        selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
                     }
-                } else if (firstAvailable.date && firstAvailable.formatted) {
-                    selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+                } else {
+                    const formatted = formatDate(selectedDate);
+                    selectCalendarDay(selectedDate, formatted.fullDate);
                 }
+            } else if (firstAvailable.date && firstAvailable.formatted) {
+                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+            }
+        }
+        
+        function changeCalendarMonthBelow(direction) {
+            currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
+            const firstAvailable = renderCalendarBelow();
+            
+            if (selectedDate) {
+                const now = getCurrentDateInTimezone();
+                now.setHours(0, 0, 0, 0);
+                const startDate = new Date(currentWeekStart);
+                const startDayOfWeek = startDate.getDay();
+                startDate.setDate(startDate.getDate() - startDayOfWeek);
+                const endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + 20);
+                
+                if (selectedDate < startDate || selectedDate > endDate) {
+                    if (firstAvailable.date && firstAvailable.formatted) {
+                        selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+                    }
+                } else {
+                    const formatted = formatDate(selectedDate);
+                    selectCalendarDay(selectedDate, formatted.fullDate);
+                }
+            } else if (firstAvailable.date && firstAvailable.formatted) {
+                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
             }
         }
         
@@ -2344,11 +2378,27 @@
             now.setHours(0, 0, 0, 0);
             
             const prevButton = document.getElementById('prevMonth');
+            const nextButton = document.getElementById('nextMonth');
             
-            if (currentWeekStart >= now) {
-                prevButton.disabled = true;
-            } else {
-                prevButton.disabled = false;
+            if (prevButton) {
+                if (currentWeekStart >= now) {
+                    prevButton.disabled = true;
+                } else {
+                    prevButton.disabled = false;
+                }
+            }
+            
+            if (nextButton) {
+                const maxDate = new Date(now);
+                maxDate.setDate(now.getDate() + clientDaysOut);
+                const endDate = new Date(currentWeekStart);
+                endDate.setDate(endDate.getDate() + 20);
+                
+                if (endDate >= maxDate) {
+                    nextButton.disabled = true;
+                } else {
+                    nextButton.disabled = false;
+                }
             }
         }
         
@@ -2887,12 +2937,133 @@
             }
         }
 
+        function renderCalendarBelow() {
+            const calendarGrid = document.getElementById('calendarGridBelow');
+            const monthDisplay = document.getElementById('monthDisplayBelow');
+            if (!calendarGrid || !monthDisplay) return { date: null, formatted: null };
+            
+            calendarGrid.innerHTML = '';
+            
+            const now = getCurrentDateInTimezone();
+            now.setHours(0, 0, 0, 0);
+            
+            const startDate = new Date(currentWeekStart);
+            const startDayOfWeek = startDate.getDay();
+            startDate.setDate(startDate.getDate() - startDayOfWeek);
+            
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 20);
+            
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            if (startDate.getMonth() === endDate.getMonth()) {
+                monthDisplay.textContent = `${months[startDate.getMonth()]} ${startDate.getFullYear()}`;
+            } else {
+                monthDisplay.textContent = `${months[startDate.getMonth()]} - ${months[endDate.getMonth()]} ${endDate.getFullYear()}`;
+            }
+            
+            let lastMonth = -1;
+            let firstAvailableDate = null;
+            let firstAvailableFormatted = null;
+            
+            for (let i = 0; i < 21; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+                
+                // Check if day is available (time slot availability checked when day is selected)
+                const isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date);
+                
+                const dayCell = document.createElement('div');
+                dayCell.className = 'calendar-day';
+                dayCell.dataset.date = date.toISOString();
+                
+                if (isToday(date)) {
+                    dayCell.classList.add('today');
+                }
+                
+                if (!isAvailable) {
+                    dayCell.classList.add('disabled');
+                }
+                
+                if (isAvailable && !firstAvailableDate) {
+                    firstAvailableDate = new Date(date);
+                    firstAvailableFormatted = formatDate(date);
+                }
+                
+                if (selectedDate && 
+                    date.getDate() === selectedDate.getDate() &&
+                    date.getMonth() === selectedDate.getMonth() &&
+                    date.getFullYear() === selectedDate.getFullYear()) {
+                    dayCell.classList.add('selected');
+                }
+                
+                if (date.getMonth() !== lastMonth && date.getDate() === 1) {
+                    const monthLabel = document.createElement('div');
+                    monthLabel.className = 'month-label';
+                    monthLabel.textContent = monthsShort[date.getMonth()];
+                    dayCell.appendChild(monthLabel);
+                    lastMonth = date.getMonth();
+                }
+                
+                const dayNumber = document.createElement('div');
+                dayNumber.textContent = date.getDate();
+                dayCell.appendChild(dayNumber);
+                
+                if (isAvailable) {
+                    const formatted = formatDate(date);
+                    dayCell.onclick = () => selectCalendarDay(date, formatted.fullDate);
+                }
+                
+                calendarGrid.appendChild(dayCell);
+            }
+            
+            updateNavigationButtonsBelow();
+            
+            return { date: firstAvailableDate, formatted: firstAvailableFormatted };
+        }
+        
+        function updateNavigationButtonsBelow() {
+            const now = getCurrentDateInTimezone();
+            now.setHours(0, 0, 0, 0);
+            
+            const prevButton = document.getElementById('prevMonthBelow');
+            const nextButton = document.getElementById('nextMonthBelow');
+            
+            if (prevButton) {
+                if (currentWeekStart >= now) {
+                    prevButton.disabled = true;
+                } else {
+                    prevButton.disabled = false;
+                }
+            }
+            
+            if (nextButton) {
+                const maxDate = new Date(now);
+                maxDate.setDate(now.getDate() + clientDaysOut);
+                const endDate = new Date(currentWeekStart);
+                endDate.setDate(endDate.getDate() + 20);
+                
+                if (endDate >= maxDate) {
+                    nextButton.disabled = true;
+                } else {
+                    nextButton.disabled = false;
+                }
+            }
+        }
+        
         function initializeCalendarBelow() {
-            // Initialize calendar below with same functionality as original
-            // This will reuse the calendar logic but with "Below" element IDs
-            // For now, just show it - the calendar functionality should work with the same IDs
-            // Note: This assumes calendar state is global, may need to refactor calendar functions
-            // to work with different element IDs if needed
+            const now = getCurrentDateInTimezone();
+            now.setHours(0, 0, 0, 0);
+            currentWeekStart = new Date(now);
+            
+            const firstAvailable = renderCalendarBelow();
+            
+            if (firstAvailable.date && firstAvailable.formatted) {
+                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+            }
         }
 
         function escapeHtml(text) {
