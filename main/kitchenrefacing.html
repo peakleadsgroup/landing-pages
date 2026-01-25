@@ -740,6 +740,81 @@
                 padding: 0 10px;
             }
         }
+
+        /* Calendar responsive styles for smaller screens */
+        @media (max-width: 600px) {
+            .weekday-name {
+                font-size: 11px;
+                padding: 8px 2px;
+                width: 1ch;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: clip;
+                display: inline-block;
+            }
+
+            .calendar-day {
+                font-size: 14px;
+                padding: 5px;
+            }
+
+            .month-display {
+                font-size: 16px;
+                min-width: 150px;
+            }
+
+            .calendar-header {
+                gap: 8px;
+            }
+
+            .nav-button {
+                width: 32px;
+                height: 32px;
+            }
+
+            .calendar-grid {
+                gap: 6px;
+            }
+
+            .weekday-header {
+                gap: 6px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .weekday-name {
+                font-size: 10px;
+                padding: 6px 1px;
+                width: 1ch;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: clip;
+                display: inline-block;
+            }
+
+            .calendar-day {
+                font-size: 12px;
+                padding: 4px;
+            }
+
+            .month-display {
+                font-size: 14px;
+                min-width: 120px;
+            }
+
+            .nav-button {
+                width: 28px;
+                height: 28px;
+            }
+
+            .calendar-grid {
+                gap: 4px;
+            }
+
+            .weekday-header {
+                gap: 4px;
+            }
+        }
     </style>
 </head>
 <body>
