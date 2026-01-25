@@ -743,76 +743,148 @@
 
         /* Calendar responsive styles for smaller screens */
         @media (max-width: 600px) {
+            /* Show only first letter - use narrow width with overflow hidden */
             .weekday-name {
-                font-size: 11px;
-                padding: 8px 2px;
-                width: 1ch;
+                font-size: 12px;
+                padding: 8px 1px;
+                width: 1.2ch;
                 overflow: hidden;
                 white-space: nowrap;
                 text-overflow: clip;
-                display: inline-block;
+                margin: 0 auto;
+                box-sizing: border-box;
             }
 
             .calendar-day {
-                font-size: 14px;
-                padding: 5px;
+                font-size: 13px;
+                padding: 4px;
+                min-width: 0;
+                max-width: 100%;
+                overflow: hidden;
+                box-sizing: border-box;
+            }
+
+            .calendar-day > div {
+                font-size: 13px;
+                line-height: 1.2;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+                text-align: center;
+            }
+
+            .month-label {
+                font-size: 8px;
+                top: 2px;
             }
 
             .month-display {
-                font-size: 16px;
-                min-width: 150px;
+                font-size: 15px;
+                min-width: 140px;
             }
 
             .calendar-header {
-                gap: 8px;
+                gap: 6px;
             }
 
             .nav-button {
-                width: 32px;
-                height: 32px;
+                width: 30px;
+                height: 30px;
             }
 
             .calendar-grid {
-                gap: 6px;
+                gap: 4px;
             }
 
             .weekday-header {
-                gap: 6px;
+                gap: 4px;
             }
         }
 
         @media (max-width: 480px) {
             .weekday-name {
-                font-size: 10px;
+                font-size: 11px;
                 padding: 6px 1px;
-                width: 1ch;
+                width: 1.2ch;
                 overflow: hidden;
                 white-space: nowrap;
                 text-overflow: clip;
-                display: inline-block;
+                margin: 0 auto;
+                box-sizing: border-box;
             }
 
             .calendar-day {
-                font-size: 12px;
-                padding: 4px;
+                font-size: 11px;
+                padding: 3px;
+                min-width: 0;
+                max-width: 100%;
+                overflow: hidden;
+                box-sizing: border-box;
+            }
+
+            .calendar-day > div {
+                font-size: 11px;
+                line-height: 1.1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+                text-align: center;
+            }
+
+            .month-label {
+                font-size: 7px;
+                top: 1px;
             }
 
             .month-display {
-                font-size: 14px;
-                min-width: 120px;
+                font-size: 13px;
+                min-width: 110px;
             }
 
             .nav-button {
-                width: 28px;
-                height: 28px;
+                width: 26px;
+                height: 26px;
             }
 
             .calendar-grid {
-                gap: 4px;
+                gap: 3px;
             }
 
             .weekday-header {
-                gap: 4px;
+                gap: 3px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .calendar-day {
+                font-size: 10px;
+                padding: 2px;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+
+            .calendar-day > div {
+                font-size: 10px;
+                max-width: 100%;
+                overflow: hidden;
+            }
+
+            .month-display {
+                font-size: 12px;
+                min-width: 100px;
+            }
+
+            .nav-button {
+                width: 24px;
+                height: 24px;
+            }
+
+            .calendar-grid {
+                gap: 2px;
+            }
+
+            .weekday-header {
+                gap: 2px;
             }
         }
     </style>
