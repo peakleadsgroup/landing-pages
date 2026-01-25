@@ -32,16 +32,28 @@
             right: 0;
             bottom: 0;
             width: 100vw;
-            height: 100vh;
-            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
-                        url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/BlissfulBathsBack.jpg') center/cover no-repeat;
-            background-size: cover;
-            background-position: center;
+            height: 100%;
+            min-height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)), 
+                        url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
+            background-size: 100% auto;
+            background-position: center top;
+            background-repeat: repeat-y;
             background-attachment: fixed;
             z-index: -1;
             transform: translateZ(0);
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
+        }
+
+        @media (max-width: 768px) {
+            body::before {
+                background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)), 
+                            url('https://github.com/peakleadsgroup/landing-pages/blob/main/Images/MobileBathroomBackground.jpg?raw=true');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+            }
         }
 
         .form-container {
@@ -657,6 +669,96 @@
                 position: absolute;
             }
         }
+
+        /* Reviews Section Styles */
+        .reviews-section {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .reviews-section.active {
+            display: block;
+        }
+
+        .reviews-content {
+            max-width: 500px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .reviews-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .review-block {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .review-text {
+            font-size: 18px;
+            color: #2c3e50;
+            line-height: 1.8;
+            margin-bottom: 25px;
+            font-style: italic;
+            padding: 0 40px;
+            position: relative;
+        }
+
+        .review-text::before,
+        .review-text::after {
+            display: none;
+        }
+
+        .review-stars {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .review-star {
+            color: #ffc107;
+            font-size: 24px;
+        }
+
+        .review-name {
+            font-size: 16px;
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .review-product-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 600px) {
+            .reviews-content {
+                margin: 10px;
+                padding: 0;
+            }
+
+            .review-block {
+                padding: 25px;
+                margin: 0;
+            }
+
+            .review-text {
+                font-size: 16px;
+                padding: 0 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -894,6 +996,15 @@
                     </svg>
                     Try Another
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REVIEWS SECTION -->
+    <div class="reviews-section" id="reviewsSection">
+        <div class="reviews-content">
+            <div class="reviews-container" id="reviewsContainer">
+                <!-- Review blocks will be dynamically added here -->
             </div>
         </div>
     </div>
@@ -1714,6 +1825,11 @@
             if (mainHeading) mainHeading.style.display = 'none';
             
             initializeCalendar();
+            
+            // Show reviews modal if reviews exist
+            setTimeout(() => {
+                showReviewsModal();
+            }, 500); // Small delay to let the calendar screen appear first
         }
 
         // ============================================
@@ -1814,6 +1930,79 @@
             document.getElementById('confirmationStep').classList.add('active');
             document.getElementById('progressBarContainer').style.display = 'none';
             document.getElementById('mainHeading').style.display = 'none';
+            
+            // Show reviews modal if reviews exist
+            setTimeout(() => {
+                showReviewsModal();
+            }, 500); // Small delay to let the confirmation screen appear first
+        }
+
+        // Reviews Section Functions
+        let reviews = [];
+
+        function showReviewsModal() {
+            // Hardcoded reviews for sample page
+            reviews = [
+                {
+                    text: 'REVIEW 1',
+                    name: 'NAME 1',
+                    productUrl: 'https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/images/Bedrock%20Bath%20Pros%20-%20IN1769364234598.png'
+                },
+                {
+                    text: 'REVIEW 2',
+                    name: 'NAME 2',
+                    productUrl: 'https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/images/Bedrock%20Bath%20Pros%20-%20IN1769364250346.png'
+                },
+                {
+                    text: 'REVIEW 3',
+                    name: 'NAME 3',
+                    productUrl: 'https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/images/Bedrock%20Bath%20Pros%20-%20IN1769364255401.png'
+                }
+            ];
+
+            // Only show reviews section if there are reviews
+            if (reviews.length > 0) {
+                buildReviewBlocks();
+                document.getElementById('reviewsSection').classList.add('active');
+            }
+        }
+
+        function buildReviewBlocks() {
+            const container = document.getElementById('reviewsContainer');
+            
+            // Clear existing content
+            container.innerHTML = '';
+
+            // Build review blocks
+            reviews.forEach((review) => {
+                const reviewBlock = document.createElement('div');
+                reviewBlock.className = 'review-block';
+                
+                let imageHtml = '';
+                if (review.productUrl && review.productUrl.trim()) {
+                    imageHtml = `<img src="${escapeHtml(review.productUrl)}" alt="Product image" class="review-product-image" onerror="this.style.display='none'">`;
+                }
+                
+                reviewBlock.innerHTML = `
+                    <div class="review-text">${escapeHtml(review.text)}</div>
+                    <div class="review-stars">
+                        <span class="review-star">★</span>
+                        <span class="review-star">★</span>
+                        <span class="review-star">★</span>
+                        <span class="review-star">★</span>
+                        <span class="review-star">★</span>
+                    </div>
+                    <div class="review-name">${escapeHtml(review.name)}</div>
+                    ${imageHtml}
+                `;
+                container.appendChild(reviewBlock);
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         async function submitFinalForm() {
