@@ -2406,10 +2406,20 @@
             selectedDate = date;
             selectedTime = null;
             
+            // Determine which calendar is active
+            const calendarStep = document.getElementById('calendarStep');
+            const calendarStepBelow = document.getElementById('calendarStepBelow');
+            const isBottomCalendar = calendarStepBelow && 
+                (calendarStepBelow.classList.contains('active') || 
+                 calendarStepBelow.style.display === 'block' ||
+                 window.getComputedStyle(calendarStepBelow).display !== 'none');
+            
+            // Remove selected class from all days in both calendars
             document.querySelectorAll('.calendar-day').forEach(day => {
                 day.classList.remove('selected');
             });
             
+            // Add selected class to the clicked day
             document.querySelectorAll('.calendar-day').forEach(day => {
                 const dayDate = new Date(day.dataset.date);
                 if (dayDate.getDate() === date.getDate() &&
@@ -2419,17 +2429,34 @@
                 }
             });
             
-            document.getElementById('selectedDayInfo').innerHTML = `
-                <h3>Selected Date</h3>
-                <p>${fullDate}</p>
-            `;
+            // Update the appropriate selected day info
+            const selectedDayInfoId = isBottomCalendar ? 'selectedDayInfoBelow' : 'selectedDayInfo';
+            const selectedDayInfo = document.getElementById(selectedDayInfoId);
+            if (selectedDayInfo) {
+                selectedDayInfo.innerHTML = `
+                    <h3>Selected Date</h3>
+                    <p>${fullDate}</p>
+                `;
+            }
             
-            renderTimes();
-            document.getElementById('timeSection').style.display = 'block';
+            // Show times in the appropriate time section
+            renderTimes(isBottomCalendar);
+            const timeSectionId = isBottomCalendar ? 'timeSectionBelow' : 'timeSection';
+            const timeSection = document.getElementById(timeSectionId);
+            if (timeSection) {
+                timeSection.style.display = 'block';
+            }
         }
         
-        async function renderTimes() {
-            const timeGrid = document.getElementById('timeGrid');
+        async function renderTimes(isBottomCalendar = false) {
+            const timeGridId = isBottomCalendar ? 'timeGridBelow' : 'timeGrid';
+            const timeGrid = document.getElementById(timeGridId);
+            
+            if (!timeGrid) {
+                console.error(`Time grid element not found: ${timeGridId}`);
+                return;
+            }
+            
             timeGrid.innerHTML = '<div style="text-align: center; padding: 20px;">Loading available times...</div>';
             
             const slots = await getAvailableTimesForDate(selectedDate);
