@@ -676,6 +676,8 @@
         .reviews-section {
             display: none;
             margin-top: 20px;
+            margin-left: auto;
+            margin-right: auto;
             width: 100%;
             max-width: 500px;
         }
@@ -2043,6 +2045,11 @@
             document.getElementById('contactStep').classList.add('active');
             document.getElementById('progressBarContainer').style.display = 'none';
             document.getElementById('mainHeading').style.display = 'none';
+            
+            // Show reviews modal if reviews exist
+            setTimeout(() => {
+                showReviewsModal();
+            }, 500); // Small delay to let the contact screen appear first
         }
 
         function showConfirmationScreen() {
