@@ -8,6 +8,7 @@
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
     <style>
         @keyframes spin {
             from { transform: rotate(0deg); }
@@ -245,6 +246,47 @@
             const realizedCashData = data.map(d => d.realizedCash);
             const realizedCashReserveData = data.map(d => d.realizedCashReserve);
 
+            // Find all Tuesdays in the date range
+            function getTuesdaysInRange(startDate, endDate) {
+                const tuesdays = [];
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                
+                // Find the first Tuesday (day 2, where 0 = Sunday)
+                let current = new Date(start);
+                // Move to the first Tuesday
+                while (current.getDay() !== 2) {
+                    current.setDate(current.getDate() + 1);
+                }
+                
+                // Add all Tuesdays in the range
+                while (current <= end) {
+                    tuesdays.push(new Date(current).toISOString().split('T')[0]);
+                    current.setDate(current.getDate() + 7); // Move to next Tuesday
+                }
+                
+                return tuesdays;
+            }
+
+            // Get date range
+            const sortedDates = [...dates].sort();
+            const minDate = sortedDates[0];
+            const maxDate = sortedDates[sortedDates.length - 1];
+            const tuesdays = getTuesdaysInRange(minDate, maxDate);
+
+            // Create annotations for Tuesday vertical lines
+            const tuesdayAnnotations = tuesdays.map(tuesday => ({
+                type: 'line',
+                xMin: tuesday,
+                xMax: tuesday,
+                borderColor: 'rgba(156, 163, 175, 0.5)',
+                borderWidth: 1,
+                borderDash: [5, 5],
+                label: {
+                    display: false
+                }
+            }));
+
             chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -329,6 +371,9 @@
                                     });
                                 }
                             }
+                        },
+                        annotation: {
+                            annotations: tuesdayAnnotations
                         }
                     },
                     scales: {
