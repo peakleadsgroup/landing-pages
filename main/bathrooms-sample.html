@@ -1009,6 +1009,88 @@
         </div>
     </div>
 
+    <!-- DUPLICATE CALL TO ACTION SECTION -->
+    <div class="reviews-section" id="ctaSection">
+        <div class="reviews-content">
+            <!-- DUPLICATE CONTACT SCREEN -->
+            <div class="form-step cta-block" id="contactStepBelow">
+                <div style="text-align: center;">
+                    <div style="font-size: 24px; color: black; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your free estimate!</div>
+                    <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Or if you're ready to schedule now you can contact us by clicking one of the buttons below</div>
+                    
+                    <a id="callButtonLinkBelow" href="#" class="contact-button call-button" style="display: none;">
+                        <svg class="phone-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
+                        </svg>
+                        Call
+                    </a>
+                    
+                    <a id="textButtonLinkBelow" href="#" class="contact-button text-button" style="display: none;">
+                        <svg class="message-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 11H7V9h2v2zm4 0h-2V9h2v2zm4 0h-2V9h2v2z"/>
+                        </svg>
+                        Text
+                    </a>
+                    
+                    <div class="phone-number-display" id="phoneNumberDisplayBelow"></div>
+                </div>
+            </div>
+
+            <!-- DUPLICATE CALENDAR SCREEN -->
+            <div class="form-step cta-block" id="calendarStepBelow">
+                <div class="calendar-step-header">We'll reach out soon to schedule your free estimate!</div>
+                <div style="font-size: 16px; color: #666; margin-bottom: 25px; text-align: center;">Ready to schedule your free estimate now? Choose a time below:</div>
+                
+                <div class="calendar-header">
+                    <div class="month-nav">
+                        <button class="nav-button" id="prevMonthBelow" onclick="changeCalendarMonthBelow(-1)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M15 18l-6-6 6-6"/>
+                            </svg>
+                        </button>
+                        <div class="month-display" id="monthDisplayBelow"></div>
+                        <button class="nav-button" id="nextMonthBelow" onclick="changeCalendarMonthBelow(1)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="weekday-header">
+                    <div class="weekday-name">Sun</div>
+                    <div class="weekday-name">Mon</div>
+                    <div class="weekday-name">Tue</div>
+                    <div class="weekday-name">Wed</div>
+                    <div class="weekday-name">Thu</div>
+                    <div class="weekday-name">Fri</div>
+                    <div class="weekday-name">Sat</div>
+                </div>
+                
+                <div class="calendar-grid" id="calendarGridBelow"></div>
+                
+                <div id="timeSectionBelow" class="time-section" style="display: none;">
+                    <div class="selected-info" id="selectedDayInfoBelow"></div>
+                    <div class="time-grid" id="timeGridBelow"></div>
+                </div>
+            </div>
+
+            <!-- DUPLICATE CONFIRMATION/THANK YOU SCREEN -->
+            <div class="form-step cta-block" id="confirmationStepBelow">
+                <div style="text-align: center; padding: 40px 20px;">
+                    <div style="margin-bottom: 30px;">
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;">
+                            <circle cx="12" cy="12" r="10" fill="#e8f5e9"/>
+                            <path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/>
+                        </svg>
+                    </div>
+                    <div style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
+                    <div id="confirmationMessageBelow" style="font-size: 18px; color: #666; line-height: 1.6;">We'll give you a call soon to schedule your free estimate.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ============================================
         // AIRTABLE CONFIGURATION
@@ -1743,10 +1825,20 @@
             selectedDate = date;
             selectedTime = null;
             
+            // Determine which calendar is active
+            const calendarStep = document.getElementById('calendarStep');
+            const calendarStepBelow = document.getElementById('calendarStepBelow');
+            const isBottomCalendar = calendarStepBelow && 
+                (calendarStepBelow.classList.contains('active') || 
+                 calendarStepBelow.style.display === 'block' ||
+                 window.getComputedStyle(calendarStepBelow).display !== 'none');
+            
+            // Remove selected class from all days in both calendars
             document.querySelectorAll('.calendar-day').forEach(day => {
                 day.classList.remove('selected');
             });
             
+            // Add selected class to the clicked day in both calendars
             document.querySelectorAll('.calendar-day').forEach(day => {
                 const dayDate = new Date(day.dataset.date);
                 if (dayDate.getDate() === date.getDate() &&
@@ -1756,17 +1848,33 @@
                 }
             });
             
-            document.getElementById('selectedDayInfo').innerHTML = `
-                <h3>Selected Date</h3>
-                <p>${fullDate}</p>
-            `;
+            // Update the appropriate selected day info
+            const selectedDayInfo = document.getElementById(isBottomCalendar ? 'selectedDayInfoBelow' : 'selectedDayInfo');
+            if (selectedDayInfo) {
+                selectedDayInfo.innerHTML = `
+                    <h3>Selected Date</h3>
+                    <p>${fullDate}</p>
+                `;
+            }
             
-            renderTimes();
-            document.getElementById('timeSection').style.display = 'block';
+            // Show time section for the appropriate calendar
+            const timeSection = document.getElementById(isBottomCalendar ? 'timeSectionBelow' : 'timeSection');
+            if (timeSection) {
+                timeSection.style.display = 'block';
+            }
+            
+            // Render times for the appropriate calendar
+            renderTimes(isBottomCalendar);
         }
         
-        async function renderTimes() {
-            const timeGrid = document.getElementById('timeGrid');
+        async function renderTimes(isBottomCalendar = false) {
+            const timeGridId = isBottomCalendar ? 'timeGridBelow' : 'timeGrid';
+            const timeGrid = document.getElementById(timeGridId);
+            
+            if (!timeGrid) {
+                return;
+            }
+            
             timeGrid.innerHTML = '<div style="text-align: center; padding: 20px;">Loading available times...</div>';
             
             const slots = await getAvailableTimesForDate(selectedDate);
@@ -1964,6 +2072,20 @@
             if (reviews.length > 0) {
                 buildReviewBlocks();
                 document.getElementById('reviewsSection').classList.add('active');
+                showDuplicateCallToAction();
+                
+                // Update background height after reviews are displayed
+                setTimeout(() => {
+                    if (typeof updateBackgroundHeight === 'function') {
+                        updateBackgroundHeight();
+                    }
+                }, 300);
+            } else {
+                // Hide duplicate call to action section if no reviews
+                const ctaSection = document.getElementById('ctaSection');
+                if (ctaSection) {
+                    ctaSection.classList.remove('active');
+                }
             }
         }
 
@@ -2003,6 +2125,277 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        function showDuplicateCallToAction() {
+            const ctaSection = document.getElementById('ctaSection');
+            const contactStepBelow = document.getElementById('contactStepBelow');
+            const calendarStepBelow = document.getElementById('calendarStepBelow');
+            const confirmationStepBelow = document.getElementById('confirmationStepBelow');
+            
+            // Hide all initially
+            if (contactStepBelow) contactStepBelow.style.display = 'none';
+            if (calendarStepBelow) calendarStepBelow.style.display = 'none';
+            if (confirmationStepBelow) confirmationStepBelow.style.display = 'none';
+            
+            // Duplicate whatever is shown at the top - show only that screen below reviews
+            if (currentSubmitScreenType === 'calendar') {
+                // Show only calendar below (no thank you screen)
+                if (calendarStepBelow) {
+                    calendarStepBelow.style.display = 'block';
+                    ctaSection.classList.add('active');
+                    // Initialize calendar below (same as original)
+                    initializeCalendarBelow();
+                }
+            } else if (currentSubmitScreenType === 'Phone' || currentSubmitScreenType === 'Text' || currentSubmitScreenType === 'Phone/Text') {
+                // Show only phone/text screen below (no thank you screen)
+                if (contactStepBelow) {
+                    contactStepBelow.style.display = 'block';
+                    ctaSection.classList.add('active');
+                    // Set up contact buttons below
+                    setupContactButtonsBelow(currentSubmitScreenType);
+                }
+            } else {
+                // For 'None' option, show only the thank you/confirmation screen below
+                if (confirmationStepBelow) {
+                    const confirmationMessageBelow = document.getElementById('confirmationMessageBelow');
+                    if (confirmationMessageBelow) {
+                        confirmationMessageBelow.textContent = "We'll give you a call soon to schedule your free estimate.";
+                    }
+                    confirmationStepBelow.style.display = 'block';
+                    ctaSection.classList.add('active');
+                }
+            }
+        }
+
+        function setupContactButtonsBelow(submitScreenType) {
+            // Get lead's name
+            const firstName = document.getElementById('firstName')?.value.trim() || '';
+            
+            // Determine which client data to use
+            const activeClient = matchedClientData || campaignClientData;
+            if (!activeClient) return;
+            
+            const phoneField = activeClient.fields['Phone'];
+            const textField = activeClient.fields['Text'];
+            
+            // Format phone numbers
+            const phoneForDisplay = phoneField ? formatClientPhoneForDisplay(phoneField) : '';
+            const textForDisplay = textField ? formatClientPhoneForDisplay(textField) : '';
+            
+            // Build the SMS body
+            const smsBody = encodeURIComponent(
+                `Hey, this is ${firstName}! I just saw your video on social media and would like to schedule an appointment to get my free, no obligation quote. Please send me some days/times that you're available!`
+            );
+            
+            // Update the contact buttons below
+            const callButtonBelow = document.getElementById('callButtonLinkBelow');
+            const textButtonBelow = document.getElementById('textButtonLinkBelow');
+            const phoneDisplayBelow = document.getElementById('phoneNumberDisplayBelow');
+            
+            // Show/hide buttons based on submit screen type
+            if (submitScreenType === 'Phone' || submitScreenType === 'Phone/Text') {
+                if (callButtonBelow && phoneField) {
+                    callButtonBelow.href = `tel:${phoneField}`;
+                    callButtonBelow.style.display = 'inline-flex';
+                }
+            } else {
+                if (callButtonBelow) callButtonBelow.style.display = 'none';
+            }
+            
+            if (submitScreenType === 'Text' || submitScreenType === 'Phone/Text') {
+                if (textButtonBelow && textField) {
+                    textButtonBelow.href = `sms:${textField}?&body=${smsBody}`;
+                    textButtonBelow.style.display = 'inline-flex';
+                }
+            } else {
+                if (textButtonBelow) textButtonBelow.style.display = 'none';
+            }
+            
+            // Display phone number
+            if (phoneDisplayBelow) {
+                if (submitScreenType === 'Phone' && phoneForDisplay) {
+                    phoneDisplayBelow.textContent = phoneForDisplay;
+                } else if (submitScreenType === 'Text' && textForDisplay) {
+                    phoneDisplayBelow.textContent = textForDisplay;
+                } else if (submitScreenType === 'Phone/Text' && phoneForDisplay) {
+                    phoneDisplayBelow.textContent = phoneForDisplay;
+                } else {
+                    phoneDisplayBelow.textContent = '';
+                }
+            }
+        }
+
+        function changeCalendarMonthBelow(direction) {
+            currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
+            const firstAvailable = renderCalendarBelow();
+            
+            if (selectedDate) {
+                const now = getCurrentDateInTimezone();
+                now.setHours(0, 0, 0, 0);
+                const startDate = new Date(currentWeekStart);
+                const startDayOfWeek = startDate.getDay();
+                startDate.setDate(startDate.getDate() - startDayOfWeek);
+                const endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + 20);
+                
+                if (selectedDate < startDate || selectedDate > endDate) {
+                    if (firstAvailable.date && firstAvailable.formatted) {
+                        selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+                    }
+                } else {
+                    const formatted = formatDate(selectedDate);
+                    selectCalendarDay(selectedDate, formatted.fullDate);
+                }
+            } else if (firstAvailable.date && firstAvailable.formatted) {
+                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+            }
+        }
+
+        function renderCalendarBelow() {
+            const calendarGrid = document.getElementById('calendarGridBelow');
+            const monthDisplay = document.getElementById('monthDisplayBelow');
+            if (!calendarGrid || !monthDisplay) return { date: null, formatted: null };
+            
+            calendarGrid.innerHTML = '';
+            
+            const now = getCurrentDateInTimezone();
+            now.setHours(0, 0, 0, 0);
+            
+            const startDate = new Date(currentWeekStart);
+            const startDayOfWeek = startDate.getDay();
+            startDate.setDate(startDate.getDate() - startDayOfWeek);
+            
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 20);
+            
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            if (startDate.getMonth() === endDate.getMonth()) {
+                monthDisplay.textContent = `${months[startDate.getMonth()]} ${startDate.getFullYear()}`;
+            } else {
+                monthDisplay.textContent = `${months[startDate.getMonth()]} - ${months[endDate.getMonth()]} ${endDate.getFullYear()}`;
+            }
+            
+            let lastMonth = -1;
+            let firstAvailableDate = null;
+            let firstAvailableFormatted = null;
+            
+            for (let i = 0; i < 21; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+                
+                // Check if day is available (time slot availability checked when day is selected)
+                const isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date);
+                
+                const dayCell = document.createElement('div');
+                dayCell.className = 'calendar-day';
+                dayCell.dataset.date = date.toISOString();
+                
+                if (isToday(date)) {
+                    dayCell.classList.add('today');
+                }
+                
+                if (!isAvailable) {
+                    dayCell.classList.add('disabled');
+                }
+                
+                if (isAvailable && !firstAvailableDate) {
+                    firstAvailableDate = new Date(date);
+                    firstAvailableFormatted = formatDate(date);
+                }
+                
+                if (selectedDate && 
+                    date.getDate() === selectedDate.getDate() &&
+                    date.getMonth() === selectedDate.getMonth() &&
+                    date.getFullYear() === selectedDate.getFullYear()) {
+                    dayCell.classList.add('selected');
+                }
+                
+                if (date.getMonth() !== lastMonth && date.getDate() === 1) {
+                    const monthLabel = document.createElement('div');
+                    monthLabel.className = 'month-label';
+                    monthLabel.textContent = monthsShort[date.getMonth()];
+                    dayCell.appendChild(monthLabel);
+                    lastMonth = date.getMonth();
+                }
+                
+                const dayNumber = document.createElement('div');
+                dayNumber.textContent = date.getDate();
+                dayCell.appendChild(dayNumber);
+                
+                if (isAvailable) {
+                    const formatted = formatDate(date);
+                    dayCell.onclick = () => selectCalendarDay(date, formatted.fullDate);
+                }
+                
+                calendarGrid.appendChild(dayCell);
+            }
+            
+            updateNavigationButtonsBelow();
+            
+            return { date: firstAvailableDate, formatted: firstAvailableFormatted };
+        }
+        
+        function updateNavigationButtonsBelow() {
+            const now = getCurrentDateInTimezone();
+            now.setHours(0, 0, 0, 0);
+            
+            const prevButton = document.getElementById('prevMonthBelow');
+            const nextButton = document.getElementById('nextMonthBelow');
+            
+            if (prevButton) {
+                if (currentWeekStart >= now) {
+                    prevButton.disabled = true;
+                } else {
+                    prevButton.disabled = false;
+                }
+            }
+            
+            if (nextButton) {
+                const maxDate = new Date(now);
+                maxDate.setDate(now.getDate() + clientDaysOut);
+                const endDate = new Date(currentWeekStart);
+                endDate.setDate(endDate.getDate() + 20);
+                
+                if (endDate >= maxDate) {
+                    nextButton.disabled = true;
+                } else {
+                    nextButton.disabled = false;
+                }
+            }
+        }
+        
+        function initializeCalendarBelow() {
+            const now = getCurrentDateInTimezone();
+            now.setHours(0, 0, 0, 0);
+            currentWeekStart = new Date(now);
+            
+            const firstAvailable = renderCalendarBelow();
+            
+            if (firstAvailable.date && firstAvailable.formatted) {
+                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+            }
+        }
+
+        function formatClientPhoneForDisplay(phoneNumber) {
+            // Remove all non-digit characters
+            const digits = phoneNumber.replace(/\D/g, '');
+            
+            // Format as (XXX) XXX-XXXX
+            if (digits.length === 11 && digits.startsWith('1')) {
+                // Remove leading 1 for display
+                const without1 = digits.substring(1);
+                return `(${without1.slice(0,3)}) ${without1.slice(3,6)}-${without1.slice(6)}`;
+            } else if (digits.length === 10) {
+                return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+            }
+            
+            // Return original if format doesn't match
+            return phoneNumber;
         }
 
         async function submitFinalForm() {
