@@ -1517,7 +1517,7 @@
             }
         }
 
-        async function sendLeadWebhook(leadRecordId, metaCampaignID, linkedClientAirtableID, appointmentTime = null) {
+        async function sendLeadWebhook(leadRecordId, metaCampaignID, linkedClientAirtableID, appointmentTime = null, uniqueID = null) {
             try {
                 // Only send if there's a linked client
                 if (!linkedClientAirtableID) {
@@ -1533,6 +1533,11 @@
                 // Add appointment time if provided
                 if (appointmentTime) {
                     webhookData['Appointment Time'] = appointmentTime;
+                }
+                
+                // Add unique Meta event ID if provided
+                if (uniqueID) {
+                    webhookData['uniqueID'] = uniqueID;
                 }
                 
                 await fetch(CONTACT_NOTIFICATION_WEBHOOK_URL, {
@@ -3416,7 +3421,9 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                     await sendLeadWebhook(
                         leadRecordId,
                         metaCampaignID,
-                        matchedClientData.id
+                        matchedClientData.id,
+                        null,
+                        eventId
                     );
                 }
                 
