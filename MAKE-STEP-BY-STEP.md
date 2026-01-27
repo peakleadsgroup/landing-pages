@@ -223,10 +223,10 @@ const articleCard = `
                     <div class="article-content">
                         <div class="article-date">${input.publishedDateDisplay}</div>
                         <h2 class="article-title">
-                            <a href="articles/${input.slug}.html">${input.title}</a>
+                            <a href="${input.slug}.html">${input.title}</a>
                         </h2>
                         <p class="article-excerpt">${input.excerpt}</p>
-                        <a href="articles/${input.slug}.html" class="article-read-more">Read More →</a>
+                        <a href="${input.slug}.html" class="article-read-more">Read More →</a>
                     </div>
                 </article>
                 `;
