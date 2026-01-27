@@ -157,95 +157,7 @@ return { populatedHTML: html };
 
 ---
 
-## **Step 5: Get Most Recent 3 Articles (for Recent Articles section)**
-
-**Module:** Airtable > Search Records
-
-**Settings:**
-- **Base:** Your Articles base
-- **Table:** Articles
-- **Filter Formula:** 
-  ```
-  AND(
-    {Status} = "Published",
-    RECORD_ID() != "{{Get Record.Record ID}}"
-  )
-  ```
-- **Sort:** Published Date (Descending)
-- **Limit:** 3
-
-**Output:** Array of 3 most recent articles
-
----
-
-## **Step 6: Build Recent Articles HTML**
-
-**Module:** Code (JavaScript)
-
-**Inputs:**
-- `recentArticles` = `{{Search Records}}` (array)
-
-**Code:**
-```javascript
-const articles = input.recentArticles || [];
-
-if (articles.length === 0) {
-  return { recentArticlesHTML: '<p>More articles coming soon!</p>' };
-}
-
-let html = '';
-articles.forEach(article => {
-  const slug = article.fields['URL Slug'] || article['URL Slug'];
-  const title = article.fields.Title || article.Title;
-  const excerpt = article.fields.Excerpt || article.Excerpt;
-  
-  html += `
-                    <div class="recent-card">
-                        <h3><a href="articles/${slug}.html">${title}</a></h3>
-                        <p>${excerpt || ''}</p>
-                    </div>
-                    `;
-});
-
-return { recentArticlesHTML: html };
-```
-
-**Output:**
-- `recentArticlesHTML` - HTML for recent articles section
-
----
-
-## **Step 7: Insert Recent Articles into Article HTML**
-
-**Module:** Code (JavaScript)
-
-**Inputs:**
-- `articleHTML` = `{{Replace Placeholders.populatedHTML}}`
-- `recentArticlesHTML` = `{{Build Recent Articles.recentArticlesHTML}}`
-
-**Code:**
-```javascript
-let html = input.articleHTML;
-
-// Find the recent articles grid and replace content
-// Look for the div with id="recentArticlesGrid"
-const gridPattern = /<div class="recent-grid" id="recentArticlesGrid">[\s\S]*?<\/div>\s*<\/div>/;
-
-const replacement = `<div class="recent-grid" id="recentArticlesGrid">
-                    ${input.recentArticlesHTML}
-                </div>`;
-
-html = html.replace(gridPattern, replacement);
-
-return { finalHTML: html };
-```
-
-**Output:**
-- `finalHTML` - complete article with Recent Articles populated
-
----
-
-## **Step 8: Create Article File via GitHub API**
+## **Step 5: Create Article File via GitHub API**
 
 **Module:** HTTP > Make a Request
 
@@ -262,7 +174,7 @@ Accept: application/vnd.github.v3+json
 ```json
 {
   "message": "Add article: {{Get Record.Title}}",
-  "content": "{{Base64 encode finalHTML}}",
+  "content": "{{Base64 encode populatedHTML}}",
   "branch": "main"
 }
 ```
@@ -271,7 +183,7 @@ Accept: application/vnd.github.v3+json
 
 **Module:** Code (JavaScript) - Base64 Encode
 ```javascript
-const html = input.finalHTML;
+const html = input.populatedHTML;
 const base64 = Buffer.from(html).toString('base64');
 return { base64Content: base64 };
 ```
@@ -280,7 +192,7 @@ Then use `{{Base64 Encode.base64Content}}` in the content field.
 
 ---
 
-## **Step 9: Read Articles Listing Page**
+## **Step 6: Read Articles Listing Page**
 
 **Module:** HTTP > Make a Request
 
@@ -291,7 +203,7 @@ Then use `{{Base64 Encode.base64Content}}` in the content field.
 
 ---
 
-## **Step 10: Build Article Card HTML**
+## **Step 7: Build Article Card HTML**
 
 **Module:** Code (JavaScript)
 
@@ -327,7 +239,7 @@ return { articleCardHTML: articleCard };
 
 ---
 
-## **Step 11: Insert Article Card into Listing Page**
+## **Step 8: Insert Article Card into Listing Page**
 
 **Module:** Code (JavaScript)
 
@@ -354,7 +266,7 @@ return { updatedListingHTML: html };
 
 ---
 
-## **Step 12: Update Listing Page via GitHub API**
+## **Step 9: Update Listing Page via GitHub API**
 
 **Module:** HTTP > Make a Request
 
@@ -384,7 +296,7 @@ Accept: application/vnd.github.v3+json
 
 ---
 
-## **Step 13: Read Sitemap**
+## **Step 10: Read Sitemap**
 
 **Module:** HTTP > Make a Request
 
@@ -393,7 +305,7 @@ Accept: application/vnd.github.v3+json
 
 ---
 
-## **Step 14: Add Article to Sitemap**
+## **Step 11: Add Article to Sitemap**
 
 **Module:** Code (JavaScript)
 
@@ -423,7 +335,7 @@ return { updatedSitemap: updatedSitemap };
 
 ---
 
-## **Step 15: Update Sitemap via GitHub API**
+## **Step 12: Update Sitemap via GitHub API**
 
 **Module:** HTTP > Make a Request
 
@@ -443,20 +355,17 @@ return { updatedSitemap: updatedSitemap };
 4. Generate Schema JSON (Code)
 5. Get Template (HTTP GET)
 6. Replace Placeholders (Code)
-7. Get Recent Articles (Airtable Search)
-8. Build Recent Articles HTML (Code)
-9. Insert Recent Articles (Code)
-10. Base64 Encode Article (Code)
-11. Create Article File (HTTP PUT to GitHub)
-12. Read Listing Page (HTTP GET)
-13. Build Article Card (Code)
-14. Insert Article Card (Code)
-15. Base64 Encode Listing (Code)
-16. Update Listing Page (HTTP PUT to GitHub)
-17. Read Sitemap (HTTP GET)
-18. Add to Sitemap (Code)
-19. Base64 Encode Sitemap (Code)
-20. Update Sitemap (HTTP PUT to GitHub)
+7. Base64 Encode Article (Code)
+8. Create Article File (HTTP PUT to GitHub)
+9. Read Listing Page (HTTP GET)
+10. Build Article Card (Code)
+11. Insert Article Card (Code)
+12. Base64 Encode Listing (Code)
+13. Update Listing Page (HTTP PUT to GitHub)
+14. Read Sitemap (HTTP GET)
+15. Add to Sitemap (Code)
+16. Base64 Encode Sitemap (Code)
+17. Update Sitemap (HTTP PUT to GitHub)
 ```
 
 ---
@@ -473,7 +382,7 @@ return { updatedSitemap: updatedSitemap };
 
 ## 🚀 Start Simple
 
-If this feels like a lot, start with just Steps 1-8 (create the article file), then add the listing and sitemap updates later!
+If this feels like a lot, start with just Steps 1-5 (create the article file), then add the listing and sitemap updates later!
 
 Let me know if you need help with any specific step or module configuration!
 
