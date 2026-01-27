@@ -165,51 +165,27 @@ Create a single table called "Articles" with the following fields:
 
 ---
 
-### **13. Author Name** (Single line text)
-- **Field Name:** `Author Name`
-- **Type:** Single line text
+### **13. Staff** (Link to another table)
+- **Field Name:** `Staff`
+- **Type:** Link to another table
 - **Required:** Yes
-- **Default:** "Peak Leads Group"
-- **Description:** Article author name
+- **Description:** Link to Staff table to select author
+- **Note:** Create a "Staff" table with fields: Name, Email, etc.
+- **SEO Impact:** MEDIUM - Used for author attribution
+
+---
+
+### **14. Author** (Lookup field)
+- **Field Name:** `Author`
+- **Type:** Lookup (from Staff field)
+- **Required:** Yes
+- **Description:** Auto-populates author name from linked Staff record
+- **Formula:** Lookup from Staff → Name field
 - **SEO Impact:** MEDIUM - Used in ArticleSchema author
 
 ---
 
-### **14. Author URL** (URL)
-- **Field Name:** `Author URL`
-- **Type:** URL
-- **Required:** Yes
-- **Default:** `https://peakleadsgroup.com`
-- **Description:** Author/organization URL
-- **SEO Impact:** MEDIUM - Used in ArticleSchema author
-
----
-
-### **15. Open Graph Image URL** (URL)
-- **Field Name:** `OG Image URL`
-- **Type:** URL
-- **Required:** No (optional)
-- **Description:** Custom Open Graph image (defaults to Featured Image if empty)
-- **Best Practices:**
-  - 1200x630px recommended
-  - Can be same as Featured Image
-- **SEO Impact:** MEDIUM - Social sharing appearance
-
----
-
-### **16. Related Articles** (Link to another table)
-- **Field Name:** `Related Articles`
-- **Type:** Link to another table (self-referencing)
-- **Required:** No
-- **Description:** Link to 3-5 related articles
-- **Best Practices:**
-  - Select articles with similar topics
-  - Helps with internal linking
-- **SEO Impact:** MEDIUM - Internal linking for SEO
-
----
-
-### **17. Internal Links** (Long text)
+### **15. Internal Links** (Long text)
 - **Field Name:** `Internal Links`
 - **Type:** Long text
 - **Required:** No
@@ -220,39 +196,20 @@ Create a single table called "Articles" with the following fields:
 
 ---
 
-### **18. Reading Time** (Number)
-- **Field Name:** `Reading Time`
-- **Type:** Number
-- **Required:** No
-- **Description:** Estimated reading time in minutes
-- **Formula:** Can calculate based on word count (average 200 words/minute)
-- **Example:** `8` (for 8 minutes)
-- **SEO Impact:** LOW - UX improvement
-
----
-
-### **19. Category** (Single select)
-- **Field Name:** `Category`
-- **Type:** Single select
-- **Required:** No (optional)
-- **Options:**
-  - Lead Generation Tips
-  - Home Services Marketing
-  - CRM & Integrations
-  - Case Studies
-  - Industry Insights
-  - Sales & Conversion
-- **SEO Impact:** LOW - Organization only (not used in current structure)
-
----
-
-### **20. Schema JSON** (Long text)
+### **16. Schema JSON** (Long text)
 - **Field Name:** `Schema JSON`
 - **Type:** Long text
 - **Required:** No (can be auto-generated)
-- **Description:** Pre-generated ArticleSchema JSON-LD
-- **Can be auto-generated** by automation tool from other fields
-- **SEO Impact:** HIGH - Structured data for search engines
+- **Description:** Pre-generated ArticleSchema JSON-LD structured data
+- **What it does:** 
+  - Tells search engines (Google, Bing, etc.) what your article is about
+  - Enables rich results in search (article carousels, featured snippets)
+  - Helps Google understand your content better
+  - Can show publication date, author, and other metadata in search results
+- **Format:** JSON-LD (JavaScript Object Notation for Linked Data)
+- **Can be auto-generated** by automation tool from other Airtable fields
+- **Example:** Contains article title, description, dates, author, image, etc. in structured format
+- **SEO Impact:** HIGH - Critical for search engine optimization and rich results
 
 ---
 
@@ -273,11 +230,10 @@ When creating an article HTML file from Airtable, map fields as follows:
 | Published Date | → | ArticleSchema.datePublished, OG article:published_time |
 | Modified Date | → | ArticleSchema.dateModified |
 | Canonical URL | → | `<link rel="canonical">` |
-| Author Name | → | ArticleSchema.author.name |
-| Author URL | → | ArticleSchema.author.url |
-| OG Image URL | → | OG image (or Featured Image if empty) |
-| Related Articles | → | Related articles section |
+| Author (from Staff lookup) | → | ArticleSchema.author.name |
+| Featured Image URL | → | OG image (used for social sharing) |
 | Internal Links | → | Contextual links in content |
+| Most Recent Articles | → | Auto-populated from last 3 published articles (excluding current) |
 
 ---
 
@@ -298,14 +254,11 @@ Published Date: "2025-01-17T00:00:00+00:00"
 Modified Date: "2025-01-17T00:00:00+00:00"
 Status: "Published"
 Canonical URL: "https://peakleadsgroup.com/articles/how-to-qualify-home-service-leads.html"
-Author Name: "Peak Leads Group"
-Author URL: "https://peakleadsgroup.com"
-OG Image URL: "" (empty, will use Featured Image)
-Related Articles: [Link to 3-5 related articles]
+Staff: [Link to Staff record]
+Author: "Daniel Wellish" (auto-populated from Staff lookup)
 Internal Links: "/About.html, /HowWeDoIt.html"
-Reading Time: 8
-Category: "Lead Generation Tips"
 Schema JSON: "{...}" (auto-generated)
+Most Recent Articles: [Auto-populated - last 3 published articles excluding current]
 ```
 
 ---
@@ -335,12 +288,9 @@ Schema JSON: "{...}" (auto-generated)
      - `[MODIFIED_DATE]` → Modified Date (formatted)
      - `[PUBLISHED_DATE_ISO]` → Published Date (ISO format)
      - `[MODIFIED_DATE_ISO]` → Modified Date (ISO format)
-     - `[AUTHOR_NAME]` → Author Name
-     - `[AUTHOR_URL]` → Author URL
+     - `[AUTHOR_NAME]` → Author (from Staff lookup)
      - `[ARTICLE_CONTENT_HTML]` → Content
-     - `[RELATED_ARTICLE_URL]` → Related Articles URLs
-     - `[RELATED_ARTICLE_TITLE]` → Related Articles Titles
-     - `[RELATED_ARTICLE_EXCERPT]` → Related Articles Excerpts
+     - `[MOST_RECENT_ARTICLES]` → Last 3 published articles (excluding current article)
 
 3. **Save File**
    - Filename: `[URL Slug].html`
@@ -356,7 +306,12 @@ Schema JSON: "{...}" (auto-generated)
    - Add to "Latest Articles" section if within top 3
    - Update `/index.html` `#articlesPreviewGrid`
 
-6. **Update Sitemap**
+6. **Update Most Recent Articles Section**
+   - On each article page, populate "Most Recent Articles" with last 3 published articles
+   - Exclude the current article from the list
+   - Update `#recentArticlesGrid` div
+
+7. **Update Sitemap**
    - Add new article URL to `sitemap.xml`
    - Format: `<url><loc>https://peakleadsgroup.com/articles/[slug].html</loc>...</url>`
 
@@ -382,8 +337,8 @@ Before publishing, ensure each article has:
 - [ ] **ArticleSchema** includes all required fields
 - [ ] **Canonical URL** set correctly
 - [ ] **Published Date** and **Modified Date** in ISO format
-- [ ] **Related Articles** linked (3-5 articles)
 - [ ] **Internal Links** added to content
+- [ ] **Most Recent Articles** will auto-populate (last 3 published, excluding current)
 
 ---
 

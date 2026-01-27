@@ -37,8 +37,7 @@
       "dateModified": "[MODIFIED_DATE_ISO]",
       "author": {
         "@type": "Organization",
-        "name": "[AUTHOR_NAME]",
-        "url": "[AUTHOR_URL]"
+        "name": "[AUTHOR_NAME]"
       },
       "publisher": {
         "@type": "Organization",
@@ -393,53 +392,53 @@
             margin: 0;
         }
 
-        /* Related Articles */
-        .related-articles {
+        /* Most Recent Articles */
+        .recent-articles {
             margin-top: 4rem;
             padding-top: 3rem;
             border-top: 2px solid #e9ecef;
         }
 
-        .related-articles h2 {
+        .recent-articles h2 {
             font-size: 2rem;
             margin-bottom: 2rem;
             color: #333;
             font-weight: 700;
         }
 
-        .related-grid {
+        .recent-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 2rem;
         }
 
-        .related-card {
+        .recent-card {
             background: #f8f9fa;
             padding: 1.5rem;
             border-radius: 8px;
             transition: transform 0.3s, box-shadow 0.3s;
         }
 
-        .related-card:hover {
+        .recent-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
-        .related-card h3 {
+        .recent-card h3 {
             font-size: 1.1rem;
             margin-bottom: 0.5rem;
         }
 
-        .related-card h3 a {
+        .recent-card h3 a {
             color: #333;
             text-decoration: none;
         }
 
-        .related-card h3 a:hover {
+        .recent-card h3 a:hover {
             color: #4a6fa5;
         }
 
-        .related-card p {
+        .recent-card p {
             font-size: 0.9rem;
             color: #666;
             margin: 0;
@@ -583,7 +582,7 @@
                 font-size: 1.3rem;
             }
 
-            .related-grid {
+            .recent-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -654,15 +653,16 @@
                 </div>
             </div>
 
-            <!-- Related Articles Section -->
-            <div class="related-articles">
-                <h2>Related Articles</h2>
-                <div class="related-grid">
-                    <!-- Related articles will be inserted here -->
-                    <!-- Example:
-                    <div class="related-card">
-                        <h3><a href="[RELATED_ARTICLE_URL]">[RELATED_ARTICLE_TITLE]</a></h3>
-                        <p>[RELATED_ARTICLE_EXCERPT]</p>
+            <!-- Most Recent Articles Section -->
+            <div class="recent-articles">
+                <h2>Most Recent Articles</h2>
+                <div class="recent-grid" id="recentArticlesGrid">
+                    <!-- Most recent 3 articles (excluding current article) will be auto-inserted here -->
+                    <!-- Automation will populate this with the 3 most recently published articles -->
+                    <!-- Example structure:
+                    <div class="recent-card">
+                        <h3><a href="articles/[ARTICLE_SLUG].html">[ARTICLE_TITLE]</a></h3>
+                        <p>[EXCERPT]</p>
                     </div>
                     -->
                 </div>
