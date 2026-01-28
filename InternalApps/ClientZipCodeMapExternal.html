@@ -607,13 +607,13 @@
             }
         }
         
-        // Find zip codes within the selected bounds
+        // Find zip codes within the selected bounds (only client zip codes)
         function findZipCodesInBounds(bounds) {
             const zipCodesInBounds = [];
             const sw = bounds.getSouthWest();
             const ne = bounds.getNorthEast();
             
-            // Check all markers that are currently visible on the map
+            // Only check markers that are currently visible on the map (these represent client zip codes)
             allMarkers.forEach(marker => {
                 if (marker._map === null) return; // Skip markers not on map
                 
@@ -628,25 +628,7 @@
                 }
             });
             
-            // Also check zip code database for any zip codes in bounds (even if not visible)
-            if (zipCompleteData && Object.keys(zipCompleteData).length > 0) {
-                Object.keys(zipCompleteData).forEach(zip => {
-                    const zipData = zipCompleteData[zip];
-                    if (zipData && zipData.lat && zipData.lng) {
-                        const lat = zipData.lat;
-                        const lng = zipData.lng;
-                        
-                        if (lat >= sw.lat && lat <= ne.lat && lng >= sw.lng && lng <= ne.lng) {
-                            // Only add if not already in list (from markers)
-                            if (!zipCodesInBounds.includes(zip)) {
-                                zipCodesInBounds.push(zip);
-                            }
-                        }
-                    }
-                });
-            }
-            
-            // Sort and display
+            // Sort and display (only client zip codes)
             const uniqueZipCodes = [...new Set(zipCodesInBounds)].sort();
             displayZipCodes(uniqueZipCodes);
         }
