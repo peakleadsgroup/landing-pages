@@ -1,0 +1,7 @@
+# Files with secrets or sensitive data
+All mail Including Spam and Trash_optimized.txt
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
