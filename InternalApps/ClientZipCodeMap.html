@@ -644,21 +644,18 @@
             allMarkers.forEach(marker => {
                 // Check if marker should be visible
                 // A marker is visible if at least one of its clients is visible
-                const shouldBeVisible = marker.clientIds && marker.clientIds.some(clientId => visibleClients.has(clientId));
+                const shouldBeVisible = marker.clientIds && marker.clientIds.length > 0 && marker.clientIds.some(clientId => visibleClients.has(clientId));
                 
                 // Also respect niche filter
                 const matchesNiche = !selectedNiche || selectedNiche === '' || markerHasNiche(marker, selectedNiche);
                 
                 const isCurrentlyOnMap = marker._map !== null;
+                const shouldShow = shouldBeVisible && matchesNiche;
                 
-                if (shouldBeVisible && matchesNiche) {
-                    if (!isCurrentlyOnMap) {
-                        marker.addTo(map);
-                    }
-                } else {
-                    if (isCurrentlyOnMap) {
-                        map.removeLayer(marker);
-                    }
+                if (shouldShow && !isCurrentlyOnMap) {
+                    marker.addTo(map);
+                } else if (!shouldShow && isCurrentlyOnMap) {
+                    map.removeLayer(marker);
                 }
             });
         }
@@ -811,7 +808,8 @@
                         
                         if (marker) {
                             allMarkers.push(marker);
-                            // Don't add to map yet - will be added based on visibility
+                            // Add to map by default - visibility will be controlled by toggle
+                            marker.addTo(map);
                         }
                     });
                     
@@ -831,6 +829,7 @@
                 });
                 
                 // Update marker visibility (respects visible clients and niche filter)
+                // This will ensure markers are shown/hidden based on client visibility
                 updateMarkerVisibility();
                 
                 // Update stats
