@@ -302,6 +302,114 @@
             background: #e8f0fe;
             color: #1a73e8;
         }
+        
+        #selection-controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        #selection-controls button {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            margin: 0;
+        }
+        
+        #selection-controls button.active {
+            background: #4CAF50;
+        }
+        
+        #zip-code-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            z-index: 3000;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            display: none;
+            flex-direction: column;
+        }
+        
+        #zip-code-modal.show {
+            display: flex;
+        }
+        
+        #zip-code-modal-header {
+            padding: 1rem;
+            border-bottom: 1px solid #dadce0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #zip-code-modal-header h3 {
+            margin: 0;
+            font-size: 1.125rem;
+            color: #202124;
+        }
+        
+        #zip-code-modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #5f6368;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+        
+        #zip-code-modal-close:hover {
+            background: #f8f9fa;
+        }
+        
+        #zip-code-modal-content {
+            padding: 1rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        #zip-code-list {
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            color: #202124;
+            white-space: pre-wrap;
+            word-break: break-all;
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        #zip-code-count {
+            margin-bottom: 0.5rem;
+            color: #5f6368;
+            font-size: 0.875rem;
+        }
+        
+        .selection-rectangle {
+            border: 2px dashed #1a73e8;
+            background: rgba(26, 115, 232, 0.1);
+            position: absolute;
+            pointer-events: none;
+            z-index: 2000;
+        }
     </style>
 </head>
 <body>
@@ -326,6 +434,10 @@
     
     <div id="map-container">
         <div id="map"></div>
+        
+        <div id="selection-controls">
+            <button id="selection-toggle" onclick="toggleSelectionMode()">Select Area</button>
+        </div>
         
         <div id="sidebar">
             <div id="sidebar-header">
@@ -357,6 +469,17 @@
         </div>
         
         <div id="error-message"></div>
+        
+        <div id="zip-code-modal">
+            <div id="zip-code-modal-header">
+                <h3>Zip Codes in Selected Area</h3>
+                <button id="zip-code-modal-close" onclick="closeZipCodeModal()">&times;</button>
+            </div>
+            <div id="zip-code-modal-content">
+                <div id="zip-code-count"></div>
+                <div id="zip-code-list"></div>
+            </div>
+        </div>
     </div>
     
     <!-- Leaflet JS -->
@@ -379,6 +502,10 @@
         let clientColorMap = {}; // Maps client ID to color
         let clientToMarkerMap = {}; // Maps client ID to array of markers
         let visibleClients = new Set(); // Track which clients are visible on the map
+        let selectionMode = false;
+        let selectionRectangle = null;
+        let selectionStart = null;
+        let selectionBox = null;
         
         // Color palette for clients
         const clientColors = [
@@ -398,7 +525,175 @@
                 attribution: '© OpenStreetMap contributors',
                 maxZoom: 19
             }).addTo(map);
+            
+            // Initialize selection mode handlers
+            setupSelectionMode();
         }
+        
+        // Setup selection mode for drawing rectangles
+        function setupSelectionMode() {
+            map.on('mousedown', function(e) {
+                if (!selectionMode) return;
+                
+                // Prevent default map dragging
+                map.dragging.disable();
+                
+                selectionStart = e.latlng;
+                
+                // Create selection rectangle
+                if (selectionRectangle) {
+                    map.removeLayer(selectionRectangle);
+                }
+                
+                selectionRectangle = L.rectangle([selectionStart, selectionStart], {
+                    color: '#1a73e8',
+                    weight: 2,
+                    fillColor: '#1a73e8',
+                    fillOpacity: 0.2,
+                    dashArray: '5, 5'
+                }).addTo(map);
+            });
+            
+            map.on('mousemove', function(e) {
+                if (!selectionMode || !selectionStart) return;
+                
+                // Update rectangle bounds
+                const bounds = L.latLngBounds([selectionStart, e.latlng]);
+                selectionRectangle.setBounds(bounds);
+            });
+            
+            map.on('mouseup', function(e) {
+                if (!selectionMode || !selectionStart) return;
+                
+                // Re-enable map dragging
+                map.dragging.enable();
+                
+                // Get final bounds
+                const bounds = selectionRectangle.getBounds();
+                
+                // Find zip codes within bounds
+                findZipCodesInBounds(bounds);
+                
+                // Reset selection
+                selectionStart = null;
+                if (selectionRectangle) {
+                    map.removeLayer(selectionRectangle);
+                    selectionRectangle = null;
+                }
+            });
+        }
+        
+        // Toggle selection mode
+        function toggleSelectionMode() {
+            selectionMode = !selectionMode;
+            const button = document.getElementById('selection-toggle');
+            
+            if (selectionMode) {
+                button.textContent = 'Cancel Selection';
+                button.classList.add('active');
+                map.getContainer().style.cursor = 'crosshair';
+            } else {
+                button.textContent = 'Select Area';
+                button.classList.remove('active');
+                map.getContainer().style.cursor = '';
+                
+                // Clean up any active selection
+                if (selectionRectangle) {
+                    map.removeLayer(selectionRectangle);
+                    selectionRectangle = null;
+                }
+                selectionStart = null;
+                map.dragging.enable();
+            }
+        }
+        
+        // Find zip codes within the selected bounds
+        function findZipCodesInBounds(bounds) {
+            const zipCodesInBounds = [];
+            const sw = bounds.getSouthWest();
+            const ne = bounds.getNorthEast();
+            
+            // Check all markers that are currently visible on the map
+            allMarkers.forEach(marker => {
+                if (marker._map === null) return; // Skip markers not on map
+                
+                const lat = marker.getLatLng().lat;
+                const lng = marker.getLatLng().lng;
+                
+                // Check if marker is within bounds
+                if (lat >= sw.lat && lat <= ne.lat && lng >= sw.lng && lng <= ne.lng) {
+                    if (marker.zipCode) {
+                        zipCodesInBounds.push(marker.zipCode);
+                    }
+                }
+            });
+            
+            // Also check zip code database for any zip codes in bounds (even if not visible)
+            if (zipCompleteData && Object.keys(zipCompleteData).length > 0) {
+                Object.keys(zipCompleteData).forEach(zip => {
+                    const zipData = zipCompleteData[zip];
+                    if (zipData && zipData.lat && zipData.lng) {
+                        const lat = zipData.lat;
+                        const lng = zipData.lng;
+                        
+                        if (lat >= sw.lat && lat <= ne.lat && lng >= sw.lng && lng <= ne.lng) {
+                            // Only add if not already in list (from markers)
+                            if (!zipCodesInBounds.includes(zip)) {
+                                zipCodesInBounds.push(zip);
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Sort and display
+            const uniqueZipCodes = [...new Set(zipCodesInBounds)].sort();
+            displayZipCodes(uniqueZipCodes);
+        }
+        
+        // Display zip codes in modal
+        function displayZipCodes(zipCodes) {
+            const modal = document.getElementById('zip-code-modal');
+            const countEl = document.getElementById('zip-code-count');
+            const listEl = document.getElementById('zip-code-list');
+            
+            countEl.textContent = `Found ${zipCodes.length} zip code${zipCodes.length !== 1 ? 's' : ''}`;
+            
+            // Format zip codes (comma-separated, with line breaks every 10)
+            let formatted = '';
+            for (let i = 0; i < zipCodes.length; i++) {
+                formatted += zipCodes[i];
+                if (i < zipCodes.length - 1) {
+                    formatted += ', ';
+                    if ((i + 1) % 10 === 0) {
+                        formatted += '\n';
+                    }
+                }
+            }
+            
+            listEl.textContent = formatted || 'No zip codes found in selected area.';
+            modal.classList.add('show');
+            
+            // Exit selection mode
+            if (selectionMode) {
+                toggleSelectionMode();
+            }
+        }
+        
+        // Close zip code modal
+        function closeZipCodeModal() {
+            document.getElementById('zip-code-modal').classList.remove('show');
+        }
+        
+        // Close modal on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeZipCodeModal();
+                if (selectionMode) {
+                    toggleSelectionMode();
+                }
+            }
+        });
         
         // Fetch clients from Airtable with pagination
         async function fetchClients() {
