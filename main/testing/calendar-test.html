@@ -418,6 +418,60 @@
             margin-right: 10px;
         }
 
+        /* Setup Notice */
+        .setup-notice {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .setup-notice strong {
+            color: #856404;
+        }
+
+        .setup-notice p {
+            margin: 10px 0;
+            color: #856404;
+            font-size: 14px;
+        }
+
+        .setup-notice details {
+            margin-top: 10px;
+        }
+
+        .setup-notice summary {
+            cursor: pointer;
+            color: #856404;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .setup-notice ol {
+            margin: 10px 0 0 20px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .setup-notice ol li {
+            margin-bottom: 10px;
+        }
+
+        .setup-notice ul {
+            margin: 5px 0 0 15px;
+            font-size: 12px;
+        }
+
+        .setup-notice code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            word-break: break-all;
+        }
+
         /* Responsive */
         @media (max-width: 600px) {
             .container {
@@ -442,6 +496,45 @@
     <div class="container">
         <h1>Lead Perfection Calendar Test</h1>
         <p class="subtitle">Test real-time availability from Lead Perfection API</p>
+
+        <!-- Setup Notice -->
+        <div id="setupNotice" class="setup-notice" style="display: none;">
+            <strong>⚠️ Setup Required</strong>
+            <p>The Lead Perfection API blocks direct browser requests (CORS). You need to set up a Make.com webhook to proxy the API calls.</p>
+            <details>
+                <summary>Click for Make.com Setup Instructions</summary>
+                <ol>
+                    <li>Create a new Make.com scenario</li>
+                    <li>Add <strong>Webhooks → Custom webhook</strong> as trigger</li>
+                    <li>Add <strong>HTTP → Make a request</strong> module:
+                        <ul>
+                            <li>URL: <code>https://api.leadperfection.com/token</code></li>
+                            <li>Method: POST</li>
+                            <li>Body type: application/x-www-form-urlencoded</li>
+                            <li>Fields: grant_type=password, username=Peakleads, password=Peakleasds#1, clientid=ry32a, appkey=AED0AE62-ACF3-447A-941D-683AEC87C0DD</li>
+                        </ul>
+                    </li>
+                    <li>Add another <strong>HTTP → Make a request</strong> module:
+                        <ul>
+                            <li>URL: <code>https://api.leadperfection.com/api/Leads/GetLeadsForwardLook</code></li>
+                            <li>Method: POST</li>
+                            <li>Headers: Authorization = Bearer {{access_token from step 3}}</li>
+                            <li>Body type: application/x-www-form-urlencoded</li>
+                            <li>Fields: branchid=, productid=, zip={{zip from webhook}}</li>
+                        </ul>
+                    </li>
+                    <li>Add <strong>Webhooks → Webhook response</strong> module:
+                        <ul>
+                            <li>Status: 200</li>
+                            <li>Body: {{data from step 4}}</li>
+                        </ul>
+                    </li>
+                    <li>Copy the webhook URL and paste it into the code at the top:<br>
+                        <code>const MAKE_WEBHOOK_URL = 'your-webhook-url-here';</code>
+                    </li>
+                </ol>
+            </details>
+        </div>
 
         <!-- Zip Code Input -->
         <div class="zip-section">
@@ -501,8 +594,13 @@
 
     <script>
         // ============================================
-        // LEAD PERFECTION API CONFIGURATION
+        // CONFIGURATION
         // ============================================
+        // Option 1: Use Make.com webhook as proxy (recommended - avoids CORS)
+        // Set this to your Make.com webhook URL that proxies Lead Perfection API
+        const MAKE_WEBHOOK_URL = ''; // e.g., 'https://hook.us2.make.com/your-webhook-id'
+        
+        // Option 2: Direct API calls (only works if CORS is enabled or from server)
         const LP_CONFIG = {
             tokenUrl: 'https://api.leadperfection.com/token',
             forwardLookUrl: 'https://api.leadperfection.com/api/Leads/GetLeadsForwardLook',
@@ -514,6 +612,9 @@
                 appkey: 'AED0AE62-ACF3-447A-941D-683AEC87C0DD'
             }
         };
+        
+        // Set to true to use Make.com proxy, false to try direct API calls
+        const USE_MAKE_PROXY = true;
 
         // ============================================
         // STATE VARIABLES
@@ -654,43 +755,19 @@
             logToConsole('='.repeat(50), 'info');
             logToConsole('Starting GetLeadsForwardLook request...', 'info');
             logToConsole('Zip Code: ' + zipCode, 'info');
-            logToConsole('Forward Look URL: ' + LP_CONFIG.forwardLookUrl, 'info');
+            logToConsole('Use Make.com Proxy: ' + USE_MAKE_PROXY, 'info');
 
             try {
-                // Get token first
-                const token = await getAccessToken();
-
-                // Build form data
-                const formData = new URLSearchParams();
-                formData.append('branchid', '');
-                formData.append('productid', '');
-                formData.append('zip', zipCode);
-
-                logToConsole('Request body: ' + formData.toString(), 'data');
-                logToConsole('Authorization: Bearer ' + token.substring(0, 30) + '...', 'data');
-
-                logToConsole('Sending POST request to Forward Look endpoint...', 'info');
-
-                const response = await fetch(LP_CONFIG.forwardLookUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': '*/*',
-                        'Authorization': 'Bearer ' + token,
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: formData
-                });
-
-                logToConsole('Forward Look response status: ' + response.status + ' ' + response.statusText,
-                    response.ok ? 'success' : 'error');
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    logToConsole('Forward Look error response: ' + errorText, 'error');
-                    throw new Error(`Forward Look request failed: ${response.status} ${response.statusText}`);
+                let data;
+                
+                if (USE_MAKE_PROXY) {
+                    // Use Make.com webhook as proxy
+                    data = await getForwardLookViaMake(zipCode);
+                } else {
+                    // Direct API call (will fail with CORS in browser)
+                    data = await getForwardLookDirect(zipCode);
                 }
 
-                const data = await response.json();
                 logToConsole('Forward Look returned ' + data.length + ' days of availability', 'success');
                 logData('Full availability data', data);
 
@@ -724,6 +801,109 @@
                 logToConsole('ERROR in getForwardLook: ' + error.message, 'error');
                 throw error;
             }
+        }
+        
+        // ============================================
+        // MAKE.COM PROXY METHOD
+        // ============================================
+        async function getForwardLookViaMake(zipCode) {
+            if (!MAKE_WEBHOOK_URL) {
+                logToConsole('ERROR: MAKE_WEBHOOK_URL is not configured!', 'error');
+                logToConsole('Please set up a Make.com webhook and update MAKE_WEBHOOK_URL at the top of this script.', 'error');
+                logToConsole('See instructions in the console for how to set up the Make.com scenario.', 'info');
+                showMakeInstructions();
+                throw new Error('Make.com webhook URL not configured. See console for setup instructions.');
+            }
+            
+            logToConsole('Using Make.com proxy: ' + MAKE_WEBHOOK_URL, 'info');
+            logToConsole('Sending zip code to Make.com webhook...', 'info');
+            
+            const response = await fetch(MAKE_WEBHOOK_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ zip: zipCode })
+            });
+            
+            logToConsole('Make.com response status: ' + response.status + ' ' + response.statusText,
+                response.ok ? 'success' : 'error');
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                logToConsole('Make.com error response: ' + errorText, 'error');
+                throw new Error(`Make.com webhook failed: ${response.status} ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            return data;
+        }
+        
+        function showMakeInstructions() {
+            logToConsole('='.repeat(50), 'warning');
+            logToConsole('MAKE.COM SETUP INSTRUCTIONS', 'warning');
+            logToConsole('='.repeat(50), 'warning');
+            logToConsole('1. Create a new Make.com scenario', 'info');
+            logToConsole('2. Add a "Webhooks" > "Custom webhook" trigger', 'info');
+            logToConsole('3. Add an "HTTP" > "Make a request" module for token:', 'info');
+            logToConsole('   - URL: https://api.leadperfection.com/token', 'info');
+            logToConsole('   - Method: POST', 'info');
+            logToConsole('   - Headers: Content-Type: application/x-www-form-urlencoded', 'info');
+            logToConsole('   - Body: grant_type=password&username=Peakleads&password=Peakleasds%231&clientid=ry32a&appkey=AED0AE62-ACF3-447A-941D-683AEC87C0DD', 'info');
+            logToConsole('4. Add another "HTTP" > "Make a request" module for availability:', 'info');
+            logToConsole('   - URL: https://api.leadperfection.com/api/Leads/GetLeadsForwardLook', 'info');
+            logToConsole('   - Method: POST', 'info');
+            logToConsole('   - Headers: Authorization: Bearer {{token from step 3}}', 'info');
+            logToConsole('   - Headers: Content-Type: application/x-www-form-urlencoded', 'info');
+            logToConsole('   - Body: branchid=&productid=&zip={{zip from webhook}}', 'info');
+            logToConsole('5. Add a "Webhooks" > "Webhook response" module', 'info');
+            logToConsole('   - Body: {{data from step 4}}', 'info');
+            logToConsole('   - Status: 200', 'info');
+            logToConsole('6. Copy the webhook URL and paste it into MAKE_WEBHOOK_URL at the top of this script', 'info');
+            logToConsole('='.repeat(50), 'warning');
+        }
+        
+        // ============================================
+        // DIRECT API METHOD (for reference, blocked by CORS)
+        // ============================================
+        async function getForwardLookDirect(zipCode) {
+            logToConsole('Forward Look URL: ' + LP_CONFIG.forwardLookUrl, 'info');
+            logToConsole('WARNING: Direct API calls are blocked by CORS in browsers!', 'warning');
+            
+            // Get token first
+            const token = await getAccessToken();
+
+            // Build form data
+            const formData = new URLSearchParams();
+            formData.append('branchid', '');
+            formData.append('productid', '');
+            formData.append('zip', zipCode);
+
+            logToConsole('Request body: ' + formData.toString(), 'data');
+            logToConsole('Authorization: Bearer ' + token.substring(0, 30) + '...', 'data');
+
+            logToConsole('Sending POST request to Forward Look endpoint...', 'info');
+
+            const response = await fetch(LP_CONFIG.forwardLookUrl, {
+                method: 'POST',
+                headers: {
+                    'Accept': '*/*',
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: formData
+            });
+
+            logToConsole('Forward Look response status: ' + response.status + ' ' + response.statusText,
+                response.ok ? 'success' : 'error');
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                logToConsole('Forward Look error response: ' + errorText, 'error');
+                throw new Error(`Forward Look request failed: ${response.status} ${response.statusText}`);
+            }
+
+            return await response.json();
         }
 
         // ============================================
@@ -1093,13 +1273,31 @@
         // ============================================
         document.addEventListener('DOMContentLoaded', function() {
             logToConsole('Page loaded and ready', 'success');
-            logToConsole('Lead Perfection API Configuration:', 'info');
-            logData('Config', {
-                tokenUrl: LP_CONFIG.tokenUrl,
-                forwardLookUrl: LP_CONFIG.forwardLookUrl,
-                username: LP_CONFIG.credentials.username,
-                clientid: LP_CONFIG.credentials.clientid
-            });
+            logToConsole('='.repeat(50), 'info');
+            logToConsole('CONFIGURATION', 'info');
+            logToConsole('Use Make.com Proxy: ' + USE_MAKE_PROXY, 'info');
+            
+            if (USE_MAKE_PROXY) {
+                if (MAKE_WEBHOOK_URL) {
+                    logToConsole('Make.com Webhook URL: ' + MAKE_WEBHOOK_URL, 'success');
+                    document.getElementById('setupNotice').style.display = 'none';
+                } else {
+                    logToConsole('Make.com Webhook URL: NOT CONFIGURED', 'warning');
+                    logToConsole('You need to set up a Make.com webhook to proxy the Lead Perfection API calls.', 'warning');
+                    document.getElementById('setupNotice').style.display = 'block';
+                    showMakeInstructions();
+                }
+            } else {
+                logToConsole('Direct API mode (will fail with CORS in browser)', 'warning');
+                logData('Lead Perfection Config', {
+                    tokenUrl: LP_CONFIG.tokenUrl,
+                    forwardLookUrl: LP_CONFIG.forwardLookUrl,
+                    username: LP_CONFIG.credentials.username,
+                    clientid: LP_CONFIG.credentials.clientid
+                });
+            }
+            
+            logToConsole('='.repeat(50), 'info');
 
             // Allow Enter key to trigger fetch
             document.getElementById('zipCode').addEventListener('keypress', function(e) {
