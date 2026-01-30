@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Lead Perfection Calendar Test</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .zip-section {
+            margin-bottom: 30px;
+        }
+
+        .zip-section label {
+            display: block;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .zip-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .zip-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 18px;
+            background: #f8f9fa;
+        }
+
+        .zip-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #fff;
+        }
+
+        .fetch-btn {
+            padding: 15px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .fetch-btn:hover {
+            background: #5a6fd6;
+            transform: translateY(-2px);
+        }
+
+        .fetch-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .status.loading {
+            display: block;
+            background: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #90caf9;
+        }
+
+        .status.success {
+            display: block;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+
+        .status.error {
+            display: block;
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+
+        /* Calendar Styles */
+        .calendar-section {
+            display: none;
+        }
+
+        .calendar-section.active {
+            display: block;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .month-display {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .nav-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #667eea;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            color: #667eea;
+        }
+
+        .nav-button:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+        }
+
+        .nav-button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .weekday-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .weekday-name {
+            text-align: center;
+            font-weight: bold;
+            color: #868e96;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 16px;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .calendar-day .month-label {
+            font-size: 9px;
+            color: #868e96;
+            position: absolute;
+            top: 2px;
+            letter-spacing: 0.5px;
+        }
+
+        .calendar-day:hover:not(.disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .calendar-day:hover:not(.disabled) .month-label {
+            color: white;
+        }
+
+        .calendar-day.selected {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .calendar-day.selected .month-label {
+            color: white;
+        }
+
+        .calendar-day.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: transparent;
+            pointer-events: none;
+        }
+
+        .calendar-day.today {
+            border-color: #667eea;
+            font-weight: 700;
+        }
+
+        .calendar-day .slot-count {
+            font-size: 10px;
+            color: #28a745;
+            position: absolute;
+            bottom: 2px;
+        }
+
+        .calendar-day.selected .slot-count,
+        .calendar-day:hover:not(.disabled) .slot-count {
+            color: #90EE90;
+        }
+
+        /* Time Slots */
+        .time-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .selected-info {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .selected-info h3 {
+            color: #2c3e50;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .selected-info p {
+            color: #667eea;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .time-slot {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .time-slot:hover {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .time-slot.selected {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .time-slot .availability {
+            font-size: 11px;
+            color: #28a745;
+            margin-top: 4px;
+        }
+
+        .time-slot:hover .availability,
+        .time-slot.selected .availability {
+            color: #90EE90;
+        }
+
+        .no-slots {
+            text-align: center;
+            padding: 40px 20px;
+            color: #868e96;
+        }
+
+        /* Console Log Display */
+        .console-container {
+            background: #1e1e1e;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .console-header {
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .clear-btn {
+            padding: 5px 15px;
+            background: #444;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .clear-btn:hover {
+            background: #555;
+        }
+
+        .console-log {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .log-entry.info {
+            color: #58a6ff;
+        }
+
+        .log-entry.success {
+            color: #3fb950;
+        }
+
+        .log-entry.error {
+            color: #f85149;
+        }
+
+        .log-entry.warning {
+            color: #d29922;
+        }
+
+        .log-entry.data {
+            color: #8b949e;
+        }
+
+        .log-timestamp {
+            color: #6e7681;
+            margin-right: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .zip-row {
+                flex-direction: column;
+            }
+
+            .time-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .calendar-day {
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lead Perfection Calendar Test</h1>
+        <p class="subtitle">Test real-time availability from Lead Perfection API</p>
+
+        <!-- Zip Code Input -->
+        <div class="zip-section">
+            <label for="zipCode">Zip Code</label>
+            <div class="zip-row">
+                <input type="text" id="zipCode" class="zip-input" placeholder="Enter zip code (e.g., 49534)" maxlength="5">
+                <button class="fetch-btn" id="fetchBtn" onclick="fetchAvailability()">Get Availability</button>
+            </div>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="status" class="status"></div>
+
+        <!-- Calendar Section -->
+        <div id="calendarSection" class="calendar-section">
+            <div class="calendar-header">
+                <button class="nav-button" id="prevWeek" onclick="changeWeek(-1)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 18l-6-6 6-6"/>
+                    </svg>
+                </button>
+                <div class="month-display" id="monthDisplay"></div>
+                <button class="nav-button" id="nextWeek" onclick="changeWeek(1)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="weekday-header">
+                <div class="weekday-name">Sun</div>
+                <div class="weekday-name">Mon</div>
+                <div class="weekday-name">Tue</div>
+                <div class="weekday-name">Wed</div>
+                <div class="weekday-name">Thu</div>
+                <div class="weekday-name">Fri</div>
+                <div class="weekday-name">Sat</div>
+            </div>
+
+            <div class="calendar-grid" id="calendarGrid"></div>
+
+            <div id="timeSection" class="time-section" style="display: none;">
+                <div class="selected-info" id="selectedDayInfo"></div>
+                <div class="time-grid" id="timeGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Console Log Display -->
+    <div class="console-container">
+        <div class="console-header">
+            <span>Console Output</span>
+            <button class="clear-btn" onclick="clearConsole()">Clear</button>
+        </div>
+        <div class="console-log" id="consoleLog"></div>
+    </div>
+
+    <script>
+        // ============================================
+        // LEAD PERFECTION API CONFIGURATION
+        // ============================================
+        const LP_CONFIG = {
+            tokenUrl: 'https://api.leadperfection.com/token',
+            forwardLookUrl: 'https://api.leadperfection.com/api/Leads/GetLeadsForwardLook',
+            credentials: {
+                grant_type: 'password',
+                username: 'Peakleads',
+                password: 'Peakleasds#1',
+                clientid: 'ry32a',
+                appkey: 'AED0AE62-ACF3-447A-941D-683AEC87C0DD'
+            }
+        };
+
+        // ============================================
+        // STATE VARIABLES
+        // ============================================
+        let accessToken = null;
+        let tokenExpiry = null;
+        let availabilityData = [];
+        let selectedDate = null;
+        let selectedTime = null;
+        let currentWeekStart = null;
+
+        // ============================================
+        // CONSOLE LOGGING
+        // ============================================
+        function logToConsole(message, type = 'info') {
+            const consoleLog = document.getElementById('consoleLog');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span>${message}`;
+            
+            consoleLog.appendChild(entry);
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+            
+            // Also log to browser console
+            const consoleMethod = type === 'error' ? 'error' : type === 'warning' ? 'warn' : 'log';
+            console[consoleMethod](`[${timestamp}] ${message}`);
+        }
+
+        function logData(label, data) {
+            const consoleLog = document.getElementById('consoleLog');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const entry = document.createElement('div');
+            entry.className = 'log-entry data';
+            entry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span>${label}: <pre style="margin: 5px 0 0 20px; white-space: pre-wrap;">${JSON.stringify(data, null, 2)}</pre>`;
+            
+            consoleLog.appendChild(entry);
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+            
+            console.log(`[${timestamp}] ${label}:`, data);
+        }
+
+        function clearConsole() {
+            document.getElementById('consoleLog').innerHTML = '';
+            logToConsole('Console cleared', 'info');
+        }
+
+        // ============================================
+        // STATUS DISPLAY
+        // ============================================
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.textContent = message;
+        }
+
+        function hideStatus() {
+            document.getElementById('status').className = 'status';
+        }
+
+        // ============================================
+        // TOKEN MANAGEMENT
+        // ============================================
+        async function getAccessToken() {
+            logToConsole('Checking if we need a new access token...', 'info');
+            
+            // Check if we have a valid token
+            if (accessToken && tokenExpiry && new Date() < tokenExpiry) {
+                logToConsole('Using existing valid token (expires: ' + tokenExpiry.toLocaleString() + ')', 'success');
+                return accessToken;
+            }
+
+            logToConsole('Token expired or not present, requesting new token...', 'info');
+            logToConsole('Token URL: ' + LP_CONFIG.tokenUrl, 'info');
+            
+            // Build form data
+            const formData = new URLSearchParams();
+            formData.append('grant_type', LP_CONFIG.credentials.grant_type);
+            formData.append('username', LP_CONFIG.credentials.username);
+            formData.append('password', LP_CONFIG.credentials.password);
+            formData.append('clientid', LP_CONFIG.credentials.clientid);
+            formData.append('appkey', LP_CONFIG.credentials.appkey);
+
+            logToConsole('Request body (form-urlencoded): ' + formData.toString(), 'data');
+
+            try {
+                logToConsole('Sending POST request to token endpoint...', 'info');
+                
+                const response = await fetch(LP_CONFIG.tokenUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': '*/*',
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: formData
+                });
+
+                logToConsole('Token response status: ' + response.status + ' ' + response.statusText, 
+                    response.ok ? 'success' : 'error');
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    logToConsole('Token error response: ' + errorText, 'error');
+                    throw new Error(`Token request failed: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                logData('Token response data', {
+                    access_token: data.access_token ? data.access_token.substring(0, 50) + '...' : null,
+                    token_type: data.token_type,
+                    expires_in: data.expires_in,
+                    issued: data['.issued'],
+                    expires: data['.expires'],
+                    user_data: data.user_data
+                });
+
+                accessToken = data.access_token;
+                // Set expiry 5 minutes before actual expiry for safety
+                const expiresInMs = (data.expires_in - 300) * 1000;
+                tokenExpiry = new Date(Date.now() + expiresInMs);
+
+                logToConsole('Token acquired successfully! Expires: ' + tokenExpiry.toLocaleString(), 'success');
+
+                return accessToken;
+
+            } catch (error) {
+                logToConsole('ERROR getting token: ' + error.message, 'error');
+                throw error;
+            }
+        }
+
+        // ============================================
+        // GET FORWARD LOOK (AVAILABILITY)
+        // ============================================
+        async function getForwardLook(zipCode) {
+            logToConsole('='.repeat(50), 'info');
+            logToConsole('Starting GetLeadsForwardLook request...', 'info');
+            logToConsole('Zip Code: ' + zipCode, 'info');
+            logToConsole('Forward Look URL: ' + LP_CONFIG.forwardLookUrl, 'info');
+
+            try {
+                // Get token first
+                const token = await getAccessToken();
+
+                // Build form data
+                const formData = new URLSearchParams();
+                formData.append('branchid', '');
+                formData.append('productid', '');
+                formData.append('zip', zipCode);
+
+                logToConsole('Request body: ' + formData.toString(), 'data');
+                logToConsole('Authorization: Bearer ' + token.substring(0, 30) + '...', 'data');
+
+                logToConsole('Sending POST request to Forward Look endpoint...', 'info');
+
+                const response = await fetch(LP_CONFIG.forwardLookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': '*/*',
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: formData
+                });
+
+                logToConsole('Forward Look response status: ' + response.status + ' ' + response.statusText,
+                    response.ok ? 'success' : 'error');
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    logToConsole('Forward Look error response: ' + errorText, 'error');
+                    throw new Error(`Forward Look request failed: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                logToConsole('Forward Look returned ' + data.length + ' days of availability', 'success');
+                logData('Full availability data', data);
+
+                // Parse and log each day's availability
+                data.forEach((day, index) => {
+                    logToConsole(`Day ${index + 1}: ${day.SDateDisplay} (${day.SDate})`, 'info');
+                    
+                    const slots = [];
+                    for (let i = 1; i <= 6; i++) {
+                        const timeDesc = day[`TMS_Descr${i}`];
+                        const available = day[`T${i}`];
+                        const availableNoOverbook = day[`X${i}`];
+                        
+                        if (timeDesc) {
+                            slots.push({
+                                time: timeDesc,
+                                available: available,
+                                availableNoOverbook: availableNoOverbook
+                            });
+                        }
+                    }
+                    
+                    if (slots.length > 0) {
+                        logData(`  Time slots for ${day.SDateDisplay}`, slots);
+                    }
+                });
+
+                return data;
+
+            } catch (error) {
+                logToConsole('ERROR in getForwardLook: ' + error.message, 'error');
+                throw error;
+            }
+        }
+
+        // ============================================
+        // MAIN FETCH FUNCTION
+        // ============================================
+        async function fetchAvailability() {
+            const zipInput = document.getElementById('zipCode');
+            const zipCode = zipInput.value.trim();
+            const fetchBtn = document.getElementById('fetchBtn');
+
+            logToConsole('='.repeat(50), 'info');
+            logToConsole('FETCH AVAILABILITY CLICKED', 'info');
+            logToConsole('Entered zip code: "' + zipCode + '"', 'info');
+
+            // Validate zip code
+            if (!zipCode) {
+                logToConsole('ERROR: Zip code is empty', 'error');
+                showStatus('Please enter a zip code', 'error');
+                return;
+            }
+
+            if (!/^\d{5}$/.test(zipCode)) {
+                logToConsole('ERROR: Invalid zip code format (must be 5 digits)', 'error');
+                showStatus('Please enter a valid 5-digit zip code', 'error');
+                return;
+            }
+
+            logToConsole('Zip code validation passed', 'success');
+
+            // Disable button while loading
+            fetchBtn.disabled = true;
+            fetchBtn.textContent = 'Loading...';
+            showStatus('Fetching availability from Lead Perfection...', 'loading');
+
+            try {
+                // Fetch availability
+                availabilityData = await getForwardLook(zipCode);
+
+                if (!availabilityData || availabilityData.length === 0) {
+                    logToConsole('WARNING: No availability data returned', 'warning');
+                    showStatus('No availability found for this zip code', 'error');
+                    document.getElementById('calendarSection').classList.remove('active');
+                    return;
+                }
+
+                logToConsole('SUCCESS: Received ' + availabilityData.length + ' days of availability', 'success');
+                showStatus('Availability loaded successfully!', 'success');
+
+                // Initialize and show calendar
+                initializeCalendar();
+                document.getElementById('calendarSection').classList.add('active');
+
+            } catch (error) {
+                logToConsole('FATAL ERROR: ' + error.message, 'error');
+                showStatus('Error: ' + error.message, 'error');
+                document.getElementById('calendarSection').classList.remove('active');
+            } finally {
+                fetchBtn.disabled = false;
+                fetchBtn.textContent = 'Get Availability';
+            }
+        }
+
+        // ============================================
+        // CALENDAR FUNCTIONS
+        // ============================================
+        function initializeCalendar() {
+            logToConsole('Initializing calendar...', 'info');
+            
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            currentWeekStart = new Date(now);
+            
+            // Reset to Sunday of current week
+            const dayOfWeek = currentWeekStart.getDay();
+            currentWeekStart.setDate(currentWeekStart.getDate() - dayOfWeek);
+            
+            logToConsole('Current week start: ' + currentWeekStart.toDateString(), 'info');
+            
+            renderCalendar();
+        }
+
+        function getAvailabilityForDate(date) {
+            // Find matching date in availability data
+            const dateStr = date.toISOString().split('T')[0];
+            
+            for (const day of availabilityData) {
+                const dayDate = new Date(day.SDate).toISOString().split('T')[0];
+                if (dayDate === dateStr) {
+                    return day;
+                }
+            }
+            return null;
+        }
+
+        function getTotalSlotsForDay(dayData) {
+            if (!dayData) return 0;
+            
+            let total = 0;
+            for (let i = 1; i <= 6; i++) {
+                const available = dayData[`T${i}`];
+                if (available && available > 0) {
+                    total += available;
+                }
+            }
+            return total;
+        }
+
+        function renderCalendar() {
+            logToConsole('Rendering calendar...', 'info');
+            
+            const calendarGrid = document.getElementById('calendarGrid');
+            const monthDisplay = document.getElementById('monthDisplay');
+            calendarGrid.innerHTML = '';
+
+            const startDate = new Date(currentWeekStart);
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 20);
+
+            const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                           'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+            // Update month display
+            if (startDate.getMonth() === endDate.getMonth()) {
+                monthDisplay.textContent = `${months[startDate.getMonth()]} ${startDate.getFullYear()}`;
+            } else {
+                monthDisplay.textContent = `${months[startDate.getMonth()]} - ${months[endDate.getMonth()]} ${endDate.getFullYear()}`;
+            }
+
+            let lastMonth = -1;
+            let firstAvailableDate = null;
+
+            // Render 21 days (3 weeks)
+            for (let i = 0; i < 21; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+
+                const dayData = getAvailabilityForDate(date);
+                const totalSlots = getTotalSlotsForDay(dayData);
+                const isAvailable = dayData && totalSlots > 0;
+
+                const dayCell = document.createElement('div');
+                dayCell.className = 'calendar-day';
+                dayCell.dataset.date = date.toISOString();
+
+                // Check if today
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                if (date.getTime() === today.getTime()) {
+                    dayCell.classList.add('today');
+                }
+
+                if (!isAvailable) {
+                    dayCell.classList.add('disabled');
+                }
+
+                if (isAvailable && !firstAvailableDate) {
+                    firstAvailableDate = new Date(date);
+                }
+
+                // Check if selected
+                if (selectedDate &&
+                    date.getDate() === selectedDate.getDate() &&
+                    date.getMonth() === selectedDate.getMonth() &&
+                    date.getFullYear() === selectedDate.getFullYear()) {
+                    dayCell.classList.add('selected');
+                }
+
+                // Add month label if first of month
+                if (date.getDate() === 1 && date.getMonth() !== lastMonth) {
+                    const monthLabel = document.createElement('div');
+                    monthLabel.className = 'month-label';
+                    monthLabel.textContent = monthsShort[date.getMonth()];
+                    dayCell.appendChild(monthLabel);
+                    lastMonth = date.getMonth();
+                }
+
+                // Day number
+                const dayNumber = document.createElement('div');
+                dayNumber.textContent = date.getDate();
+                dayCell.appendChild(dayNumber);
+
+                // Slot count indicator
+                if (isAvailable) {
+                    const slotCount = document.createElement('div');
+                    slotCount.className = 'slot-count';
+                    slotCount.textContent = `${totalSlots} slots`;
+                    dayCell.appendChild(slotCount);
+
+                    dayCell.onclick = () => selectDay(date, dayData);
+                }
+
+                calendarGrid.appendChild(dayCell);
+            }
+
+            logToConsole('Calendar rendered with ' + (firstAvailableDate ? 'available dates' : 'no available dates'), 
+                firstAvailableDate ? 'success' : 'warning');
+
+            // Auto-select first available date
+            if (firstAvailableDate && !selectedDate) {
+                const dayData = getAvailabilityForDate(firstAvailableDate);
+                selectDay(firstAvailableDate, dayData);
+            }
+
+            updateNavigationButtons();
+        }
+
+        function changeWeek(direction) {
+            logToConsole('Changing week: ' + (direction > 0 ? 'next' : 'previous'), 'info');
+            currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
+            renderCalendar();
+        }
+
+        function updateNavigationButtons() {
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            
+            // Get Sunday of current week
+            const thisWeekStart = new Date(now);
+            thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay());
+
+            const prevButton = document.getElementById('prevWeek');
+            const nextButton = document.getElementById('nextWeek');
+
+            // Disable prev if we're at current week
+            prevButton.disabled = currentWeekStart <= thisWeekStart;
+
+            // Disable next if we're past the last available date
+            if (availabilityData.length > 0) {
+                const lastAvailable = new Date(availabilityData[availabilityData.length - 1].SDate);
+                const currentEnd = new Date(currentWeekStart);
+                currentEnd.setDate(currentEnd.getDate() + 20);
+                nextButton.disabled = currentEnd >= lastAvailable;
+            }
+        }
+
+        function selectDay(date, dayData) {
+            logToConsole('='.repeat(50), 'info');
+            logToConsole('Day selected: ' + date.toDateString(), 'info');
+            logData('Day data', dayData);
+
+            selectedDate = date;
+            selectedTime = null;
+
+            // Update calendar selection
+            document.querySelectorAll('.calendar-day').forEach(day => {
+                day.classList.remove('selected');
+            });
+
+            document.querySelectorAll('.calendar-day').forEach(day => {
+                const dayDate = new Date(day.dataset.date);
+                if (dayDate.getDate() === date.getDate() &&
+                    dayDate.getMonth() === date.getMonth() &&
+                    dayDate.getFullYear() === date.getFullYear()) {
+                    day.classList.add('selected');
+                }
+            });
+
+            // Update selected day info
+            const selectedDayInfo = document.getElementById('selectedDayInfo');
+            const formattedDate = date.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            selectedDayInfo.innerHTML = `
+                <h3>Selected Date</h3>
+                <p>${formattedDate}</p>
+            `;
+
+            // Render time slots
+            renderTimeSlots(dayData);
+            document.getElementById('timeSection').style.display = 'block';
+        }
+
+        function renderTimeSlots(dayData) {
+            logToConsole('Rendering time slots...', 'info');
+            
+            const timeGrid = document.getElementById('timeGrid');
+            timeGrid.innerHTML = '';
+
+            const slots = [];
+
+            // Extract available time slots
+            for (let i = 1; i <= 6; i++) {
+                const timeDesc = dayData[`TMS_Descr${i}`];
+                const available = dayData[`T${i}`];
+                const availableNoOverbook = dayData[`X${i}`];
+
+                if (timeDesc && available > 0) {
+                    slots.push({
+                        time: timeDesc,
+                        available: available,
+                        availableNoOverbook: availableNoOverbook,
+                        slotIndex: i
+                    });
+                    logToConsole(`  Slot ${i}: ${timeDesc} - ${available} available (${availableNoOverbook} without overbooking)`, 'info');
+                } else if (timeDesc) {
+                    logToConsole(`  Slot ${i}: ${timeDesc} - NOT AVAILABLE (T${i}=${available})`, 'warning');
+                }
+            }
+
+            if (slots.length === 0) {
+                logToConsole('No available time slots for this day', 'warning');
+                timeGrid.innerHTML = `
+                    <div class="no-slots" style="grid-column: 1/-1;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                        <p>No available times for this day</p>
+                    </div>
+                `;
+                return;
+            }
+
+            logToConsole(`Rendering ${slots.length} time slots`, 'success');
+
+            slots.forEach(slot => {
+                const timeSlot = document.createElement('div');
+                timeSlot.className = 'time-slot';
+                timeSlot.innerHTML = `
+                    <div>${slot.time}</div>
+                    <div class="availability">${slot.available} available</div>
+                `;
+                timeSlot.onclick = () => selectTimeSlot(slot);
+                timeGrid.appendChild(timeSlot);
+            });
+        }
+
+        function selectTimeSlot(slot) {
+            logToConsole('='.repeat(50), 'info');
+            logToConsole('Time slot selected: ' + slot.time, 'info');
+            logData('Slot details', slot);
+
+            selectedTime = slot;
+
+            // Update time slot selection visually
+            document.querySelectorAll('.time-slot').forEach(ts => {
+                ts.classList.remove('selected');
+            });
+            event.target.closest('.time-slot').classList.add('selected');
+
+            // Log the full selection
+            const formattedDate = selectedDate.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            logToConsole('='.repeat(50), 'success');
+            logToConsole('SELECTION COMPLETE', 'success');
+            logToConsole('Date: ' + formattedDate, 'success');
+            logToConsole('Time: ' + slot.time, 'success');
+            logToConsole('Available slots: ' + slot.available, 'success');
+            logToConsole('='.repeat(50), 'success');
+
+            // Show alert for testing
+            alert(`Selected:\n${formattedDate}\n${slot.time}\n\n(This is just a test - no lead will be posted)`);
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            logToConsole('Page loaded and ready', 'success');
+            logToConsole('Lead Perfection API Configuration:', 'info');
+            logData('Config', {
+                tokenUrl: LP_CONFIG.tokenUrl,
+                forwardLookUrl: LP_CONFIG.forwardLookUrl,
+                username: LP_CONFIG.credentials.username,
+                clientid: LP_CONFIG.credentials.clientid
+            });
+
+            // Allow Enter key to trigger fetch
+            document.getElementById('zipCode').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    fetchAvailability();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
