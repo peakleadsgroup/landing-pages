@@ -1,0 +1,2841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
+    <title>Windows Replacement Qualification</title>
+    
+    <!-- Meta Pixel Code - Will be dynamically set -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    // Meta Pixel will be initialized after client data is loaded
+    </script>
+    <noscript id="metaPixelNoscript"></noscript>
+    <!-- End Meta Pixel Code -->
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
+                        url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/images/windowback.png') center/cover no-repeat;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            z-index: -1;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo-container {
+            margin-bottom: 30px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-img {
+            max-width: 200px;
+            max-height: 80px;
+            object-fit: contain;
+        }
+
+        .main-heading {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .question {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .sub-heading {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 25px;
+            font-style: italic;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .option {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .option:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .option.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            color: #1976d2;
+        }
+
+        .address-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .address-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .address-input {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f8f9fa;
+            width: 100%;
+        }
+
+        .address-input:focus {
+            outline: none;
+            border-color: #2196f3;
+            background: #fff;
+        }
+
+        .address-input.error {
+            border-color: #f44336;
+        }
+
+        .address-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .address-label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .address-error {
+            color: #f44336;
+            font-size: 12px;
+            margin-top: 5px;
+            text-align: left;
+            display: none;
+        }
+
+        .hidden-initially {
+            display: none !important;
+        }
+
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4CAF50;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .nav-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .privacy-policy-text {
+            margin-top: 20px;
+            font-size: 10px;
+            color: #666;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .privacy-policy-text p {
+            margin-bottom: 8px;
+        }
+
+        .privacy-policy-text a {
+            color: #2196f3;
+            text-decoration: underline;
+        }
+
+        .privacy-policy-text a:hover {
+            color: #1976d2;
+        }
+
+        .name-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .phone-step label {
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: block;
+            color: #2c3e50;
+            text-align: left;
+        }
+
+        .phone-help {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+            text-align: left;
+        }
+
+        .row {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        #phone, #email {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f8f9fa;
+            width: 100%;
+        }
+
+        #phone:focus, #email:focus {
+            outline: none;
+            border-color: #2196f3;
+            background: #fff;
+        }
+
+        /* Phone/Text Button Styles */
+        .contact-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: white;
+            text-decoration: none;
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .call-button {
+            background: #10b981;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+        
+        .call-button:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+        }
+        
+        .text-button {
+            background: #3b82f6;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+        
+        .text-button:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+        }
+        
+        .contact-button:active {
+            transform: translateY(0);
+        }
+        
+        .phone-icon,
+        .message-icon {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .phone-number-display {
+            color: #4CAF50;
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 20px;
+            letter-spacing: 1px;
+        }
+
+        /* Calendar Styles */
+        .calendar-step-header {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .month-nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 0 auto;
+        }
+
+        .month-display {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            min-width: 180px;
+            text-align: center;
+        }
+
+        .nav-button {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-button:hover:not(:disabled) {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            color: white;
+        }
+
+        .nav-button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .weekday-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .weekday-name {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #868e96;
+            padding: 10px 5px;
+            text-transform: uppercase;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            position: relative;
+        }
+
+        .month-label {
+            position: absolute;
+            top: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #4CAF50;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .calendar-day:hover:not(.disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+            border-color: #4CAF50;
+            background: #4CAF50;
+            color: white;
+        }
+
+        .calendar-day:hover:not(.disabled) .month-label {
+            color: white;
+        }
+
+        .calendar-day.selected {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .calendar-day.selected .month-label {
+            color: white;
+        }
+
+        .calendar-day.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: transparent;
+            pointer-events: none;
+        }
+
+        .calendar-day.today {
+            border-color: #4CAF50;
+            font-weight: 700;
+        }
+
+        .time-section {
+            margin-top: 20px;
+        }
+
+        .selected-info {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .selected-info h3 {
+            font-size: 14px;
+            color: #2e7d32;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .selected-info p {
+            font-size: 16px;
+            color: #1b5e20;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .time-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .time-slot {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+        .time-slot:hover {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .no-slots {
+            text-align: center;
+            padding: 40px 20px;
+            color: #868e96;
+        }
+
+        .no-slots svg {
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 600px) {
+            body::before {
+                position: absolute;
+            }
+
+            .form-container {
+                padding: 25px;
+                margin: 10px;
+            }
+
+            .address-row {
+                grid-template-columns: 1fr;
+            }
+
+            .name-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .main-heading {
+                font-size: 20px;
+            }
+
+            .question {
+                font-size: 18px;
+            }
+        }
+        
+        /* Fix for iOS and other mobile browsers */
+        @media (max-width: 768px) {
+            body::before {
+                position: absolute;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="logo-container">
+            <img id="logoImg" 
+                 src="" 
+                 alt="" 
+                 class="logo-img"
+                 style="display: none;">
+        </div>
+
+        <div id="mainHeading">
+            <h1 class="main-heading">
+                Take our 30 second quiz to get a <span class="highlight">fast and free quote</span>
+            </h1>
+        </div>
+
+        <div class="progress-bar" id="progressBarContainer">
+            <div class="progress-fill" id="progressFill" style="width: 16.7%"></div>
+        </div>
+
+        <!-- STEP 1: Homeowner -->
+        <div class="form-step active" id="step1">
+            <div class="question">Are you a homeowner?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'yes')">Yes</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'no')">No</div>
+            </div>
+        </div>
+
+        <!-- STEP 2: Window Count -->
+        <div class="form-step" id="step2" style="display: none;">
+            <div class="question">How many windows will you be replacing?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'windowCount', 'less_than_3')">Less than 3</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'windowCount', '3_to_6')">3-6</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'windowCount', '6_to_10')">6-10</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'windowCount', 'more_than_10')">More than 10</div>
+            </div>
+        </div>
+
+        <!-- STEP 3: Timeline -->
+        <div class="form-step" id="step3">
+            <div class="question">How soon would you like to replace your windows?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'asap')">ASAP</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'within_month')">Within a month</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'within_3_months')">Within 3 months</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'within_6_months')">Within 6 months</div>
+            </div>
+        </div>
+
+        <!-- STEP 4: Priority -->
+        <div class="form-step" id="step4">
+            <div class="question">What's your biggest priority?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'priority', 'lower_energy_bills')">Lower energy bills</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'priority', 'improve_appearance')">Improve appearance</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'priority', 'fix_broken_windows')">Fix broken windows</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'priority', 'reduce_noise')">Reduce outside noise</div>
+            </div>
+        </div>
+
+        <!-- STEP 5: Address -->
+        <div class="form-step" id="step5">
+            <div class="question">What is the location of this project?</div>
+            <div class="sub-heading">Please make sure your address is full and correct so we can confirm you are within our service area</div>
+            <div class="address-grid">
+                <div class="address-field">
+                    <label class="address-label" for="street">Street Address</label>
+                    <input type="text" class="address-input" id="street" placeholder="Street Address" oninput="validateAddressForm()">
+                    <div class="address-error" id="streetError">Street address must start with a number</div>
+                </div>
+                
+                <div id="cityField" class="address-field hidden-initially">
+                    <label class="address-label" for="city">City</label>
+                    <input type="text" class="address-input" id="city" placeholder="City" oninput="validateAddressForm()">
+                </div>
+                
+                <div class="address-row hidden-initially" id="stateZipRow">
+                    <div class="address-field">
+                        <label class="address-label" for="state">State</label>
+                        <input type="text" class="address-input" id="state" placeholder="State" oninput="validateAddressForm()">
+                    </div>
+                    <div class="address-field">
+                        <label class="address-label" for="zip">Zip Code</label>
+                        <input type="text" class="address-input" id="zip" placeholder="Zip Code" oninput="validateAddressForm()" maxlength="5">
+                    </div>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="goToStep6()" id="submitFormBtn" disabled>Next</button>
+            </div>
+        </div>
+
+        <!-- STEP 6: NAME -->
+        <div class="form-step" id="step6">
+            <div class="question">Who will we be speaking with?</div>
+            <div class="name-grid">
+                <div>
+                    <label for="firstName" style="margin-bottom: 10px; display: block; color: #2c3e50; text-align: center;">First Name</label>
+                    <input type="text" class="address-input" id="firstName" placeholder="First Name" required autocomplete="given-name" oninput="validateNameForm()">
+                </div>
+                <div>
+                    <label for="lastName" style="margin-bottom: 10px; display: block; color: #2c3e50; text-align: center;">Last Name</label>
+                    <input type="text" class="address-input" id="lastName" placeholder="Last Name" required autocomplete="family-name" oninput="validateNameForm()">
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="goToStep7()" id="nameNextBtn" disabled>Next</button>
+            </div>
+        </div>
+
+        <!-- STEP 7: PHONE -->
+        <div class="form-step" id="step7">
+            <div class="question">Where can we reach you?</div>
+            <div class="row">
+                <div id="phoneWrap">
+                    <label for="phone">Phone</label>
+                    <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required autocomplete="tel" aria-describedby="phoneHelp">
+                    <small id="phoneHelp" class="phone-help">US number, 10 digits.</small>
+                    <input type="hidden" id="phone_digits" name="phone_digits" value="">
+                </div>
+                <div id="emailWrap" style="display:none">
+                    <label for="email">Email</label>
+                    <input id="email" name="email" type="email" inputmode="email" placeholder="your@email.com" autocomplete="email" required>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Get My Quote</button>
+            </div>
+            <div class="privacy-policy-text" id="privacyPolicyText">
+                <p>By clicking "NEXT STEP" and submitting this form, (i) I agree that <span id="partnerBusinessName">Peak Leads Group and it's marketing partners</span> may use automated technology to call or text my phone number (provided above) or email me regarding my request, and I may revoke this consent at any time, and (ii) I agree to the <a href="privacypolicy.html" target="_blank">Terms & Conditions and Privacy Policy</a>.</p>
+                <p>I understand that my authorization to receive calls, texts, and emails via automated technology is not a condition of purchasing any goods or services. Message frequency may vary. Msg & data rates may apply. Reply STOP to cancel. Reply HELP for assistance.</p>
+            </div>
+        </div>
+
+        <!-- PHONE/TEXT CONTACT SCREEN -->
+        <div class="form-step" id="contactStep">
+            <div style="text-align: center;">
+                <div style="font-size: 24px; color: #4CAF50; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your free estimate!</div>
+                <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Or if you're ready to schedule now you can contact us by clicking one of the buttons below</div>
+                
+                <a id="callButtonLink" href="#" class="contact-button call-button" style="display: none;">
+                    <svg class="phone-icon" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
+                    </svg>
+                    Call
+                </a>
+                
+                <a id="textButtonLink" href="#" class="contact-button text-button" style="display: none;">
+                    <svg class="message-icon" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 11H7V9h2v2zm4 0h-2V9h2v2zm4 0h-2V9h2v2z"/>
+                    </svg>
+                    Text
+                </a>
+                
+                <div class="phone-number-display" id="phoneNumberDisplay"></div>
+            </div>
+        </div>
+
+        <!-- CALENDAR BOOKING SCREEN -->
+        <div class="form-step" id="calendarStep">
+            <div class="calendar-step-header">We'll reach out soon to schedule your free estimate!</div>
+            <div style="font-size: 16px; color: #666; margin-bottom: 25px; text-align: center;">Ready to schedule your free estimate now? Choose a time below:</div>
+            
+            <div class="calendar-header">
+                <div class="month-nav">
+                    <button class="nav-button" id="prevMonth" onclick="changeCalendarMonth(-1)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 18l-6-6 6-6"/>
+                        </svg>
+                    </button>
+                    <div class="month-display" id="monthDisplay"></div>
+                </div>
+            </div>
+            
+            <div class="weekday-header">
+                <div class="weekday-name">Sun</div>
+                <div class="weekday-name">Mon</div>
+                <div class="weekday-name">Tue</div>
+                <div class="weekday-name">Wed</div>
+                <div class="weekday-name">Thu</div>
+                <div class="weekday-name">Fri</div>
+                <div class="weekday-name">Sat</div>
+            </div>
+            
+            <div class="calendar-grid" id="calendarGrid"></div>
+            
+            <div id="timeSection" class="time-section" style="display: none;">
+                <div class="selected-info" id="selectedDayInfo"></div>
+                <div class="time-grid" id="timeGrid"></div>
+            </div>
+        </div>
+
+        <!-- CONFIRMATION/THANK YOU SCREEN -->
+        <div class="form-step" id="confirmationStep">
+            <div style="text-align: center; padding: 40px 20px;">
+                <div style="margin-bottom: 30px;">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;">
+                        <circle cx="12" cy="12" r="10" fill="#e8f5e9"/>
+                        <path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/>
+                    </svg>
+                </div>
+                <div style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
+                <div id="confirmationMessage" style="font-size: 18px; color: #666; line-height: 1.6;">We'll give you a call soon to schedule your free estimate.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // AIRTABLE CONFIGURATION
+        // ============================================
+        const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
+        const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
+        const AIRTABLE_BASE_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
+        
+        const TABLES = {
+            CLIENTS: 'tblMl8Y97cMSbricC',
+            CAMPAIGNS: 'tbl6uhtOFzGzA7EMu',
+            B2C_LEADS: 'tblPt6Wc79hTBSmcD',
+            B2C_ADS: 'tbl7ungQGMMLYwshw',
+            URL_PARAMETERS: 'tbl5JDBRhTzuxzsc4',
+        };
+        const CONTACT_NOTIFICATION_WEBHOOK_URL = 'https://hook.us2.make.com/16nbe9d7b8igymuas81euw3o124khm7s';
+        
+        // Lead Perfection API Configuration (via Make.com proxy)
+        const LP_MAKE_WEBHOOK_URL = 'https://hook.us2.make.com/dn7kjdagrc6goimlozfan1zpt2dp9lvs';
+        
+        // Calendar Configuration (defaults, will be overridden by client data)
+        const CALENDAR_CONFIG = {
+            timezone: 'America/New_York',
+            daysOut: 14,
+            minHoursInAdvance: 48,
+            availableDaysOfWeek: [1, 2, 3, 4, 5] // Monday-Friday
+        };
+        // ============================================
+
+        let currentStep = 1;
+        let formData = {};
+        let eventId = null;
+        let hasTrackedEngagement = false;
+        let clientData = null;
+        let campaignClientData = null;
+        let matchedClientData = null;
+        let adRecordId = null;
+        let campaignRecordId = null; // Track the campaign record ID for Source Campaign linking
+        let metaCampaignID = null; // Track the Meta campaign ID (from Campaign ID field)
+        let leadRecordId = null; // Track the lead record ID so we can update it with appointment
+        let clientTimezone = 'America/New_York'; // Default timezone
+        let clientAvailability = []; // Client's available times
+        let clientAvailableDays = [1, 2, 3, 4, 5]; // Default: Monday-Friday
+        let clientDaysOut = 14; // Default: 14 days out
+        let isSubmitting = false; // Flag to prevent duplicate submissions
+        let lpAvailabilityData = []; // Lead Perfection API availability data
+        
+        // Get campaign ID immediately from URL (before DOM is ready)
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialCampaignID = urlParams.get('campaignID');
+
+        // ============================================
+        // AIRTABLE API FUNCTIONS
+        // ============================================
+        
+        // Check if the current request is from a Facebook/Instagram crawler
+        function isFacebookCrawler() {
+            const userAgent = navigator.userAgent || '';
+            return userAgent.includes('facebookexternalhit') || 
+                   userAgent.includes('Facebot') || 
+                   userAgent.includes('facebookexternalhit/1.1');
+        }
+
+
+        async function fetchAirtableData(url) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    const error = new Error(`Airtable API error: ${response.status} ${response.statusText}`);
+                    throw error;
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Airtable fetch error:', error);
+                throw error;
+            }
+        }
+
+        async function fetchUrlParametersForClient(clientId, additionalLogData = {}) {
+            try {
+                if (!clientId) {
+                    return [];
+                }
+                
+                // Fetch URL parameters linked to this client
+                // Try multiple filter approaches for linked records
+                // First try: direct record ID match (works for single linked records)
+                let filterFormula = encodeURIComponent(`{Clients}="${clientId}"`);
+                let urlParamsUrl = `${AIRTABLE_BASE_URL}/${TABLES.URL_PARAMETERS}?filterByFormula=${filterFormula}`;
+                
+                let urlParamsData = await fetchAirtableData(urlParamsUrl);
+                
+                // If no results, try FIND with ARRAYJOIN (works for multiple linked records)
+                if (!urlParamsData.records || urlParamsData.records.length === 0) {
+                    filterFormula = encodeURIComponent(`FIND("${clientId}", ARRAYJOIN({Clients}))`);
+                    urlParamsUrl = `${AIRTABLE_BASE_URL}/${TABLES.URL_PARAMETERS}?filterByFormula=${filterFormula}`;
+                    urlParamsData = await fetchAirtableData(urlParamsUrl);
+                }
+                
+                if (urlParamsData.records && urlParamsData.records.length > 0) {
+                    const params = urlParamsData.records.map(record => ({
+                        parameter: record.fields['Parameter'] || '',
+                        value: record.fields['Value'] || ''
+                    }));
+                    
+                    return params;
+                }
+                
+                return [];
+            } catch (error) {
+                console.error('Error fetching URL parameters:', error);
+                return [];
+            }
+        }
+
+        async function buildRedirectUrlWithParameters(baseUrl, urlParameters, dataSource, additionalLogData = {}) {
+            try {
+                const url = new URL(baseUrl);
+                
+                // Map form data values based on the Value field
+                // Try to get fullName and phone from dataSource (could be leadData or formData)
+                const fullName = dataSource.fullName || (dataSource.firstName && dataSource.lastName ? `${dataSource.firstName} ${dataSource.lastName}`.trim() : '');
+                const phone = dataSource.phone || '';
+                
+                const valueMap = {
+                    'Full Name': fullName,
+                    'Phone': phone
+                };
+                
+                // Add each URL parameter
+                urlParameters.forEach(param => {
+                    const paramName = param.parameter;
+                    const valueType = param.value;
+                    
+                    if (paramName && valueType && valueMap[valueType] !== undefined) {
+                        const paramValue = valueMap[valueType];
+                        if (paramValue) {
+                            url.searchParams.append(paramName, paramValue);
+                        }
+                    }
+                });
+                
+                const finalUrl = url.toString();
+                return finalUrl;
+            } catch (error) {
+                console.error('Error building redirect URL:', error);
+                return baseUrl;
+            }
+        }
+
+        async function loadClientFromCampaign(campaignIDParam = null) {
+            try {
+                
+                // Use provided param or get from URL
+                const campaignID = campaignIDParam || initialCampaignID || new URLSearchParams(window.location.search).get('campaignID');
+                
+                if (!campaignID) {
+                    console.log('No campaignID found in URL');
+                    return null;
+                }
+
+                console.log('Looking for campaign with ID:', campaignID);
+
+                // First, try to fetch campaign by Campaign ID field
+                let campaign = null;
+                const campaignUrl = `${AIRTABLE_BASE_URL}/${TABLES.CAMPAIGNS}?filterByFormula={Campaign ID}="${campaignID}"`;
+                const campaignData = await fetchAirtableData(campaignUrl);
+                
+                if (campaignData.records && campaignData.records.length > 0) {
+                    campaign = campaignData.records[0];
+                    campaignRecordId = campaign.id; // Store campaign record ID for Source Campaign linking
+                    metaCampaignID = campaign.fields['Campaign ID'] || campaignID; // Store Meta campaign ID
+                    console.log('Found campaign by Campaign ID field:', campaign.id);
+                } else {
+                    // If not found by Campaign ID field, try fetching directly by record ID
+                    console.log('Campaign not found by Campaign ID field, trying direct record ID lookup');
+                    try {
+                        const directCampaignUrl = `${AIRTABLE_BASE_URL}/${TABLES.CAMPAIGNS}/${campaignID}`;
+                        const directCampaignData = await fetchAirtableData(directCampaignUrl);
+                        campaign = directCampaignData;
+                        campaignRecordId = campaign.id; // Store campaign record ID for Source Campaign linking
+                        metaCampaignID = campaign.fields['Campaign ID'] || null; // Store Meta campaign ID if available
+                        console.log('Found campaign by direct record ID:', campaign.id);
+                    } catch (directError) {
+                        console.error('Campaign not found by record ID either:', directError);
+                        return null;
+                    }
+                }
+                
+                // Get linked client record ID
+                if (!campaign.fields || !campaign.fields.Client || campaign.fields.Client.length === 0) {
+                    console.error('Campaign has no linked Client');
+                    return null;
+                }
+                
+                const clientRecordId = campaign.fields.Client[0];
+                console.log('Found linked client record ID:', clientRecordId);
+                
+                // Fetch client data
+                const clientUrl = `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}/${clientRecordId}`;
+                const clientData = await fetchAirtableData(clientUrl);
+                
+                console.log('Loaded client data:', clientData.id, clientData.fields);
+                
+                return clientData;
+            } catch (error) {
+                console.error('Error loading client from campaign:', error);
+                return null;
+            }
+        }
+
+        async function findClientByZipCode(zipCode) {
+            try {
+                // Fetch all clients
+                const clientsUrl = `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}`;
+                const clientsData = await fetchAirtableData(clientsUrl);
+                
+                if (!clientsData.records || clientsData.records.length === 0) {
+                    return null;
+                }
+                
+                // Search through each client's Expanded Area Raw Zips
+                for (const client of clientsData.records) {
+                    // Only consider clients with "Active" or "Paused" status
+                    const status = client.fields['Status'];
+                    if (status !== 'Active' && status !== 'Paused') {
+                        continue;
+                    }
+                    
+                    const zipList = client.fields['Expanded Area Raw Zips'];
+                    if (!zipList) continue;
+                    
+                    // Parse comma-separated zip codes (handle spaces)
+                    const zipCodes = zipList.split(',').map(z => z.trim());
+                    
+                    if (zipCodes.includes(zipCode)) {
+                        return client;
+                    }
+                }
+                
+                return null;
+            } catch (error) {
+                console.error('Error finding client by zip code:', error);
+                return null;
+            }
+        }
+
+        async function findAdByATID(adATID) {
+            try {
+                if (!adATID) return null;
+                
+                // If adATID looks like an Airtable record ID (starts with "rec"), try to fetch it directly
+                if (adATID.startsWith('rec')) {
+                    try {
+                        const directUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_ADS}/${adATID}`;
+                        const adData = await fetchAirtableData(directUrl);
+                        if (adData && adData.id) {
+                            console.log('Found ad by direct record ID:', adATID);
+                            return adData.id;
+                        }
+                    } catch (directError) {
+                        // If direct fetch fails, fall through to search by scriptATID
+                        console.log('Direct record ID lookup failed, trying scriptATID search:', directError.message);
+                    }
+                }
+                
+                // Fetch all ads and find by scriptATID
+                const adsUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_ADS}`;
+                const adsData = await fetchAirtableData(adsUrl);
+                
+                if (!adsData.records || adsData.records.length === 0) {
+                    console.log('No ads found in table');
+                    return null;
+                }
+                
+                // Find ad where scriptATID matches
+                for (const ad of adsData.records) {
+                    if (ad.fields.scriptATID === adATID) {
+                        console.log('Found ad by scriptATID:', adATID, '->', ad.id);
+                        return ad.id; // Return record ID
+                    }
+                }
+                
+                console.log('No ad found matching adATID:', adATID);
+                return null;
+            } catch (error) {
+                console.log('Ad lookup failed (non-critical):', error.message);
+                return null;
+            }
+        }
+
+        // ============================================
+        // LEAD PERFECTION API FUNCTIONS
+        // ============================================
+        
+        async function fetchLeadPerfectionAvailability(zipCode) {
+            try {
+                if (!zipCode || !LP_MAKE_WEBHOOK_URL) {
+                    console.log('No zip code or webhook URL for Lead Perfection availability');
+                    return [];
+                }
+                
+                console.log('Fetching Lead Perfection availability for zip:', zipCode);
+                
+                const response = await fetch(LP_MAKE_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ zip: zipCode })
+                });
+                
+                if (!response.ok) {
+                    console.error('Lead Perfection API error:', response.status, response.statusText);
+                    return [];
+                }
+                
+                const data = await response.json();
+                console.log('Lead Perfection availability data:', data);
+                
+                return data || [];
+            } catch (error) {
+                console.error('Error fetching Lead Perfection availability:', error);
+                return [];
+            }
+        }
+        
+        function getLPAvailabilityForDate(date) {
+            if (!lpAvailabilityData || lpAvailabilityData.length === 0) return null;
+            
+            const dateStr = date.toISOString().split('T')[0];
+            
+            for (const day of lpAvailabilityData) {
+                const dayDate = new Date(day.SDate).toISOString().split('T')[0];
+                if (dayDate === dateStr) {
+                    return day;
+                }
+            }
+            return null;
+        }
+        
+        function getLPTimeSlotsForDay(dayData) {
+            if (!dayData) return [];
+            
+            const slots = [];
+            
+            // Extract available time slots from Lead Perfection data (T1-T6, TMS_Descr1-TMS_Descr6)
+            for (let i = 1; i <= 6; i++) {
+                const timeDesc = dayData[`TMS_Descr${i}`];
+                const available = dayData[`T${i}`];
+                
+                if (timeDesc && available > 0) {
+                    slots.push({
+                        time: timeDesc,
+                        available: available,
+                        slotIndex: i
+                    });
+                }
+            }
+            
+            return slots;
+        }
+        
+        function hasLPAvailabilityForDate(date) {
+            const dayData = getLPAvailabilityForDate(date);
+            if (!dayData) return false;
+            
+            const slots = getLPTimeSlotsForDay(dayData);
+            return slots.length > 0;
+        }
+
+        async function sendLeadWebhook(leadRecordId, metaCampaignID, linkedClientAirtableID, appointmentTime = null) {
+            try {
+                // Only send if there's a linked client
+                if (!linkedClientAirtableID) {
+                    console.log('No linked client, skipping webhook');
+                    return;
+                }
+                
+                const webhookData = {
+                    'Lead Airtable ID': leadRecordId,
+                    'Campaign ID': metaCampaignID,
+                    'Client Airtable ID': linkedClientAirtableID
+                };
+                
+                // Add appointment time if provided
+                if (appointmentTime) {
+                    webhookData['Appointment Time'] = appointmentTime;
+                }
+                
+                await fetch(CONTACT_NOTIFICATION_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(webhookData),
+                    mode: 'no-cors'
+                });
+                
+                console.log('Lead webhook sent successfully');
+            } catch (error) {
+                console.error('Error sending lead webhook:', error);
+            }
+        }
+        
+        async function submitLeadToAirtable(leadData) {
+            try {
+                // Determine which client to use for Lead Price (matched client first, then campaign client)
+                const clientForPrice = matchedClientData || campaignClientData;
+                let leadPrice = null;
+                
+                if (clientForPrice && clientForPrice.fields && clientForPrice.fields['Lead Price']) {
+                    leadPrice = clientForPrice.fields['Lead Price'];
+                }
+                
+                // Prepare the record
+                const record = {
+                    fields: {
+                        'Phone': leadData.phone,
+                        'Full Summary': leadData.fullSummary,
+                        'Full Summary HTML': leadData.fullSummaryHTML,
+                        'Full Name': leadData.fullName,
+                        'First Name': leadData.firstName,
+                        'Last Name': leadData.lastName,
+                        'Model': 'Lead',
+                        'Address': leadData.address,
+                        'City': leadData.city,
+                        'State': leadData.state,
+                        'Zip': leadData.zip
+                    }
+                };
+                
+                // Add email if provided
+                if (leadData.email && leadData.email.trim()) {
+                    record.fields['Email'] = leadData.email.trim();
+                }
+                
+                // Add Lead Price if available
+                if (leadPrice !== null && leadPrice !== undefined) {
+                    record.fields['Price'] = leadPrice;
+                }
+                
+                // Add linked client ONLY if we found a match by zip code (no fallback to campaign client)
+                if (matchedClientData && matchedClientData.id) {
+                    record.fields['Linked Client'] = [matchedClientData.id];
+                }
+                
+                // Always add Source Campaign if we have a campaign record ID
+                if (campaignRecordId) {
+                    record.fields['Source Campaign'] = [campaignRecordId];
+                }
+                
+                // Add linked ad if we found one
+                if (adRecordId) {
+                    record.fields['Ad'] = [adRecordId];
+                }
+                
+                console.log('Submitting lead to Airtable:', record);
+                
+                // Submit to Airtable
+                const response = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ records: [record] })
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Airtable submission failed: ${response.status} ${response.statusText} - ${errorText}`);
+                }
+                
+                const result = await response.json();
+                console.log('Lead submitted successfully:', result);
+                
+                // Store the lead record ID so we can update it with appointment later
+                if (result.records && result.records.length > 0) {
+                    leadRecordId = result.records[0].id;
+                    console.log('Lead record ID stored:', leadRecordId);
+                }
+                
+                return result;
+            } catch (error) {
+                console.error('Error submitting lead to Airtable:', error);
+                throw error;
+            }
+        }
+
+        function initializeMetaPixel(pixelId) {
+            if (!pixelId || typeof fbq === 'undefined') return;
+            
+            try {
+                fbq('init', pixelId);
+                fbq('track', 'PageView');
+                
+                // Update noscript tag
+                const noscript = document.getElementById('metaPixelNoscript');
+                if (noscript) {
+                    noscript.innerHTML = `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1" />`;
+                }
+            } catch (error) {
+                console.error('Meta Pixel initialization error:', error);
+            }
+        }
+
+        function preloadLogo(logoUrl) {
+            // Preload the image immediately for faster display
+            if (logoUrl) {
+                const link = document.createElement('link');
+                link.rel = 'preload';
+                link.as = 'image';
+                link.href = logoUrl;
+                document.head.appendChild(link);
+                
+                // Also preload using Image object
+                const img = new Image();
+                img.src = logoUrl;
+            }
+        }
+
+        function loadLogo(logoUrl) {
+            const logoImg = document.getElementById('logoImg');
+            console.log('Loading logo:', logoUrl);
+            if (logoUrl && logoImg) {
+                // Preload first for faster display
+                preloadLogo(logoUrl);
+                
+                logoImg.src = logoUrl;
+                logoImg.style.display = 'block';
+                console.log('Logo image set, display:', logoImg.style.display);
+                
+                // Handle logo load errors
+                logoImg.onerror = function() {
+                    console.error('Failed to load logo image:', logoUrl);
+                    logoImg.style.display = 'none';
+                };
+                
+                // Confirm logo loaded
+                logoImg.onload = function() {
+                    console.log('Logo image loaded successfully');
+                };
+            } else {
+                console.log('No logo URL or logo element not found', { logoUrl, logoImg: !!logoImg });
+            }
+        }
+
+        // Start loading client data immediately (don't wait for DOM)
+        // Initialize immediately - start fetching as soon as script runs
+        (async function() {
+            try {
+                console.log('Initializing page, loading client data...');
+                // Load client from campaign ID (use pre-fetched value if available)
+                campaignClientData = await loadClientFromCampaign(initialCampaignID);
+                
+                if (campaignClientData) {
+                    console.log('Client data loaded successfully');
+                    clientData = campaignClientData;
+                    
+                    // Load logo immediately when we get the URL
+                    const logoUrl = campaignClientData.fields['Logo Link'];
+                    console.log('Logo URL from client data:', logoUrl);
+                    if (logoUrl) {
+                        // Preload immediately, even before DOM is ready
+                        preloadLogo(logoUrl);
+                        
+                        // Load logo when DOM is ready
+                        if (document.readyState === 'loading') {
+                            document.addEventListener('DOMContentLoaded', () => {
+                                loadLogo(logoUrl);
+                            });
+                        } else {
+                            loadLogo(logoUrl);
+                        }
+                    } else {
+                        console.warn('No Logo Link found in client data');
+                    }
+                    
+                    // Initialize Meta Pixel
+                    const metaPixel = campaignClientData.fields['Meta Pixel'];
+                    if (metaPixel) {
+                        console.log('Initializing Meta Pixel:', metaPixel);
+                        initializeMetaPixel(metaPixel);
+                    } else {
+                        console.log('No Meta Pixel found in client data');
+                    }
+                    
+                    // Update partner name in privacy policy
+                    updatePartnerNameInPrivacyPolicy();
+                } else {
+                    console.warn('No client data loaded from campaign');
+                    // Initialize default Meta Pixel (if needed)
+                    // For now, we'll just track PageView without pixel ID
+                    if (typeof fbq !== 'undefined') {
+                        fbq('track', 'PageView');
+                    }
+                    // Update partner name with default
+                    updatePartnerNameInPrivacyPolicy();
+                }
+            } catch (error) {
+                console.error('Error initializing page:', error);
+                // Update partner name with default on error
+                updatePartnerNameInPrivacyPolicy();
+            }
+        })();
+        
+        // Function to update partner name in privacy policy
+        function updatePartnerNameInPrivacyPolicy() {
+            const partnerNameElement = document.getElementById('partnerBusinessName');
+            if (!partnerNameElement) return;
+            
+            // Try to get partner name from matched client first, then campaign client
+            let partnerName = null;
+            if (matchedClientData && matchedClientData.fields && matchedClientData.fields['Name']) {
+                partnerName = matchedClientData.fields['Name'];
+            } else if (campaignClientData && campaignClientData.fields && campaignClientData.fields['Name']) {
+                partnerName = campaignClientData.fields['Name'];
+            } else if (clientData && clientData.fields && clientData.fields['Name']) {
+                partnerName = clientData.fields['Name'];
+            }
+            
+            // Update the text if we found a partner name, otherwise use default
+            if (partnerName) {
+                partnerNameElement.textContent = partnerName;
+            } else {
+                partnerNameElement.textContent = "Peak Leads Group and it's marketing partners";
+            }
+        }
+        
+        // Also ensure logo loads when DOM is ready (backup)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                // If client data is already loaded, ensure logo is displayed
+                if (clientData && clientData.fields && clientData.fields['Logo Link']) {
+                    const logoImg = document.getElementById('logoImg');
+                    if (logoImg && !logoImg.src) {
+                        loadLogo(clientData.fields['Logo Link']);
+                    }
+                }
+            });
+        }
+
+        // ============================================
+        // FORM FUNCTIONS
+        // ============================================
+
+        function generateEventId() {
+            return 'event_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function selectOptionAndAdvance(element, field, value) {
+            const options = element.parentElement.querySelectorAll('.option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            element.classList.add('selected');
+            formData[field] = value;
+            
+            if (!hasTrackedEngagement) {
+                if (typeof fbq !== 'undefined' && clientData && clientData.fields['Meta Pixel']) {
+                    fbq('track', 'ViewContent', {
+                        content_category: 'home_improvement',
+                        content_name: 'windows_replacement_quiz_start'
+                    });
+                }
+                hasTrackedEngagement = true;
+            }
+            
+            setTimeout(() => {
+                nextStep();
+            }, 200);
+        }
+
+        function validateAddressForm() {
+            const street = document.getElementById('street').value.trim();
+            const city = document.getElementById('city').value.trim();
+            const state = document.getElementById('state').value.trim();
+            const zip = document.getElementById('zip').value.trim();
+            const cityField = document.getElementById('cityField');
+            const stateZipRow = document.getElementById('stateZipRow');
+            const streetInput = document.getElementById('street');
+            const streetError = document.getElementById('streetError');
+            
+            // Check if street starts with a number
+            const startsWithNumber = /^\d/.test(street);
+            
+            if (street.length > 0) {
+                if (!startsWithNumber) {
+                    streetInput.classList.add('error');
+                    streetError.style.display = 'block';
+                } else {
+                    streetInput.classList.remove('error');
+                    streetError.style.display = 'none';
+                }
+                
+                cityField.classList.remove('hidden-initially');
+                stateZipRow.classList.remove('hidden-initially');
+            } else {
+                streetInput.classList.remove('error');
+                streetError.style.display = 'none';
+                cityField.classList.add('hidden-initially');
+                stateZipRow.classList.add('hidden-initially');
+                document.getElementById('city').value = '';
+                document.getElementById('state').value = '';
+                document.getElementById('zip').value = '';
+            }
+            
+            const submitBtn = document.getElementById('submitFormBtn');
+            if (submitBtn) {
+                submitBtn.disabled = !(street && city && state && zip && startsWithNumber);
+            }
+            
+            if (street && city && state && zip && startsWithNumber) {
+                formData.address = { street, city, state, zip };
+            } else {
+                // Clear address data if validation fails to prevent stale data
+                if (formData.address) {
+                    delete formData.address;
+                }
+            }
+        }
+
+        function updateProgress() {
+            const progressFill = document.getElementById('progressFill');
+            // Adjust step number for progress calculation (skip step 2)
+            const adjustedStep = currentStep > 2 ? currentStep - 1 : currentStep;
+            const percentage = (adjustedStep / 6) * 100;
+            progressFill.style.width = percentage + '%';
+        }
+
+        function nextStep() {
+            if (currentStep < 7) {
+                document.getElementById('step' + currentStep).classList.remove('active');
+                currentStep++;
+                // Skip step 2 (window count question)
+                if (currentStep === 2) {
+                    currentStep = 3;
+                }
+                document.getElementById('step' + currentStep).classList.add('active');
+                updateProgress();
+            }
+        }
+
+        function goToStep6() {
+            validateAddressForm();
+            if (formData.address) {
+                nextStep();
+            }
+        }
+
+        function validateNameForm() {
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const nameNextBtn = document.getElementById('nameNextBtn');
+            
+            if (nameNextBtn) {
+                nameNextBtn.disabled = !(firstName && lastName);
+            }
+            
+            if (firstName && lastName) {
+                formData.firstName = firstName;
+                formData.lastName = lastName;
+            }
+        }
+
+        function goToStep7() {
+            validateNameForm();
+            if (formData.firstName && formData.lastName) {
+                nextStep();
+                setupPhoneValidation();
+            }
+        }
+
+        function formatPhone(val) {
+            const d = val.replace(/\D/g,'').slice(0,10);
+            let f = d;
+            if(d.length > 6) f = `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+            else if(d.length > 3) f = `(${d.slice(0,3)}) ${d.slice(3)}`;
+            else if(d.length > 0) f = `(${d}`;
+            return {formatted:f, digits:d};
+        }
+
+        function isValidPhoneNumber(digits) {
+            // Check 1: Must be exactly 10 digits
+            if (digits.length !== 10) {
+                return { valid: false, error: 'Phone number must be 10 digits.' };
+            }
+
+            // Check 2: Cannot start with 1
+            if (digits.charAt(0) === '1') {
+                return { valid: false, error: "Phone number shouldn't start with a 1." };
+            }
+
+            const areaCode = digits.substring(0, 3);
+            const exchange = digits.substring(3, 6);
+            const lineNumber = digits.substring(6, 10);
+
+            // Check 3: Area code validation - repeating digits (000, 111, 222, etc)
+            if (/^(\d)\1{2}$/.test(areaCode)) {
+                return { valid: false, error: 'Invalid area code.' };
+            }
+
+            // Check 4: Area code validation - 555
+            if (areaCode === '555') {
+                return { valid: false, error: 'Area code 555 is not valid.' };
+            }
+
+            // Check 5: Area code validation - toll-free numbers
+            const tollFreeAreaCodes = ['800', '888', '877', '866', '855', '844', '833'];
+            if (tollFreeAreaCodes.includes(areaCode)) {
+                return { valid: false, error: 'Toll-free numbers are not accepted.' };
+            }
+
+            // Check 6: Exchange code validation - special services
+            const specialExchanges = ['911', '411', '611'];
+            if (specialExchanges.includes(exchange)) {
+                return { valid: false, error: 'Invalid exchange code.' };
+            }
+
+            // Check 7: Exchange code validation - cannot start with 0 or 1
+            if (exchange.charAt(0) === '0' || exchange.charAt(0) === '1') {
+                return { valid: false, error: 'Invalid exchange code.' };
+            }
+
+            // Check 8: Sequential digits (ascending)
+            if (digits === '1234567890' || digits === '0123456789') {
+                return { valid: false, error: 'Sequential numbers are not valid.' };
+            }
+            for (let i = 0; i < digits.length - 2; i++) {
+                const digit1 = parseInt(digits.charAt(i));
+                const digit2 = parseInt(digits.charAt(i + 1));
+                const digit3 = parseInt(digits.charAt(i + 2));
+                
+                if (digit2 === digit1 + 1 && digit3 === digit2 + 1) {
+                    // Allow one sequence of 3, but check if entire number is sequential
+                    let sequentialCount = 3;
+                    for (let j = i + 3; j < digits.length; j++) {
+                        if (parseInt(digits.charAt(j)) === parseInt(digits.charAt(j - 1)) + 1) {
+                            sequentialCount++;
+                        } else {
+                            break;
+                        }
+                    }
+                    if (sequentialCount >= 7) {
+                        return { valid: false, error: 'Sequential numbers are not valid.' };
+                    }
+                }
+            }
+
+            // Check 9: All same digits (555-555-5555, etc)
+            if (/^(\d)\1{9}$/.test(digits)) {
+                return { valid: false, error: 'All digits cannot be the same.' };
+            }
+
+            // Check 10: Repeating patterns (123-123-1234, 456-456-4567)
+            if (areaCode === exchange && areaCode === lineNumber.substring(0, 3)) {
+                return { valid: false, error: 'Repeating patterns are not valid.' };
+            }
+
+            // Check 11: Known fake/test numbers (555-0100 through 555-0199)
+            if (exchange === '555' && lineNumber.startsWith('01')) {
+                return { valid: false, error: 'Test numbers are not valid.' };
+            }
+
+            // Check 12: Wildcard/placeholder detection - multiple zeros in a row
+            if (digits.includes('000') || digits.includes('0000')) {
+                return { valid: false, error: 'Invalid phone number format.' };
+            }
+
+            // Check 13: 999-9999 patterns
+            if (lineNumber === '9999' || exchange === '999') {
+                return { valid: false, error: 'Invalid phone number format.' };
+            }
+
+            return { valid: true, error: '' };
+        }
+
+        function isValidEmail(email) {
+            if (!email || email.trim() === '') {
+                return { valid: false, error: 'Email is required.' };
+            }
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (emailRegex.test(email.trim())) {
+                return { valid: true, error: '' };
+            }
+            return { valid: false, error: 'Please enter a valid email address.' };
+        }
+
+        function validatePhones() {
+            const phoneInput = document.getElementById('phone');
+            const emailInput = document.getElementById('email');
+            const emailWrap = document.getElementById('emailWrap');
+            const phoneDigits = document.getElementById('phone_digits');
+            const phoneSubmitBtn = document.getElementById('phoneSubmitBtn');
+            
+            if (!phoneInput) return;
+
+            const p1 = formatPhone(phoneInput.value);
+            if (phoneInput.value !== p1.formatted) phoneInput.value = p1.formatted;
+            phoneDigits.value = p1.digits;
+
+            let phoneError = document.getElementById('phoneError');
+            if (!phoneError) {
+                phoneError = document.createElement('div');
+                phoneError.id = 'phoneError';
+                phoneError.style.color = 'red';
+                phoneError.style.fontSize = '12px';
+                phoneError.style.marginTop = '5px';
+                phoneError.style.display = 'none';
+                
+                const phoneHelp = document.getElementById('phoneHelp');
+                if (phoneHelp) {
+                    phoneHelp.parentNode.insertBefore(phoneError, phoneHelp.nextSibling);
+                }
+            }
+
+            // Validate phone number with all checks
+            const validation = isValidPhoneNumber(p1.digits);
+            
+            if (p1.digits.length > 0 && !validation.valid) {
+                phoneError.textContent = validation.error;
+                phoneError.style.display = 'block';
+                phoneInput.setCustomValidity(validation.error);
+            } else {
+                phoneError.style.display = 'none';
+                if(p1.digits.length === 10 && validation.valid){
+                    phoneInput.setCustomValidity('');
+                } else if (p1.digits.length > 0 && p1.digits.length < 10) {
+                    phoneInput.setCustomValidity('Please enter a valid 10-digit phone number.');
+                }
+            }
+
+            const shouldShowEmail = p1.digits.length === 10 && validation.valid;
+            emailWrap.style.display = shouldShowEmail ? '' : 'none';
+            if (emailInput) emailInput.required = true; // Email is required
+
+            // Validate email (required)
+            let emailValid = true;
+            if (emailInput) {
+                const emailValidation = isValidEmail(emailInput.value);
+                const emailTouched = emailInput.dataset.touched === 'true';
+                
+                // Create or update email error display
+                let emailError = document.getElementById('emailError');
+                if (!emailError && shouldShowEmail) {
+                    emailError = document.createElement('div');
+                    emailError.id = 'emailError';
+                    emailError.style.color = 'red';
+                    emailError.style.fontSize = '12px';
+                    emailError.style.marginTop = '5px';
+                    emailError.style.display = 'none';
+                    
+                    emailInput.parentNode.appendChild(emailError);
+                }
+                
+                if (!emailValidation.valid) {
+                    emailInput.setCustomValidity(emailValidation.error);
+                    // Only show error if field has been touched
+                    if (emailTouched) {
+                        emailInput.classList.add('error');
+                        if (emailError) {
+                            emailError.textContent = emailValidation.error;
+                            emailError.style.display = 'block';
+                        }
+                    }
+                    emailValid = false;
+                } else {
+                    emailInput.setCustomValidity('');
+                    emailInput.classList.remove('error');
+                    if (emailError) {
+                        emailError.style.display = 'none';
+                    }
+                    emailValid = true;
+                }
+            }
+
+            const phoneValid = p1.digits.length === 10 && validation.valid;
+            const buttonShouldEnable = phoneValid && emailValid;
+            
+            // Update formData and log when phone/email are valid
+            if (phoneValid) {
+                formData.phone = p1.digits;
+                if (emailValid && emailInput) {
+                    formData.email = emailInput.value.trim();
+                }
+            }
+            
+            if (phoneSubmitBtn) {
+                phoneSubmitBtn.disabled = !buttonShouldEnable;
+            }
+        }
+
+        function setupPhoneValidation() {
+            const phoneInput = document.getElementById('phone');
+            const emailInput = document.getElementById('email');
+            
+            if (phoneInput) {
+                phoneInput.addEventListener('input', validatePhones);
+                phoneInput.addEventListener('blur', validatePhones);
+            }
+            
+            if (emailInput) {
+                // Mark email as touched when user interacts with it
+                emailInput.addEventListener('input', function() {
+                    emailInput.dataset.touched = 'true';
+                    validatePhones();
+                });
+                emailInput.addEventListener('blur', function() {
+                    emailInput.dataset.touched = 'true';
+                    validatePhones();
+                });
+            }
+        }
+
+        // ============================================
+        // CALENDAR FUNCTIONS
+        // ============================================
+        
+        let selectedDate = null;
+        let selectedTime = null;
+        let currentWeekStart = null;
+        
+        function getCurrentDateInTimezone() {
+            return new Date(new Date().toLocaleString('en-US', { timeZone: clientTimezone }));
+        }
+        
+        function parseTimeString(timeStr) {
+            // Parse time strings like "8:00 AM", "9:00 AM", "8:00 PM"
+            const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+            if (!match) return null;
+            
+            let hours = parseInt(match[1]);
+            const minutes = parseInt(match[2]);
+            const ampm = match[3].toUpperCase();
+            
+            if (ampm === 'PM' && hours !== 12) {
+                hours += 12;
+            } else if (ampm === 'AM' && hours === 12) {
+                hours = 0;
+            }
+            
+            return { hours, minutes };
+        }
+        
+        function initializeCalendar() {
+            const now = getCurrentDateInTimezone();
+            now.setHours(0, 0, 0, 0);
+            currentWeekStart = new Date(now);
+            
+            const firstAvailable = renderCalendar();
+            
+            if (firstAvailable.date && firstAvailable.formatted) {
+                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+            }
+        }
+        
+        function isToday(date) {
+            const today = getCurrentDateInTimezone();
+            return date.getDate() === today.getDate() &&
+                   date.getMonth() === today.getMonth() &&
+                   date.getFullYear() === today.getFullYear();
+        }
+        
+        function convertDayNameToNumber(dayName) {
+            const dayMap = {
+                'Sunday': 0,
+                'Monday': 1,
+                'Tuesday': 2,
+                'Wednesday': 3,
+                'Thursday': 4,
+                'Friday': 5,
+                'Saturday': 6
+            };
+            return dayMap[dayName] !== undefined ? dayMap[dayName] : null;
+        }
+        
+        function isDayOfWeekAvailable(date) {
+            return clientAvailableDays.includes(date.getDay());
+        }
+        
+        function isWithinBookingWindow(date) {
+            const now = getCurrentDateInTimezone();
+            const hoursFromNow = (date - now) / (1000 * 60 * 60);
+            
+            if (hoursFromNow < CALENDAR_CONFIG.minHoursInAdvance) return false;
+            
+            const maxDate = new Date(now);
+            maxDate.setDate(now.getDate() + clientDaysOut);
+            
+            return date <= maxDate;
+        }
+        
+        function isHoliday(date) {
+            const month = date.getMonth(); // 0-11 (Jan = 0, Dec = 11)
+            const day = date.getDate();
+            
+            // Christmas Eve (December 24)
+            if (month === 11 && day === 24) return true;
+            
+            // Christmas (December 25)
+            if (month === 11 && day === 25) return true;
+            
+            // New Year's Eve (December 31)
+            if (month === 11 && day === 31) return true;
+            
+            // New Year's Day (January 1)
+            if (month === 0 && day === 1) return true;
+            
+            return false;
+        }
+        
+        async function getAvailableTimesForDate(date) {
+            if (!date) return [];
+            
+            // Get Lead Perfection availability data for this date
+            const dayData = getLPAvailabilityForDate(date);
+            if (!dayData) return [];
+            
+            const lpSlots = getLPTimeSlotsForDay(dayData);
+            if (lpSlots.length === 0) return [];
+            
+            // Convert LP slots to the format expected by the calendar
+            const slots = lpSlots.map(lpSlot => {
+                // Parse the time string from LP (e.g., "8am - 10am", "10am - 12pm", etc.)
+                const timeDisplay = lpSlot.time;
+                
+                // Format for Appt field - use the start time
+                // Extract start time from range like "8am - 10am"
+                const startTimeMatch = timeDisplay.match(/^(\d+)(am|pm)/i);
+                let apptTimeFormat = timeDisplay;
+                if (startTimeMatch) {
+                    const hour = parseInt(startTimeMatch[1]);
+                    const ampm = startTimeMatch[2].toUpperCase();
+                    apptTimeFormat = `${hour.toString().padStart(2, '0')}:00 ${ampm}`;
+                }
+                
+                return {
+                    time: new Date(date), // Placeholder time object
+                    display: timeDisplay,
+                    apptFormat: apptTimeFormat,
+                    isoString: date.toISOString(),
+                    originalTime: timeDisplay,
+                    slotIndex: lpSlot.slotIndex
+                };
+            });
+            
+            return slots;
+        }
+        
+        function formatDate(date) {
+            return {
+                fullDate: date.toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    timeZone: clientTimezone
+                })
+            };
+        }
+        
+        function formatAppointmentDate(date, timeDisplay) {
+            // Format as MM/DD/YYYY at HH:mm AM/PM
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            const year = date.getFullYear();
+            
+            return `${month}/${day}/${year} at ${timeDisplay}`;
+        }
+        
+        async function getBookedAppointments(date) {
+            try {
+                // Format the date as MM/DD/YYYY to match appointment format
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                const year = date.getFullYear();
+                const datePrefix = `${month}/${day}/${year} at `;
+                
+                // Fetch all leads with appointments on this date
+                // We'll filter by checking if Appt field starts with our date prefix
+                const leadsUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}?filterByFormula=SEARCH("${datePrefix}", {Appt})`;
+                const leadsData = await fetchAirtableData(leadsUrl);
+                
+                if (!leadsData.records || leadsData.records.length === 0) {
+                    return [];
+                }
+                
+                // Extract the times that are already booked
+                const bookedTimes = [];
+                leadsData.records.forEach(lead => {
+                    const appt = lead.fields['Appt'];
+                    if (appt && appt.startsWith(datePrefix)) {
+                        // Extract the time part (everything after "at ")
+                        const timePart = appt.substring(datePrefix.length).trim();
+                        if (timePart) {
+                            bookedTimes.push(timePart);
+                        }
+                    }
+                });
+                
+                console.log('Booked times found:', bookedTimes);
+                return bookedTimes;
+            } catch (error) {
+                console.error('Error fetching booked appointments:', error);
+                // Return empty array on error so we don't block availability
+                return [];
+            }
+        }
+        
+        function renderCalendar() {
+            const calendarGrid = document.getElementById('calendarGrid');
+            const monthDisplay = document.getElementById('monthDisplay');
+            calendarGrid.innerHTML = '';
+            
+            const now = getCurrentDateInTimezone();
+            now.setHours(0, 0, 0, 0);
+            
+            const startDate = new Date(currentWeekStart);
+            const startDayOfWeek = startDate.getDay();
+            startDate.setDate(startDate.getDate() - startDayOfWeek);
+            
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 20);
+            
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            if (startDate.getMonth() === endDate.getMonth()) {
+                monthDisplay.textContent = `${months[startDate.getMonth()]} ${startDate.getFullYear()}`;
+            } else {
+                monthDisplay.textContent = `${months[startDate.getMonth()]} - ${months[endDate.getMonth()]} ${endDate.getFullYear()}`;
+            }
+            
+            let lastMonth = -1;
+            let firstAvailableDate = null;
+            let firstAvailableFormatted = null;
+            
+            for (let i = 0; i < 21; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+                
+                // Check if day has availability from Lead Perfection API
+                const isAvailable = hasLPAvailabilityForDate(date);
+                
+                const dayCell = document.createElement('div');
+                dayCell.className = 'calendar-day';
+                dayCell.dataset.date = date.toISOString();
+                
+                if (isToday(date)) {
+                    dayCell.classList.add('today');
+                }
+                
+                if (!isAvailable) {
+                    dayCell.classList.add('disabled');
+                }
+                
+                if (isAvailable && !firstAvailableDate) {
+                    firstAvailableDate = new Date(date);
+                    firstAvailableFormatted = formatDate(date);
+                }
+                
+                if (selectedDate && 
+                    date.getDate() === selectedDate.getDate() &&
+                    date.getMonth() === selectedDate.getMonth() &&
+                    date.getFullYear() === selectedDate.getFullYear()) {
+                    dayCell.classList.add('selected');
+                }
+                
+                if (date.getMonth() !== lastMonth && date.getDate() === 1) {
+                    const monthLabel = document.createElement('div');
+                    monthLabel.className = 'month-label';
+                    monthLabel.textContent = monthsShort[date.getMonth()];
+                    dayCell.appendChild(monthLabel);
+                    lastMonth = date.getMonth();
+                }
+                
+                const dayNumber = document.createElement('div');
+                dayNumber.textContent = date.getDate();
+                dayCell.appendChild(dayNumber);
+                
+                if (isAvailable) {
+                    const formatted = formatDate(date);
+                    dayCell.onclick = () => selectCalendarDay(date, formatted.fullDate);
+                }
+                
+                calendarGrid.appendChild(dayCell);
+            }
+            
+            updateNavigationButtons();
+            
+            return { date: firstAvailableDate, formatted: firstAvailableFormatted };
+        }
+        
+        function changeCalendarMonth(direction) {
+            if (direction < 0) {
+                currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
+                const firstAvailable = renderCalendar();
+                
+                if (selectedDate) {
+                    const now = getCurrentDateInTimezone();
+                    now.setHours(0, 0, 0, 0);
+                    const startDate = new Date(currentWeekStart);
+                    const startDayOfWeek = startDate.getDay();
+                    startDate.setDate(startDate.getDate() - startDayOfWeek);
+                    const endDate = new Date(startDate);
+                    endDate.setDate(startDate.getDate() + 20);
+                    
+                    if (selectedDate < startDate || selectedDate > endDate) {
+                        if (firstAvailable.date && firstAvailable.formatted) {
+                            selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+                        }
+                    } else {
+                        const formatted = formatDate(selectedDate);
+                        selectCalendarDay(selectedDate, formatted.fullDate);
+                    }
+                } else if (firstAvailable.date && firstAvailable.formatted) {
+                    selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+                }
+            }
+        }
+        
+        function updateNavigationButtons() {
+            const now = getCurrentDateInTimezone();
+            now.setHours(0, 0, 0, 0);
+            
+            // Get Sunday of current week
+            const thisWeekStart = new Date(now);
+            thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay());
+            
+            const prevButton = document.getElementById('prevMonth');
+            const nextButton = document.getElementById('nextMonth');
+            
+            if (prevButton) {
+                // Disable prev if we're at current week
+                prevButton.disabled = currentWeekStart <= thisWeekStart;
+            }
+            
+            if (nextButton) {
+                // Disable next if we're past the last available date from LP data
+                if (lpAvailabilityData && lpAvailabilityData.length > 0) {
+                    const lastAvailable = new Date(lpAvailabilityData[lpAvailabilityData.length - 1].SDate);
+                    const currentEnd = new Date(currentWeekStart);
+                    currentEnd.setDate(currentEnd.getDate() + 20);
+                    nextButton.disabled = currentEnd >= lastAvailable;
+                } else {
+                    nextButton.disabled = true;
+                }
+            }
+        }
+        
+        function selectCalendarDay(date, fullDate) {
+            selectedDate = date;
+            selectedTime = null;
+            
+            document.querySelectorAll('.calendar-day').forEach(day => {
+                day.classList.remove('selected');
+            });
+            
+            document.querySelectorAll('.calendar-day').forEach(day => {
+                const dayDate = new Date(day.dataset.date);
+                if (dayDate.getDate() === date.getDate() &&
+                    dayDate.getMonth() === date.getMonth() &&
+                    dayDate.getFullYear() === date.getFullYear()) {
+                    day.classList.add('selected');
+                }
+            });
+            
+            document.getElementById('selectedDayInfo').innerHTML = `
+                <h3>Selected Date</h3>
+                <p>${fullDate}</p>
+            `;
+            
+            renderTimes();
+            document.getElementById('timeSection').style.display = 'block';
+        }
+        
+        async function renderTimes() {
+            const timeGrid = document.getElementById('timeGrid');
+            timeGrid.innerHTML = '<div style="text-align: center; padding: 20px;">Loading available times...</div>';
+            
+            const slots = await getAvailableTimesForDate(selectedDate);
+            
+            timeGrid.innerHTML = '';
+            
+            if (slots.length === 0) {
+                timeGrid.innerHTML = `
+                    <div class="no-slots">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                        <p>No available times for this day</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            slots.forEach(slot => {
+                const timeSlot = document.createElement('div');
+                timeSlot.className = 'time-slot';
+                timeSlot.textContent = slot.display;
+                timeSlot.onclick = () => selectCalendarTime(slot);
+                timeGrid.appendChild(timeSlot);
+            });
+        }
+        
+        async function selectCalendarTime(slot) {
+            selectedTime = slot;
+            
+            // Format appointment as MM/DD/YYYY at HH:mm AM/PM
+            // Use apptFormat if available (has leading zero), otherwise use display
+            const timeForAppt = slot.apptFormat || slot.display;
+            const appointmentText = formatAppointmentDate(selectedDate, timeForAppt);
+            
+            // Update the lead record in Airtable with the appointment
+            if (leadRecordId) {
+                try {
+                    const updateResponse = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}/${leadRecordId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            fields: {
+                                'Appt': appointmentText
+                            }
+                        })
+                    });
+                    
+                    if (!updateResponse.ok) {
+                        const errorText = await updateResponse.text();
+                        const error = new Error(`Failed to update appointment: ${errorText}`);
+                        throw error;
+                    }
+                    console.log('Appointment saved to Airtable:', appointmentText);
+                    
+                    // Send appointment notifications to contacts
+                    const clientToNotify = matchedClientData || campaignClientData;
+                    console.log('Appointment booking - clientToNotify:', clientToNotify);
+                    if (clientToNotify && clientToNotify.id) {
+                        console.log('Sending appointment notifications for client:', clientToNotify.id);
+                        // Get lead data for notification
+                        const leadFullName = formData.fullName || `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || 'Unknown';
+                        
+                        // Use stored summary HTML if available, otherwise build it
+                        let fullSummaryHTML = formData.fullSummaryHTML;
+                        if (!fullSummaryHTML) {
+                            const emailLineHTML = formData.email ? `Email: ${formData.email}<BR>` : '';
+                            fullSummaryHTML = `Windows Replacement Lead Information:<BR><BR>Name: ${leadFullName}<BR>Phone: ${formatPhoneForDisplay(formData.phone || '')}<BR>${emailLineHTML}Homeowner: ${formData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Timeline: ${getTimelineDisplay(formData.timeline)}<BR>Priority: ${getPriorityDisplay(formData.priority)}<BR><BR>Address:<BR>${formData.address?.street || ''}<BR>${formData.address?.city || ''}, ${formData.address?.state || ''} ${formData.address?.zip || ''}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true,
+                                timeZone: 'America/New_York'
+                            })} EST`;
+                        }
+                        
+                        // Send webhook if client is linked
+                        if (matchedClientData && matchedClientData.id && leadRecordId) {
+                            await sendLeadWebhook(
+                                leadRecordId,
+                                metaCampaignID,
+                                matchedClientData.id,
+                                appointmentText
+                            );
+                        }
+                        
+                        console.log('Appointment notifications sent');
+                    } else {
+                        console.log('No client found for appointment notifications');
+                    }
+                } catch (error) {
+                    console.error('Error updating appointment in Airtable:', error);
+                }
+            } else {
+                console.warn('No lead record ID available to update with appointment');
+            }
+            
+            // Show confirmation screen with appointment-specific message
+            const confirmationMessage = document.getElementById('confirmationMessage');
+            if (confirmationMessage) {
+                confirmationMessage.textContent = "We'll give you a call soon to confirm your appointment time!";
+            }
+            document.getElementById('calendarStep').classList.remove('active');
+            document.getElementById('confirmationStep').classList.add('active');
+        }
+        
+        async function showCalendarScreen() {
+            console.log('showCalendarScreen called');
+            const step7 = document.getElementById('step7');
+            const calendarStep = document.getElementById('calendarStep');
+            const progressBar = document.getElementById('progressBarContainer');
+            const mainHeading = document.getElementById('mainHeading');
+            
+            // Get client timezone from client data
+            const activeClient = matchedClientData || campaignClientData;
+            if (activeClient && activeClient.fields) {
+                // Set timezone from client data
+                if (activeClient.fields['Timezone']) {
+                    clientTimezone = activeClient.fields['Timezone'];
+                    console.log('Using client timezone:', clientTimezone);
+                }
+                
+                // Set days out from client data
+                if (activeClient.fields['Days Out'] !== undefined && activeClient.fields['Days Out'] !== null) {
+                    const daysOutValue = Number(activeClient.fields['Days Out']);
+                    if (!isNaN(daysOutValue) && daysOutValue > 0) {
+                        clientDaysOut = daysOutValue;
+                        console.log('Using client days out:', clientDaysOut);
+                    } else {
+                        clientDaysOut = 14;
+                    }
+                } else {
+                    clientDaysOut = 14;
+                }
+            }
+            
+            if (step7) step7.classList.remove('active');
+            if (calendarStep) {
+                calendarStep.classList.add('active');
+                console.log('Calendar step activated');
+            } else {
+                console.error('Calendar step element not found!');
+            }
+            if (progressBar) progressBar.style.display = 'none';
+            if (mainHeading) mainHeading.style.display = 'none';
+            
+            // Fetch Lead Perfection availability using the lead's zip code
+            const zipCode = formData.address?.zip || '';
+            if (zipCode) {
+                lpAvailabilityData = await fetchLeadPerfectionAvailability(zipCode);
+            }
+            
+            initializeCalendar();
+        }
+        
+        // ============================================
+        // END CALENDAR FUNCTIONS
+        // ============================================
+
+        function formatClientPhoneForDisplay(phoneNumber) {
+            // Remove all non-digit characters
+            const digits = phoneNumber.replace(/\D/g, '');
+            
+            // Format as (XXX) XXX-XXXX
+            if (digits.length === 11 && digits.startsWith('1')) {
+                // Remove leading 1 for display
+                const without1 = digits.substring(1);
+                return `(${without1.slice(0,3)}) ${without1.slice(3,6)}-${without1.slice(6)}`;
+            } else if (digits.length === 10) {
+                return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+            }
+            
+            // Return original if format doesn't match
+            return phoneNumber;
+        }
+
+        function showContactScreen(submitScreenType) {
+            // Get lead's name
+            const firstName = document.getElementById('firstName')?.value.trim() || '';
+            
+            // Determine which client data to use (matched client or campaign client)
+            const activeClient = matchedClientData || campaignClientData;
+            if (!activeClient) {
+                showConfirmationScreen();
+                return;
+            }
+            
+            const phoneField = activeClient.fields['Phone'];
+            const textField = activeClient.fields['Text'];
+            
+            // Format phone numbers
+            const phoneForDisplay = phoneField ? formatClientPhoneForDisplay(phoneField) : '';
+            const textForDisplay = textField ? formatClientPhoneForDisplay(textField) : '';
+            
+            // Build the SMS body with lead's name
+            const smsBody = encodeURIComponent(
+                `Hey, this is ${firstName}! I just saw your video on social media and would like to schedule an appointment to get my free, no obligation quote. Please send me some days/times that you're available!`
+            );
+            
+            // Update the contact buttons and phone display
+            const callButton = document.getElementById('callButtonLink');
+            const textButton = document.getElementById('textButtonLink');
+            const phoneDisplay = document.getElementById('phoneNumberDisplay');
+            
+            // Show/hide buttons based on submit screen type
+            if (submitScreenType === 'Phone' || submitScreenType === 'Phone/Text') {
+                if (callButton && phoneField) {
+                    callButton.href = `tel:${phoneField}`;
+                    callButton.style.display = 'inline-flex';
+                }
+            }
+            
+            if (submitScreenType === 'Text' || submitScreenType === 'Phone/Text') {
+                if (textButton && textField) {
+                    textButton.href = `sms:${textField}?&body=${smsBody}`;
+                    textButton.style.display = 'inline-flex';
+                }
+            }
+            
+            // Display phone number
+            if (phoneDisplay) {
+                if (submitScreenType === 'Phone' && phoneForDisplay) {
+                    phoneDisplay.textContent = phoneForDisplay;
+                } else if (submitScreenType === 'Text' && textForDisplay) {
+                    phoneDisplay.textContent = textForDisplay;
+                } else if (submitScreenType === 'Phone/Text' && phoneForDisplay) {
+                    phoneDisplay.textContent = phoneForDisplay;
+                } else {
+                    phoneDisplay.textContent = '';
+                }
+            }
+            
+            // Show the contact screen
+            document.getElementById('step7').classList.remove('active');
+            document.getElementById('contactStep').classList.add('active');
+            document.getElementById('progressBarContainer').style.display = 'none';
+            document.getElementById('mainHeading').style.display = 'none';
+        }
+
+        function showConfirmationScreen() {
+            // Show the confirmation/thank you screen
+            // Reset to default message for non-appointment bookings
+            const confirmationMessage = document.getElementById('confirmationMessage');
+            if (confirmationMessage) {
+                confirmationMessage.textContent = "We'll give you a call soon to schedule your free estimate.";
+            }
+            document.getElementById('step7').classList.remove('active');
+            document.getElementById('confirmationStep').classList.add('active');
+            document.getElementById('progressBarContainer').style.display = 'none';
+            document.getElementById('mainHeading').style.display = 'none';
+        }
+
+        function formatPhoneForDisplay(digits) {
+            if (digits && digits.length === 10) {
+                return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+            }
+            return digits;
+        }
+
+        function getWindowCountDisplay(value) {
+            const options = {
+                'less_than_3': 'Less than 3',
+                '3_to_6': '3-6',
+                '6_to_10': '6-10',
+                'more_than_10': 'More than 10'
+            };
+            return options[value] || value;
+        }
+
+        function getTimelineDisplay(value) {
+            const options = {
+                'asap': 'ASAP',
+                'within_month': 'Within a month',
+                'within_3_months': 'Within 3 months',
+                'within_6_months': 'Within 6 months'
+            };
+            return options[value] || value;
+        }
+
+        function getPriorityDisplay(value) {
+            const options = {
+                'lower_energy_bills': 'Lower energy bills',
+                'improve_appearance': 'Improve appearance',
+                'fix_broken_windows': 'Fix broken windows',
+                'reduce_noise': 'Reduce outside noise'
+            };
+            return options[value] || value;
+        }
+
+        async function submitFinalForm() {
+            // Prevent duplicate submissions
+            if (isSubmitting) {
+                console.log('Submission already in progress, ignoring duplicate click');
+                return;
+            }
+            
+            // Set submission flag and disable button immediately
+            isSubmitting = true;
+            const phoneSubmitBtn = document.getElementById('phoneSubmitBtn');
+            if (phoneSubmitBtn) {
+                phoneSubmitBtn.disabled = true;
+                phoneSubmitBtn.textContent = 'Submitting...';
+            }
+            
+            try {
+                eventId = generateEventId();
+                
+                const emailInput = document.getElementById('email');
+                const emailValue = emailInput ? emailInput.value.trim() : '';
+                
+                const finalData = {
+                    ...formData,
+                    phone: document.getElementById('phone_digits').value,
+                    email: emailValue
+                };
+            
+            // Track Facebook event if we have client data and pixel
+            if (typeof fbq !== 'undefined' && clientData && clientData.fields['Meta Pixel']) {
+                const leadEventData = {
+                    content_category: 'home_improvement',
+                    content_name: 'windows_replacement_quote',
+                    value: 1.00,
+                    currency: 'USD',
+                    homeowner_status: finalData.homeowner,
+                    timeline: finalData.timeline,
+                    priority: finalData.priority
+                };
+                
+                fbq('track', 'Lead', leadEventData, {
+                    eventID: eventId
+                });
+            }
+            
+            // Find client by zip code
+            try {
+                // Safety check: ensure address data exists
+                if (!finalData.address || !finalData.address.zip) {
+                    throw new Error('Address data is missing or incomplete. Address object: ' + JSON.stringify(finalData.address));
+                }
+                
+                matchedClientData = await findClientByZipCode(finalData.address.zip);
+                // Update partner name in privacy policy if client was matched
+                updatePartnerNameInPrivacyPolicy();
+                
+            } catch (error) {
+                console.error('Error finding client by zip code:', error);
+            }
+            
+            // Find ad by adATID from URL
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const adATID = urlParams.get('adATID');
+                if (adATID) {
+                    adRecordId = await findAdByATID(adATID);
+                }
+            } catch (error) {
+                // Non-critical, just log
+                console.log('Ad lookup failed:', error.message);
+            }
+            
+            // Build full summary
+            const emailLine = finalData.email ? `Email: ${finalData.email}\n` : '';
+            const fullSummary = `Windows Replacement Lead Information:
+
+Name: ${finalData.firstName} ${finalData.lastName}
+Phone: ${formatPhoneForDisplay(finalData.phone)}
+${emailLine}Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}
+Timeline: ${getTimelineDisplay(finalData.timeline)}
+Priority: ${getPriorityDisplay(finalData.priority)}
+
+Address:
+${finalData.address.street}
+${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}
+
+Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'America/New_York'
+})} EST`.trim();
+
+            // Format full address
+            const formattedAddress = `${finalData.address.street}, ${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}`;
+            
+            // Build HTML version of full summary
+            const emailLineHTML = finalData.email ? `Email: ${finalData.email}<BR>` : '';
+            const fullSummaryHTML = `Windows Replacement Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR>${emailLineHTML}Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Timeline: ${getTimelineDisplay(finalData.timeline)}<BR>Priority: ${getPriorityDisplay(finalData.priority)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+                timeZone: 'America/New_York'
+            })} EST`;
+            
+            // Store form data for later use (e.g., appointment notifications)
+            formData.phone = finalData.phone;
+            formData.email = finalData.email || '';
+            formData.fullName = `${finalData.firstName} ${finalData.lastName}`;
+            formData.fullSummaryHTML = fullSummaryHTML;
+            
+            // Prepare lead data for Airtable
+            // Safety check: ensure address data exists
+            if (!finalData.address) {
+                throw new Error('Address data is missing. Cannot submit lead without address information.');
+            }
+            
+            const leadData = {
+                phone: finalData.phone,
+                email: finalData.email || '',
+                fullSummary: fullSummary,
+                fullSummaryHTML: fullSummaryHTML,
+                fullName: `${finalData.firstName} ${finalData.lastName}`,
+                firstName: finalData.firstName,
+                lastName: finalData.lastName,
+                address: formattedAddress,
+                city: finalData.address.city || '',
+                state: finalData.address.state || '',
+                zip: finalData.address.zip || ''
+            };
+            
+            // Submit to Airtable
+            let submissionSuccessful = false;
+            try {
+                await submitLeadToAirtable(leadData);
+                submissionSuccessful = true;
+                
+                // Send webhook if client is linked
+                if (matchedClientData && matchedClientData.id && leadRecordId) {
+                    await sendLeadWebhook(
+                        leadRecordId,
+                        metaCampaignID,
+                        matchedClientData.id
+                    );
+                }
+                
+                // Log that submission completed successfully
+                console.log('=== SUBMISSION SUCCESSFUL ===');
+                console.log('submissionSuccessful:', submissionSuccessful);
+                console.log('leadRecordId:', leadRecordId);
+                console.log('matchedClientData:', matchedClientData);
+                console.log('campaignClientData:', campaignClientData);
+            } catch (error) {
+                // Error webhook already sent in submitLeadToAirtable
+                // Show generic confirmation screen instead of calendar/phone options
+                console.error('Lead submission failed, showing generic confirmation:', error);
+                showConfirmationScreen();
+                // Reset submission flag and button on error
+                isSubmitting = false;
+                if (phoneSubmitBtn) {
+                    phoneSubmitBtn.disabled = false;
+                    phoneSubmitBtn.textContent = 'Book My Quote';
+                }
+                return; // Exit early - don't show calendar/phone options
+            }
+            
+            // Only proceed to show submit screen if submission was successful
+            console.log('=== CHECKING SUBMISSION STATUS ===');
+            console.log('submissionSuccessful:', submissionSuccessful);
+            console.log('About to check if we should proceed to submit screen');
+            
+            if (!submissionSuccessful) {
+                console.log('Submission not successful, showing confirmation screen');
+                showConfirmationScreen();
+                return;
+            }
+            
+            console.log('Submission successful, proceeding to determine submit screen');
+            console.log('matchedClientData:', matchedClientData);
+            console.log('campaignClientData:', campaignClientData);
+            
+            // Determine which submit screen to show
+            // Use matched client first, but fall back to campaign client if matched client doesn't have Submit Screen
+            let activeClient = matchedClientData || campaignClientData;
+            let submitScreenType = 'None'; // Default
+            
+            // Try to get Submit Screen from matched client first
+            if (matchedClientData && matchedClientData.fields && matchedClientData.fields['Submit Screen']) {
+                activeClient = matchedClientData;
+                submitScreenType = String(matchedClientData.fields['Submit Screen']).trim();
+            } 
+            // Fall back to campaign client if matched client doesn't have Submit Screen
+            else if (campaignClientData && campaignClientData.fields && campaignClientData.fields['Submit Screen']) {
+                activeClient = campaignClientData;
+                submitScreenType = String(campaignClientData.fields['Submit Screen']).trim();
+            }
+            
+            // Show appropriate screen based on submit screen type (case-insensitive comparison)
+            const normalizedType = submitScreenType.toLowerCase();
+            
+            if (normalizedType === 'redirect') {
+                // Redirect to URL from Redirect URL field
+                const redirectUrl = activeClient && activeClient.fields['Redirect URL'] ? activeClient.fields['Redirect URL'] : null;
+                if (redirectUrl) {
+                    const clientId = activeClient ? activeClient.id : null;
+                    
+                    // Use leadData if available, otherwise fall back to formData
+                    const dataForParams = leadData || formData;
+                    const fullName = dataForParams.fullName || (dataForParams.firstName && dataForParams.lastName ? `${dataForParams.firstName} ${dataForParams.lastName}`.trim() : '');
+                    const phone = dataForParams.phone || '';
+                    
+                    let finalRedirectUrl = redirectUrl;
+                    
+                    // Special handling for Elevated Kitchen & Bath
+                    if (clientId === 'receATe2XBIG7KSXS') {
+                        try {
+                            const url = new URL(redirectUrl);
+                            if (fullName) {
+                                url.searchParams.append('full_name', fullName);
+                            }
+                            if (phone) {
+                                url.searchParams.append('phone', phone);
+                            }
+                            finalRedirectUrl = url.toString();
+                        } catch (error) {
+                            console.error('Error building redirect URL:', error);
+                            // If URL parsing fails, try simple string concatenation
+                            const separator = redirectUrl.includes('?') ? '&' : '?';
+                            const params = [];
+                            if (fullName) params.push(`full_name=${encodeURIComponent(fullName)}`);
+                            if (phone) params.push(`phone=${encodeURIComponent(phone)}`);
+                            if (params.length > 0) {
+                                finalRedirectUrl = redirectUrl + separator + params.join('&');
+                            }
+                        }
+                    } else {
+                        // For other clients, use the dynamic URL parameters system
+                        const logData = {
+                            campaignID: metaCampaignID || initialCampaignID,
+                            clientAirtableID: clientId,
+                            leadAirtableID: leadRecordId
+                        };
+                        
+                        const urlParameters = await fetchUrlParametersForClient(clientId, logData);
+                        finalRedirectUrl = await buildRedirectUrlWithParameters(redirectUrl, urlParameters, dataForParams, logData);
+                    }
+                    
+                    window.location.href = finalRedirectUrl;
+                } else {
+                    // If no redirect URL, show confirmation screen
+                    console.warn('Redirect option selected but no Redirect URL found');
+                    showConfirmationScreen();
+                }
+            } else if (normalizedType === 'calendar') {
+                console.log('Showing calendar screen');
+                showCalendarScreen();
+            } else if (normalizedType === 'phone') {
+                showContactScreen('Phone');
+            } else if (normalizedType === 'text') {
+                showContactScreen('Text');
+            } else if (normalizedType === 'phone/text') {
+                showContactScreen('Phone/Text');
+            } else {
+                // None or default
+                showConfirmationScreen();
+            }
+            } catch (error) {
+                // Catch any unexpected errors that weren't caught by the Airtable submission catch
+                console.error('Unexpected error in submitFinalForm:', error);
+                showConfirmationScreen();
+                // Reset submission flag and button on error
+                isSubmitting = false;
+                if (phoneSubmitBtn) {
+                    phoneSubmitBtn.disabled = false;
+                    phoneSubmitBtn.textContent = 'Book My Quote';
+                }
+            }
+        }
+
+        updateProgress();
+
+        window.__attachPlaces = function(){
+            if(!window.google || !google.maps || !google.maps.places) return;
+            
+            const addressInput = document.getElementById('street');
+            if (!addressInput) return;
+            
+            const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+                types: ['address'],
+                componentRestrictions: { country: ['us'] },
+                fields: ['address_components','formatted_address','geometry']
+            });
+            
+            autocomplete.addListener('place_changed', ()=>{
+                const place = autocomplete.getPlace();
+                if(!place || !place.address_components) return;
+
+                const comps = Object.fromEntries(place.address_components.flatMap(c => c.types.map(t => [t, c])));
+                
+                let streetAddress = '';
+                if(comps.street_number) streetAddress += comps.street_number.long_name + ' ';
+                if(comps.route) streetAddress += comps.route.long_name;
+                if(streetAddress.trim()) addressInput.value = streetAddress.trim();
+                
+                const cityField = document.getElementById('cityField');
+                const stateZipRow = document.getElementById('stateZipRow');
+                if (streetAddress.trim()) {
+                    cityField.classList.remove('hidden-initially');
+                    stateZipRow.classList.remove('hidden-initially');
+                }
+                
+                const cityInput = document.getElementById('city');
+                const stateInput = document.getElementById('state');
+                const zipInput = document.getElementById('zip');
+                
+                if(comps.locality && cityInput) cityInput.value = comps.locality.long_name;
+                else if(comps.sublocality && cityInput) cityInput.value = comps.sublocality.long_name;
+                if(comps.administrative_area_level_1 && stateInput) stateInput.value = comps.administrative_area_level_1.short_name;
+                if(comps.postal_code && zipInput) zipInput.value = comps.postal_code.long_name;
+
+                validateAddressForm();
+            });
+        };
+    </script>
+
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&libraries=places&callback=__attachPlaces">
+    </script>
+</body>
+</html>
+
