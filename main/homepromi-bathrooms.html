@@ -2723,72 +2723,66 @@
             const timeForAppt = slot.apptFormat || slot.display;
             const appointmentText = formatAppointmentDate(selectedDate, timeForAppt);
             
-            // ============ TESTING MODE - DISABLED FOR CALENDAR TESTING ============
-            console.log('[TEST MODE] Selected appointment:', appointmentText);
-            console.log('[TEST MODE] Selected slot:', slot);
-            
             // Update the lead record in Airtable with the appointment
-            // if (leadRecordId) {
-            //     try {
-            //         const updateResponse = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}/${leadRecordId}`, {
-            //             method: 'PATCH',
-            //             headers: {
-            //                 'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-            //                 'Content-Type': 'application/json'
-            //             },
-            //             body: JSON.stringify({
-            //                 fields: {
-            //                     'Appt': appointmentText
-            //                 }
-            //             })
-            //         });
-            //         
-            //         if (!updateResponse.ok) {
-            //             const errorText = await updateResponse.text();
-            //             const error = new Error(`Failed to update appointment: ${errorText}`);
-            //             throw error;
-            //         }
-            //         // Send appointment notifications to contacts
-            //         const clientToNotify = matchedClientData || campaignClientData;
-            //         if (clientToNotify && clientToNotify.id) {
-            //             // Get lead data for notification
-            //             const leadFullName = formData.fullName || `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || 'Unknown';
-            //             
-            //             // Use stored summary HTML if available, otherwise build it
-            //             let fullSummaryHTML = formData.fullSummaryHTML;
-            //             if (!fullSummaryHTML) {
-            //                 const emailLineHTML = formData.email ? `Email: ${formData.email}<BR>` : '';
-            //                 fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${leadFullName}<BR>Phone: ${formatPhoneForDisplay(formData.phone || '')}<BR>${emailLineHTML}Homeowner: ${formData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Last Updated: ${getLastUpdatedDisplay(formData.lastUpdated)}<BR>Project Type: ${getProjectTypeDisplay(formData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(formData.mainGoal)}<BR><BR>Address:<BR>${formData.address?.street || ''}<BR>${formData.address?.city || ''}, ${formData.address?.state || ''} ${formData.address?.zip || ''}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
-            //                     weekday: 'long', 
-            //                     year: 'numeric', 
-            //                     month: 'long', 
-            //                     day: 'numeric',
-            //                     hour: 'numeric',
-            //                     minute: '2-digit',
-            //                     hour12: true,
-            //                     timeZone: 'America/New_York'
-            //                 })} EST`;
-            //             }
-            //             
-            //             // Send webhook if client is linked
-            //             if (matchedClientData && matchedClientData.id && leadRecordId) {
-            //                 await sendLeadWebhook(
-            //                     leadRecordId,
-            //                     metaCampaignID,
-            //                     matchedClientData.id,
-            //                     appointmentText
-            //                 );
-            //             }
-            //             
-            //         }
-            //     } catch (error) {
-            //         console.error('Error updating appointment in Airtable:', error);
-            //     }
-            // } else {
-            //     console.warn('No lead record ID available to update with appointment');
-            // }
-            console.log('[TEST MODE] Would update Airtable and send webhook for appointment');
-            // ============ END TESTING MODE ============
+            if (leadRecordId) {
+                try {
+                    const updateResponse = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}/${leadRecordId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            fields: {
+                                'Appt': appointmentText
+                            }
+                        })
+                    });
+                    
+                    if (!updateResponse.ok) {
+                        const errorText = await updateResponse.text();
+                        const error = new Error(`Failed to update appointment: ${errorText}`);
+                        throw error;
+                    }
+                    // Send appointment notifications to contacts
+                    const clientToNotify = matchedClientData || campaignClientData;
+                    if (clientToNotify && clientToNotify.id) {
+                        // Get lead data for notification
+                        const leadFullName = formData.fullName || `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || 'Unknown';
+                        
+                        // Use stored summary HTML if available, otherwise build it
+                        let fullSummaryHTML = formData.fullSummaryHTML;
+                        if (!fullSummaryHTML) {
+                            const emailLineHTML = formData.email ? `Email: ${formData.email}<BR>` : '';
+                            fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${leadFullName}<BR>Phone: ${formatPhoneForDisplay(formData.phone || '')}<BR>${emailLineHTML}Homeowner: ${formData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Last Updated: ${getLastUpdatedDisplay(formData.lastUpdated)}<BR>Project Type: ${getProjectTypeDisplay(formData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(formData.mainGoal)}<BR><BR>Address:<BR>${formData.address?.street || ''}<BR>${formData.address?.city || ''}, ${formData.address?.state || ''} ${formData.address?.zip || ''}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true,
+                                timeZone: 'America/New_York'
+                            })} EST`;
+                        }
+                        
+                        // Send webhook if client is linked
+                        if (matchedClientData && matchedClientData.id && leadRecordId) {
+                            await sendLeadWebhook(
+                                leadRecordId,
+                                metaCampaignID,
+                                matchedClientData.id,
+                                appointmentText
+                            );
+                        }
+                        
+                    }
+                } catch (error) {
+                    console.error('Error updating appointment in Airtable:', error);
+                }
+            } else {
+                console.warn('No lead record ID available to update with appointment');
+            }
             
             // Show confirmation screen with appointment-specific message
             const confirmationMessage = document.getElementById('confirmationMessage');
@@ -3457,23 +3451,19 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             // Submit to Airtable
             let submissionSuccessful = false;
             try {
-                // ============ TESTING MODE - DISABLED FOR CALENDAR TESTING ============
-                // await submitLeadToAirtable(leadData);
-                console.log('[TEST MODE] Would submit lead to Airtable:', leadData);
-                submissionSuccessful = true; // Simulate success for testing
+                await submitLeadToAirtable(leadData);
+                submissionSuccessful = true;
                 
                 // Send webhook if client is linked
-                // if (matchedClientData && matchedClientData.id && leadRecordId) {
-                //     await sendLeadWebhook(
-                //         leadRecordId,
-                //         metaCampaignID,
-                //         matchedClientData.id,
-                //         null,
-                //         eventId
-                //     );
-                // }
-                console.log('[TEST MODE] Would send lead webhook');
-                // ============ END TESTING MODE ============
+                if (matchedClientData && matchedClientData.id && leadRecordId) {
+                    await sendLeadWebhook(
+                        leadRecordId,
+                        metaCampaignID,
+                        matchedClientData.id,
+                        null,
+                        eventId
+                    );
+                }
                 
                 // Submission completed successfully
             } catch (error) {
@@ -3512,60 +3502,53 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 submitScreenType = String(campaignClientData.fields['Submit Screen']).trim();
             }
             
-            // ============ TESTING MODE - ALWAYS SHOW CALENDAR ============
-            console.log('[TEST MODE] Forcing calendar screen for testing');
-            currentSubmitScreenType = 'calendar';
-            showCalendarScreen();
-            // ============ END TESTING MODE ============
+            // Show appropriate screen based on submit screen type (case-insensitive comparison)
+            const normalizedType = submitScreenType.toLowerCase();
             
-            // ORIGINAL CODE - UNCOMMENT WHEN DONE TESTING:
-            // // Show appropriate screen based on submit screen type (case-insensitive comparison)
-            // const normalizedType = submitScreenType.toLowerCase();
-            // 
-            // if (normalizedType === 'redirect') {
-            //     // Redirect to URL from Redirect URL field
-            //     const redirectUrl = activeClient && activeClient.fields['Redirect URL'] ? activeClient.fields['Redirect URL'] : null;
-            //     if (redirectUrl) {
-            //         const clientId = activeClient ? activeClient.id : null;
-            //         
-            //         // Use leadData if available, otherwise fall back to formData
-            //         const dataForParams = leadData || formData;
-            //         const fullName = dataForParams.fullName || (dataForParams.firstName && dataForParams.lastName ? `${dataForParams.firstName} ${dataForParams.lastName}`.trim() : '');
-            //         const phone = dataForParams.phone || '';
-            //         
-            //         // Use the dynamic URL parameters system
-            //         const logData = {
-            //             campaignID: metaCampaignID || initialCampaignID,
-            //             clientAirtableID: clientId,
-            //             leadAirtableID: leadRecordId
-            //         };
-            //         
-            //         const urlParameters = await fetchUrlParametersForClient(clientId, logData);
-            //         const finalRedirectUrl = await buildRedirectUrlWithParameters(redirectUrl, urlParameters, dataForParams, logData);
-            //         
-            //         window.location.href = finalRedirectUrl;
-            //     } else {
-            //         // If no redirect URL, show confirmation screen
-            //         console.warn('Redirect option selected but no Redirect URL found');
-            //         showConfirmationScreen();
-            //     }
-            // } else if (normalizedType === 'calendar') {
-            //     currentSubmitScreenType = 'calendar';
-            //     showCalendarScreen();
-            // } else if (normalizedType === 'phone') {
-            //     currentSubmitScreenType = 'Phone';
-            //     showContactScreen('Phone');
-            // } else if (normalizedType === 'text') {
-            //     currentSubmitScreenType = 'Text';
-            //     showContactScreen('Text');
-            // } else if (normalizedType === 'phone/text') {
-            //     currentSubmitScreenType = 'Phone/Text';
-            //     showContactScreen('Phone/Text');
-            // } else {
-            //     // None or default
-            //     currentSubmitScreenType = null;
-            //     showConfirmationScreen();
-            // }
+            if (normalizedType === 'redirect') {
+                // Redirect to URL from Redirect URL field
+                const redirectUrl = activeClient && activeClient.fields['Redirect URL'] ? activeClient.fields['Redirect URL'] : null;
+                if (redirectUrl) {
+                    const clientId = activeClient ? activeClient.id : null;
+                    
+                    // Use leadData if available, otherwise fall back to formData
+                    const dataForParams = leadData || formData;
+                    const fullName = dataForParams.fullName || (dataForParams.firstName && dataForParams.lastName ? `${dataForParams.firstName} ${dataForParams.lastName}`.trim() : '');
+                    const phone = dataForParams.phone || '';
+                    
+                    // Use the dynamic URL parameters system
+                    const logData = {
+                        campaignID: metaCampaignID || initialCampaignID,
+                        clientAirtableID: clientId,
+                        leadAirtableID: leadRecordId
+                    };
+                    
+                    const urlParameters = await fetchUrlParametersForClient(clientId, logData);
+                    const finalRedirectUrl = await buildRedirectUrlWithParameters(redirectUrl, urlParameters, dataForParams, logData);
+                    
+                    window.location.href = finalRedirectUrl;
+                } else {
+                    // If no redirect URL, show confirmation screen
+                    console.warn('Redirect option selected but no Redirect URL found');
+                    showConfirmationScreen();
+                }
+            } else if (normalizedType === 'calendar') {
+                currentSubmitScreenType = 'calendar';
+                showCalendarScreen();
+            } else if (normalizedType === 'phone') {
+                currentSubmitScreenType = 'Phone';
+                showContactScreen('Phone');
+            } else if (normalizedType === 'text') {
+                currentSubmitScreenType = 'Text';
+                showContactScreen('Text');
+            } else if (normalizedType === 'phone/text') {
+                currentSubmitScreenType = 'Phone/Text';
+                showContactScreen('Phone/Text');
+            } else {
+                // None or default
+                currentSubmitScreenType = null;
+                showConfirmationScreen();
+            }
             } catch (error) {
                 // Catch any unexpected errors that weren't caught by the Airtable submission catch
                 console.error('Unexpected error in submitFinalForm:', error);
