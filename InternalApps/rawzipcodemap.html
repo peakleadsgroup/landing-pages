@@ -41,17 +41,25 @@
             border-bottom: 1px solid #dadce0;
             flex-shrink: 0;
         }
+        #lists-section.sidebar-section {
+            flex-shrink: 1;
+        }
         #lists-section {
             flex: 1;
-            min-height: 0;
+            min-height: 180px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             padding-bottom: 0;
         }
+        #lists-section h2,
+        #lists-section .overlap-legend {
+            flex-shrink: 0;
+        }
         #lists-section .list-cards {
             flex: 1;
-            min-height: 0;
+            min-height: 100px;
+            overflow-y: auto;
         }
         .sidebar-section h2 {
             font-size: 1rem;
