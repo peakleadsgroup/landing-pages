@@ -128,6 +128,37 @@
         .list-card-name { font-weight: 500; color: #202124; font-size: 0.875rem; }
         .list-card-count { font-size: 0.75rem; color: #5f6368; }
         .list-card-remove { padding: 0.375rem 0.5rem; font-size: 0.75rem; }
+        .list-card-toggle {
+            padding: 0.25rem;
+            background: none;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+        }
+        .list-card-toggle:hover { background: #f8f9fa; border-color: #1a73e8; }
+        .list-card-toggle.hidden { opacity: 0.5; }
+        .list-card-toggle svg { width: 18px; height: 18px; }
+        .list-card.list-card-hidden { opacity: 0.6; background: #e8eaed; }
+        .list-card.list-card-hidden .list-card-name { text-decoration: line-through; }
+        .overlap-legend {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: #5f6368;
+        }
+        .overlap-legend span { display: flex; align-items: center; gap: 0.25rem; }
+        .overlap-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.2);
+        }
         #selected-section {
             border-top: 2px solid #dadce0;
             background: #e8f0fe;
@@ -225,6 +256,10 @@
             </div>
             <div class="sidebar-section">
                 <h2>Your lists</h2>
+                <div class="overlap-legend">
+                    <span><span class="overlap-dot" id="overlap-dot" style="background:#673AB7"></span> = in 2+ lists</span>
+                    <input type="color" id="overlap-color" value="#673AB7" title="Overlap color" style="width:24px;height:20px;padding:0;border:1px solid #dadce0;border-radius:4px;cursor:pointer;">
+                </div>
                 <div class="list-cards" id="list-cards">
                     <div class="empty-lists" id="empty-lists" style="color:#5f6368;font-size:0.875rem;">No lists yet. Add one above.</div>
                 </div>
@@ -259,6 +294,12 @@
         let selectedZipCodes = [];
 
         const defaultColors = ['#2196F3', '#4CAF50', '#FF9800', '#9C27B0', '#00BCD4', '#E91E63', '#795548', '#607D8B'];
+        const DEFAULT_OVERLAP_COLOR = '#673AB7';
+
+        function getOverlapColor() {
+            const el = document.getElementById('overlap-color');
+            return el ? el.value : DEFAULT_OVERLAP_COLOR;
+        }
 
         function parseZipInput(raw) {
             if (!raw || typeof raw !== 'string') return [];
@@ -375,6 +416,14 @@
             const v = this.value;
             if (/^#[0-9A-Fa-f]{6}$/.test(v)) document.getElementById('list-color').value = v;
         });
+        const overlapColorEl = document.getElementById('overlap-color');
+        if (overlapColorEl) {
+            overlapColorEl.addEventListener('input', function() {
+                const dot = document.getElementById('overlap-dot');
+                if (dot) dot.style.background = this.value;
+                redrawMap();
+            });
+        }
 
         function addList() {
             const name = (document.getElementById('list-name').value || 'List ' + (lists.length + 1)).trim();
@@ -386,13 +435,13 @@
                 return;
             }
             const listId = 'list-' + Date.now();
-            lists.push({ id: listId, name, color, zips });
+            lists.push({ id: listId, name, color, zips, visible: true });
             document.getElementById('list-name').value = '';
             document.getElementById('list-zips').value = '';
             document.getElementById('list-color').value = defaultColors[lists.length % defaultColors.length];
             document.getElementById('list-color-hex').value = document.getElementById('list-color').value;
             renderListCards();
-            plotList(listId);
+            redrawMap();
         }
 
         document.getElementById('add-list-btn').addEventListener('click', addList);
@@ -409,8 +458,11 @@
             container.querySelectorAll('.list-card').forEach(c => c.remove());
             lists.forEach(list => {
                 const card = document.createElement('div');
-                card.className = 'list-card';
+                card.className = 'list-card' + (list.visible ? '' : ' list-card-hidden');
+                const eyeSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+                const eyeOffSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
                 card.innerHTML = `
+                    <button type="button" class="list-card-toggle" title="${list.visible ? 'Hide list' : 'Show list'}" data-id="${list.id}" aria-label="Toggle visibility">${list.visible ? eyeSvg : eyeOffSvg}</button>
                     <span class="list-card-color" style="background:${list.color}"></span>
                     <div class="list-card-info">
                         <div class="list-card-name">${escapeHtml(list.name)}</div>
@@ -418,9 +470,22 @@
                     </div>
                     <button type="button" class="list-card-remove danger" data-id="${list.id}">Remove</button>
                 `;
-                card.querySelector('button').addEventListener('click', () => removeList(list.id));
+                const toggleBtn = card.querySelector('.list-card-toggle');
+                toggleBtn.addEventListener('click', () => { toggleListVisibility(list.id); });
+                if (!list.visible) toggleBtn.classList.add('hidden');
+                card.querySelector('.list-card-remove').addEventListener('click', () => removeList(list.id));
                 container.appendChild(card);
             });
+            const overlapDot = document.getElementById('overlap-dot');
+            if (overlapDot) overlapDot.style.background = getOverlapColor();
+        }
+
+        function toggleListVisibility(listId) {
+            const list = lists.find(l => l.id === listId);
+            if (!list) return;
+            list.visible = !list.visible;
+            renderListCards();
+            redrawMap();
         }
 
         function escapeHtml(s) {
@@ -431,33 +496,52 @@
 
         function removeList(listId) {
             lists = lists.filter(l => l.id !== listId);
-            allMarkers.forEach(m => {
-                if (m.listId === listId && m._map) map.removeLayer(m);
-            });
-            allMarkers = allMarkers.filter(m => m.listId !== listId);
             renderListCards();
+            redrawMap();
         }
 
-        function plotList(listId) {
-            const list = lists.find(l => l.id === listId);
-            if (!list) return;
-            list.zips.forEach(zip => {
+        function redrawMap() {
+            if (!map) return;
+            allMarkers.forEach(m => { if (m._map) map.removeLayer(m); });
+            allMarkers = [];
+
+            const visibleLists = lists.filter(l => l.visible);
+            const zipToListIds = {};
+            visibleLists.forEach(list => {
+                list.zips.forEach(zip => {
+                    if (!zipToListIds[zip]) zipToListIds[zip] = [];
+                    zipToListIds[zip].push(list.id);
+                });
+            });
+
+            const overlapColor = getOverlapColor();
+            Object.keys(zipToListIds).forEach(zip => {
                 const data = zipCompleteData[zip];
                 if (!data || data.lat == null || data.lng == null) return;
+                const listIds = zipToListIds[zip];
+                const isOverlap = listIds.length >= 2;
+                const color = isOverlap ? overlapColor : (lists.find(l => l.id === listIds[0]) || {}).color || '#666';
+                const listNames = listIds.map(id => (lists.find(l => l.id === id) || {}).name).filter(Boolean);
                 const marker = L.circleMarker([data.lat, data.lng], {
                     radius: 6,
-                    fillColor: list.color,
+                    fillColor: color,
                     color: '#fff',
                     weight: 1,
                     fillOpacity: 0.85,
                     opacity: 0.9
                 });
                 marker.zipCode = zip;
-                marker.listId = listId;
-                marker.bindPopup('<strong>Zip:</strong> ' + zip + (data.pop ? '<br><strong>Pop:</strong> ' + data.pop.toLocaleString() : ''));
+                marker.listIds = listIds;
+                const popupLines = ['<strong>Zip:</strong> ' + zip];
+                if (listNames.length) popupLines.push('<strong>Lists:</strong> ' + listNames.join(', '));
+                if (data.pop) popupLines.push('<strong>Pop:</strong> ' + data.pop.toLocaleString());
+                marker.bindPopup(popupLines.join('<br>'));
                 marker.addTo(map);
                 allMarkers.push(marker);
             });
+
+            const overlapDot = document.getElementById('overlap-dot');
+            if (overlapDot) overlapDot.style.background = overlapColor;
         }
 
         async function loadZipData() {
