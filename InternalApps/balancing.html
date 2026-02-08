@@ -253,7 +253,12 @@
                 records.push(...(data.records || []));
                 if (data.offset) await get(data.offset);
             };
-            return get(null).then(() => records);
+            return get(null).then(() => {
+                if (tableId === TABLES.B2C_LEADS) {
+                    console.log('[Balancing] fetchAllRecords B2C_LEADS', { filterFormula: filterFormula || '(none)', recordCount: records.length });
+                }
+                return records;
+            });
         }
 
         function loadClients() {
@@ -281,24 +286,34 @@
         }
 
         async function getCampaignsForClient(clientId) {
+            console.log('[Balancing] getCampaignsForClient', { clientId });
             let records = [];
             try {
                 const formula = `FIND("${clientId}", ARRAYJOIN({Client}))`;
+                console.log('[Balancing] Campaigns formula', { formula });
                 records = await fetchAllRecords(TABLES.CAMPAIGNS, formula);
-            } catch (_) {}
+                console.log('[Balancing] Campaigns from formula', { count: records.length, records: records.map(r => ({ id: r.id, campaignId: r.fields && r.fields['Campaign ID'] })) });
+            } catch (e) {
+                console.warn('[Balancing] Campaigns formula failed', e);
+            }
             if (records.length === 0) {
-                records = await fetchAllRecords(TABLES.CAMPAIGNS);
-                records = records.filter(r => {
+                console.log('[Balancing] No campaigns from formula; fetching all and filtering by Client');
+                const all = await fetchAllRecords(TABLES.CAMPAIGNS);
+                console.log('[Balancing] All campaigns count', all.length, 'sample Client field:', all[0] && all[0].fields && all[0].fields['Client']);
+                records = all.filter(r => {
                     const client = r.fields && r.fields['Client'];
                     if (!client) return false;
                     const ids = Array.isArray(client) ? client : [client];
                     return ids.includes(clientId);
                 });
+                console.log('[Balancing] After client filter', { count: records.length });
             }
-            return records.map(r => ({
+            const out = records.map(r => ({
                 id: r.id,
                 campaignId: (r.fields && r.fields['Campaign ID']) || null
             })).filter(c => c.campaignId);
+            console.log('[Balancing] Final campaigns (with Campaign ID)', { count: out.length, list: out });
+            return out;
         }
 
         async function fetchSpendForCampaign(campaignId) {
@@ -337,6 +352,7 @@
         async function fetchSpendForClient(clientId) {
             const campaigns = await getCampaignsForClient(clientId);
             campaignList = campaigns;
+            console.log('[Balancing] fetchSpendForClient', { clientId, campaignCount: campaigns.length });
             aggregatedSpend = { '3day': 0, '7day': 0, '14day': 0 };
             const statusEl = document.getElementById('client-status');
             if (!campaigns.length) {
@@ -352,9 +368,10 @@
                     aggregatedSpend['14day'] += spend['14day'];
                     sent++;
                 } catch (e) {
-                    console.warn('Webhook failed for campaign', c.campaignId, e);
+                    console.warn('[Balancing] Webhook failed for campaign', c.campaignId, e);
                 }
             }
+            console.log('[Balancing] Webhooks sent', { sent, total: campaigns.length, aggregatedSpend });
             statusEl.textContent = sent === campaigns.length
                 ? `${campaigns.length} campaign(s): webhook sent for each.`
                 : `Webhook sent for ${sent} of ${campaigns.length} campaign(s).`;
@@ -368,29 +385,45 @@
         }
 
         async function fetchLeadsForClient(clientId) {
+            console.log('[Balancing] fetchLeadsForClient', { clientId, campaignIds: campaignList.map(c => c.id) });
             let records = [];
             const campaignIds = campaignList.map(c => c.id);
             const linkedClientFormula = `FIND("${clientId}", ARRAYJOIN({Linked Client}))`;
             try {
                 records = await fetchAllRecords(TABLES.B2C_LEADS, linkedClientFormula);
-            } catch (_) {
+                console.log('[Balancing] Leads by Linked Client', { formula: linkedClientFormula, count: records.length });
+            } catch (e) {
+                console.warn('[Balancing] Leads by Linked Client failed', e);
                 try {
                     if (campaignIds.length) {
                         const formula = buildLeadsFilter(campaignIds);
                         records = await fetchAllRecords(TABLES.B2C_LEADS, formula);
+                        console.log('[Balancing] Leads by Source Campaign (fallback)', { formula, count: records.length });
+                    } else {
+                        console.log('[Balancing] No campaign IDs; cannot use Source Campaign fallback');
                     }
-                } catch (__) {}
+                } catch (e2) {
+                    console.warn('[Balancing] Leads by Source Campaign failed', e2);
+                }
             }
             const now = new Date();
             const ms14 = 14 * 24 * 60 * 60 * 1000;
             const ms7 = 7 * 24 * 60 * 60 * 1000;
             const ms3 = 3 * 24 * 60 * 60 * 1000;
             const cutoff14 = new Date(now.getTime() - ms14);
-            return records
+            if (records.length) {
+                const sample = records.slice(0, 3).map(r => ({ id: r.id, createdTime: r.createdTime }));
+                console.log('[Balancing] Raw leads sample (createdTime)', sample);
+                console.log('[Balancing] 14-day window', { cutoff14: cutoff14.toISOString(), now: now.toISOString() });
+            }
+            const beforeFilter = records.length;
+            const filtered = records
                 .filter(r => {
                     const t = r.createdTime ? new Date(r.createdTime) : null;
                     return t && t >= cutoff14;
-                })
+                });
+            console.log('[Balancing] After 14-day filter', { before: beforeFilter, after: filtered.length });
+            const result = filtered
                 .map(r => {
                     const created = r.createdTime ? new Date(r.createdTime) : null;
                     const f = r.fields || {};
@@ -409,6 +442,8 @@
                     };
                 })
                 .sort((a, b) => (b.created && a.created) ? b.created - a.created : 0);
+            console.log('[Balancing] fetchLeadsForClient result', { leadCount: result.length });
+            return result;
         }
 
         function renderLeads(leads) {
@@ -453,6 +488,7 @@
 
         async function onClientChange() {
             const clientId = document.getElementById('client-select').value;
+            console.log('[Balancing] onClientChange', { clientId, clientName: clientId ? (clientList.find(c => c.id === clientId) || {}).name : '' });
             const errEl = document.getElementById('client-error');
             errEl.style.display = 'none';
             if (!clientId) {
