@@ -378,21 +378,32 @@
             const cpl7 = q7.length > 0 && typeof s7 === 'number' ? s7 / q7.length : null;
             const cpl14 = q14.length > 0 && typeof s14 === 'number' ? s14 / q14.length : null;
 
-            function periodSummary(days, spend, count, cpl) {
-                return days + ' day — Spend: ' + formatSpend(spend) + ' | Qualified: ' + count + ' | CPL: ' + (cpl != null ? formatSpend(cpl) : '—');
+            function formatDateShort(d) {
+                if (!d || !d.getTime) return '';
+                return d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' });
             }
+            function periodSummary(days, spend, count, cpl, dateStart, dateEnd) {
+                const range = (dateStart && dateEnd) ? (' (' + formatDateShort(dateStart) + ' – ' + formatDateShort(dateEnd) + ')') : '';
+                return days + ' day' + range + ' — Spend: ' + formatSpend(spend) + ' | Qualified: ' + count + ' | CPL: ' + (cpl != null ? formatSpend(cpl) : '—');
+            }
+            const dateEnd3 = new Date(now);
+            const dateStart3 = new Date(now - ms3);
+            const dateEnd7 = new Date(now);
+            const dateStart7 = new Date(now - ms7);
+            const dateEnd14 = new Date(now);
+            const dateStart14 = new Date(now - ms14);
 
             periodEl.innerHTML =
                 '<details class="period-section">' +
-                '<summary><span class="period-stats">' + escapeHtml(periodSummary(3, s3, q3.length, cpl3)) + '</span></summary>' +
+                '<summary><span class="period-stats">' + escapeHtml(periodSummary(3, s3, q3.length, cpl3, dateStart3, dateEnd3)) + '</span></summary>' +
                 '<div class="panel-body"><div id="leads-table-wrap-3" class="overflow-x-auto"><table><thead><tr><th>Created</th><th>Name</th><th>Phone</th><th>Summary</th></tr></thead><tbody id="leads-tbody-3"></tbody></table></div></div>' +
                 '</details>' +
                 '<details class="period-section">' +
-                '<summary><span class="period-stats">' + escapeHtml(periodSummary(7, s7, q7.length, cpl7)) + '</span></summary>' +
+                '<summary><span class="period-stats">' + escapeHtml(periodSummary(7, s7, q7.length, cpl7, dateStart7, dateEnd7)) + '</span></summary>' +
                 '<div class="panel-body"><div id="leads-table-wrap-7" class="overflow-x-auto"><table><thead><tr><th>Created</th><th>Name</th><th>Phone</th><th>Summary</th></tr></thead><tbody id="leads-tbody-7"></tbody></table></div></div>' +
                 '</details>' +
                 '<details class="period-section">' +
-                '<summary><span class="period-stats">' + escapeHtml(periodSummary(14, s14, q14.length, cpl14)) + '</span></summary>' +
+                '<summary><span class="period-stats">' + escapeHtml(periodSummary(14, s14, q14.length, cpl14, dateStart14, dateEnd14)) + '</span></summary>' +
                 '<div class="panel-body"><div id="leads-table-wrap-14" class="overflow-x-auto"><table><thead><tr><th>Created</th><th>Name</th><th>Phone</th><th>Summary</th></tr></thead><tbody id="leads-tbody-14"></tbody></table></div></div>' +
                 '</details>';
 
