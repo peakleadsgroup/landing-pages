@@ -78,9 +78,14 @@
             background: #f8f9fa;
         }
         .campaign-card-header {
-            font-family: ui-monospace, monospace;
             font-weight: 600;
-            color: #1a73e8;
+            color: #202124;
+            margin-bottom: 0.25rem;
+        }
+        .campaign-card-id {
+            font-family: ui-monospace, monospace;
+            font-size: 0.75rem;
+            color: #5f6368;
             margin-bottom: 0.75rem;
             padding-bottom: 0.5rem;
             border-bottom: 1px solid #e8eaed;
@@ -154,7 +159,9 @@
         const LINKED_FIELD_NAME = 'Linked Client';
         const CLIENT_CAMPAIGNS_FIELD = 'Campaigns';
         const CAMPAIGN_ID_FIELD = 'Campaign ID';
-        const MAKE_WEBHOOK_URL = 'https://hook.us2.make.com/d4eoxhqbbblt5qqm6ft3rbeg5pv3ubed';
+        const MAKE_WEBHOOK_3DAY = 'https://hook.us2.make.com/d4eoxhqbbblt5qqm6ft3rbeg5pv3ubed';
+        const MAKE_WEBHOOK_7DAY = 'https://hook.us2.make.com/vbcc13xqt1yd1vmj1rseyokjptr4hadm';
+        const MAKE_WEBHOOK_14DAY = 'https://hook.us2.make.com/fqdn72zbj58fwmc3gao851owopri9cvm';
 
         async function fetchAirtable(url) {
             const res = await fetch(url, {
@@ -207,17 +214,14 @@
             return String(s).replace(/"/g, '""');
         }
 
-        function parseWebhookResponse(text) {
-            const out = {
-                '3day': '', '3daystart': '', '3daystop': '',
-                '7day': '', '7daystart': '', '7daystop': '',
-                '14day': '', '14daystart': '', '14daystop': ''
-            };
+        function parsePeriodResponse(text) {
+            const out = { spend: 0, start: '', stop: '' };
             if (!text || typeof text !== 'string') return out;
             try {
                 const parsed = JSON.parse(text);
-                const keys = ['3day', '3daystart', '3daystop', '7day', '7daystart', '7daystop', '14day', '14daystart', '14daystop'];
-                keys.forEach(function (k) { if (parsed[k] != null) out[k] = String(parsed[k]); });
+                if (parsed['3day'] != null) out.spend = Number(parsed['3day']) || 0;
+                if (parsed['3daystart'] != null) out.start = String(parsed['3daystart']).trim();
+                if (parsed['3daystop'] != null) out.stop = String(parsed['3daystop']).trim();
                 return out;
             } catch (_) {}
             const regex = /(\w+)\s*:\s*([^\n]+)/g;
@@ -225,24 +229,26 @@
             while ((m = regex.exec(text)) !== null) {
                 const key = m[1].toLowerCase();
                 const val = m[2].trim();
-                if (out.hasOwnProperty(key)) out[key] = val;
+                if (key === '3day') out.spend = Number(val) || 0;
+                else if (key === '3daystart') out.start = val;
+                else if (key === '3daystop') out.stop = val;
             }
             return out;
         }
 
-        async function fetchWebhookSpend(campaignId) {
+        async function fetchWebhookPeriod(url, campaignId) {
             try {
-                const res = await fetch(MAKE_WEBHOOK_URL, {
+                const res = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ campaignId: campaignId })
                 });
-                if (!res.ok) return null;
+                if (!res.ok) return { spend: 0, start: '', stop: '' };
                 const text = await res.text();
-                return parseWebhookResponse(text);
+                return parsePeriodResponse(text);
             } catch (e) {
-                console.warn('[Balancing] Webhook failed for campaign', campaignId, e);
-                return null;
+                console.warn('[Balancing] Webhook failed', campaignId, e);
+                return { spend: 0, start: '', stop: '' };
             }
         }
 
@@ -264,19 +270,22 @@
                     listEl.innerHTML = '';
                     return { totalSpend3: 0, totalSpend7: 0, totalSpend14: 0 };
                 }
-                const campaignIds = [];
+                const campaigns = [];
                 for (let i = 0; i < campaignRecordIds.length; i++) {
                     const recId = campaignRecordIds[i];
                     try {
                         const campaignUrl = AIRTABLE_BASE_URL + '/' + CAMPAIGNS_TABLE_ID + '/' + recId;
                         const campaignRecord = await fetchAirtable(campaignUrl);
-                        const cid = campaignRecord.fields && campaignRecord.fields[CAMPAIGN_ID_FIELD];
-                        if (cid != null && cid !== '') campaignIds.push(String(cid));
+                        const f = campaignRecord.fields || {};
+                        const cid = f[CAMPAIGN_ID_FIELD];
+                        if (cid == null || cid === '') continue;
+                        const campaignName = (f['Name'] || f['Campaign Name'] || f['Campaign'] || String(cid)).trim();
+                        campaigns.push({ id: String(cid), name: campaignName });
                     } catch (e) {
                         console.warn('[Balancing] Failed to fetch campaign', recId, e);
                     }
                 }
-                if (campaignIds.length === 0) {
+                if (campaigns.length === 0) {
                     panel.style.display = 'none';
                     listEl.innerHTML = '';
                     return { totalSpend3: 0, totalSpend7: 0, totalSpend14: 0 };
@@ -284,28 +293,31 @@
                 listEl.innerHTML = '<div class="loading">Loading campaign spend…</div>';
                 panel.style.display = 'block';
 
+                const campaignResults = await Promise.all(campaigns.map(async function (c) {
+                    const [r3, r7, r14] = await Promise.all([
+                        fetchWebhookPeriod(MAKE_WEBHOOK_3DAY, c.id),
+                        fetchWebhookPeriod(MAKE_WEBHOOK_7DAY, c.id),
+                        fetchWebhookPeriod(MAKE_WEBHOOK_14DAY, c.id)
+                    ]);
+                    return { id: c.id, name: c.name, r3, r7, r14 };
+                }));
                 let totalSpend3 = 0, totalSpend7 = 0, totalSpend14 = 0;
-                for (let i = 0; i < campaignIds.length; i++) {
-                    const data = await fetchWebhookSpend(campaignIds[i]);
-                    const d = data || {};
-                    const n3 = Number(d['3day']);
-                    const n7 = Number(d['7day']);
-                    const n14 = Number(d['14day']);
-                    if (!isNaN(n3)) totalSpend3 += n3;
-                    if (!isNaN(n7)) totalSpend7 += n7;
-                    if (!isNaN(n14)) totalSpend14 += n14;
-                }
-                const campaignLabel = campaignIds.length === 1 ? '1 campaign' : campaignIds.length + ' campaigns';
                 const row = function (label, spend) {
                     return '<div class="campaign-period"><strong>' + escapeHtml(label) + '</strong> <span class="spend">' + escapeHtml(formatSpend(spend)) + '</span></div>';
                 };
-                listEl.innerHTML =
-                    '<div class="campaign-card campaign-card-single">' +
-                    '<div class="campaign-card-header">Combined spend (' + escapeHtml(campaignLabel) + ')</div>' +
-                    row('3 day:', totalSpend3) +
-                    row('7 day:', totalSpend7) +
-                    row('14 day:', totalSpend14) +
-                    '</div>';
+                const cards = campaignResults.map(function (o) {
+                    totalSpend3 += (o.r3 && o.r3.spend) || 0;
+                    totalSpend7 += (o.r7 && o.r7.spend) || 0;
+                    totalSpend14 += (o.r14 && o.r14.spend) || 0;
+                    return '<div class="campaign-card">' +
+                        '<div class="campaign-card-header">' + escapeHtml(o.name) + '</div>' +
+                        '<div class="campaign-card-id">' + escapeHtml(o.id) + '</div>' +
+                        row('3 day:', o.r3 && o.r3.spend) +
+                        row('7 day:', o.r7 && o.r7.spend) +
+                        row('14 day:', o.r14 && o.r14.spend) +
+                        '</div>';
+                });
+                listEl.innerHTML = cards.join('');
                 return { totalSpend3, totalSpend7, totalSpend14 };
             } catch (e) {
                 console.warn('[Balancing] loadCampaignsForClient failed', e);
