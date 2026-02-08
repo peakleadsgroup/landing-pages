@@ -446,18 +446,24 @@
                 margin: 0 !important;
             }
 
-            .nav-container > .logo {
+            /* Logo link (first <a>) – truly center on viewport so logo isn't shifted by button widths */
+            .nav-container > a:first-of-type {
                 grid-column: 2 / 3 !important;
                 grid-row: 1 / 2 !important;
                 justify-self: center !important;
                 align-self: center !important;
+                display: flex !important;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .nav-container > a:first-of-type .logo,
+            .nav-container .logo {
                 max-width: 150px;
+                width: auto;
                 height: auto;
-                margin: 0 auto;
+                margin: 0 !important;
                 display: block !important;
-                position: absolute;
-                left: 50%;
-                transform: translateX(-50%);
             }
 
             .nav-container > nav {
