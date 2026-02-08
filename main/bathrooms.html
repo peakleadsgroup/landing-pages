@@ -1566,6 +1566,11 @@
                     record.fields['Ad'] = [adRecordId];
                 }
                 
+                // Add Unique ID (used for Meta lead deduplication) if provided
+                if (leadData.uniqueId) {
+                    record.fields['Unique ID'] = leadData.uniqueId;
+                }
+                
                 // Submit to Airtable
                 const response = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}`, {
                     method: 'POST',
@@ -3343,7 +3348,8 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 address: formattedAddress,
                 city: finalData.address.city || '',
                 state: finalData.address.state || '',
-                zip: finalData.address.zip || ''
+                zip: finalData.address.zip || '',
+                uniqueId: eventId
             };
             
             // Submit to Airtable
