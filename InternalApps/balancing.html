@@ -392,7 +392,7 @@
 
             function formatDateShort(d) {
                 if (!d || !d.getTime) return '';
-                return d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' });
+                return d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit', timeZone: 'America/New_York' });
             }
             function periodSummary(days, spend, count, cpl, dateStart, dateEnd) {
                 const range = (dateStart && dateEnd) ? (' (' + formatDateShort(dateStart) + ' – ' + formatDateShort(dateEnd) + ')') : '';
