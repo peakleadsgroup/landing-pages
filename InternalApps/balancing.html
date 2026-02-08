@@ -52,7 +52,8 @@
         }
         .client-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
         .client-table th, .client-table td { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid #e8eaed; vertical-align: middle; }
-        .client-table th { background: #f8f9fa; font-weight: 600; color: #5f6368; }
+        .client-table thead { position: sticky; top: 0; z-index: 10; }
+        .client-table thead th { background: #f8f9fa; font-weight: 600; color: #5f6368; box-shadow: 0 1px 0 0 #e8eaed; }
         .client-table tbody tr.client-row:hover { background: #f8f9fa; }
         .client-table .client-expand-cell { width: 40px; padding: 0.35rem; }
         .client-table .status-cell { width: 90px; }
