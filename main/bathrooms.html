@@ -2269,9 +2269,9 @@
             const slots = [];
             const now = getCurrentDateInTimezone();
             const dateStr = date.toLocaleDateString('en-US', { timeZone: clientTimezone });
-            
-            const bookedTimes = await getBookedAppointments(date);
-            console.log('[Calendar] getAvailableTimesForDate', { date: dateStr, clientAvailability, bookedTimes, clientMinHoursInAdvance });
+            const linkedClientId = (matchedClientData && matchedClientData.id) || (campaignClientData && campaignClientData.id) || null;
+            const bookedTimes = await getBookedAppointments(date, linkedClientId);
+            console.log('[Calendar] getAvailableTimesForDate', { date: dateStr, linkedClientId, clientAvailability, bookedTimes, clientMinHoursInAdvance });
             
             let parsed = 0;
             let skippedTooSoon = 0;
@@ -2351,29 +2351,29 @@
             return `${month}/${day}/${year} at ${timeDisplay}`;
         }
         
-        async function getBookedAppointments(date) {
+        async function getBookedAppointments(date, linkedClientId) {
             try {
-                // Format the date as MM/DD/YYYY to match appointment format
+                // Only count appointments for this client's leads; otherwise we'd block slots used by other clients
+                if (!linkedClientId) {
+                    return [];
+                }
                 const month = (date.getMonth() + 1).toString().padStart(2, '0');
                 const day = date.getDate().toString().padStart(2, '0');
                 const year = date.getFullYear();
                 const datePrefix = `${month}/${day}/${year} at `;
-                
-                // Fetch all leads with appointments on this date
-                // We'll filter by checking if Appt field starts with our date prefix
-                const leadsUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}?filterByFormula=SEARCH("${datePrefix}", {Appt})`;
+                // Filter: Appt contains this date AND lead is linked to this client (so we don't block slots with other clients' leads)
+                const filterByFormula = `AND(SEARCH("${datePrefix}", {Appt}), FIND("${linkedClientId}", ARRAYJOIN({Linked Client})) > 0)`;
+                const leadsUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}?filterByFormula=${encodeURIComponent(filterByFormula)}`;
                 const leadsData = await fetchAirtableData(leadsUrl);
                 
                 if (!leadsData.records || leadsData.records.length === 0) {
                     return [];
                 }
                 
-                // Extract the times that are already booked
                 const bookedTimes = [];
                 leadsData.records.forEach(lead => {
                     const appt = lead.fields['Appt'];
                     if (appt && appt.startsWith(datePrefix)) {
-                        // Extract the time part (everything after "at ")
                         const timePart = appt.substring(datePrefix.length).trim();
                         if (timePart) {
                             bookedTimes.push(timePart);
@@ -2384,7 +2384,6 @@
                 return bookedTimes;
             } catch (error) {
                 console.error('Error fetching booked appointments:', error);
-                // Return empty array on error so we don't block availability
                 return [];
             }
         }
