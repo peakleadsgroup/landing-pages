@@ -1114,7 +1114,7 @@
                         <path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/>
                     </svg>
                 </div>
-                <div style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
+                <div id="confirmationTitle" style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
                 <div id="confirmationMessage" style="font-size: 18px; color: #666; line-height: 1.6;">We'll give you a call soon to schedule your free estimate.</div>
             </div>
         </div>
@@ -1204,7 +1204,7 @@
                             <path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/>
                         </svg>
                     </div>
-                    <div style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
+                    <div id="confirmationTitleBelow" style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
                     <div id="confirmationMessageBelow" style="font-size: 18px; color: #666; line-height: 1.6;">We'll give you a call soon to schedule your free estimate.</div>
                 </div>
             </div>
@@ -2665,12 +2665,30 @@
             }
             
             // Show confirmation screen with appointment-specific message
+            const confirmationTitle = document.getElementById('confirmationTitle');
             const confirmationMessage = document.getElementById('confirmationMessage');
+            if (confirmationTitle) {
+                confirmationTitle.textContent = "IMPORTANT";
+            }
             if (confirmationMessage) {
-                confirmationMessage.textContent = "We'll give you a call soon to confirm your appointment time!";
+                confirmationMessage.textContent = "Your appointment is not confirmed until we speak with you over the phone. We will call you as soon as possible to confirm your time!";
             }
             document.getElementById('calendarStep').classList.remove('active');
             document.getElementById('confirmationStep').classList.add('active');
+            
+            // Show same confirmation screen in the bottom section so user can't select a second time
+            const calendarStepBelow = document.getElementById('calendarStepBelow');
+            const confirmationStepBelow = document.getElementById('confirmationStepBelow');
+            const ctaSection = document.getElementById('ctaSection');
+            if (calendarStepBelow) calendarStepBelow.style.display = 'none';
+            if (confirmationStepBelow) {
+                confirmationStepBelow.style.display = 'block';
+                const confirmationTitleBelow = document.getElementById('confirmationTitleBelow');
+                const confirmationMessageBelow = document.getElementById('confirmationMessageBelow');
+                if (confirmationTitleBelow) confirmationTitleBelow.textContent = "IMPORTANT";
+                if (confirmationMessageBelow) confirmationMessageBelow.textContent = "Your appointment is not confirmed until we speak with you over the phone. We will call you as soon as possible to confirm your time!";
+            }
+            if (ctaSection) ctaSection.classList.add('active');
             
             // Show reviews modal if reviews exist
             setTimeout(() => {
@@ -2842,7 +2860,11 @@
         function showConfirmationScreen() {
             // Show the confirmation/thank you screen
             // Reset to default message for non-appointment bookings
+            const confirmationTitle = document.getElementById('confirmationTitle');
             const confirmationMessage = document.getElementById('confirmationMessage');
+            if (confirmationTitle) {
+                confirmationTitle.textContent = "Thank you!";
+            }
             if (confirmationMessage) {
                 confirmationMessage.textContent = "We'll give you a call soon to schedule your free estimate.";
             }
