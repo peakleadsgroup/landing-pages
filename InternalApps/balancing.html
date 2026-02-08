@@ -69,6 +69,16 @@
         tr:hover td { background: #f8f9fa; }
         .empty { padding: 2rem; text-align: center; color: #5f6368; }
         .loading { padding: 1rem; color: #5f6368; }
+        .campaign-id-list { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+        .campaign-id-pill {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            background: #e8f0fe;
+            color: #1a73e8;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-family: ui-monospace, monospace;
+        }
     </style>
 </head>
 <body>
@@ -83,6 +93,12 @@
                 <select id="client-select">
                     <option value="">-- Select a client --</option>
                 </select>
+            </div>
+        </div>
+        <div class="panel" id="campaigns-panel" style="display: none;">
+            <div class="panel-header" style="padding: 0.75rem 1.25rem; border-bottom: 1px solid #e8eaed; font-weight: 600; color: #202124;">Campaigns</div>
+            <div class="panel-body">
+                <div id="campaigns-list" class="campaign-id-list"></div>
             </div>
         </div>
         <div class="panel">
@@ -112,9 +128,12 @@
         const AIRTABLE_BASE_URL = 'https://api.airtable.com/v0/' + AIRTABLE_BASE_ID;
         const TABLE_NAMES = {
             CLIENTS: 'Clients',
-            B2C_LEADS: 'B2C Leads'
+            B2C_LEADS: 'B2C Leads',
+            CAMPAIGNS: 'Campaigns'
         };
         const LINKED_FIELD_NAME = 'Linked Client';
+        const CLIENT_CAMPAIGNS_FIELD = 'Campaigns';
+        const CAMPAIGN_ID_FIELD = 'Campaign ID';
 
         async function fetchAirtable(url) {
             const res = await fetch(url, {
@@ -167,6 +186,46 @@
             return String(s).replace(/"/g, '""');
         }
 
+        async function loadCampaignsForClient(clientId) {
+            const panel = document.getElementById('campaigns-panel');
+            const listEl = document.getElementById('campaigns-list');
+            try {
+                const clientUrl = AIRTABLE_BASE_URL + '/' + encodeURIComponent(TABLE_NAMES.CLIENTS) + '/' + clientId;
+                const clientRecord = await fetchAirtable(clientUrl);
+                const campaignRecordIds = clientRecord.fields && clientRecord.fields[CLIENT_CAMPAIGNS_FIELD];
+                if (!campaignRecordIds || !Array.isArray(campaignRecordIds) || campaignRecordIds.length === 0) {
+                    panel.style.display = 'none';
+                    listEl.innerHTML = '';
+                    return;
+                }
+                const campaignIds = [];
+                for (let i = 0; i < campaignRecordIds.length; i++) {
+                    const recId = campaignRecordIds[i];
+                    try {
+                        const campaignUrl = AIRTABLE_BASE_URL + '/' + encodeURIComponent(TABLE_NAMES.CAMPAIGNS) + '/' + recId;
+                        const campaignRecord = await fetchAirtable(campaignUrl);
+                        const cid = campaignRecord.fields && campaignRecord.fields[CAMPAIGN_ID_FIELD];
+                        if (cid != null && cid !== '') campaignIds.push(String(cid));
+                    } catch (e) {
+                        console.warn('[Balancing] Failed to fetch campaign', recId, e);
+                    }
+                }
+                if (campaignIds.length === 0) {
+                    panel.style.display = 'none';
+                    listEl.innerHTML = '';
+                    return;
+                }
+                listEl.innerHTML = campaignIds.map(function (cid) {
+                    return '<span class="campaign-id-pill">' + escapeHtml(cid) + '</span>';
+                }).join('');
+                panel.style.display = 'block';
+            } catch (e) {
+                console.warn('[Balancing] loadCampaignsForClient failed', e);
+                panel.style.display = 'none';
+                listEl.innerHTML = '';
+            }
+        }
+
         async function loadLeadsForClient(clientId) {
             const stateEl = document.getElementById('leads-state');
             const wrapEl = document.getElementById('leads-table-wrap');
@@ -179,6 +238,8 @@
             stateEl.textContent = 'Loading leads…';
             stateEl.className = 'loading';
             wrapEl.style.display = 'none';
+
+            await loadCampaignsForClient(clientId);
 
             // Same as recordID.html: filter by client NAME (Linked Client primary field in Airtable)
             const escapedName = escapeFormulaString(clientName);
@@ -235,6 +296,8 @@
             const clientId = this.value;
             console.log('[Balancing] client-select change', { clientId });
             if (!clientId) {
+                document.getElementById('campaigns-panel').style.display = 'none';
+                document.getElementById('campaigns-list').innerHTML = '';
                 document.getElementById('leads-state').textContent = 'Select a client to see leads.';
                 document.getElementById('leads-state').className = 'empty';
                 document.getElementById('leads-table-wrap').style.display = 'none';
