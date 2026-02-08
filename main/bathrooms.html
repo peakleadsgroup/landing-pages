@@ -1226,7 +1226,6 @@
             B2C_ADS: 'tbl7ungQGMMLYwshw',
             URL_PARAMETERS: 'tbl5JDBRhTzuxzsc4',
         };
-        const CONTACT_NOTIFICATION_WEBHOOK_URL = 'https://hook.us2.make.com/16nbe9d7b8igymuas81euw3o124khm7s';
         
         // Calendar Configuration (defaults, will be overridden by client data)
         const CALENDAR_CONFIG = {
@@ -1517,42 +1516,6 @@
             }
         }
 
-        async function sendLeadWebhook(leadRecordId, metaCampaignID, linkedClientAirtableID, appointmentTime = null, uniqueID = null) {
-            try {
-                // Only send if there's a linked client
-                if (!linkedClientAirtableID) {
-                    return;
-                }
-                
-                const webhookData = {
-                    'Lead Airtable ID': leadRecordId,
-                    'Campaign ID': metaCampaignID,
-                    'Client Airtable ID': linkedClientAirtableID
-                };
-                
-                // Add appointment time if provided
-                if (appointmentTime) {
-                    webhookData['Appointment Time'] = appointmentTime;
-                }
-                
-                // Add unique Meta event ID if provided
-                if (uniqueID) {
-                    webhookData['uniqueID'] = uniqueID;
-                }
-                
-                await fetch(CONTACT_NOTIFICATION_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(webhookData),
-                    mode: 'no-cors'
-                });
-            } catch (error) {
-                console.error('Error sending lead webhook:', error);
-            }
-        }
-        
         async function submitLeadToAirtable(leadData) {
             try {
                 // Determine which client to use for Lead Price (matched client first, then campaign client)
@@ -2663,9 +2626,14 @@
             const timeForAppt = slot.apptFormat || slot.display;
             const appointmentText = formatAppointmentDate(selectedDate, timeForAppt);
             
-            // Update the lead record in Airtable with the appointment
+            // Update the lead record in Airtable with the appointment and re-write summaries with appointment at top
             if (leadRecordId) {
                 try {
+                    const baseSummary = formData.fullSummary || '';
+                    const baseSummaryHTML = formData.fullSummaryHTML || '';
+                    const fullSummaryWithAppt = `Appointment: ${appointmentText}\n\n${baseSummary}`;
+                    const fullSummaryHTMLWithAppt = `Appointment: ${appointmentText}<BR><BR>${baseSummaryHTML}`;
+
                     const updateResponse = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}/${leadRecordId}`, {
                         method: 'PATCH',
                         headers: {
@@ -2674,7 +2642,9 @@
                         },
                         body: JSON.stringify({
                             fields: {
-                                'Appt': appointmentText
+                                'Appt': appointmentText,
+                                'Full Summary': fullSummaryWithAppt,
+                                'Full Summary HTML': fullSummaryHTMLWithAppt
                             }
                         })
                     });
@@ -2683,39 +2653,6 @@
                         const errorText = await updateResponse.text();
                         const error = new Error(`Failed to update appointment: ${errorText}`);
                         throw error;
-                    }
-                    // Send appointment notifications to contacts
-                    const clientToNotify = matchedClientData || campaignClientData;
-                    if (clientToNotify && clientToNotify.id) {
-                        // Get lead data for notification
-                        const leadFullName = formData.fullName || `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || 'Unknown';
-                        
-                        // Use stored summary HTML if available, otherwise build it
-                        let fullSummaryHTML = formData.fullSummaryHTML;
-                        if (!fullSummaryHTML) {
-                            const emailLineHTML = formData.email ? `Email: ${formData.email}<BR>` : '';
-                            fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${leadFullName}<BR>Phone: ${formatPhoneForDisplay(formData.phone || '')}<BR>${emailLineHTML}Homeowner: ${formData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Last Updated: ${getLastUpdatedDisplay(formData.lastUpdated)}<BR>Project Type: ${getProjectTypeDisplay(formData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(formData.mainGoal)}<BR><BR>Address:<BR>${formData.address?.street || ''}<BR>${formData.address?.city || ''}, ${formData.address?.state || ''} ${formData.address?.zip || ''}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
-                                weekday: 'long', 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric',
-                                hour: 'numeric',
-                                minute: '2-digit',
-                                hour12: true,
-                                timeZone: 'America/New_York'
-                            })} EST`;
-                        }
-                        
-                        // Send webhook if client is linked
-                        if (matchedClientData && matchedClientData.id && leadRecordId) {
-                            await sendLeadWebhook(
-                                leadRecordId,
-                                metaCampaignID,
-                                matchedClientData.id,
-                                appointmentText
-                            );
-                        }
-                        
                     }
                 } catch (error) {
                     console.error('Error updating appointment in Airtable:', error);
@@ -3384,10 +3321,11 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 timeZone: 'America/New_York'
             })} EST`;
             
-            // Store form data for later use (e.g., appointment notifications)
+            // Store form data for later use (e.g., appointment summary update)
             formData.phone = finalData.phone;
             formData.email = finalData.email || '';
             formData.fullName = `${finalData.firstName} ${finalData.lastName}`;
+            formData.fullSummary = fullSummary;
             formData.fullSummaryHTML = fullSummaryHTML;
             
             // Prepare lead data for Airtable
@@ -3415,17 +3353,6 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             try {
                 await submitLeadToAirtable(leadData);
                 submissionSuccessful = true;
-                
-                // Send webhook if client is linked
-                if (matchedClientData && matchedClientData.id && leadRecordId) {
-                    await sendLeadWebhook(
-                        leadRecordId,
-                        metaCampaignID,
-                        matchedClientData.id,
-                        null,
-                        eventId
-                    );
-                }
                 
                 // Submission completed successfully
             } catch (error) {
