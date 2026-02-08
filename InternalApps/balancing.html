@@ -154,6 +154,7 @@
             color: #1a73e8;
             margin-right: 0.25rem;
         }
+        .hint { color: #5f6368; }
     </style>
 </head>
 <body>
@@ -179,6 +180,7 @@
                     <div class="stat-card cpl"><div class="label">7-day CPL</div><div class="value" id="stat-7d-cpl">—</div></div>
                     <div class="stat-card cpl"><div class="label">14-day CPL</div><div class="value" id="stat-14d-cpl">—</div></div>
                 </div>
+                <div id="client-status" class="hint" style="margin-top: 0.5rem; font-size: 0.8125rem; color: #5f6368;"></div>
                 <div id="client-error" class="error-msg" style="display: none;"></div>
             </div>
         </div>
@@ -279,8 +281,20 @@
         }
 
         async function getCampaignsForClient(clientId) {
-            const formula = `FIND("${clientId}", ARRAYJOIN({Client}))`;
-            const records = await fetchAllRecords(TABLES.CAMPAIGNS, formula);
+            let records = [];
+            try {
+                const formula = `FIND("${clientId}", ARRAYJOIN({Client}))`;
+                records = await fetchAllRecords(TABLES.CAMPAIGNS, formula);
+            } catch (_) {}
+            if (records.length === 0) {
+                records = await fetchAllRecords(TABLES.CAMPAIGNS);
+                records = records.filter(r => {
+                    const client = r.fields && r.fields['Client'];
+                    if (!client) return false;
+                    const ids = Array.isArray(client) ? client : [client];
+                    return ids.includes(clientId);
+                });
+            }
             return records.map(r => ({
                 id: r.id,
                 campaignId: (r.fields && r.fields['Campaign ID']) || null
@@ -324,16 +338,26 @@
             const campaigns = await getCampaignsForClient(clientId);
             campaignList = campaigns;
             aggregatedSpend = { '3day': 0, '7day': 0, '14day': 0 };
+            const statusEl = document.getElementById('client-status');
+            if (!campaigns.length) {
+                statusEl.textContent = 'No campaigns linked to this client. Webhook not sent.';
+                return aggregatedSpend;
+            }
+            let sent = 0;
             for (const c of campaigns) {
                 try {
                     const spend = await fetchSpendForCampaign(c.campaignId);
                     aggregatedSpend['3day'] += spend['3day'];
                     aggregatedSpend['7day'] += spend['7day'];
                     aggregatedSpend['14day'] += spend['14day'];
+                    sent++;
                 } catch (e) {
                     console.warn('Webhook failed for campaign', c.campaignId, e);
                 }
             }
+            statusEl.textContent = sent === campaigns.length
+                ? `${campaigns.length} campaign(s): webhook sent for each.`
+                : `Webhook sent for ${sent} of ${campaigns.length} campaign(s).`;
             return aggregatedSpend;
         }
 
@@ -344,10 +368,19 @@
         }
 
         async function fetchLeadsForClient(clientId) {
+            let records = [];
             const campaignIds = campaignList.map(c => c.id);
-            if (!campaignIds.length) return [];
-            const formula = buildLeadsFilter(campaignIds);
-            const records = await fetchAllRecords(TABLES.B2C_LEADS, formula);
+            const linkedClientFormula = `FIND("${clientId}", ARRAYJOIN({Linked Client}))`;
+            try {
+                records = await fetchAllRecords(TABLES.B2C_LEADS, linkedClientFormula);
+            } catch (_) {
+                try {
+                    if (campaignIds.length) {
+                        const formula = buildLeadsFilter(campaignIds);
+                        records = await fetchAllRecords(TABLES.B2C_LEADS, formula);
+                    }
+                } catch (__) {}
+            }
             const now = new Date();
             const ms14 = 14 * 24 * 60 * 60 * 1000;
             const ms7 = 7 * 24 * 60 * 60 * 1000;
@@ -424,6 +457,7 @@
             errEl.style.display = 'none';
             if (!clientId) {
                 document.getElementById('client-stats').style.display = 'none';
+                document.getElementById('client-status').textContent = '';
                 document.getElementById('leads-table').style.display = 'none';
                 document.getElementById('leads-empty').style.display = 'block';
                 document.getElementById('leads-empty').textContent = 'Select a client to load leads and spend.';
@@ -440,6 +474,7 @@
             } catch (e) {
                 errEl.textContent = e.message || 'Something went wrong.';
                 errEl.style.display = 'block';
+                document.getElementById('client-status').textContent = '';
                 document.getElementById('client-stats').style.display = 'none';
                 renderLeads([]);
             } finally {
