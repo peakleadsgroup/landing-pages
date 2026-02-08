@@ -385,25 +385,35 @@
         }
 
         async function fetchLeadsForClient(clientId) {
-            console.log('[Balancing] fetchLeadsForClient', { clientId, campaignIds: campaignList.map(c => c.id) });
+            console.log('[Balancing] fetchLeadsForClient', { clientId });
+            // B2C Leads (tblPt6Wc79hTBSmcD): filter by "Linked Client" field only
+            const linkedClientFormula = `FIND("${clientId}", ARRAYJOIN({Linked Client})) > 0`;
             let records = [];
-            const campaignIds = campaignList.map(c => c.id);
-            const linkedClientFormula = `FIND("${clientId}", ARRAYJOIN({Linked Client}))`;
             try {
                 records = await fetchAllRecords(TABLES.B2C_LEADS, linkedClientFormula);
                 console.log('[Balancing] Leads by Linked Client', { formula: linkedClientFormula, count: records.length });
             } catch (e) {
                 console.warn('[Balancing] Leads by Linked Client failed', e);
+            }
+            if (records.length === 0) {
+                console.log('[Balancing] No leads from Linked Client; fetching first page without filter to check field names');
                 try {
-                    if (campaignIds.length) {
-                        const formula = buildLeadsFilter(campaignIds);
-                        records = await fetchAllRecords(TABLES.B2C_LEADS, formula);
-                        console.log('[Balancing] Leads by Source Campaign (fallback)', { formula, count: records.length });
-                    } else {
-                        console.log('[Balancing] No campaign IDs; cannot use Source Campaign fallback');
+                    const sampleUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}?maxRecords=3`;
+                    const sampleData = await fetchAirtable(sampleUrl);
+                    const sampleRecords = sampleData.records || [];
+                    if (sampleRecords.length) {
+                        const first = sampleRecords[0];
+                        const fieldNames = first.fields ? Object.keys(first.fields) : [];
+                        const linkedValue = first.fields && first.fields['Linked Client'];
+                        console.log('[Balancing] B2C_LEADS sample record', {
+                                fieldNames,
+                                hasLinkedClient: 'Linked Client' in (first.fields || {}),
+                                linkedClientValue: linkedValue,
+                                createdTime: first.createdTime
+                        });
                     }
                 } catch (e2) {
-                    console.warn('[Balancing] Leads by Source Campaign failed', e2);
+                    console.warn('[Balancing] Sample fetch failed', e2);
                 }
             }
             const now = new Date();
