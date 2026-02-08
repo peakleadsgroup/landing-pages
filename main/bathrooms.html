@@ -1108,7 +1108,7 @@
         <!-- CONFIRMATION/THANK YOU SCREEN -->
         <div class="form-step" id="confirmationStep">
             <div style="text-align: center; padding: 40px 20px;">
-                <div style="margin-bottom: 30px;">
+                <div id="confirmationIcon" style="margin-bottom: 30px;">
                     <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;">
                         <circle cx="12" cy="12" r="10" fill="#e8f5e9"/>
                         <path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/>
@@ -1198,7 +1198,7 @@
             <!-- DUPLICATE CONFIRMATION/THANK YOU SCREEN -->
             <div class="form-step cta-block" id="confirmationStepBelow">
                 <div style="text-align: center; padding: 40px 20px;">
-                    <div style="margin-bottom: 30px;">
+                    <div id="confirmationIconBelow" style="margin-bottom: 30px;">
                         <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;">
                             <circle cx="12" cy="12" r="10" fill="#e8f5e9"/>
                             <path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/>
@@ -1253,6 +1253,7 @@
         let clientDaysOut = 14; // Default: 14 days out
         let isSubmitting = false; // Flag to prevent duplicate submissions
         let currentSubmitScreenType = null; // Store the current submit screen type
+        let appointmentTimeSelected = false; // True after user selects a time (so bottom shows confirmation, not calendar)
         
         // Get campaign ID immediately from URL (before DOM is ready)
         const urlParams = new URLSearchParams(window.location.search);
@@ -2664,6 +2665,14 @@
                 console.warn('No lead record ID available to update with appointment');
             }
             
+            appointmentTimeSelected = true; // So showDuplicateCallToAction shows confirmation below, not calendar
+            
+            // Exclamation mark icon for appointment confirmation (replaces check mark)
+            const confirmationIcon = document.getElementById('confirmationIcon');
+            const confirmationIconBelow = document.getElementById('confirmationIconBelow');
+            if (confirmationIcon) confirmationIcon.innerHTML = exclamationIconHtml;
+            if (confirmationIconBelow) confirmationIconBelow.innerHTML = exclamationIconHtml;
+            
             // Show confirmation screen with appointment-specific message
             const confirmationTitle = document.getElementById('confirmationTitle');
             const confirmationMessage = document.getElementById('confirmationMessage');
@@ -2857,9 +2866,13 @@
             }, 500); // Small delay to let the contact screen appear first
         }
 
+        const checkMarkIconHtml = '<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#e8f5e9"/><path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/></svg>';
+        const exclamationIconHtml = '<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#e8f5e9" stroke="#4CAF50"/><path d="M12 7 v6" stroke="#4CAF50" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.5" fill="#4CAF50"/></svg>';
         function showConfirmationScreen() {
             // Show the confirmation/thank you screen
-            // Reset to default message for non-appointment bookings
+            // Reset to default message and check mark icon for non-appointment bookings
+            const confirmationIcon = document.getElementById('confirmationIcon');
+            if (confirmationIcon) confirmationIcon.innerHTML = checkMarkIconHtml;
             const confirmationTitle = document.getElementById('confirmationTitle');
             const confirmationMessage = document.getElementById('confirmationMessage');
             if (confirmationTitle) {
@@ -2978,14 +2991,26 @@
             if (confirmationStepBelow) confirmationStepBelow.style.display = 'none';
             
             // Duplicate whatever is shown at the top - show only that screen below reviews
-            if (currentSubmitScreenType === 'calendar') {
-                // Show only calendar below (no thank you screen)
+            if (currentSubmitScreenType === 'calendar' && !appointmentTimeSelected) {
+                // Show calendar below only if user hasn't selected a time yet
                 if (calendarStepBelow) {
                     calendarStepBelow.style.display = 'block';
                     ctaSection.classList.add('active');
-                    // Initialize calendar below (same as original)
                     initializeCalendarBelow();
                 }
+            } else if (currentSubmitScreenType === 'calendar' && appointmentTimeSelected) {
+                // User already selected a time on top calendar - show confirmation below so they can't pick a second time
+                if (calendarStepBelow) calendarStepBelow.style.display = 'none';
+                if (confirmationStepBelow) {
+                    const confirmationIconBelow = document.getElementById('confirmationIconBelow');
+                    if (confirmationIconBelow) confirmationIconBelow.innerHTML = exclamationIconHtml;
+                    confirmationStepBelow.style.display = 'block';
+                    const confirmationTitleBelow = document.getElementById('confirmationTitleBelow');
+                    const confirmationMessageBelow = document.getElementById('confirmationMessageBelow');
+                    if (confirmationTitleBelow) confirmationTitleBelow.textContent = "IMPORTANT";
+                    if (confirmationMessageBelow) confirmationMessageBelow.textContent = "Your appointment is not confirmed until we speak with you over the phone. We will call you as soon as possible to confirm your time!";
+                }
+                if (ctaSection) ctaSection.classList.add('active');
             } else if (currentSubmitScreenType === 'Phone' || currentSubmitScreenType === 'Text' || currentSubmitScreenType === 'Phone/Text') {
                 // Show only phone/text screen below (no thank you screen)
                 if (contactStepBelow) {
