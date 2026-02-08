@@ -69,16 +69,26 @@
         tr:hover td { background: #f8f9fa; }
         .empty { padding: 2rem; text-align: center; color: #5f6368; }
         .loading { padding: 1rem; color: #5f6368; }
-        .campaign-id-list { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
-        .campaign-id-pill {
-            display: inline-block;
-            padding: 0.35rem 0.75rem;
-            background: #e8f0fe;
-            color: #1a73e8;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            font-family: ui-monospace, monospace;
+        .campaign-id-list { display: flex; flex-wrap: wrap; gap: 1rem; }
+        .campaign-card {
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            padding: 1rem;
+            min-width: 280px;
+            background: #f8f9fa;
         }
+        .campaign-card-header {
+            font-family: ui-monospace, monospace;
+            font-weight: 600;
+            color: #1a73e8;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e8eaed;
+        }
+        .campaign-period { margin-bottom: 0.5rem; font-size: 0.8125rem; }
+        .campaign-period strong { color: #5f6368; display: inline-block; min-width: 4.5rem; }
+        .campaign-period .spend { font-weight: 600; color: #202124; }
+        .campaign-period .dates { color: #5f6368; font-size: 0.75rem; }
     </style>
 </head>
 <body>
@@ -131,9 +141,12 @@
             B2C_LEADS: 'B2C Leads',
             CAMPAIGNS: 'Campaigns'
         };
+        // Campaigns table: name can 403; use table ID (same as bathrooms.html etc.)
+        const CAMPAIGNS_TABLE_ID = 'tbl6uhtOFzGzA7EMu';
         const LINKED_FIELD_NAME = 'Linked Client';
         const CLIENT_CAMPAIGNS_FIELD = 'Campaigns';
         const CAMPAIGN_ID_FIELD = 'Campaign ID';
+        const MAKE_WEBHOOK_URL = 'https://hook.us2.make.com/d4eoxhqbbblt5qqm6ft3rbeg5pv3ubed';
 
         async function fetchAirtable(url) {
             const res = await fetch(url, {
@@ -186,6 +199,51 @@
             return String(s).replace(/"/g, '""');
         }
 
+        function parseWebhookResponse(text) {
+            const out = {
+                3day: '', 3daystart: '', 3daystop: '',
+                7day: '', 7daystart: '', 7daystop: '',
+                14day: '', 14daystart: '', 14daystop: ''
+            };
+            if (!text || typeof text !== 'string') return out;
+            try {
+                const parsed = JSON.parse(text);
+                const keys = ['3day', '3daystart', '3daystop', '7day', '7daystart', '7daystop', '14day', '14daystart', '14daystop'];
+                keys.forEach(function (k) { if (parsed[k] != null) out[k] = String(parsed[k]); });
+                return out;
+            } catch (_) {}
+            const regex = /(\w+)\s*:\s*([^\n]+)/g;
+            let m;
+            while ((m = regex.exec(text)) !== null) {
+                const key = m[1].toLowerCase();
+                const val = m[2].trim();
+                if (out.hasOwnProperty(key)) out[key] = val;
+            }
+            return out;
+        }
+
+        async function fetchWebhookSpend(campaignId) {
+            try {
+                const res = await fetch(MAKE_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ campaignId: campaignId })
+                });
+                if (!res.ok) return null;
+                const text = await res.text();
+                return parseWebhookResponse(text);
+            } catch (e) {
+                console.warn('[Balancing] Webhook failed for campaign', campaignId, e);
+                return null;
+            }
+        }
+
+        function formatSpend(val) {
+            if (val == null || val === '') return '—';
+            const n = Number(val);
+            return isNaN(n) ? val : '$' + n.toFixed(2);
+        }
+
         async function loadCampaignsForClient(clientId) {
             const panel = document.getElementById('campaigns-panel');
             const listEl = document.getElementById('campaigns-list');
@@ -202,7 +260,7 @@
                 for (let i = 0; i < campaignRecordIds.length; i++) {
                     const recId = campaignRecordIds[i];
                     try {
-                        const campaignUrl = AIRTABLE_BASE_URL + '/' + encodeURIComponent(TABLE_NAMES.CAMPAIGNS) + '/' + recId;
+                        const campaignUrl = AIRTABLE_BASE_URL + '/' + CAMPAIGNS_TABLE_ID + '/' + recId;
                         const campaignRecord = await fetchAirtable(campaignUrl);
                         const cid = campaignRecord.fields && campaignRecord.fields[CAMPAIGN_ID_FIELD];
                         if (cid != null && cid !== '') campaignIds.push(String(cid));
@@ -215,10 +273,28 @@
                     listEl.innerHTML = '';
                     return;
                 }
-                listEl.innerHTML = campaignIds.map(function (cid) {
-                    return '<span class="campaign-id-pill">' + escapeHtml(cid) + '</span>';
-                }).join('');
+                listEl.innerHTML = '<div class="loading">Loading campaign spend…</div>';
                 panel.style.display = 'block';
+
+                const cards = [];
+                for (let i = 0; i < campaignIds.length; i++) {
+                    const cid = campaignIds[i];
+                    const data = await fetchWebhookSpend(cid);
+                    const d = data || {};
+                    const row = function (label, spend, start, stop) {
+                        const startStop = (start || stop) ? (' <span class="dates">(' + escapeHtml(start || '') + (start && stop ? ' – ' : '') + (stop || '') + ')</span>') : '';
+                        return '<div class="campaign-period"><strong>' + escapeHtml(label) + '</strong> <span class="spend">' + escapeHtml(formatSpend(spend)) + '</span>' + startStop + '</div>';
+                    };
+                    cards.push(
+                        '<div class="campaign-card">' +
+                        '<div class="campaign-card-header">' + escapeHtml(cid) + '</div>' +
+                        row('3 day:', d['3day'], d['3daystart'], d['3daystop']) +
+                        row('7 day:', d['7day'], d['7daystart'], d['7daystop']) +
+                        row('14 day:', d['14day'], d['14daystart'], d['14daystop']) +
+                        '</div>'
+                    );
+                }
+                listEl.innerHTML = cards.join('');
             } catch (e) {
                 console.warn('[Balancing] loadCampaignsForClient failed', e);
                 panel.style.display = 'none';
