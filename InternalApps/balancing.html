@@ -49,17 +49,18 @@
             outline: none;
             border-color: #1a73e8;
         }
-        .client-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-        .client-table th, .client-table td { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid #e8eaed; vertical-align: middle; }
-        .client-table thead th {
+        .client-table-wrapper { width: 100%; overflow-x: auto; }
+        .client-table-sticky-header {
             position: sticky;
             top: 0;
             z-index: 10;
             background: #f8f9fa;
-            font-weight: 600;
-            color: #5f6368;
-            box-shadow: 0 1px 0 0 #e8eaed;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
         }
+        .client-table-sticky-header .client-table { margin-bottom: 0; border-bottom: 1px solid #e8eaed; }
+        .client-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; table-layout: fixed; }
+        .client-table th, .client-table td { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid #e8eaed; vertical-align: middle; }
+        .client-table-sticky-header th { font-weight: 600; color: #5f6368; }
         .client-table tbody tr.client-row:hover { background: #f8f9fa; }
         .client-table .client-expand-cell { width: 40px; padding: 0.35rem; }
         .client-table .status-cell { width: 90px; }
@@ -168,24 +169,34 @@
     <main>
         <div class="panel">
             <div class="panel-header" style="padding: 0.75rem 1.25rem; border-bottom: 1px solid #e8eaed; font-weight: 600; color: #202124;">Clients (Active & Paused)</div>
-            <div class="panel-body" style="padding: 0; overflow-x: auto;">
-                <table class="client-table" id="client-table">
-                    <thead>
-                        <tr>
-                            <th class="client-expand-cell"></th>
-                            <th class="status-cell">Status</th>
-                            <th>Client</th>
-                            <th>TBC Lead Model</th>
-                            <th>Weekly Cap</th>
-                            <th>Qualified Leads This Week</th>
-                            <th>Monthly Cap (Calculated)</th>
-                            <th>Qualified Leads This Month</th>
-                            <th>AUTOPAUSE</th>
-                        </tr>
-                    </thead>
-                    <tbody id="client-tbody">
-                    </tbody>
-                </table>
+            <div class="panel-body" style="padding: 0;">
+                <div class="client-table-wrapper">
+                    <div class="client-table-sticky-header">
+                        <table class="client-table" aria-hidden="true">
+                            <colgroup>
+                                <col style="width: 3%"><col style="width: 8%"><col style="width: 14%"><col style="width: 12%"><col style="width: 10%"><col style="width: 16%"><col style="width: 14%"><col style="width: 14%"><col style="width: 9%">
+                            </colgroup>
+                            <tr>
+                                <th class="client-expand-cell"></th>
+                                <th class="status-cell">Status</th>
+                                <th>Client</th>
+                                <th>TBC Lead Model</th>
+                                <th>Weekly Cap</th>
+                                <th>Qualified Leads This Week</th>
+                                <th>Monthly Cap (Calculated)</th>
+                                <th>Qualified Leads This Month</th>
+                                <th>AUTOPAUSE</th>
+                            </tr>
+                        </table>
+                    </div>
+                    <table class="client-table" id="client-table">
+                        <colgroup>
+                            <col style="width: 3%"><col style="width: 8%"><col style="width: 14%"><col style="width: 12%"><col style="width: 10%"><col style="width: 16%"><col style="width: 14%"><col style="width: 14%"><col style="width: 9%">
+                        </colgroup>
+                        <tbody id="client-tbody">
+                        </tbody>
+                    </table>
+                </div>
                 <div id="client-list-loading" class="loading" style="padding: 1.25rem;">Loading clients…</div>
                 <div id="client-list-empty" class="empty" style="padding: 1.25rem; display: none;">No active or paused clients.</div>
             </div>
