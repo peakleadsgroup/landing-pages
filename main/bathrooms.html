@@ -1518,12 +1518,10 @@
 
         async function submitLeadToAirtable(leadData) {
             try {
-                // Determine which client to use for Lead Price (matched client first, then campaign client)
-                const clientForPrice = matchedClientData || campaignClientData;
+                // Only set Lead Price when we have a matched client by zip; leave blank if no match
                 let leadPrice = null;
-                
-                if (clientForPrice && clientForPrice.fields && clientForPrice.fields['Lead Price']) {
-                    leadPrice = clientForPrice.fields['Lead Price'];
+                if (matchedClientData && matchedClientData.fields && matchedClientData.fields['Lead Price']) {
+                    leadPrice = matchedClientData.fields['Lead Price'];
                 }
                 
                 // Prepare the record
