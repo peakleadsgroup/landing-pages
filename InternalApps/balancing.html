@@ -125,7 +125,7 @@
             </div>
         </div>
         <div class="panel" id="campaigns-panel" style="display: none;">
-            <div class="panel-header" style="padding: 0.75rem 1.25rem; border-bottom: 1px solid #e8eaed; font-weight: 600; color: #202124;">Campaigns</div>
+            <div class="panel-header" style="padding: 0.75rem 1.25rem; border-bottom: 1px solid #e8eaed; font-weight: 600; color: #202124;">Spend summary</div>
             <div class="panel-body">
                 <div id="campaigns-list" class="campaign-id-list"></div>
             </div>
@@ -285,10 +285,8 @@
                 panel.style.display = 'block';
 
                 let totalSpend3 = 0, totalSpend7 = 0, totalSpend14 = 0;
-                const cards = [];
                 for (let i = 0; i < campaignIds.length; i++) {
-                    const cid = campaignIds[i];
-                    const data = await fetchWebhookSpend(cid);
+                    const data = await fetchWebhookSpend(campaignIds[i]);
                     const d = data || {};
                     const n3 = Number(d['3day']);
                     const n7 = Number(d['7day']);
@@ -296,20 +294,18 @@
                     if (!isNaN(n3)) totalSpend3 += n3;
                     if (!isNaN(n7)) totalSpend7 += n7;
                     if (!isNaN(n14)) totalSpend14 += n14;
-                    const row = function (label, spend, start, stop) {
-                        const startStop = (start || stop) ? (' <span class="dates">(' + escapeHtml(start || '') + (start && stop ? ' – ' : '') + (stop || '') + ')</span>') : '';
-                        return '<div class="campaign-period"><strong>' + escapeHtml(label) + '</strong> <span class="spend">' + escapeHtml(formatSpend(spend)) + '</span>' + startStop + '</div>';
-                    };
-                    cards.push(
-                        '<div class="campaign-card">' +
-                        '<div class="campaign-card-header">' + escapeHtml(cid) + '</div>' +
-                        row('3 day:', d['3day'], d['3daystart'], d['3daystop']) +
-                        row('7 day:', d['7day'], d['7daystart'], d['7daystop']) +
-                        row('14 day:', d['14day'], d['14daystart'], d['14daystop']) +
-                        '</div>'
-                    );
                 }
-                listEl.innerHTML = cards.join('');
+                const campaignLabel = campaignIds.length === 1 ? '1 campaign' : campaignIds.length + ' campaigns';
+                const row = function (label, spend) {
+                    return '<div class="campaign-period"><strong>' + escapeHtml(label) + '</strong> <span class="spend">' + escapeHtml(formatSpend(spend)) + '</span></div>';
+                };
+                listEl.innerHTML =
+                    '<div class="campaign-card campaign-card-single">' +
+                    '<div class="campaign-card-header">Combined spend (' + escapeHtml(campaignLabel) + ')</div>' +
+                    row('3 day:', totalSpend3) +
+                    row('7 day:', totalSpend7) +
+                    row('14 day:', totalSpend14) +
+                    '</div>';
                 return { totalSpend3, totalSpend7, totalSpend14 };
             } catch (e) {
                 console.warn('[Balancing] loadCampaignsForClient failed', e);
