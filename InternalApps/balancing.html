@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
+    <title>Campaign Balancing – Meta Spend & CPL</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #f8f9fa;
+        }
+        #header {
+            flex-shrink: 0;
+            background: white;
+            color: #1a73e8;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        #header-logo { height: 40px; width: auto; }
+        #header h1 { font-size: 1.5rem; font-weight: 500; margin: 0; }
+        #main {
+            flex: 1;
+            padding: 1.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        .panel-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #dadce0;
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #202124;
+        }
+        .panel-body { padding: 1.25rem; }
+        .field { margin-bottom: 1rem; }
+        .field:last-child { margin-bottom: 0; }
+        .field label {
+            display: block;
+            margin-bottom: 0.35rem;
+            font-weight: 500;
+            color: #5f6368;
+            font-size: 0.875rem;
+        }
+        .field select {
+            width: 100%;
+            max-width: 400px;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+            font-size: 0.9375rem;
+            background: white;
+        }
+        .field select:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+        }
+        .stats-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .stat-card {
+            background: #f0f7ff;
+            border: 1px solid #c2dbfe;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            min-width: 140px;
+        }
+        .stat-card .label { font-size: 0.75rem; color: #5f6368; text-transform: uppercase; letter-spacing: 0.02em; margin-bottom: 0.25rem; }
+        .stat-card .value { font-size: 1.25rem; font-weight: 600; color: #202124; }
+        .stat-card.cpl .value { color: #1a73e8; }
+        .stat-card.spend .value { color: #0d47a1; }
+        #loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        #loading-overlay.show { display: flex; }
+        .spinner {
+            border: 3px solid #e8eaed;
+            border-top-color: #1a73e8;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-msg { margin-top: 1rem; color: #5f6368; font-size: 0.9375rem; }
+        #leads-table-wrap {
+            overflow-x: auto;
+        }
+        table.leads-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+        table.leads-table th,
+        table.leads-table td {
+            padding: 0.6rem 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e8eaed;
+        }
+        table.leads-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #5f6368;
+        }
+        table.leads-table tr:hover td { background: #f8f9fa; }
+        .lead-row.within-3d { background: #d4edda !important; }
+        .lead-row.within-7d { background: #fff3cd !important; }
+        .lead-row.within-14d { background: white; }
+        .empty-state {
+            padding: 2rem;
+            text-align: center;
+            color: #5f6368;
+        }
+        .error-msg {
+            background: #fce8e6;
+            color: #c5221f;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+        .campaign-badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            background: #e8f0fe;
+            color: #1a73e8;
+            margin-right: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <header id="header">
+        <img id="header-logo" src="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" alt="PLG">
+        <h1>Campaign Balancing – Meta Spend & CPL</h1>
+    </header>
+    <main id="main">
+        <div class="panel">
+            <div class="panel-header">Client & Meta spend</div>
+            <div class="panel-body">
+                <div class="field">
+                    <label for="client-select">Client (Active & Paused)</label>
+                    <select id="client-select">
+                        <option value="">-- Select a client --</option>
+                    </select>
+                </div>
+                <div id="client-stats" class="stats-row" style="display: none;">
+                    <div class="stat-card spend"><div class="label">3-day spend</div><div class="value" id="stat-3d-spend">—</div></div>
+                    <div class="stat-card spend"><div class="label">7-day spend</div><div class="value" id="stat-7d-spend">—</div></div>
+                    <div class="stat-card spend"><div class="label">14-day spend</div><div class="value" id="stat-14d-spend">—</div></div>
+                    <div class="stat-card cpl"><div class="label">3-day CPL</div><div class="value" id="stat-3d-cpl">—</div></div>
+                    <div class="stat-card cpl"><div class="label">7-day CPL</div><div class="value" id="stat-7d-cpl">—</div></div>
+                    <div class="stat-card cpl"><div class="label">14-day CPL</div><div class="value" id="stat-14d-cpl">—</div></div>
+                </div>
+                <div id="client-error" class="error-msg" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="panel">
+            <div class="panel-header">B2C leads (last 14 days) – green: last 3 days, yellow: 3–7 days</div>
+            <div class="panel-body">
+                <div id="leads-table-wrap">
+                    <table class="leads-table" id="leads-table" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Created</th>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Summary</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leads-tbody"></tbody>
+                    </table>
+                </div>
+                <div id="leads-empty" class="empty-state">Select a client to load leads and spend.</div>
+            </div>
+        </div>
+    </main>
+    <div id="loading-overlay">
+        <div style="text-align: center;">
+            <div class="spinner"></div>
+            <div class="loading-msg" id="loading-msg">Loading…</div>
+        </div>
+    </div>
+
+    <script>
+        const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
+        const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
+        const AIRTABLE_BASE_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
+        const TABLES = {
+            CLIENTS: 'tblMl8Y97cMSbricC',
+            CAMPAIGNS: 'tbl6uhtOFzGzA7EMu',
+            B2C_LEADS: 'tblPt6Wc79hTBSmcD'
+        };
+        const MAKE_WEBHOOK_URL = 'https://hook.us2.make.com/d4eoxhqbbblt5qqm6ft3rbeg5pv3ubed';
+
+        let clientList = [];
+        let campaignList = [];
+        let aggregatedSpend = { '3day': 0, '7day': 0, '14day': 0 };
+        let leads14 = [];
+
+        function showLoading(show, msg = 'Loading…') {
+            const el = document.getElementById('loading-overlay');
+            document.getElementById('loading-msg').textContent = msg;
+            el.classList.toggle('show', !!show);
+        }
+
+        async function fetchAirtable(url) {
+            const res = await fetch(url, {
+                headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
+            });
+            if (!res.ok) throw new Error(`Airtable ${res.status}: ${await res.text()}`);
+            return res.json();
+        }
+
+        function fetchAllRecords(tableId, filterFormula = null) {
+            let url = `${AIRTABLE_BASE_URL}/${tableId}`;
+            const params = [];
+            if (filterFormula) params.push(`filterByFormula=${encodeURIComponent(filterFormula)}`);
+            if (params.length) url += '?' + params.join('&');
+            const records = [];
+            const get = async (offset) => {
+                const pageUrl = offset ? url + (url.includes('?') ? '&' : '?') + `offset=${offset}` : url;
+                const data = await fetchAirtable(pageUrl);
+                records.push(...(data.records || []));
+                if (data.offset) await get(data.offset);
+            };
+            return get(null).then(() => records);
+        }
+
+        function loadClients() {
+            const formula = 'OR({Status}="Active", {Status}="Paused")';
+            return fetchAllRecords(TABLES.CLIENTS, formula).then(records => {
+                clientList = records.map(r => ({
+                    id: r.id,
+                    name: (r.fields && (r.fields['Name'] || r.fields['Client'])) || 'Unnamed'
+                }));
+                const sel = document.getElementById('client-select');
+                sel.innerHTML = '<option value="">-- Select a client --</option>' +
+                    clientList.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+            });
+        }
+
+        function escapeHtml(s) {
+            const div = document.createElement('div');
+            div.textContent = s;
+            return div.innerHTML;
+        }
+
+        function formatCurrency(n) {
+            if (n == null || isNaN(n)) return '—';
+            return '$' + Number(n).toFixed(2);
+        }
+
+        async function getCampaignsForClient(clientId) {
+            const formula = `FIND("${clientId}", ARRAYJOIN({Client}))`;
+            const records = await fetchAllRecords(TABLES.CAMPAIGNS, formula);
+            return records.map(r => ({
+                id: r.id,
+                campaignId: (r.fields && r.fields['Campaign ID']) || null
+            })).filter(c => c.campaignId);
+        }
+
+        async function fetchSpendForCampaign(campaignId) {
+            const res = await fetch(MAKE_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ campaignId: campaignId })
+            });
+            if (!res.ok) throw new Error(`Webhook ${res.status}`);
+            const text = await res.text();
+            return parseSpendResponse(text);
+        }
+
+        function parseSpendResponse(text) {
+            const data = {};
+            const num = (v) => (v != null && v !== '' && !isNaN(Number(v))) ? Number(v) : 0;
+            try {
+                const parsed = JSON.parse(text);
+                return {
+                    '3day': num(parsed['3day'] ?? parsed['3day']),
+                    '7day': num(parsed['7day'] ?? parsed['7day']),
+                    '14day': num(parsed['14day'] ?? parsed['14day'])
+                };
+            } catch (_) {}
+            const lower = text.toLowerCase();
+            const m3 = text.match(/\b3day\s*[:\=]\s*([\d.]+)/i) || lower.match(/3day\s*[:\=]\s*([\d.]+)/);
+            const m7 = text.match(/\b7day\s*[:\=]\s*([\d.]+)/i) || lower.match(/7day\s*[:\=]\s*([\d.]+)/);
+            const m14 = text.match(/\b14day\s*[:\=]\s*([\d.]+)/i) || lower.match(/14day\s*[:\=]\s*([\d.]+)/);
+            return {
+                '3day': num(m3 && m3[1]),
+                '7day': num(m7 && m7[1]),
+                '14day': num(m14 && m14[1])
+            };
+        }
+
+        async function fetchSpendForClient(clientId) {
+            const campaigns = await getCampaignsForClient(clientId);
+            campaignList = campaigns;
+            aggregatedSpend = { '3day': 0, '7day': 0, '14day': 0 };
+            for (const c of campaigns) {
+                try {
+                    const spend = await fetchSpendForCampaign(c.campaignId);
+                    aggregatedSpend['3day'] += spend['3day'];
+                    aggregatedSpend['7day'] += spend['7day'];
+                    aggregatedSpend['14day'] += spend['14day'];
+                } catch (e) {
+                    console.warn('Webhook failed for campaign', c.campaignId, e);
+                }
+            }
+            return aggregatedSpend;
+        }
+
+        function buildLeadsFilter(campaignIds) {
+            if (!campaignIds.length) return null;
+            const terms = campaignIds.map(id => `{Source Campaign}="${id}"`).join(', ');
+            return 'OR(' + terms + ')';
+        }
+
+        async function fetchLeadsForClient(clientId) {
+            const campaignIds = campaignList.map(c => c.id);
+            if (!campaignIds.length) return [];
+            const formula = buildLeadsFilter(campaignIds);
+            const records = await fetchAllRecords(TABLES.B2C_LEADS, formula);
+            const now = new Date();
+            const ms14 = 14 * 24 * 60 * 60 * 1000;
+            const ms7 = 7 * 24 * 60 * 60 * 1000;
+            const ms3 = 3 * 24 * 60 * 60 * 1000;
+            const cutoff14 = new Date(now.getTime() - ms14);
+            return records
+                .filter(r => {
+                    const t = r.createdTime ? new Date(r.createdTime) : null;
+                    return t && t >= cutoff14;
+                })
+                .map(r => {
+                    const created = r.createdTime ? new Date(r.createdTime) : null;
+                    const f = r.fields || {};
+                    const diff = created ? now.getTime() - created.getTime() : 0;
+                    let band = 'within-14d';
+                    if (diff <= ms3) band = 'within-3d';
+                    else if (diff <= ms7) band = 'within-7d';
+                    return {
+                        id: r.id,
+                        created: created,
+                        createdTime: r.createdTime,
+                        band: band,
+                        name: (f['Full Name'] || f['First Name'] || '').trim() || '—',
+                        phone: (f['Phone'] || '').trim() || '—',
+                        summary: (() => { const s = (f['Full Summary'] || '').trim(); return s ? (s.length > 120 ? s.substring(0, 120) + '…' : s) : '—'; })()
+                    };
+                })
+                .sort((a, b) => (b.created && a.created) ? b.created - a.created : 0);
+        }
+
+        function renderLeads(leads) {
+            const tbody = document.getElementById('leads-tbody');
+            const table = document.getElementById('leads-table');
+            const empty = document.getElementById('leads-empty');
+            if (!leads.length) {
+                table.style.display = 'none';
+                empty.style.display = 'block';
+                empty.textContent = 'No leads in the last 14 days for this client.';
+                return;
+            }
+            table.style.display = 'table';
+            empty.style.display = 'none';
+            const fmt = (d) => d ? d.toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+            tbody.innerHTML = leads.map(l => `
+                <tr class="lead-row ${l.band}">
+                    <td>${escapeHtml(fmt(l.created))}</td>
+                    <td>${escapeHtml(l.name)}</td>
+                    <td>${escapeHtml(l.phone)}</td>
+                    <td>${escapeHtml(l.summary)}</td>
+                </tr>
+            `).join('');
+        }
+
+        function updateStats(leads) {
+            const now = new Date();
+            const ms3 = 3 * 24 * 60 * 60 * 1000;
+            const ms7 = 7 * 24 * 60 * 60 * 1000;
+            const ms14 = 14 * 24 * 60 * 60 * 1000;
+            const count3 = leads.filter(l => l.created && (now - l.created) <= ms3).length;
+            const count7 = leads.filter(l => l.created && (now - l.created) <= ms7).length;
+            const count14 = leads.length;
+            document.getElementById('stat-3d-spend').textContent = formatCurrency(aggregatedSpend['3day']);
+            document.getElementById('stat-7d-spend').textContent = formatCurrency(aggregatedSpend['7day']);
+            document.getElementById('stat-14d-spend').textContent = formatCurrency(aggregatedSpend['14day']);
+            document.getElementById('stat-3d-cpl').textContent = count3 ? formatCurrency(aggregatedSpend['3day'] / count3) : '—';
+            document.getElementById('stat-7d-cpl').textContent = count7 ? formatCurrency(aggregatedSpend['7day'] / count7) : '—';
+            document.getElementById('stat-14d-cpl').textContent = count14 ? formatCurrency(aggregatedSpend['14day'] / count14) : '—';
+            document.getElementById('client-stats').style.display = 'flex';
+        }
+
+        async function onClientChange() {
+            const clientId = document.getElementById('client-select').value;
+            const errEl = document.getElementById('client-error');
+            errEl.style.display = 'none';
+            if (!clientId) {
+                document.getElementById('client-stats').style.display = 'none';
+                document.getElementById('leads-table').style.display = 'none';
+                document.getElementById('leads-empty').style.display = 'block';
+                document.getElementById('leads-empty').textContent = 'Select a client to load leads and spend.';
+                document.getElementById('leads-tbody').innerHTML = '';
+                return;
+            }
+            showLoading(true, 'Fetching campaigns & Meta spend…');
+            try {
+                await fetchSpendForClient(clientId);
+                showLoading(true, 'Fetching B2C leads…');
+                leads14 = await fetchLeadsForClient(clientId);
+                renderLeads(leads14);
+                updateStats(leads14);
+            } catch (e) {
+                errEl.textContent = e.message || 'Something went wrong.';
+                errEl.style.display = 'block';
+                document.getElementById('client-stats').style.display = 'none';
+                renderLeads([]);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        document.getElementById('client-select').addEventListener('change', onClientChange);
+
+        loadClients().then(() => {
+            document.getElementById('client-select').disabled = false;
+        }).catch(e => {
+            document.getElementById('client-error').textContent = 'Failed to load clients: ' + e.message;
+            document.getElementById('client-error').style.display = 'block';
+        });
+    </script>
+</body>
+</html>
