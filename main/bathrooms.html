@@ -1248,9 +1248,10 @@
         let metaCampaignID = null; // Track the Meta campaign ID (from Campaign ID field)
         let leadRecordId = null; // Track the lead record ID so we can update it with appointment
         let clientTimezone = 'America/New_York'; // Default timezone
-        let clientAvailability = []; // Client's available times
+        let clientAvailability = []; // Client's available times (each element one time string, e.g. "9:00 AM")
         let clientAvailableDays = [1, 2, 3, 4, 5]; // Default: Monday-Friday
         let clientDaysOut = 14; // Default: 14 days out
+        let clientMinHoursInAdvance = 48; // Default: 48; can be overridden by client field
         let isSubmitting = false; // Flag to prevent duplicate submissions
         let currentSubmitScreenType = null; // Store the current submit screen type
         let appointmentTimeSelected = false; // True after user selects a time (so bottom shows confirmation, not calendar)
@@ -2168,12 +2169,14 @@
         }
         
         function parseTimeString(timeStr) {
-            // Parse time strings like "8:00 AM", "9:00 AM", "8:00 PM"
-            const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+            // Parse time strings like "8:00 AM", "09:00 AM", "8:00am", "8:00 PM"
+            if (timeStr == null || typeof timeStr !== 'string') return null;
+            const trimmed = timeStr.trim();
+            const match = trimmed.match(/(\d+):(\d+)\s*(AM|PM)/i);
             if (!match) return null;
             
-            let hours = parseInt(match[1]);
-            const minutes = parseInt(match[2]);
+            let hours = parseInt(match[1], 10);
+            const minutes = parseInt(match[2], 10);
             const ampm = match[3].toUpperCase();
             
             if (ampm === 'PM' && hours !== 12) {
@@ -2225,7 +2228,7 @@
             const now = getCurrentDateInTimezone();
             const hoursFromNow = (date - now) / (1000 * 60 * 60);
             
-            if (hoursFromNow < CALENDAR_CONFIG.minHoursInAdvance) return false;
+            if (hoursFromNow < clientMinHoursInAdvance) return false;
             
             const maxDate = new Date(now);
             maxDate.setDate(now.getDate() + clientDaysOut);
@@ -2252,65 +2255,78 @@
             return false;
         }
         
+        function normalizeTimeForComparison(timeStr) {
+            if (timeStr == null || typeof timeStr !== 'string') return '';
+            return timeStr.trim().replace(/^0(\d):/, '$1:').toUpperCase();
+        }
+        
         async function getAvailableTimesForDate(date) {
-            if (!date || !clientAvailability || clientAvailability.length === 0) return [];
+            if (!date || !clientAvailability || clientAvailability.length === 0) {
+                console.log('[Calendar] getAvailableTimesForDate: no date or no clientAvailability', { date: date ? date.toISOString() : null, availabilityLength: clientAvailability ? clientAvailability.length : 0 });
+                return [];
+            }
             
             const slots = [];
             const now = getCurrentDateInTimezone();
+            const dateStr = date.toLocaleDateString('en-US', { timeZone: clientTimezone });
             
-            // Get already booked times for this date
             const bookedTimes = await getBookedAppointments(date);
+            console.log('[Calendar] getAvailableTimesForDate', { date: dateStr, clientAvailability, bookedTimes, clientMinHoursInAdvance });
             
-            // Use client's Availability field to generate time slots
+            let parsed = 0;
+            let skippedTooSoon = 0;
+            let skippedBooked = 0;
+            
             clientAvailability.forEach(timeStr => {
                 const timeParts = parseTimeString(timeStr);
-                if (!timeParts) return;
+                if (!timeParts) {
+                    console.log('[Calendar] parseTimeString failed for:', JSON.stringify(timeStr));
+                    return;
+                }
+                parsed++;
                 
                 const slotTime = new Date(date);
                 slotTime.setHours(timeParts.hours, timeParts.minutes, 0, 0);
                 
                 const hoursFromNow = (slotTime - now) / (1000 * 60 * 60);
                 
-                // Only show times that meet minimum advance requirement
-                if (hoursFromNow >= CALENDAR_CONFIG.minHoursInAdvance) {
-                    const hours = slotTime.getHours();
-                    const minutes = slotTime.getMinutes();
-                    const ampm = hours >= 12 ? 'PM' : 'AM';
-                    const displayHours12 = hours % 12 || 12;
-                    const displayMinutes = minutes.toString().padStart(2, '0');
-                    // Display format for calendar (can be single digit hour)
-                    const displayTime = `${displayHours12}:${displayMinutes} ${ampm}`;
-                    // Format for Appt field (HH:mm with leading zero)
-                    const apptTimeFormat = `${displayHours12.toString().padStart(2, '0')}:${displayMinutes} ${ampm}`;
-                    
-                    // Check if this time is already booked
-                    // Normalize times for comparison (handle both "9:00 AM" and "09:00 AM" formats)
-                    const normalizeTime = (timeStr) => {
-                        // Remove leading zero from hour if present, e.g., "09:00 AM" -> "9:00 AM"
-                        return timeStr.trim().replace(/^0(\d):/, '$1:');
-                    };
-                    
-                    const normalizedDisplayTime = normalizeTime(displayTime);
-                    const isBooked = bookedTimes.some(booked => {
-                        const normalizedBooked = normalizeTime(booked);
-                        return normalizedBooked === normalizedDisplayTime;
-                    });
-                    
-                    if (!isBooked) {
-                        slots.push({
-                            time: slotTime,
-                            display: displayTime,
-                            apptFormat: apptTimeFormat, // Store formatted time for Appt field
-                            isoString: slotTime.toISOString(),
-                            originalTime: timeStr
-                        });
-                    }
+                if (hoursFromNow < clientMinHoursInAdvance) {
+                    skippedTooSoon++;
+                    console.log('[Calendar] Slot skipped (too soon):', timeStr, 'hoursFromNow=', hoursFromNow.toFixed(1), 'minRequired=', clientMinHoursInAdvance);
+                    return;
                 }
+                
+                const hours = slotTime.getHours();
+                const minutes = slotTime.getMinutes();
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                const displayHours12 = hours % 12 || 12;
+                const displayMinutes = minutes.toString().padStart(2, '0');
+                const displayTime = `${displayHours12}:${displayMinutes} ${ampm}`;
+                const apptTimeFormat = `${displayHours12.toString().padStart(2, '0')}:${displayMinutes} ${ampm}`;
+                
+                const normalizedDisplayTime = normalizeTimeForComparison(displayTime);
+                const isBooked = bookedTimes.some(booked => {
+                    const normalizedBooked = normalizeTimeForComparison(booked);
+                    return normalizedBooked === normalizedDisplayTime;
+                });
+                
+                if (isBooked) {
+                    skippedBooked++;
+                    console.log('[Calendar] Slot skipped (booked):', displayTime, 'bookedTimes:', bookedTimes);
+                    return;
+                }
+                
+                slots.push({
+                    time: slotTime,
+                    display: displayTime,
+                    apptFormat: apptTimeFormat,
+                    isoString: slotTime.toISOString(),
+                    originalTime: timeStr
+                });
             });
             
-            // Sort slots by time
             slots.sort((a, b) => a.time - b.time);
-            
+            console.log('[Calendar] getAvailableTimesForDate result', { date: dateStr, parsed, skippedTooSoon, skippedBooked, slotsCount: slots.length, displayTimes: slots.map(s => s.display) });
             return slots;
         }
         
@@ -2719,14 +2735,36 @@
                     clientTimezone = activeClient.fields['Timezone'];
                 }
                 
-                // Set availability from client data
+                // Set availability from client data; flatten so comma/newline-separated strings become multiple slots
                 if (activeClient.fields['Availability']) {
-                    clientAvailability = Array.isArray(activeClient.fields['Availability']) 
-                        ? activeClient.fields['Availability'] 
-                        : [activeClient.fields['Availability']];
+                    const raw = activeClient.fields['Availability'];
+                    const arr = Array.isArray(raw) ? raw : [raw];
+                    const flattened = [];
+                    arr.forEach(item => {
+                        let str = typeof item === 'string' ? item : (item && (item.fields && (item.fields['Time'] || item.fields['Name'] || item.fields['Label'])) || item.name || '');
+                        if (typeof str !== 'string') return;
+                        str.split(/[\n,]+/).forEach(part => {
+                            const t = part.trim();
+                            if (t) flattened.push(t);
+                        });
+                    });
+                    clientAvailability = [...new Set(flattened)];
+                    console.log('[Calendar] Client availability (normalized):', clientAvailability);
                 } else {
                     clientAvailability = [];
+                    console.log('[Calendar] No client Availability field');
                 }
+                // Min hours in advance (client can override default 48)
+                if (activeClient.fields['Min Hours In Advance'] !== undefined && activeClient.fields['Min Hours In Advance'] !== null) {
+                    const val = Number(activeClient.fields['Min Hours In Advance']);
+                    if (!isNaN(val) && val >= 0) clientMinHoursInAdvance = val;
+                } else if (activeClient.fields['Hours In Advance'] !== undefined && activeClient.fields['Hours In Advance'] !== null) {
+                    const val = Number(activeClient.fields['Hours In Advance']);
+                    if (!isNaN(val) && val >= 0) clientMinHoursInAdvance = val;
+                } else {
+                    clientMinHoursInAdvance = CALENDAR_CONFIG.minHoursInAdvance;
+                }
+                console.log('[Calendar] clientMinHoursInAdvance:', clientMinHoursInAdvance);
                 
                 // Set available days from client data
                 if (activeClient.fields['Days']) {
@@ -2867,7 +2905,7 @@
         }
 
         const checkMarkIconHtml = '<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#e8f5e9"/><path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/></svg>';
-        const exclamationIconHtml = '<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#e8f5e9" stroke="#4CAF50"/><path d="M12 7 v6" stroke="#4CAF50" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.5" fill="#4CAF50"/></svg>';
+        const exclamationIconHtml = '<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#F9A825" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#FFF9C4" stroke="#F9A825"/><path d="M12 7 v6" stroke="#F9A825" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.5" fill="#F9A825"/></svg>';
         function showConfirmationScreen() {
             // Show the confirmation/thank you screen
             // Reset to default message and check mark icon for non-appointment bookings
