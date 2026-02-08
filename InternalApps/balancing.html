@@ -106,13 +106,15 @@
     </main>
 
     <script>
+        // Same approach as Dashboards/recordID.html: table names and filter by client name
         const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
         const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
         const AIRTABLE_BASE_URL = 'https://api.airtable.com/v0/' + AIRTABLE_BASE_ID;
-        const TABLES = {
-            CLIENTS: 'tblMl8Y97cMSbricC',
-            B2C_LEADS: 'tblPt6Wc79hTBSmcD'
+        const TABLE_NAMES = {
+            CLIENTS: 'Clients',
+            B2C_LEADS: 'B2C Leads'
         };
+        const LINKED_FIELD_NAME = 'Linked Client';
 
         async function fetchAirtable(url) {
             const res = await fetch(url, {
@@ -122,8 +124,8 @@
             return res.json();
         }
 
-        function fetchAllRecords(tableId, filterFormula) {
-            let url = AIRTABLE_BASE_URL + '/' + tableId;
+        function fetchAllRecords(tableName, filterFormula) {
+            let url = AIRTABLE_BASE_URL + '/' + encodeURIComponent(tableName);
             if (filterFormula) url += '?filterByFormula=' + encodeURIComponent(filterFormula);
             const records = [];
             const get = async (offset) => {
@@ -132,12 +134,19 @@
                 records.push(...(data.records || []));
                 if (data.offset) await get(data.offset);
             };
-            return get(null).then(() => records);
+            return get(null).then(() => {
+                if (tableName === TABLE_NAMES.B2C_LEADS) {
+                    console.log('[Balancing] fetchAllRecords B2C Leads', { filterFormula: filterFormula || null, recordCount: records.length });
+                }
+                return records;
+            });
         }
 
         function loadClients() {
             const formula = 'OR({Status}="Active", {Status}="Paused")';
-            return fetchAllRecords(TABLES.CLIENTS, formula).then(records => {
+            console.log('[Balancing] loadClients', { formula, tableName: TABLE_NAMES.CLIENTS });
+            return fetchAllRecords(TABLE_NAMES.CLIENTS, formula).then(records => {
+                console.log('[Balancing] Clients loaded', { count: records.length });
                 const sel = document.getElementById('client-select');
                 sel.innerHTML = '<option value="">-- Select a client --</option>' +
                     records.map(r => {
@@ -153,17 +162,30 @@
             return div.innerHTML;
         }
 
+        function escapeFormulaString(s) {
+            if (s == null) return '';
+            return String(s).replace(/"/g, '""');
+        }
+
         async function loadLeadsForClient(clientId) {
             const stateEl = document.getElementById('leads-state');
             const wrapEl = document.getElementById('leads-table-wrap');
             const tbody = document.getElementById('leads-tbody');
 
+            const selectedOption = document.getElementById('client-select').options[document.getElementById('client-select').selectedIndex];
+            const clientName = selectedOption ? selectedOption.text : '';
+            console.log('[Balancing] loadLeadsForClient', { clientId, clientName });
+
             stateEl.textContent = 'Loading leads…';
             stateEl.className = 'loading';
             wrapEl.style.display = 'none';
 
-            const formula = 'FIND("' + clientId + '", ARRAYJOIN({Linked Client})) > 0';
-            const records = await fetchAllRecords(TABLES.B2C_LEADS, formula);
+            // Same as recordID.html: filter by client NAME (Linked Client primary field in Airtable)
+            const escapedName = escapeFormulaString(clientName);
+            const formula = 'FIND("' + escapedName + '", ARRAYJOIN({' + LINKED_FIELD_NAME + '}))';
+            console.log('[Balancing] Leads formula (by client name, like recordID)', { formula, tableName: TABLE_NAMES.B2C_LEADS });
+            const records = await fetchAllRecords(TABLE_NAMES.B2C_LEADS, formula);
+            console.log('[Balancing] Leads result', { recordCount: records.length });
 
             const rows = records.map(r => {
                 const f = r.fields || {};
@@ -179,9 +201,30 @@
             tbody.innerHTML = rows;
 
             if (records.length === 0) {
+                console.log('[Balancing] No leads; fetching sample B2C_LEADS (no filter) to inspect field names');
+                try {
+                    const sampleUrl = AIRTABLE_BASE_URL + '/' + encodeURIComponent(TABLE_NAMES.B2C_LEADS) + '?maxRecords=3';
+                    const sampleData = await fetchAirtable(sampleUrl);
+                    const sampleRecords = sampleData.records || [];
+                    console.log('[Balancing] B2C_LEADS sample (no filter)', { count: sampleRecords.length });
+                    sampleRecords.forEach((r, i) => {
+                        const fields = r.fields || {};
+                        const fieldNames = Object.keys(fields);
+                        console.log('[Balancing] Sample record ' + (i + 1), {
+                            id: r.id,
+                            createdTime: r.createdTime,
+                            fieldNames: fieldNames,
+                            linkedClientField: 'Linked Client' in fields ? fields['Linked Client'] : '(no "Linked Client" key)',
+                            allKeysContainingLinked: fieldNames.filter(function (k) { return k.toLowerCase().indexOf('linked') >= 0; })
+                        });
+                    });
+                } catch (e) {
+                    console.warn('[Balancing] Sample fetch failed', e);
+                }
                 stateEl.textContent = 'No leads for this client.';
                 stateEl.className = 'empty';
             } else {
+                console.log('[Balancing] Showing leads', { count: records.length });
                 stateEl.textContent = '';
                 stateEl.className = '';
                 wrapEl.style.display = 'block';
@@ -190,6 +233,7 @@
 
         document.getElementById('client-select').addEventListener('change', function () {
             const clientId = this.value;
+            console.log('[Balancing] client-select change', { clientId });
             if (!clientId) {
                 document.getElementById('leads-state').textContent = 'Select a client to see leads.';
                 document.getElementById('leads-state').className = 'empty';
