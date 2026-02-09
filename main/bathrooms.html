@@ -1227,6 +1227,9 @@
             URL_PARAMETERS: 'tbl5JDBRhTzuxzsc4',
         };
         
+        // Lead Perfection API Configuration (via Make.com proxy)
+        const LP_MAKE_WEBHOOK_URL = 'https://hook.us2.make.com/dn7kjdagrc6goimlozfan1zpt2dp9lvs';
+        
         // Calendar Configuration (defaults, will be overridden by client data)
         const CALENDAR_CONFIG = {
             timezone: 'America/New_York',
@@ -1255,6 +1258,7 @@
         let isSubmitting = false; // Flag to prevent duplicate submissions
         let currentSubmitScreenType = null; // Store the current submit screen type
         let appointmentTimeSelected = false; // True after user selects a time (so bottom shows confirmation, not calendar)
+        let lpAvailabilityData = []; // Lead Perfection API availability data
         
         // Get campaign ID immediately from URL (before DOM is ready)
         const urlParams = new URLSearchParams(window.location.search);
@@ -2157,6 +2161,96 @@
         }
 
         // ============================================
+        // ============================================
+        // LEAD PERFECTION API FUNCTIONS
+        // ============================================
+        
+        async function fetchLeadPerfectionAvailability(zipCode) {
+            try {
+                if (!zipCode || !LP_MAKE_WEBHOOK_URL) {
+                    console.log('No zip code or webhook URL for Lead Perfection availability');
+                    return [];
+                }
+                
+                console.log('Fetching Lead Perfection availability for zip:', zipCode);
+                
+                const response = await fetch(LP_MAKE_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ zip: zipCode })
+                });
+                
+                if (!response.ok) {
+                    console.error('Lead Perfection API error:', response.status, response.statusText);
+                    return [];
+                }
+                
+                const data = await response.json();
+                console.log('Lead Perfection availability data:', data);
+                
+                return data || [];
+            } catch (error) {
+                console.error('Error fetching Lead Perfection availability:', error);
+                return [];
+            }
+        }
+        
+        function getLPAvailabilityForDate(date) {
+            if (!lpAvailabilityData || lpAvailabilityData.length === 0) return null;
+            
+            const dateStr = date.toISOString().split('T')[0];
+            
+            for (const day of lpAvailabilityData) {
+                const dayDate = new Date(day.SDate).toISOString().split('T')[0];
+                if (dayDate === dateStr) {
+                    return day;
+                }
+            }
+            return null;
+        }
+        
+        function getLPTimeSlotsForDay(dayData) {
+            if (!dayData) return [];
+            
+            const slots = [];
+            
+            // Extract available time slots from Lead Perfection data (T1-T6, TMS_Descr1-TMS_Descr6)
+            for (let i = 1; i <= 6; i++) {
+                const timeDesc = dayData[`TMS_Descr${i}`];
+                const available = dayData[`T${i}`];
+                
+                if (timeDesc && available > 0) {
+                    slots.push({
+                        time: timeDesc,
+                        available: available,
+                        slotIndex: i
+                    });
+                }
+            }
+            
+            return slots;
+        }
+        
+        function hasLPAvailabilityForDate(date) {
+            const dayData = getLPAvailabilityForDate(date);
+            if (!dayData) return false;
+            
+            const slots = getLPTimeSlotsForDay(dayData);
+            return slots.length > 0;
+        }
+        
+        // Helper function to check if client is "Home Pro MI"
+        function isHomeProMIClient() {
+            const activeClient = matchedClientData || campaignClientData;
+            if (activeClient && activeClient.fields && activeClient.fields['Name']) {
+                return activeClient.fields['Name'] === 'Home Pro MI';
+            }
+            return false;
+        }
+        
+        // ============================================
         // CALENDAR FUNCTIONS
         // ============================================
         
@@ -2261,7 +2355,50 @@
         }
         
         async function getAvailableTimesForDate(date) {
-            if (!date || !clientAvailability || clientAvailability.length === 0) {
+            if (!date) {
+                console.log('[Calendar] getAvailableTimesForDate: no date');
+                return [];
+            }
+            
+            // If client is "Home Pro MI", use Lead Perfection API logic
+            if (isHomeProMIClient()) {
+                // Get Lead Perfection availability data for this date
+                const dayData = getLPAvailabilityForDate(date);
+                if (!dayData) return [];
+                
+                const lpSlots = getLPTimeSlotsForDay(dayData);
+                if (lpSlots.length === 0) return [];
+                
+                // Convert LP slots to the format expected by the calendar
+                const slots = lpSlots.map(lpSlot => {
+                    // Parse the time string from LP (e.g., "8am - 10am", "10am - 12pm", etc.)
+                    const timeDisplay = lpSlot.time;
+                    
+                    // Format for Appt field - use the start time
+                    // Extract start time from range like "8am - 10am"
+                    const startTimeMatch = timeDisplay.match(/^(\d+)(am|pm)/i);
+                    let apptTimeFormat = timeDisplay;
+                    if (startTimeMatch) {
+                        const hour = parseInt(startTimeMatch[1]);
+                        const ampm = startTimeMatch[2].toUpperCase();
+                        apptTimeFormat = `${hour.toString().padStart(2, '0')}:00 ${ampm}`;
+                    }
+                    
+                    return {
+                        time: new Date(date), // Placeholder time object
+                        display: timeDisplay,
+                        apptFormat: apptTimeFormat,
+                        isoString: date.toISOString(),
+                        originalTime: timeDisplay,
+                        slotIndex: lpSlot.slotIndex
+                    };
+                });
+                
+                return slots;
+            }
+            
+            // Otherwise, use the standard client availability logic
+            if (!clientAvailability || clientAvailability.length === 0) {
                 console.log('[Calendar] getAvailableTimesForDate: no date or no clientAvailability', { date: date ? date.toISOString() : null, availabilityLength: clientAvailability ? clientAvailability.length : 0 });
                 return [];
             }
@@ -2422,8 +2559,15 @@
                 const date = new Date(startDate);
                 date.setDate(startDate.getDate() + i);
                 
-                // Check if day is available (time slot availability checked when day is selected)
-                const isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date);
+                // Check if day is available
+                // If client is "Home Pro MI", use Lead Perfection API availability
+                // Otherwise, use standard client availability logic
+                let isAvailable;
+                if (isHomeProMIClient()) {
+                    isAvailable = hasLPAvailabilityForDate(date);
+                } else {
+                    isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date);
+                }
                 
                 const dayCell = document.createElement('div');
                 dayCell.className = 'calendar-day';
@@ -2534,23 +2678,43 @@
             const nextButton = document.getElementById('nextMonth');
             
             if (prevButton) {
-                if (currentWeekStart >= now) {
-                    prevButton.disabled = true;
+                if (isHomeProMIClient()) {
+                    // Get Sunday of current week
+                    const thisWeekStart = new Date(now);
+                    thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay());
+                    // Disable prev if we're at current week
+                    prevButton.disabled = currentWeekStart <= thisWeekStart;
                 } else {
-                    prevButton.disabled = false;
+                    if (currentWeekStart >= now) {
+                        prevButton.disabled = true;
+                    } else {
+                        prevButton.disabled = false;
+                    }
                 }
             }
             
             if (nextButton) {
-                const maxDate = new Date(now);
-                maxDate.setDate(now.getDate() + clientDaysOut);
-                const endDate = new Date(currentWeekStart);
-                endDate.setDate(endDate.getDate() + 20);
-                
-                if (endDate >= maxDate) {
-                    nextButton.disabled = true;
+                if (isHomeProMIClient()) {
+                    // Disable next if we're past the last available date from LP data
+                    if (lpAvailabilityData && lpAvailabilityData.length > 0) {
+                        const lastAvailable = new Date(lpAvailabilityData[lpAvailabilityData.length - 1].SDate);
+                        const currentEnd = new Date(currentWeekStart);
+                        currentEnd.setDate(currentEnd.getDate() + 20);
+                        nextButton.disabled = currentEnd >= lastAvailable;
+                    } else {
+                        nextButton.disabled = true;
+                    }
                 } else {
-                    nextButton.disabled = false;
+                    const maxDate = new Date(now);
+                    maxDate.setDate(now.getDate() + clientDaysOut);
+                    const endDate = new Date(currentWeekStart);
+                    endDate.setDate(endDate.getDate() + 20);
+                    
+                    if (endDate >= maxDate) {
+                        nextButton.disabled = true;
+                    } else {
+                        nextButton.disabled = false;
+                    }
                 }
             }
         }
@@ -2720,7 +2884,7 @@
             }, 500); // Small delay to let the confirmation screen appear first
         }
         
-        function showCalendarScreen() {
+        async function showCalendarScreen() {
             const step7 = document.getElementById('step7');
             const calendarStep = document.getElementById('calendarStep');
             const progressBar = document.getElementById('progressBarContainer');
@@ -2728,7 +2892,34 @@
             
             // Get client timezone, availability, and days
             const activeClient = matchedClientData || campaignClientData;
-            if (activeClient && activeClient.fields) {
+            
+            // If client is "Home Pro MI", fetch Lead Perfection availability
+            if (isHomeProMIClient()) {
+                if (activeClient && activeClient.fields) {
+                    // Set timezone from client data
+                    if (activeClient.fields['Timezone']) {
+                        clientTimezone = activeClient.fields['Timezone'];
+                    }
+                    
+                    // Set days out from client data
+                    if (activeClient.fields['Days Out'] !== undefined && activeClient.fields['Days Out'] !== null) {
+                        const daysOutValue = Number(activeClient.fields['Days Out']);
+                        if (!isNaN(daysOutValue) && daysOutValue > 0) {
+                            clientDaysOut = daysOutValue;
+                        } else {
+                            clientDaysOut = 14;
+                        }
+                    } else {
+                        clientDaysOut = 14;
+                    }
+                }
+                
+                // Fetch Lead Perfection availability using the lead's zip code
+                const zipCode = formData.address?.zip || '';
+                if (zipCode) {
+                    lpAvailabilityData = await fetchLeadPerfectionAvailability(zipCode);
+                }
+            } else if (activeClient && activeClient.fields) {
                 // Set timezone from client data
                 if (activeClient.fields['Timezone']) {
                     clientTimezone = activeClient.fields['Timezone'];
@@ -3163,8 +3354,15 @@
                 const date = new Date(startDate);
                 date.setDate(startDate.getDate() + i);
                 
-                // Check if day is available (time slot availability checked when day is selected)
-                const isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date);
+                // Check if day is available
+                // If client is "Home Pro MI", use Lead Perfection API availability
+                // Otherwise, use standard client availability logic
+                let isAvailable;
+                if (isHomeProMIClient()) {
+                    isAvailable = hasLPAvailabilityForDate(date);
+                } else {
+                    isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date);
+                }
                 
                 const dayCell = document.createElement('div');
                 dayCell.className = 'calendar-day';
@@ -3223,23 +3421,43 @@
             const nextButton = document.getElementById('nextMonthBelow');
             
             if (prevButton) {
-                if (currentWeekStart >= now) {
-                    prevButton.disabled = true;
+                if (isHomeProMIClient()) {
+                    // Get Sunday of current week
+                    const thisWeekStart = new Date(now);
+                    thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay());
+                    // Disable prev if we're at current week
+                    prevButton.disabled = currentWeekStart <= thisWeekStart;
                 } else {
-                    prevButton.disabled = false;
+                    if (currentWeekStart >= now) {
+                        prevButton.disabled = true;
+                    } else {
+                        prevButton.disabled = false;
+                    }
                 }
             }
             
             if (nextButton) {
-                const maxDate = new Date(now);
-                maxDate.setDate(now.getDate() + clientDaysOut);
-                const endDate = new Date(currentWeekStart);
-                endDate.setDate(endDate.getDate() + 20);
-                
-                if (endDate >= maxDate) {
-                    nextButton.disabled = true;
+                if (isHomeProMIClient()) {
+                    // Disable next if we're past the last available date from LP data
+                    if (lpAvailabilityData && lpAvailabilityData.length > 0) {
+                        const lastAvailable = new Date(lpAvailabilityData[lpAvailabilityData.length - 1].SDate);
+                        const currentEnd = new Date(currentWeekStart);
+                        currentEnd.setDate(currentEnd.getDate() + 20);
+                        nextButton.disabled = currentEnd >= lastAvailable;
+                    } else {
+                        nextButton.disabled = true;
+                    }
                 } else {
-                    nextButton.disabled = false;
+                    const maxDate = new Date(now);
+                    maxDate.setDate(now.getDate() + clientDaysOut);
+                    const endDate = new Date(currentWeekStart);
+                    endDate.setDate(endDate.getDate() + 20);
+                    
+                    if (endDate >= maxDate) {
+                        nextButton.disabled = true;
+                    } else {
+                        nextButton.disabled = false;
+                    }
                 }
             }
         }
