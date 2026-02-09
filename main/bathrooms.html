@@ -2294,7 +2294,7 @@
             const firstAvailable = renderCalendar();
             
             if (firstAvailable.date && firstAvailable.formatted) {
-                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate, false);
             }
         }
         
@@ -2616,7 +2616,8 @@
                     const formatted = formatDate(date);
                     // Create a copy of the date to avoid reference issues in the closure
                     const dateCopy = new Date(date);
-                    dayCell.onclick = () => selectCalendarDay(dateCopy, formatted.fullDate);
+                    // Top calendar - pass false for isBottomCalendar
+                    dayCell.onclick = () => selectCalendarDay(dateCopy, formatted.fullDate, false);
                 }
                 
                 calendarGrid.appendChild(dayCell);
@@ -2642,14 +2643,14 @@
                 
                 if (selectedDate < startDate || selectedDate > endDate) {
                     if (firstAvailable.date && firstAvailable.formatted) {
-                        selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+                        selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate, false);
                     }
                 } else {
                     const formatted = formatDate(selectedDate);
-                    selectCalendarDay(selectedDate, formatted.fullDate);
+                    selectCalendarDay(selectedDate, formatted.fullDate, false);
                 }
             } else if (firstAvailable.date && firstAvailable.formatted) {
-                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate, false);
             }
         }
         
@@ -2668,14 +2669,14 @@
                 
                 if (selectedDate < startDate || selectedDate > endDate) {
                     if (firstAvailable.date && firstAvailable.formatted) {
-                        selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+                        selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate, true);
                     }
                 } else {
                     const formatted = formatDate(selectedDate);
-                    selectCalendarDay(selectedDate, formatted.fullDate);
+                    selectCalendarDay(selectedDate, formatted.fullDate, true);
                 }
             } else if (firstAvailable.date && firstAvailable.formatted) {
-                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate, true);
             }
         }
         
@@ -2728,18 +2729,20 @@
             }
         }
         
-        function selectCalendarDay(date, fullDate) {
+        function selectCalendarDay(date, fullDate, isBottomCalendar = null) {
             // Create a new Date object to avoid reference issues
             selectedDate = new Date(date);
             selectedTime = null;
             
-            // Determine which calendar is active
-            const calendarStep = document.getElementById('calendarStep');
-            const calendarStepBelow = document.getElementById('calendarStepBelow');
-            const isBottomCalendar = calendarStepBelow && 
-                (calendarStepBelow.classList.contains('active') || 
-                 calendarStepBelow.style.display === 'block' ||
-                 window.getComputedStyle(calendarStepBelow).display !== 'none');
+            // If isBottomCalendar wasn't passed, try to determine which calendar is active
+            if (isBottomCalendar === null) {
+                const calendarStep = document.getElementById('calendarStep');
+                const calendarStepBelow = document.getElementById('calendarStepBelow');
+                isBottomCalendar = calendarStepBelow && 
+                    (calendarStepBelow.classList.contains('active') || 
+                     calendarStepBelow.style.display === 'block' ||
+                     window.getComputedStyle(calendarStepBelow).display !== 'none');
+            }
             
             // Remove selected class from all days in both calendars
             document.querySelectorAll('.calendar-day').forEach(day => {
@@ -3421,7 +3424,8 @@
                     const formatted = formatDate(date);
                     // Create a copy of the date to avoid reference issues in the closure
                     const dateCopy = new Date(date);
-                    dayCell.onclick = () => selectCalendarDay(dateCopy, formatted.fullDate);
+                    // Bottom calendar - pass true for isBottomCalendar
+                    dayCell.onclick = () => selectCalendarDay(dateCopy, formatted.fullDate, true);
                 }
                 
                 calendarGrid.appendChild(dayCell);
@@ -3489,7 +3493,7 @@
             const firstAvailable = renderCalendarBelow();
             
             if (firstAvailable.date && firstAvailable.formatted) {
-                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate, true);
             }
         }
 
