@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
-    <title>Bathroom Remodel Qualification</title>
+    <title>Bathroom Remodel Qualification (TEST - No Airtable)</title>
     
     <!-- Meta Pixel Code - Will be dynamically set -->
     <script>
@@ -911,6 +911,7 @@
 </head>
 <body>
     <div class="form-container">
+        <div style="background:#d32f2f;color:#fff;padding:10px 16px;margin:-40px -40px 20px -40px;border-radius:20px 20px 0 0;text-align:center;font-weight:bold;">TEST MODE — Leads are NOT written to Airtable. Open console (F12) for zip/client search logs.</div>
         <div class="logo-container">
             <img id="logoImg" 
                  src="" 
@@ -921,7 +922,7 @@
 
         <div id="mainHeading">
             <h1 class="main-heading">
-                Take our 30 second quiz to book a <span class="highlight">fast and free quote</span>
+                Take our 30 second quiz to get a <span class="highlight">fast and free quote</span>
             </h1>
         </div>
 
@@ -1034,7 +1035,7 @@
                 </div>
             </div>
             <div class="nav-buttons">
-                <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Book My Quote</button>
+                <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Get Quote</button>
             </div>
             <div class="privacy-policy-text" id="privacyPolicyText">
                 <p>By clicking "NEXT STEP" and submitting this form, (i) I agree that <span id="partnerBusinessName">Peak Leads Group and it's marketing partners</span> may use automated technology to call or text my phone number (provided above) or email me regarding my request, and I may revoke this consent at any time, and (ii) I agree to the <a href="privacypolicy.html" target="_blank">Terms & Conditions and Privacy Policy</a>.</p>
@@ -1108,13 +1109,13 @@
         <!-- CONFIRMATION/THANK YOU SCREEN -->
         <div class="form-step" id="confirmationStep">
             <div style="text-align: center; padding: 40px 20px;">
-                <div style="margin-bottom: 30px;">
+                <div id="confirmationIcon" style="margin-bottom: 30px;">
                     <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;">
                         <circle cx="12" cy="12" r="10" fill="#e8f5e9"/>
                         <path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/>
                     </svg>
                 </div>
-                <div style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
+                <div id="confirmationTitle" style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
                 <div id="confirmationMessage" style="font-size: 18px; color: #666; line-height: 1.6;">We'll give you a call soon to schedule your free estimate.</div>
             </div>
         </div>
@@ -1198,13 +1199,13 @@
             <!-- DUPLICATE CONFIRMATION/THANK YOU SCREEN -->
             <div class="form-step cta-block" id="confirmationStepBelow">
                 <div style="text-align: center; padding: 40px 20px;">
-                    <div style="margin-bottom: 30px;">
+                    <div id="confirmationIconBelow" style="margin-bottom: 30px;">
                         <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;">
                             <circle cx="12" cy="12" r="10" fill="#e8f5e9"/>
                             <path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/>
                         </svg>
                     </div>
-                    <div style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
+                    <div id="confirmationTitleBelow" style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
                     <div id="confirmationMessageBelow" style="font-size: 18px; color: #666; line-height: 1.6;">We'll give you a call soon to schedule your free estimate.</div>
                 </div>
             </div>
@@ -1219,14 +1220,19 @@
         const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
         const AIRTABLE_BASE_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
         
-        const TABLES = {
+        const         TABLES = {
             CLIENTS: 'tblMl8Y97cMSbricC',
             CAMPAIGNS: 'tbl6uhtOFzGzA7EMu',
             B2C_LEADS: 'tblPt6Wc79hTBSmcD',
             B2C_ADS: 'tbl7ungQGMMLYwshw',
             URL_PARAMETERS: 'tbl5JDBRhTzuxzsc4',
         };
-        const CONTACT_NOTIFICATION_WEBHOOK_URL = 'https://hook.us2.make.com/16nbe9d7b8igymuas81euw3o124khm7s';
+
+        // TEST MODE: when true, do NOT write leads or appointment updates to Airtable (for zip/client debugging)
+        const TEST_MODE_NO_AIRTABLE = true;
+
+        // Lead Perfection API Configuration (via Make.com proxy)
+        const LP_MAKE_WEBHOOK_URL = 'https://hook.us2.make.com/dn7kjdagrc6goimlozfan1zpt2dp9lvs';
         
         // Calendar Configuration (defaults, will be overridden by client data)
         const CALENDAR_CONFIG = {
@@ -1249,11 +1255,14 @@
         let metaCampaignID = null; // Track the Meta campaign ID (from Campaign ID field)
         let leadRecordId = null; // Track the lead record ID so we can update it with appointment
         let clientTimezone = 'America/New_York'; // Default timezone
-        let clientAvailability = []; // Client's available times
+        let clientAvailability = []; // Client's available times (each element one time string, e.g. "9:00 AM")
         let clientAvailableDays = [1, 2, 3, 4, 5]; // Default: Monday-Friday
         let clientDaysOut = 14; // Default: 14 days out
+        let clientMinHoursInAdvance = 48; // Default: 48; can be overridden by client field
         let isSubmitting = false; // Flag to prevent duplicate submissions
         let currentSubmitScreenType = null; // Store the current submit screen type
+        let appointmentTimeSelected = false; // True after user selects a time (so bottom shows confirmation, not calendar)
+        let lpAvailabilityData = []; // Lead Perfection API availability data
         
         // Get campaign ID immediately from URL (before DOM is ready)
         const urlParams = new URLSearchParams(window.location.search);
@@ -1411,70 +1420,110 @@
         }
 
         async function findClientByZipCode(zipCode) {
+            const log = (...args) => console.log('[ZipClientSearch]', ...args);
             try {
-                // Define the niche for this landing page
                 const landingPageNiche = 'Bathrooms';
-                
-                // Fetch all clients
-                const clientsUrl = `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}`;
-                const clientsData = await fetchAirtableData(clientsUrl);
-                
-                if (!clientsData.records || clientsData.records.length === 0) {
+                const zipStr = String(zipCode).trim();
+
+                log('========== START findClientByZipCode ==========');
+                log('Input zipCode (raw):', JSON.stringify(zipCode), 'type:', typeof zipCode);
+                log('Normalized zipStr:', JSON.stringify(zipStr), 'length:', zipStr.length);
+                log('Landing page niche:', landingPageNiche);
+
+                // Fetch ALL clients with pagination
+                let allRecords = [];
+                let url = `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}`;
+                let pageNum = 0;
+                do {
+                    pageNum++;
+                    log('Fetching clients page', pageNum, 'url:', url.replace(AIRTABLE_API_KEY, '***'));
+                    const page = await fetchAirtableData(url);
+                    const count = page.records ? page.records.length : 0;
+                    log('  Page', pageNum, 'returned', count, 'records', page.offset ? '(more pages follow)' : '(last page)');
+                    if (page.records && page.records.length > 0) {
+                        allRecords = allRecords.concat(page.records);
+                    }
+                    url = page.offset ? `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}?offset=${page.offset}` : null;
+                } while (url);
+
+                log('Total clients fetched:', allRecords.length);
+
+                if (allRecords.length === 0) {
+                    log('No client records returned from Airtable. Returning null.');
+                    log('========== END findClientByZipCode (no records) ==========');
                     return null;
                 }
-                
-                // Collect all matching clients (both Active and Paused)
+
                 const activeMatches = [];
                 const pausedMatches = [];
-                
-                // Search through each client's Expanded Area Raw Zips
-                for (const client of clientsData.records) {
-                    // Only consider clients with "Active" or "Paused" status
+
+                for (let i = 0; i < allRecords.length; i++) {
+                    const client = allRecords[i];
+                    const clientName = (client.fields && client.fields['Name']) ? client.fields['Name'] : '(no name)';
                     const status = client.fields['Status'];
-                    if (status !== 'Active' && status !== 'Paused') {
-                        continue;
-                    }
-                    
-                    // Check if client niche matches the landing page niche
-                    // Niche is a multiple select field (array), so check if array includes the niche
                     const clientNiche = client.fields['Niche'];
-                    if (!clientNiche) {
+                    const zipList = client.fields['Expanded Area Raw Zips'];
+
+                    log('--- Client', i + 1, 'of', allRecords.length, ':', clientName, '| id:', client.id, '| Status:', status);
+
+                    if (status !== 'Active' && status !== 'Paused') {
+                        log('  SKIP: Status is not Active or Paused');
                         continue;
                     }
-                    // Handle multiple select field (array) - check if array includes the niche
-                    const nicheMatches = Array.isArray(clientNiche) 
+
+                    if (!clientNiche) {
+                        log('  SKIP: No Niche field');
+                        continue;
+                    }
+                    const nicheMatches = Array.isArray(clientNiche)
                         ? clientNiche.includes(landingPageNiche)
                         : clientNiche === landingPageNiche;
                     if (!nicheMatches) {
+                        log('  SKIP: Niche does not include', landingPageNiche, '| client Niche:', clientNiche);
                         continue;
                     }
-                    
-                    const zipList = client.fields['Expanded Area Raw Zips'];
-                    if (!zipList) continue;
-                    
-                    // Parse comma-separated zip codes (handle spaces)
-                    const zipCodes = zipList.split(',').map(z => z.trim());
-                    
-                    if (zipCodes.includes(zipCode)) {
-                        // Separate Active and Paused clients
+
+                    if (!zipList) {
+                        log('  SKIP: No Expanded Area Raw Zips');
+                        continue;
+                    }
+
+                    const zipCodes = zipList.split(',').map(z => String(z).trim());
+                    const hasZip = zipCodes.includes(zipStr);
+                    if (hasZip) {
+                        log('  MATCH: zip', zipStr, 'found in client zips. Total zips for client:', zipCodes.length);
                         if (status === 'Active') {
                             activeMatches.push(client);
                         } else if (status === 'Paused') {
                             pausedMatches.push(client);
                         }
+                    } else {
+                        // Optional: log first few zips for this client to spot format issues (avoid huge logs)
+                        const sample = zipCodes.length <= 5 ? zipCodes : zipCodes.slice(0, 3).concat(['...']);
+                        const zipStrInList = zipCodes.some(z => z === zipStr);
+                        const zipStrInListLoose = zipCodes.some(z => String(z).trim() === zipStr);
+                        log('  No match. Sample zips:', sample.join(', '), '| zipStr in list (strict):', zipStrInList, '(trimmed):', zipStrInListLoose);
                     }
                 }
-                
-                // Prefer Active clients over Paused clients
+
+                log('Result: activeMatches:', activeMatches.length, 'pausedMatches:', pausedMatches.length);
+
                 if (activeMatches.length > 0) {
-                    return activeMatches[0]; // Return first Active client
-                } else if (pausedMatches.length > 0) {
-                    return pausedMatches[0]; // Return first Paused client if no Active matches
+                    log('Returning first Active client:', activeMatches[0].fields && activeMatches[0].fields['Name']);
+                    log('========== END findClientByZipCode (matched Active) ==========');
+                    return activeMatches[0];
                 }
-                
+                if (pausedMatches.length > 0) {
+                    log('Returning first Paused client:', pausedMatches[0].fields && pausedMatches[0].fields['Name']);
+                    log('========== END findClientByZipCode (matched Paused) ==========');
+                    return pausedMatches[0];
+                }
+
+                log('No client matched zip', zipStr, '. Returning null.');
+                log('========== END findClientByZipCode (no match) ==========');
                 return null;
             } catch (error) {
-                console.error('Error finding client by zip code:', error);
+                console.error('[ZipClientSearch] Error finding client by zip code:', error);
                 return null;
             }
         }
@@ -1517,45 +1566,12 @@
             }
         }
 
-        async function sendLeadWebhook(leadRecordId, metaCampaignID, linkedClientAirtableID, appointmentTime = null) {
-            try {
-                // Only send if there's a linked client
-                if (!linkedClientAirtableID) {
-                    return;
-                }
-                
-                const webhookData = {
-                    'Lead Airtable ID': leadRecordId,
-                    'Campaign ID': metaCampaignID,
-                    'Client Airtable ID': linkedClientAirtableID
-                };
-                
-                // Add appointment time if provided
-                if (appointmentTime) {
-                    webhookData['Appointment Time'] = appointmentTime;
-                }
-                
-                await fetch(CONTACT_NOTIFICATION_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(webhookData),
-                    mode: 'no-cors'
-                });
-            } catch (error) {
-                console.error('Error sending lead webhook:', error);
-            }
-        }
-        
         async function submitLeadToAirtable(leadData) {
             try {
-                // Determine which client to use for Lead Price (matched client first, then campaign client)
-                const clientForPrice = matchedClientData || campaignClientData;
+                // Only set Lead Price when we have a matched client by zip; leave blank if no match
                 let leadPrice = null;
-                
-                if (clientForPrice && clientForPrice.fields && clientForPrice.fields['Lead Price']) {
-                    leadPrice = clientForPrice.fields['Lead Price'];
+                if (matchedClientData && matchedClientData.fields && matchedClientData.fields['Lead Price']) {
+                    leadPrice = matchedClientData.fields['Lead Price'];
                 }
                 
                 // Prepare the record
@@ -1598,6 +1614,11 @@
                 // Add linked ad if we found one
                 if (adRecordId) {
                     record.fields['Ad'] = [adRecordId];
+                }
+                
+                // Add Unique ID (used for Meta lead deduplication) if provided
+                if (leadData.uniqueId) {
+                    record.fields['Unique ID'] = leadData.uniqueId;
                 }
                 
                 // Submit to Airtable
@@ -2184,6 +2205,100 @@
         }
 
         // ============================================
+        // ============================================
+        // LEAD PERFECTION API FUNCTIONS
+        // ============================================
+        
+        async function fetchLeadPerfectionAvailability(zipCode) {
+            try {
+                if (!zipCode || !LP_MAKE_WEBHOOK_URL) {
+                    console.log('No zip code or webhook URL for Lead Perfection availability');
+                    return [];
+                }
+                
+                console.log('Fetching Lead Perfection availability for zip:', zipCode);
+                
+                const response = await fetch(LP_MAKE_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ zip: zipCode })
+                });
+                
+                if (!response.ok) {
+                    console.error('Lead Perfection API error:', response.status, response.statusText);
+                    return [];
+                }
+                
+                const data = await response.json();
+                console.log('Lead Perfection availability data:', data);
+                
+                return data || [];
+            } catch (error) {
+                console.error('Error fetching Lead Perfection availability:', error);
+                return [];
+            }
+        }
+        
+        function getLPAvailabilityForDate(date) {
+            if (!lpAvailabilityData || lpAvailabilityData.length === 0) return null;
+            if (!date) return null;
+            
+            // Ensure we have a proper Date object
+            const dateObj = new Date(date);
+            const dateStr = dateObj.toISOString().split('T')[0];
+            
+            for (const day of lpAvailabilityData) {
+                if (!day.SDate) continue;
+                const dayDate = new Date(day.SDate).toISOString().split('T')[0];
+                if (dayDate === dateStr) {
+                    return day;
+                }
+            }
+            return null;
+        }
+        
+        function getLPTimeSlotsForDay(dayData) {
+            if (!dayData) return [];
+            
+            const slots = [];
+            
+            // Extract available time slots from Lead Perfection data (T1-T6, TMS_Descr1-TMS_Descr6)
+            for (let i = 1; i <= 6; i++) {
+                const timeDesc = dayData[`TMS_Descr${i}`];
+                const available = dayData[`T${i}`];
+                
+                if (timeDesc && available > 0) {
+                    slots.push({
+                        time: timeDesc,
+                        available: available,
+                        slotIndex: i
+                    });
+                }
+            }
+            
+            return slots;
+        }
+        
+        function hasLPAvailabilityForDate(date) {
+            const dayData = getLPAvailabilityForDate(date);
+            if (!dayData) return false;
+            
+            const slots = getLPTimeSlotsForDay(dayData);
+            return slots.length > 0;
+        }
+        
+        // Helper function to check if client is "Home Pro MI"
+        function isHomeProMIClient() {
+            const activeClient = matchedClientData || campaignClientData;
+            if (activeClient && activeClient.fields && activeClient.fields['Name']) {
+                return activeClient.fields['Name'] === 'Home Pro MI';
+            }
+            return false;
+        }
+        
+        // ============================================
         // CALENDAR FUNCTIONS
         // ============================================
         
@@ -2196,12 +2311,14 @@
         }
         
         function parseTimeString(timeStr) {
-            // Parse time strings like "8:00 AM", "9:00 AM", "8:00 PM"
-            const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+            // Parse time strings like "8:00 AM", "09:00 AM", "8:00am", "8:00 PM"
+            if (timeStr == null || typeof timeStr !== 'string') return null;
+            const trimmed = timeStr.trim();
+            const match = trimmed.match(/(\d+):(\d+)\s*(AM|PM)/i);
             if (!match) return null;
             
-            let hours = parseInt(match[1]);
-            const minutes = parseInt(match[2]);
+            let hours = parseInt(match[1], 10);
+            const minutes = parseInt(match[2], 10);
             const ampm = match[3].toUpperCase();
             
             if (ampm === 'PM' && hours !== 12) {
@@ -2221,7 +2338,7 @@
             const firstAvailable = renderCalendar();
             
             if (firstAvailable.date && firstAvailable.formatted) {
-                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate, false);
             }
         }
         
@@ -2253,7 +2370,7 @@
             const now = getCurrentDateInTimezone();
             const hoursFromNow = (date - now) / (1000 * 60 * 60);
             
-            if (hoursFromNow < CALENDAR_CONFIG.minHoursInAdvance) return false;
+            if (hoursFromNow < clientMinHoursInAdvance) return false;
             
             const maxDate = new Date(now);
             maxDate.setDate(now.getDate() + clientDaysOut);
@@ -2280,65 +2397,124 @@
             return false;
         }
         
+        function normalizeTimeForComparison(timeStr) {
+            if (timeStr == null || typeof timeStr !== 'string') return '';
+            return timeStr.trim().replace(/^0(\d):/, '$1:').toUpperCase();
+        }
+        
         async function getAvailableTimesForDate(date) {
-            if (!date || !clientAvailability || clientAvailability.length === 0) return [];
+            if (!date) {
+                console.log('[Calendar] getAvailableTimesForDate: no date');
+                return [];
+            }
+            
+            // Ensure we have a proper Date object
+            const dateObj = new Date(date);
+            
+            // If client is "Home Pro MI", use Lead Perfection API logic
+            if (isHomeProMIClient()) {
+                // Get Lead Perfection availability data for this date
+                const dayData = getLPAvailabilityForDate(dateObj);
+                if (!dayData) return [];
+                
+                const lpSlots = getLPTimeSlotsForDay(dayData);
+                if (lpSlots.length === 0) return [];
+                
+                // Convert LP slots to the format expected by the calendar
+                const slots = lpSlots.map(lpSlot => {
+                    // Parse the time string from LP (e.g., "8am - 10am", "10am - 12pm", etc.)
+                    const timeDisplay = lpSlot.time;
+                    
+                    // Format for Appt field - use the start time
+                    // Extract start time from range like "8am - 10am"
+                    const startTimeMatch = timeDisplay.match(/^(\d+)(am|pm)/i);
+                    let apptTimeFormat = timeDisplay;
+                    if (startTimeMatch) {
+                        const hour = parseInt(startTimeMatch[1]);
+                        const ampm = startTimeMatch[2].toUpperCase();
+                        apptTimeFormat = `${hour.toString().padStart(2, '0')}:00 ${ampm}`;
+                    }
+                    
+                    return {
+                        time: new Date(dateObj), // Placeholder time object
+                        display: timeDisplay,
+                        apptFormat: apptTimeFormat,
+                        isoString: dateObj.toISOString(),
+                        originalTime: timeDisplay,
+                        slotIndex: lpSlot.slotIndex
+                    };
+                });
+                
+                return slots;
+            }
+            
+            // Otherwise, use the standard client availability logic
+            if (!clientAvailability || clientAvailability.length === 0) {
+                console.log('[Calendar] getAvailableTimesForDate: no date or no clientAvailability', { date: date ? date.toISOString() : null, availabilityLength: clientAvailability ? clientAvailability.length : 0 });
+                return [];
+            }
             
             const slots = [];
             const now = getCurrentDateInTimezone();
+            const dateStr = date.toLocaleDateString('en-US', { timeZone: clientTimezone });
+            const linkedClientId = (matchedClientData && matchedClientData.id) || (campaignClientData && campaignClientData.id) || null;
+            const bookedTimes = await getBookedAppointments(date, linkedClientId);
+            console.log('[Calendar] getAvailableTimesForDate', { date: dateStr, linkedClientId, clientAvailability, bookedTimes, clientMinHoursInAdvance });
             
-            // Get already booked times for this date
-            const bookedTimes = await getBookedAppointments(date);
+            let parsed = 0;
+            let skippedTooSoon = 0;
+            let skippedBooked = 0;
             
-            // Use client's Availability field to generate time slots
             clientAvailability.forEach(timeStr => {
                 const timeParts = parseTimeString(timeStr);
-                if (!timeParts) return;
+                if (!timeParts) {
+                    console.log('[Calendar] parseTimeString failed for:', JSON.stringify(timeStr));
+                    return;
+                }
+                parsed++;
                 
                 const slotTime = new Date(date);
                 slotTime.setHours(timeParts.hours, timeParts.minutes, 0, 0);
                 
                 const hoursFromNow = (slotTime - now) / (1000 * 60 * 60);
                 
-                // Only show times that meet minimum advance requirement
-                if (hoursFromNow >= CALENDAR_CONFIG.minHoursInAdvance) {
-                    const hours = slotTime.getHours();
-                    const minutes = slotTime.getMinutes();
-                    const ampm = hours >= 12 ? 'PM' : 'AM';
-                    const displayHours12 = hours % 12 || 12;
-                    const displayMinutes = minutes.toString().padStart(2, '0');
-                    // Display format for calendar (can be single digit hour)
-                    const displayTime = `${displayHours12}:${displayMinutes} ${ampm}`;
-                    // Format for Appt field (HH:mm with leading zero)
-                    const apptTimeFormat = `${displayHours12.toString().padStart(2, '0')}:${displayMinutes} ${ampm}`;
-                    
-                    // Check if this time is already booked
-                    // Normalize times for comparison (handle both "9:00 AM" and "09:00 AM" formats)
-                    const normalizeTime = (timeStr) => {
-                        // Remove leading zero from hour if present, e.g., "09:00 AM" -> "9:00 AM"
-                        return timeStr.trim().replace(/^0(\d):/, '$1:');
-                    };
-                    
-                    const normalizedDisplayTime = normalizeTime(displayTime);
-                    const isBooked = bookedTimes.some(booked => {
-                        const normalizedBooked = normalizeTime(booked);
-                        return normalizedBooked === normalizedDisplayTime;
-                    });
-                    
-                    if (!isBooked) {
-                        slots.push({
-                            time: slotTime,
-                            display: displayTime,
-                            apptFormat: apptTimeFormat, // Store formatted time for Appt field
-                            isoString: slotTime.toISOString(),
-                            originalTime: timeStr
-                        });
-                    }
+                if (hoursFromNow < clientMinHoursInAdvance) {
+                    skippedTooSoon++;
+                    console.log('[Calendar] Slot skipped (too soon):', timeStr, 'hoursFromNow=', hoursFromNow.toFixed(1), 'minRequired=', clientMinHoursInAdvance);
+                    return;
                 }
+                
+                const hours = slotTime.getHours();
+                const minutes = slotTime.getMinutes();
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                const displayHours12 = hours % 12 || 12;
+                const displayMinutes = minutes.toString().padStart(2, '0');
+                const displayTime = `${displayHours12}:${displayMinutes} ${ampm}`;
+                const apptTimeFormat = `${displayHours12.toString().padStart(2, '0')}:${displayMinutes} ${ampm}`;
+                
+                const normalizedDisplayTime = normalizeTimeForComparison(displayTime);
+                const isBooked = bookedTimes.some(booked => {
+                    const normalizedBooked = normalizeTimeForComparison(booked);
+                    return normalizedBooked === normalizedDisplayTime;
+                });
+                
+                if (isBooked) {
+                    skippedBooked++;
+                    console.log('[Calendar] Slot skipped (booked):', displayTime, 'bookedTimes:', bookedTimes);
+                    return;
+                }
+                
+                slots.push({
+                    time: slotTime,
+                    display: displayTime,
+                    apptFormat: apptTimeFormat,
+                    isoString: slotTime.toISOString(),
+                    originalTime: timeStr
+                });
             });
             
-            // Sort slots by time
             slots.sort((a, b) => a.time - b.time);
-            
+            console.log('[Calendar] getAvailableTimesForDate result', { date: dateStr, parsed, skippedTooSoon, skippedBooked, slotsCount: slots.length, displayTimes: slots.map(s => s.display) });
             return slots;
         }
         
@@ -2363,29 +2539,29 @@
             return `${month}/${day}/${year} at ${timeDisplay}`;
         }
         
-        async function getBookedAppointments(date) {
+        async function getBookedAppointments(date, linkedClientId) {
             try {
-                // Format the date as MM/DD/YYYY to match appointment format
+                // Only count appointments for this client's leads; otherwise we'd block slots used by other clients
+                if (!linkedClientId) {
+                    return [];
+                }
                 const month = (date.getMonth() + 1).toString().padStart(2, '0');
                 const day = date.getDate().toString().padStart(2, '0');
                 const year = date.getFullYear();
                 const datePrefix = `${month}/${day}/${year} at `;
-                
-                // Fetch all leads with appointments on this date
-                // We'll filter by checking if Appt field starts with our date prefix
-                const leadsUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}?filterByFormula=SEARCH("${datePrefix}", {Appt})`;
+                // Filter: Appt contains this date AND lead is linked to this client (so we don't block slots with other clients' leads)
+                const filterByFormula = `AND(SEARCH("${datePrefix}", {Appt}), FIND("${linkedClientId}", ARRAYJOIN({Linked Client})) > 0)`;
+                const leadsUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}?filterByFormula=${encodeURIComponent(filterByFormula)}`;
                 const leadsData = await fetchAirtableData(leadsUrl);
                 
                 if (!leadsData.records || leadsData.records.length === 0) {
                     return [];
                 }
                 
-                // Extract the times that are already booked
                 const bookedTimes = [];
                 leadsData.records.forEach(lead => {
                     const appt = lead.fields['Appt'];
                     if (appt && appt.startsWith(datePrefix)) {
-                        // Extract the time part (everything after "at ")
                         const timePart = appt.substring(datePrefix.length).trim();
                         if (timePart) {
                             bookedTimes.push(timePart);
@@ -2396,7 +2572,6 @@
                 return bookedTimes;
             } catch (error) {
                 console.error('Error fetching booked appointments:', error);
-                // Return empty array on error so we don't block availability
                 return [];
             }
         }
@@ -2435,8 +2610,15 @@
                 const date = new Date(startDate);
                 date.setDate(startDate.getDate() + i);
                 
-                // Check if day is available (time slot availability checked when day is selected)
-                const isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date);
+                // Check if day is available
+                // If client is "Home Pro MI", use Lead Perfection API availability
+                // Otherwise, use standard client availability logic
+                let isAvailable;
+                if (isHomeProMIClient()) {
+                    isAvailable = hasLPAvailabilityForDate(date);
+                } else {
+                    isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date);
+                }
                 
                 const dayCell = document.createElement('div');
                 dayCell.className = 'calendar-day';
@@ -2476,7 +2658,10 @@
                 
                 if (isAvailable) {
                     const formatted = formatDate(date);
-                    dayCell.onclick = () => selectCalendarDay(date, formatted.fullDate);
+                    // Create a copy of the date to avoid reference issues in the closure
+                    const dateCopy = new Date(date);
+                    // Top calendar - pass false for isBottomCalendar
+                    dayCell.onclick = () => selectCalendarDay(dateCopy, formatted.fullDate, false);
                 }
                 
                 calendarGrid.appendChild(dayCell);
@@ -2502,14 +2687,14 @@
                 
                 if (selectedDate < startDate || selectedDate > endDate) {
                     if (firstAvailable.date && firstAvailable.formatted) {
-                        selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+                        selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate, false);
                     }
                 } else {
                     const formatted = formatDate(selectedDate);
-                    selectCalendarDay(selectedDate, formatted.fullDate);
+                    selectCalendarDay(selectedDate, formatted.fullDate, false);
                 }
             } else if (firstAvailable.date && firstAvailable.formatted) {
-                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate, false);
             }
         }
         
@@ -2528,14 +2713,14 @@
                 
                 if (selectedDate < startDate || selectedDate > endDate) {
                     if (firstAvailable.date && firstAvailable.formatted) {
-                        selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+                        selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate, true);
                     }
                 } else {
                     const formatted = formatDate(selectedDate);
-                    selectCalendarDay(selectedDate, formatted.fullDate);
+                    selectCalendarDay(selectedDate, formatted.fullDate, true);
                 }
             } else if (firstAvailable.date && firstAvailable.formatted) {
-                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate, true);
             }
         }
         
@@ -2547,38 +2732,61 @@
             const nextButton = document.getElementById('nextMonth');
             
             if (prevButton) {
-                if (currentWeekStart >= now) {
-                    prevButton.disabled = true;
+                if (isHomeProMIClient()) {
+                    // Get Sunday of current week
+                    const thisWeekStart = new Date(now);
+                    thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay());
+                    // Disable prev if we're at current week
+                    prevButton.disabled = currentWeekStart <= thisWeekStart;
                 } else {
-                    prevButton.disabled = false;
+                    if (currentWeekStart >= now) {
+                        prevButton.disabled = true;
+                    } else {
+                        prevButton.disabled = false;
+                    }
                 }
             }
             
             if (nextButton) {
-                const maxDate = new Date(now);
-                maxDate.setDate(now.getDate() + clientDaysOut);
-                const endDate = new Date(currentWeekStart);
-                endDate.setDate(endDate.getDate() + 20);
-                
-                if (endDate >= maxDate) {
-                    nextButton.disabled = true;
+                if (isHomeProMIClient()) {
+                    // Disable next if we're past the last available date from LP data
+                    if (lpAvailabilityData && lpAvailabilityData.length > 0) {
+                        const lastAvailable = new Date(lpAvailabilityData[lpAvailabilityData.length - 1].SDate);
+                        const currentEnd = new Date(currentWeekStart);
+                        currentEnd.setDate(currentEnd.getDate() + 20);
+                        nextButton.disabled = currentEnd >= lastAvailable;
+                    } else {
+                        nextButton.disabled = true;
+                    }
                 } else {
-                    nextButton.disabled = false;
+                    const maxDate = new Date(now);
+                    maxDate.setDate(now.getDate() + clientDaysOut);
+                    const endDate = new Date(currentWeekStart);
+                    endDate.setDate(endDate.getDate() + 20);
+                    
+                    if (endDate >= maxDate) {
+                        nextButton.disabled = true;
+                    } else {
+                        nextButton.disabled = false;
+                    }
                 }
             }
         }
         
-        function selectCalendarDay(date, fullDate) {
-            selectedDate = date;
+        function selectCalendarDay(date, fullDate, isBottomCalendar = null) {
+            // Create a new Date object to avoid reference issues
+            selectedDate = new Date(date);
             selectedTime = null;
             
-            // Determine which calendar is active
-            const calendarStep = document.getElementById('calendarStep');
-            const calendarStepBelow = document.getElementById('calendarStepBelow');
-            const isBottomCalendar = calendarStepBelow && 
-                (calendarStepBelow.classList.contains('active') || 
-                 calendarStepBelow.style.display === 'block' ||
-                 window.getComputedStyle(calendarStepBelow).display !== 'none');
+            // If isBottomCalendar wasn't passed, try to determine which calendar is active
+            if (isBottomCalendar === null) {
+                const calendarStep = document.getElementById('calendarStep');
+                const calendarStepBelow = document.getElementById('calendarStepBelow');
+                isBottomCalendar = calendarStepBelow && 
+                    (calendarStepBelow.classList.contains('active') || 
+                     calendarStepBelow.style.display === 'block' ||
+                     window.getComputedStyle(calendarStepBelow).display !== 'none');
+            }
             
             // Remove selected class from all days in both calendars
             document.querySelectorAll('.calendar-day').forEach(day => {
@@ -2622,9 +2830,16 @@
                 return;
             }
             
+            if (!selectedDate) {
+                timeGrid.innerHTML = '<div style="text-align: center; padding: 20px;">Please select a date</div>';
+                return;
+            }
+            
             timeGrid.innerHTML = '<div style="text-align: center; padding: 20px;">Loading available times...</div>';
             
-            const slots = await getAvailableTimesForDate(selectedDate);
+            // Create a new Date object to ensure we're using the correct date
+            const dateToUse = new Date(selectedDate);
+            const slots = await getAvailableTimesForDate(dateToUse);
             
             timeGrid.innerHTML = '';
             
@@ -2658,9 +2873,16 @@
             const timeForAppt = slot.apptFormat || slot.display;
             const appointmentText = formatAppointmentDate(selectedDate, timeForAppt);
             
-            // Update the lead record in Airtable with the appointment
-            if (leadRecordId) {
+            // Update the lead record in Airtable with the appointment (skipped in TEST_MODE_NO_AIRTABLE)
+            if (TEST_MODE_NO_AIRTABLE) {
+                console.log('[TEST MODE] Skipping Airtable PATCH for appointment - no update written.');
+            } else if (leadRecordId) {
                 try {
+                    const baseSummary = formData.fullSummary || '';
+                    const baseSummaryHTML = formData.fullSummaryHTML || '';
+                    const fullSummaryWithAppt = `Appointment: ${appointmentText}\n\n${baseSummary}`;
+                    const fullSummaryHTMLWithAppt = `Appointment: ${appointmentText}<BR><BR>${baseSummaryHTML}`;
+
                     const updateResponse = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}/${leadRecordId}`, {
                         method: 'PATCH',
                         headers: {
@@ -2669,7 +2891,9 @@
                         },
                         body: JSON.stringify({
                             fields: {
-                                'Appt': appointmentText
+                                'Appt': appointmentText,
+                                'Full Summary': fullSummaryWithAppt,
+                                'Full Summary HTML': fullSummaryHTMLWithAppt
                             }
                         })
                     });
@@ -2679,39 +2903,6 @@
                         const error = new Error(`Failed to update appointment: ${errorText}`);
                         throw error;
                     }
-                    // Send appointment notifications to contacts
-                    const clientToNotify = matchedClientData || campaignClientData;
-                    if (clientToNotify && clientToNotify.id) {
-                        // Get lead data for notification
-                        const leadFullName = formData.fullName || `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || 'Unknown';
-                        
-                        // Use stored summary HTML if available, otherwise build it
-                        let fullSummaryHTML = formData.fullSummaryHTML;
-                        if (!fullSummaryHTML) {
-                            const emailLineHTML = formData.email ? `Email: ${formData.email}<BR>` : '';
-                            fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${leadFullName}<BR>Phone: ${formatPhoneForDisplay(formData.phone || '')}<BR>${emailLineHTML}Homeowner: ${formData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Last Updated: ${getLastUpdatedDisplay(formData.lastUpdated)}<BR>Project Type: ${getProjectTypeDisplay(formData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(formData.mainGoal)}<BR><BR>Address:<BR>${formData.address?.street || ''}<BR>${formData.address?.city || ''}, ${formData.address?.state || ''} ${formData.address?.zip || ''}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
-                                weekday: 'long', 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric',
-                                hour: 'numeric',
-                                minute: '2-digit',
-                                hour12: true,
-                                timeZone: 'America/New_York'
-                            })} EST`;
-                        }
-                        
-                        // Send webhook if client is linked
-                        if (matchedClientData && matchedClientData.id && leadRecordId) {
-                            await sendLeadWebhook(
-                                leadRecordId,
-                                metaCampaignID,
-                                matchedClientData.id,
-                                appointmentText
-                            );
-                        }
-                        
-                    }
                 } catch (error) {
                     console.error('Error updating appointment in Airtable:', error);
                 }
@@ -2719,13 +2910,39 @@
                 console.warn('No lead record ID available to update with appointment');
             }
             
+            appointmentTimeSelected = true; // So showDuplicateCallToAction shows confirmation below, not calendar
+            
+            // Exclamation mark icon for appointment confirmation (replaces check mark)
+            const confirmationIcon = document.getElementById('confirmationIcon');
+            const confirmationIconBelow = document.getElementById('confirmationIconBelow');
+            if (confirmationIcon) confirmationIcon.innerHTML = exclamationIconHtml;
+            if (confirmationIconBelow) confirmationIconBelow.innerHTML = exclamationIconHtml;
+            
             // Show confirmation screen with appointment-specific message
+            const confirmationTitle = document.getElementById('confirmationTitle');
             const confirmationMessage = document.getElementById('confirmationMessage');
+            if (confirmationTitle) {
+                confirmationTitle.textContent = "IMPORTANT";
+            }
             if (confirmationMessage) {
-                confirmationMessage.textContent = "We'll give you a call soon to confirm your appointment time!";
+                confirmationMessage.textContent = "Your appointment is not confirmed until we speak with you over the phone. We will call you as soon as possible to confirm your time!";
             }
             document.getElementById('calendarStep').classList.remove('active');
             document.getElementById('confirmationStep').classList.add('active');
+            
+            // Show same confirmation screen in the bottom section so user can't select a second time
+            const calendarStepBelow = document.getElementById('calendarStepBelow');
+            const confirmationStepBelow = document.getElementById('confirmationStepBelow');
+            const ctaSection = document.getElementById('ctaSection');
+            if (calendarStepBelow) calendarStepBelow.style.display = 'none';
+            if (confirmationStepBelow) {
+                confirmationStepBelow.style.display = 'block';
+                const confirmationTitleBelow = document.getElementById('confirmationTitleBelow');
+                const confirmationMessageBelow = document.getElementById('confirmationMessageBelow');
+                if (confirmationTitleBelow) confirmationTitleBelow.textContent = "IMPORTANT";
+                if (confirmationMessageBelow) confirmationMessageBelow.textContent = "Your appointment is not confirmed until we speak with you over the phone. We will call you as soon as possible to confirm your time!";
+            }
+            if (ctaSection) ctaSection.classList.add('active');
             
             // Show reviews modal if reviews exist
             setTimeout(() => {
@@ -2733,7 +2950,7 @@
             }, 500); // Small delay to let the confirmation screen appear first
         }
         
-        function showCalendarScreen() {
+        async function showCalendarScreen() {
             const step7 = document.getElementById('step7');
             const calendarStep = document.getElementById('calendarStep');
             const progressBar = document.getElementById('progressBarContainer');
@@ -2741,20 +2958,69 @@
             
             // Get client timezone, availability, and days
             const activeClient = matchedClientData || campaignClientData;
-            if (activeClient && activeClient.fields) {
+            
+            // If client is "Home Pro MI", fetch Lead Perfection availability
+            if (isHomeProMIClient()) {
+                if (activeClient && activeClient.fields) {
+                    // Set timezone from client data
+                    if (activeClient.fields['Timezone']) {
+                        clientTimezone = activeClient.fields['Timezone'];
+                    }
+                    
+                    // Set days out from client data
+                    if (activeClient.fields['Days Out'] !== undefined && activeClient.fields['Days Out'] !== null) {
+                        const daysOutValue = Number(activeClient.fields['Days Out']);
+                        if (!isNaN(daysOutValue) && daysOutValue > 0) {
+                            clientDaysOut = daysOutValue;
+                        } else {
+                            clientDaysOut = 14;
+                        }
+                    } else {
+                        clientDaysOut = 14;
+                    }
+                }
+                
+                // Fetch Lead Perfection availability using the lead's zip code
+                const zipCode = formData.address?.zip || '';
+                if (zipCode) {
+                    lpAvailabilityData = await fetchLeadPerfectionAvailability(zipCode);
+                }
+            } else if (activeClient && activeClient.fields) {
                 // Set timezone from client data
                 if (activeClient.fields['Timezone']) {
                     clientTimezone = activeClient.fields['Timezone'];
                 }
                 
-                // Set availability from client data
+                // Set availability from client data; flatten so comma/newline-separated strings become multiple slots
                 if (activeClient.fields['Availability']) {
-                    clientAvailability = Array.isArray(activeClient.fields['Availability']) 
-                        ? activeClient.fields['Availability'] 
-                        : [activeClient.fields['Availability']];
+                    const raw = activeClient.fields['Availability'];
+                    const arr = Array.isArray(raw) ? raw : [raw];
+                    const flattened = [];
+                    arr.forEach(item => {
+                        let str = typeof item === 'string' ? item : (item && (item.fields && (item.fields['Time'] || item.fields['Name'] || item.fields['Label'])) || item.name || '');
+                        if (typeof str !== 'string') return;
+                        str.split(/[\n,]+/).forEach(part => {
+                            const t = part.trim();
+                            if (t) flattened.push(t);
+                        });
+                    });
+                    clientAvailability = [...new Set(flattened)];
+                    console.log('[Calendar] Client availability (normalized):', clientAvailability);
                 } else {
                     clientAvailability = [];
+                    console.log('[Calendar] No client Availability field');
                 }
+                // Min hours in advance (client can override default 48)
+                if (activeClient.fields['Min Hours In Advance'] !== undefined && activeClient.fields['Min Hours In Advance'] !== null) {
+                    const val = Number(activeClient.fields['Min Hours In Advance']);
+                    if (!isNaN(val) && val >= 0) clientMinHoursInAdvance = val;
+                } else if (activeClient.fields['Hours In Advance'] !== undefined && activeClient.fields['Hours In Advance'] !== null) {
+                    const val = Number(activeClient.fields['Hours In Advance']);
+                    if (!isNaN(val) && val >= 0) clientMinHoursInAdvance = val;
+                } else {
+                    clientMinHoursInAdvance = CALENDAR_CONFIG.minHoursInAdvance;
+                }
+                console.log('[Calendar] clientMinHoursInAdvance:', clientMinHoursInAdvance);
                 
                 // Set available days from client data
                 if (activeClient.fields['Days']) {
@@ -2894,10 +3160,18 @@
             }, 500); // Small delay to let the contact screen appear first
         }
 
+        const checkMarkIconHtml = '<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#e8f5e9"/><path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/></svg>';
+        const exclamationIconHtml = '<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#F9A825" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#FFF9C4" stroke="#F9A825"/><path d="M12 7 v6" stroke="#F9A825" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.5" fill="#F9A825"/></svg>';
         function showConfirmationScreen() {
             // Show the confirmation/thank you screen
-            // Reset to default message for non-appointment bookings
+            // Reset to default message and check mark icon for non-appointment bookings
+            const confirmationIcon = document.getElementById('confirmationIcon');
+            if (confirmationIcon) confirmationIcon.innerHTML = checkMarkIconHtml;
+            const confirmationTitle = document.getElementById('confirmationTitle');
             const confirmationMessage = document.getElementById('confirmationMessage');
+            if (confirmationTitle) {
+                confirmationTitle.textContent = "Thank you!";
+            }
             if (confirmationMessage) {
                 confirmationMessage.textContent = "We'll give you a call soon to schedule your free estimate.";
             }
@@ -3011,14 +3285,26 @@
             if (confirmationStepBelow) confirmationStepBelow.style.display = 'none';
             
             // Duplicate whatever is shown at the top - show only that screen below reviews
-            if (currentSubmitScreenType === 'calendar') {
-                // Show only calendar below (no thank you screen)
+            if (currentSubmitScreenType === 'calendar' && !appointmentTimeSelected) {
+                // Show calendar below only if user hasn't selected a time yet
                 if (calendarStepBelow) {
                     calendarStepBelow.style.display = 'block';
                     ctaSection.classList.add('active');
-                    // Initialize calendar below (same as original)
                     initializeCalendarBelow();
                 }
+            } else if (currentSubmitScreenType === 'calendar' && appointmentTimeSelected) {
+                // User already selected a time on top calendar - show confirmation below so they can't pick a second time
+                if (calendarStepBelow) calendarStepBelow.style.display = 'none';
+                if (confirmationStepBelow) {
+                    const confirmationIconBelow = document.getElementById('confirmationIconBelow');
+                    if (confirmationIconBelow) confirmationIconBelow.innerHTML = exclamationIconHtml;
+                    confirmationStepBelow.style.display = 'block';
+                    const confirmationTitleBelow = document.getElementById('confirmationTitleBelow');
+                    const confirmationMessageBelow = document.getElementById('confirmationMessageBelow');
+                    if (confirmationTitleBelow) confirmationTitleBelow.textContent = "IMPORTANT";
+                    if (confirmationMessageBelow) confirmationMessageBelow.textContent = "Your appointment is not confirmed until we speak with you over the phone. We will call you as soon as possible to confirm your time!";
+                }
+                if (ctaSection) ctaSection.classList.add('active');
             } else if (currentSubmitScreenType === 'Phone' || currentSubmitScreenType === 'Text' || currentSubmitScreenType === 'Phone/Text') {
                 // Show only phone/text screen below (no thank you screen)
                 if (contactStepBelow) {
@@ -3134,8 +3420,15 @@
                 const date = new Date(startDate);
                 date.setDate(startDate.getDate() + i);
                 
-                // Check if day is available (time slot availability checked when day is selected)
-                const isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date);
+                // Check if day is available
+                // If client is "Home Pro MI", use Lead Perfection API availability
+                // Otherwise, use standard client availability logic
+                let isAvailable;
+                if (isHomeProMIClient()) {
+                    isAvailable = hasLPAvailabilityForDate(date);
+                } else {
+                    isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date);
+                }
                 
                 const dayCell = document.createElement('div');
                 dayCell.className = 'calendar-day';
@@ -3175,7 +3468,10 @@
                 
                 if (isAvailable) {
                     const formatted = formatDate(date);
-                    dayCell.onclick = () => selectCalendarDay(date, formatted.fullDate);
+                    // Create a copy of the date to avoid reference issues in the closure
+                    const dateCopy = new Date(date);
+                    // Bottom calendar - pass true for isBottomCalendar
+                    dayCell.onclick = () => selectCalendarDay(dateCopy, formatted.fullDate, true);
                 }
                 
                 calendarGrid.appendChild(dayCell);
@@ -3194,23 +3490,43 @@
             const nextButton = document.getElementById('nextMonthBelow');
             
             if (prevButton) {
-                if (currentWeekStart >= now) {
-                    prevButton.disabled = true;
+                if (isHomeProMIClient()) {
+                    // Get Sunday of current week
+                    const thisWeekStart = new Date(now);
+                    thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay());
+                    // Disable prev if we're at current week
+                    prevButton.disabled = currentWeekStart <= thisWeekStart;
                 } else {
-                    prevButton.disabled = false;
+                    if (currentWeekStart >= now) {
+                        prevButton.disabled = true;
+                    } else {
+                        prevButton.disabled = false;
+                    }
                 }
             }
             
             if (nextButton) {
-                const maxDate = new Date(now);
-                maxDate.setDate(now.getDate() + clientDaysOut);
-                const endDate = new Date(currentWeekStart);
-                endDate.setDate(endDate.getDate() + 20);
-                
-                if (endDate >= maxDate) {
-                    nextButton.disabled = true;
+                if (isHomeProMIClient()) {
+                    // Disable next if we're past the last available date from LP data
+                    if (lpAvailabilityData && lpAvailabilityData.length > 0) {
+                        const lastAvailable = new Date(lpAvailabilityData[lpAvailabilityData.length - 1].SDate);
+                        const currentEnd = new Date(currentWeekStart);
+                        currentEnd.setDate(currentEnd.getDate() + 20);
+                        nextButton.disabled = currentEnd >= lastAvailable;
+                    } else {
+                        nextButton.disabled = true;
+                    }
                 } else {
-                    nextButton.disabled = false;
+                    const maxDate = new Date(now);
+                    maxDate.setDate(now.getDate() + clientDaysOut);
+                    const endDate = new Date(currentWeekStart);
+                    endDate.setDate(endDate.getDate() + 20);
+                    
+                    if (endDate >= maxDate) {
+                        nextButton.disabled = true;
+                    } else {
+                        nextButton.disabled = false;
+                    }
                 }
             }
         }
@@ -3223,7 +3539,7 @@
             const firstAvailable = renderCalendarBelow();
             
             if (firstAvailable.date && firstAvailable.formatted) {
-                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate, true);
             }
         }
 
@@ -3314,12 +3630,12 @@
             
             // Find client by zip code
             try {
-                // Safety check: ensure address data exists
                 if (!finalData.address || !finalData.address.zip) {
                     throw new Error('Address data is missing or incomplete. Address object: ' + JSON.stringify(finalData.address));
                 }
-                
+                console.log('[Submit] Looking up client for zip:', finalData.address.zip, '| full address:', finalData.address);
                 matchedClientData = await findClientByZipCode(finalData.address.zip);
+                console.log('[Submit] findClientByZipCode result:', matchedClientData ? (matchedClientData.fields && matchedClientData.fields['Name']) : null);
                 // Update partner name in privacy policy if client was matched
                 updatePartnerNameInPrivacyPolicy();
             } catch (error) {
@@ -3379,10 +3695,11 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 timeZone: 'America/New_York'
             })} EST`;
             
-            // Store form data for later use (e.g., appointment notifications)
+            // Store form data for later use (e.g., appointment summary update)
             formData.phone = finalData.phone;
             formData.email = finalData.email || '';
             formData.fullName = `${finalData.firstName} ${finalData.lastName}`;
+            formData.fullSummary = fullSummary;
             formData.fullSummaryHTML = fullSummaryHTML;
             
             // Prepare lead data for Airtable
@@ -3402,37 +3719,29 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 address: formattedAddress,
                 city: finalData.address.city || '',
                 state: finalData.address.state || '',
-                zip: finalData.address.zip || ''
+                zip: finalData.address.zip || '',
+                uniqueId: eventId
             };
             
-            // Submit to Airtable
+            // Submit to Airtable (skipped in TEST_MODE_NO_AIRTABLE)
             let submissionSuccessful = false;
-            try {
-                await submitLeadToAirtable(leadData);
+            if (TEST_MODE_NO_AIRTABLE) {
+                console.log('[TEST MODE] Skipping submitLeadToAirtable - no lead written to Airtable.');
                 submissionSuccessful = true;
-                
-                // Send webhook if client is linked
-                if (matchedClientData && matchedClientData.id && leadRecordId) {
-                    await sendLeadWebhook(
-                        leadRecordId,
-                        metaCampaignID,
-                        matchedClientData.id
-                    );
+            } else {
+                try {
+                    await submitLeadToAirtable(leadData);
+                    submissionSuccessful = true;
+                } catch (error) {
+                    console.error('Lead submission failed, showing generic confirmation:', error);
+                    showConfirmationScreen();
+                    isSubmitting = false;
+                    if (phoneSubmitBtn) {
+                        phoneSubmitBtn.disabled = false;
+                        phoneSubmitBtn.textContent = 'Get Quote';
+                    }
+                    return;
                 }
-                
-                // Submission completed successfully
-            } catch (error) {
-                // Error webhook already sent in submitLeadToAirtable
-                // Show generic confirmation screen instead of calendar/phone options
-                console.error('Lead submission failed, showing generic confirmation:', error);
-                showConfirmationScreen();
-                // Reset submission flag and button on error
-                isSubmitting = false;
-                if (phoneSubmitBtn) {
-                    phoneSubmitBtn.disabled = false;
-                    phoneSubmitBtn.textContent = 'Book My Quote';
-                }
-                return; // Exit early - don't show calendar/phone options
             }
             
             // Only proceed to show submit screen if submission was successful
@@ -3512,7 +3821,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 isSubmitting = false;
                 if (phoneSubmitBtn) {
                     phoneSubmitBtn.disabled = false;
-                    phoneSubmitBtn.textContent = 'Book My Quote';
+                    phoneSubmitBtn.textContent = 'Get Quote';
                 }
             }
         }
