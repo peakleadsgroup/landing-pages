@@ -2199,10 +2199,14 @@
         
         function getLPAvailabilityForDate(date) {
             if (!lpAvailabilityData || lpAvailabilityData.length === 0) return null;
+            if (!date) return null;
             
-            const dateStr = date.toISOString().split('T')[0];
+            // Ensure we have a proper Date object
+            const dateObj = new Date(date);
+            const dateStr = dateObj.toISOString().split('T')[0];
             
             for (const day of lpAvailabilityData) {
+                if (!day.SDate) continue;
                 const dayDate = new Date(day.SDate).toISOString().split('T')[0];
                 if (dayDate === dateStr) {
                     return day;
@@ -2360,10 +2364,13 @@
                 return [];
             }
             
+            // Ensure we have a proper Date object
+            const dateObj = new Date(date);
+            
             // If client is "Home Pro MI", use Lead Perfection API logic
             if (isHomeProMIClient()) {
                 // Get Lead Perfection availability data for this date
-                const dayData = getLPAvailabilityForDate(date);
+                const dayData = getLPAvailabilityForDate(dateObj);
                 if (!dayData) return [];
                 
                 const lpSlots = getLPTimeSlotsForDay(dayData);
@@ -2385,10 +2392,10 @@
                     }
                     
                     return {
-                        time: new Date(date), // Placeholder time object
+                        time: new Date(dateObj), // Placeholder time object
                         display: timeDisplay,
                         apptFormat: apptTimeFormat,
-                        isoString: date.toISOString(),
+                        isoString: dateObj.toISOString(),
                         originalTime: timeDisplay,
                         slotIndex: lpSlot.slotIndex
                     };
@@ -2607,7 +2614,9 @@
                 
                 if (isAvailable) {
                     const formatted = formatDate(date);
-                    dayCell.onclick = () => selectCalendarDay(date, formatted.fullDate);
+                    // Create a copy of the date to avoid reference issues in the closure
+                    const dateCopy = new Date(date);
+                    dayCell.onclick = () => selectCalendarDay(dateCopy, formatted.fullDate);
                 }
                 
                 calendarGrid.appendChild(dayCell);
@@ -2720,7 +2729,8 @@
         }
         
         function selectCalendarDay(date, fullDate) {
-            selectedDate = date;
+            // Create a new Date object to avoid reference issues
+            selectedDate = new Date(date);
             selectedTime = null;
             
             // Determine which calendar is active
@@ -2773,9 +2783,16 @@
                 return;
             }
             
+            if (!selectedDate) {
+                timeGrid.innerHTML = '<div style="text-align: center; padding: 20px;">Please select a date</div>';
+                return;
+            }
+            
             timeGrid.innerHTML = '<div style="text-align: center; padding: 20px;">Loading available times...</div>';
             
-            const slots = await getAvailableTimesForDate(selectedDate);
+            // Create a new Date object to ensure we're using the correct date
+            const dateToUse = new Date(selectedDate);
+            const slots = await getAvailableTimesForDate(dateToUse);
             
             timeGrid.innerHTML = '';
             
@@ -3402,7 +3419,9 @@
                 
                 if (isAvailable) {
                     const formatted = formatDate(date);
-                    dayCell.onclick = () => selectCalendarDay(date, formatted.fullDate);
+                    // Create a copy of the date to avoid reference issues in the closure
+                    const dateCopy = new Date(date);
+                    dayCell.onclick = () => selectCalendarDay(dateCopy, formatted.fullDate);
                 }
                 
                 calendarGrid.appendChild(dayCell);
