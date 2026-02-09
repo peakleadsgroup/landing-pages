@@ -1417,51 +1417,49 @@
 
         async function findClientByZipCode(zipCode) {
             try {
-                // Define the niche for this landing page
                 const landingPageNiche = 'Bathrooms';
-                
-                // Fetch all clients
-                const clientsUrl = `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}`;
-                const clientsData = await fetchAirtableData(clientsUrl);
-                
-                if (!clientsData.records || clientsData.records.length === 0) {
+                const zipStr = String(zipCode).trim();
+
+                // Fetch ALL clients (Airtable returns max 100 per request; paginate to get every record)
+                let allRecords = [];
+                let url = `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}`;
+                do {
+                    const page = await fetchAirtableData(url);
+                    if (page.records && page.records.length > 0) {
+                        allRecords = allRecords.concat(page.records);
+                    }
+                    url = page.offset ? `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}?offset=${page.offset}` : null;
+                } while (url);
+
+                if (allRecords.length === 0) {
                     return null;
                 }
-                
-                // Collect all matching clients (both Active and Paused)
+
                 const activeMatches = [];
                 const pausedMatches = [];
-                
-                // Search through each client's Expanded Area Raw Zips
-                for (const client of clientsData.records) {
-                    // Only consider clients with "Active" or "Paused" status
+
+                for (const client of allRecords) {
                     const status = client.fields['Status'];
                     if (status !== 'Active' && status !== 'Paused') {
                         continue;
                     }
-                    
-                    // Check if client niche matches the landing page niche
-                    // Niche is a multiple select field (array), so check if array includes the niche
+
                     const clientNiche = client.fields['Niche'];
                     if (!clientNiche) {
                         continue;
                     }
-                    // Handle multiple select field (array) - check if array includes the niche
-                    const nicheMatches = Array.isArray(clientNiche) 
+                    const nicheMatches = Array.isArray(clientNiche)
                         ? clientNiche.includes(landingPageNiche)
                         : clientNiche === landingPageNiche;
                     if (!nicheMatches) {
                         continue;
                     }
-                    
+
                     const zipList = client.fields['Expanded Area Raw Zips'];
                     if (!zipList) continue;
-                    
-                    // Parse comma-separated zip codes (handle spaces)
-                    const zipCodes = zipList.split(',').map(z => z.trim());
-                    
-                    if (zipCodes.includes(zipCode)) {
-                        // Separate Active and Paused clients
+
+                    const zipCodes = zipList.split(',').map(z => String(z).trim());
+                    if (zipCodes.includes(zipStr)) {
                         if (status === 'Active') {
                             activeMatches.push(client);
                         } else if (status === 'Paused') {
@@ -1469,14 +1467,13 @@
                         }
                     }
                 }
-                
-                // Prefer Active clients over Paused clients
+
                 if (activeMatches.length > 0) {
-                    return activeMatches[0]; // Return first Active client
-                } else if (pausedMatches.length > 0) {
-                    return pausedMatches[0]; // Return first Paused client if no Active matches
+                    return activeMatches[0];
                 }
-                
+                if (pausedMatches.length > 0) {
+                    return pausedMatches[0];
+                }
                 return null;
             } catch (error) {
                 console.error('Error finding client by zip code:', error);
