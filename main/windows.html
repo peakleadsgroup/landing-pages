@@ -781,6 +781,11 @@
                         </svg>
                     </button>
                     <div class="month-display" id="monthDisplay"></div>
+                    <button class="nav-button" id="nextMonth" onclick="changeCalendarMonth(1)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 18l6-6-6-6"/>
+                        </svg>
+                    </button>
                 </div>
             </div>
             
@@ -833,6 +838,8 @@
             URL_PARAMETERS: 'tbl5JDBRhTzuxzsc4',
         };
         const CONTACT_NOTIFICATION_WEBHOOK_URL = 'https://hook.us2.make.com/16nbe9d7b8igymuas81euw3o124khm7s';
+        // Lead Perfection API Configuration (via Make.com proxy)
+        const LP_MAKE_WEBHOOK_URL = 'https://hook.us2.make.com/dn7kjdagrc6goimlozfan1zpt2dp9lvs';
         
         // Calendar Configuration (defaults, will be overridden by client data)
         const CALENDAR_CONFIG = {
@@ -858,7 +865,9 @@
         let clientAvailability = []; // Client's available times
         let clientAvailableDays = [1, 2, 3, 4, 5]; // Default: Monday-Friday
         let clientDaysOut = 14; // Default: 14 days out
+        let clientMinHoursInAdvance = CALENDAR_CONFIG.minHoursInAdvance; // Default minimum hours in advance (can be overridden per client)
         let isSubmitting = false; // Flag to prevent duplicate submissions
+        let lpAvailabilityData = []; // Lead Perfection API availability data
         
         // Get campaign ID immediately from URL (before DOM is ready)
         const urlParams = new URLSearchParams(window.location.search);
@@ -1034,33 +1043,63 @@
 
         async function findClientByZipCode(zipCode) {
             try {
-                // Fetch all clients
-                const clientsUrl = `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}`;
-                const clientsData = await fetchAirtableData(clientsUrl);
-                
-                if (!clientsData.records || clientsData.records.length === 0) {
+                const landingPageNiche = 'Windows';
+                const zipStr = String(zipCode).trim();
+
+                // Fetch ALL clients (Airtable returns max 100 per request; paginate to get every record)
+                let allRecords = [];
+                let url = `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}`;
+                do {
+                    const page = await fetchAirtableData(url);
+                    if (page.records && page.records.length > 0) {
+                        allRecords = allRecords.concat(page.records);
+                    }
+                    url = page.offset ? `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}?offset=${page.offset}` : null;
+                } while (url);
+
+                if (allRecords.length === 0) {
                     return null;
                 }
-                
-                // Search through each client's Expanded Area Raw Zips
-                for (const client of clientsData.records) {
-                    // Only consider clients with "Active" or "Paused" status
+
+                const activeMatches = [];
+                const pausedMatches = [];
+
+                for (const client of allRecords) {
                     const status = client.fields['Status'];
                     if (status !== 'Active' && status !== 'Paused') {
                         continue;
                     }
-                    
+
+                    const clientNiche = client.fields['Niche'];
+                    if (!clientNiche) {
+                        continue;
+                    }
+                    const nicheMatches = Array.isArray(clientNiche)
+                        ? clientNiche.includes(landingPageNiche)
+                        : clientNiche === landingPageNiche;
+                    if (!nicheMatches) {
+                        continue;
+                    }
+
                     const zipList = client.fields['Expanded Area Raw Zips'];
                     if (!zipList) continue;
-                    
-                    // Parse comma-separated zip codes (handle spaces)
-                    const zipCodes = zipList.split(',').map(z => z.trim());
-                    
-                    if (zipCodes.includes(zipCode)) {
-                        return client;
+
+                    const zipCodes = zipList.split(',').map(z => String(z).trim());
+                    if (zipCodes.includes(zipStr)) {
+                        if (status === 'Active') {
+                            activeMatches.push(client);
+                        } else if (status === 'Paused') {
+                            pausedMatches.push(client);
+                        }
                     }
                 }
-                
+
+                if (activeMatches.length > 0) {
+                    return activeMatches[0];
+                }
+                if (pausedMatches.length > 0) {
+                    return pausedMatches[0];
+                }
                 return null;
             } catch (error) {
                 console.error('Error finding client by zip code:', error);
@@ -1148,12 +1187,10 @@
         
         async function submitLeadToAirtable(leadData) {
             try {
-                // Determine which client to use for Lead Price (matched client first, then campaign client)
-                const clientForPrice = matchedClientData || campaignClientData;
+                // Only set Lead Price when we have a matched client by zip; leave blank if no match
                 let leadPrice = null;
-                
-                if (clientForPrice && clientForPrice.fields && clientForPrice.fields['Lead Price']) {
-                    leadPrice = clientForPrice.fields['Lead Price'];
+                if (matchedClientData && matchedClientData.fields && matchedClientData.fields['Lead Price']) {
+                    leadPrice = matchedClientData.fields['Lead Price'];
                 }
                 
                 // Prepare the record
@@ -1198,7 +1235,10 @@
                     record.fields['Ad'] = [adRecordId];
                 }
                 
-                console.log('Submitting lead to Airtable:', record);
+                // Add Unique ID (used for Meta lead deduplication) if provided
+                if (leadData.uniqueId) {
+                    record.fields['Unique ID'] = leadData.uniqueId;
+                }
                 
                 // Submit to Airtable
                 const response = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}`, {
@@ -1216,7 +1256,6 @@
                 }
                 
                 const result = await response.json();
-                console.log('Lead submitted successfully:', result);
                 
                 // Store the lead record ID so we can update it with appointment later
                 if (result.records && result.records.length > 0) {
@@ -1756,6 +1795,93 @@
         }
 
         // ============================================
+        // LEAD PERFECTION API FUNCTIONS
+        // ============================================
+        
+        async function fetchLeadPerfectionAvailability(zipCode) {
+            try {
+                if (!zipCode || !LP_MAKE_WEBHOOK_URL) {
+                    console.log('No zip code or webhook URL for Lead Perfection availability');
+                    return [];
+                }
+                
+                console.log('Fetching Lead Perfection availability for zip:', zipCode);
+                
+                const response = await fetch(LP_MAKE_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ zip: zipCode })
+                });
+                
+                if (!response.ok) {
+                    console.error('Lead Perfection API error:', response.status, response.statusText);
+                    return [];
+                }
+                
+                const data = await response.json();
+                console.log('Lead Perfection availability data:', data);
+                
+                return data || [];
+            } catch (error) {
+                console.error('Error fetching Lead Perfection availability:', error);
+                return [];
+            }
+        }
+        
+        function getLPAvailabilityForDate(date) {
+            if (!lpAvailabilityData || lpAvailabilityData.length === 0) return null;
+            if (!date) return null;
+            
+            const dateObj = new Date(date);
+            const dateStr = dateObj.toISOString().split('T')[0];
+            
+            for (const day of lpAvailabilityData) {
+                if (!day.SDate) continue;
+                const dayDate = new Date(day.SDate).toISOString().split('T')[0];
+                if (dayDate === dateStr) {
+                    return day;
+                }
+            }
+            return null;
+        }
+        
+        function getLPTimeSlotsForDay(dayData) {
+            if (!dayData) return [];
+            
+            const slots = [];
+            for (let i = 1; i <= 6; i++) {
+                const timeDesc = dayData[`TMS_Descr${i}`];
+                const available = dayData[`T${i}`];
+                
+                if (timeDesc && available > 0) {
+                    slots.push({
+                        time: timeDesc,
+                        available: available,
+                        slotIndex: i
+                    });
+                }
+            }
+            return slots;
+        }
+        
+        function hasLPAvailabilityForDate(date) {
+            const dayData = getLPAvailabilityForDate(date);
+            if (!dayData) return false;
+            const slots = getLPTimeSlotsForDay(dayData);
+            return slots.length > 0;
+        }
+        
+        function isHomeProMIClient() {
+            const activeClient = matchedClientData || campaignClientData;
+            if (activeClient && activeClient.fields && activeClient.fields['Name']) {
+                return activeClient.fields['Name'] === 'Home Pro MI';
+            }
+            return false;
+        }
+        
+        // ============================================
         // CALENDAR FUNCTIONS
         // ============================================
         
@@ -1825,12 +1951,17 @@
             const now = getCurrentDateInTimezone();
             const hoursFromNow = (date - now) / (1000 * 60 * 60);
             
-            if (hoursFromNow < CALENDAR_CONFIG.minHoursInAdvance) return false;
+            if (hoursFromNow < clientMinHoursInAdvance) return false;
             
             const maxDate = new Date(now);
             maxDate.setDate(now.getDate() + clientDaysOut);
             
             return date <= maxDate;
+        }
+        
+        function normalizeTimeForComparison(timeStr) {
+            if (timeStr == null || typeof timeStr !== 'string') return '';
+            return timeStr.trim().replace(/^0(\d):/, '$1:').toUpperCase();
         }
         
         function isHoliday(date) {
@@ -1853,16 +1984,46 @@
         }
         
         async function getAvailableTimesForDate(date) {
-            if (!date || !clientAvailability || clientAvailability.length === 0) return [];
+            if (!date) return [];
+            
+            const dateObj = new Date(date);
+            
+            // If client is "Home Pro MI", use Lead Perfection API logic
+            if (isHomeProMIClient()) {
+                const dayData = getLPAvailabilityForDate(dateObj);
+                if (!dayData) return [];
+                
+                const lpSlots = getLPTimeSlotsForDay(dayData);
+                if (lpSlots.length === 0) return [];
+                
+                return lpSlots.map(lpSlot => {
+                    const timeDisplay = lpSlot.time;
+                    const startTimeMatch = timeDisplay.match(/^(\d+)(am|pm)/i);
+                    let apptTimeFormat = timeDisplay;
+                    if (startTimeMatch) {
+                        const hour = parseInt(startTimeMatch[1]);
+                        const ampm = startTimeMatch[2].toUpperCase();
+                        apptTimeFormat = `${hour.toString().padStart(2, '0')}:00 ${ampm}`;
+                    }
+                    return {
+                        time: new Date(dateObj),
+                        display: timeDisplay,
+                        apptFormat: apptTimeFormat,
+                        isoString: dateObj.toISOString(),
+                        originalTime: timeDisplay,
+                        slotIndex: lpSlot.slotIndex
+                    };
+                });
+            }
+            
+            // Standard client availability logic
+            if (!clientAvailability || clientAvailability.length === 0) return [];
             
             const slots = [];
             const now = getCurrentDateInTimezone();
+            const linkedClientId = (matchedClientData && matchedClientData.id) || (campaignClientData && campaignClientData.id) || null;
+            const bookedTimes = await getBookedAppointments(date, linkedClientId);
             
-            // Get already booked times for this date
-            const bookedTimes = await getBookedAppointments(date);
-            console.log('Booked times for date:', bookedTimes);
-            
-            // Use client's Availability field to generate time slots
             clientAvailability.forEach(timeStr => {
                 const timeParts = parseTimeString(timeStr);
                 if (!timeParts) return;
@@ -1872,46 +2033,31 @@
                 
                 const hoursFromNow = (slotTime - now) / (1000 * 60 * 60);
                 
-                // Only show times that meet minimum advance requirement
-                if (hoursFromNow >= CALENDAR_CONFIG.minHoursInAdvance) {
-                    const hours = slotTime.getHours();
-                    const minutes = slotTime.getMinutes();
-                    const ampm = hours >= 12 ? 'PM' : 'AM';
-                    const displayHours12 = hours % 12 || 12;
-                    const displayMinutes = minutes.toString().padStart(2, '0');
-                    // Display format for calendar (can be single digit hour)
-                    const displayTime = `${displayHours12}:${displayMinutes} ${ampm}`;
-                    // Format for Appt field (HH:mm with leading zero)
-                    const apptTimeFormat = `${displayHours12.toString().padStart(2, '0')}:${displayMinutes} ${ampm}`;
-                    
-                    // Check if this time is already booked
-                    // Normalize times for comparison (handle both "9:00 AM" and "09:00 AM" formats)
-                    const normalizeTime = (timeStr) => {
-                        // Remove leading zero from hour if present, e.g., "09:00 AM" -> "9:00 AM"
-                        return timeStr.trim().replace(/^0(\d):/, '$1:');
-                    };
-                    
-                    const normalizedDisplayTime = normalizeTime(displayTime);
-                    const isBooked = bookedTimes.some(booked => {
-                        const normalizedBooked = normalizeTime(booked);
-                        return normalizedBooked === normalizedDisplayTime;
+                if (hoursFromNow < clientMinHoursInAdvance) return;
+                
+                const hours = slotTime.getHours();
+                const minutes = slotTime.getMinutes();
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                const displayHours12 = hours % 12 || 12;
+                const displayMinutes = minutes.toString().padStart(2, '0');
+                const displayTime = `${displayHours12}:${displayMinutes} ${ampm}`;
+                const apptTimeFormat = `${displayHours12.toString().padStart(2, '0')}:${displayMinutes} ${ampm}`;
+                
+                const normalizedDisplayTime = normalizeTimeForComparison(displayTime);
+                const isBooked = bookedTimes.some(booked => normalizeTimeForComparison(booked) === normalizedDisplayTime);
+                
+                if (!isBooked) {
+                    slots.push({
+                        time: slotTime,
+                        display: displayTime,
+                        apptFormat: apptTimeFormat,
+                        isoString: slotTime.toISOString(),
+                        originalTime: timeStr
                     });
-                    
-                    if (!isBooked) {
-                        slots.push({
-                            time: slotTime,
-                            display: displayTime,
-                            apptFormat: apptTimeFormat, // Store formatted time for Appt field
-                            isoString: slotTime.toISOString(),
-                            originalTime: timeStr
-                        });
-                    }
                 }
             });
             
-            // Sort slots by time
             slots.sort((a, b) => a.time - b.time);
-            
             return slots;
         }
         
@@ -1936,41 +2082,37 @@
             return `${month}/${day}/${year} at ${timeDisplay}`;
         }
         
-        async function getBookedAppointments(date) {
+        async function getBookedAppointments(date, linkedClientId) {
             try {
-                // Format the date as MM/DD/YYYY to match appointment format
+                // Only count appointments for this client's leads
+                if (!linkedClientId) {
+                    return [];
+                }
                 const month = (date.getMonth() + 1).toString().padStart(2, '0');
                 const day = date.getDate().toString().padStart(2, '0');
                 const year = date.getFullYear();
                 const datePrefix = `${month}/${day}/${year} at `;
-                
-                // Fetch all leads with appointments on this date
-                // We'll filter by checking if Appt field starts with our date prefix
-                const leadsUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}?filterByFormula=SEARCH("${datePrefix}", {Appt})`;
+                const filterByFormula = `AND(SEARCH("${datePrefix}", {Appt}), FIND("${linkedClientId}", ARRAYJOIN({Linked Client})) > 0)`;
+                const leadsUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}?filterByFormula=${encodeURIComponent(filterByFormula)}`;
                 const leadsData = await fetchAirtableData(leadsUrl);
                 
                 if (!leadsData.records || leadsData.records.length === 0) {
                     return [];
                 }
                 
-                // Extract the times that are already booked
                 const bookedTimes = [];
                 leadsData.records.forEach(lead => {
                     const appt = lead.fields['Appt'];
                     if (appt && appt.startsWith(datePrefix)) {
-                        // Extract the time part (everything after "at ")
                         const timePart = appt.substring(datePrefix.length).trim();
                         if (timePart) {
                             bookedTimes.push(timePart);
                         }
                     }
                 });
-                
-                console.log('Booked times found:', bookedTimes);
                 return bookedTimes;
             } catch (error) {
                 console.error('Error fetching booked appointments:', error);
-                // Return empty array on error so we don't block availability
                 return [];
             }
         }
@@ -2009,8 +2151,13 @@
                 const date = new Date(startDate);
                 date.setDate(startDate.getDate() + i);
                 
-                // Check if day is available (time slot availability checked when day is selected)
-                const isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date);
+                // Check if day is available; Home Pro MI uses Lead Perfection API availability
+                let isAvailable;
+                if (isHomeProMIClient()) {
+                    isAvailable = hasLPAvailabilityForDate(date);
+                } else {
+                    isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date);
+                }
                 
                 const dayCell = document.createElement('div');
                 dayCell.className = 'calendar-day';
@@ -2062,30 +2209,28 @@
         }
         
         function changeCalendarMonth(direction) {
-            if (direction < 0) {
-                currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
-                const firstAvailable = renderCalendar();
+            currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
+            const firstAvailable = renderCalendar();
+            
+            if (selectedDate) {
+                const now = getCurrentDateInTimezone();
+                now.setHours(0, 0, 0, 0);
+                const startDate = new Date(currentWeekStart);
+                const startDayOfWeek = startDate.getDay();
+                startDate.setDate(startDate.getDate() - startDayOfWeek);
+                const endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + 20);
                 
-                if (selectedDate) {
-                    const now = getCurrentDateInTimezone();
-                    now.setHours(0, 0, 0, 0);
-                    const startDate = new Date(currentWeekStart);
-                    const startDayOfWeek = startDate.getDay();
-                    startDate.setDate(startDate.getDate() - startDayOfWeek);
-                    const endDate = new Date(startDate);
-                    endDate.setDate(startDate.getDate() + 20);
-                    
-                    if (selectedDate < startDate || selectedDate > endDate) {
-                        if (firstAvailable.date && firstAvailable.formatted) {
-                            selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
-                        }
-                    } else {
-                        const formatted = formatDate(selectedDate);
-                        selectCalendarDay(selectedDate, formatted.fullDate);
+                if (selectedDate < startDate || selectedDate > endDate) {
+                    if (firstAvailable.date && firstAvailable.formatted) {
+                        selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
                     }
-                } else if (firstAvailable.date && firstAvailable.formatted) {
-                    selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+                } else {
+                    const formatted = formatDate(selectedDate);
+                    selectCalendarDay(selectedDate, formatted.fullDate);
                 }
+            } else if (firstAvailable.date && firstAvailable.formatted) {
+                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
             }
         }
         
@@ -2094,11 +2239,35 @@
             now.setHours(0, 0, 0, 0);
             
             const prevButton = document.getElementById('prevMonth');
+            const nextButton = document.getElementById('nextMonth');
             
-            if (currentWeekStart >= now) {
-                prevButton.disabled = true;
-            } else {
-                prevButton.disabled = false;
+            if (prevButton) {
+                if (isHomeProMIClient()) {
+                    const thisWeekStart = new Date(now);
+                    thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay());
+                    prevButton.disabled = currentWeekStart <= thisWeekStart;
+                } else {
+                    prevButton.disabled = currentWeekStart >= now;
+                }
+            }
+            
+            if (nextButton) {
+                if (isHomeProMIClient()) {
+                    if (lpAvailabilityData && lpAvailabilityData.length > 0) {
+                        const lastAvailable = new Date(lpAvailabilityData[lpAvailabilityData.length - 1].SDate);
+                        const currentEnd = new Date(currentWeekStart);
+                        currentEnd.setDate(currentEnd.getDate() + 20);
+                        nextButton.disabled = currentEnd >= lastAvailable;
+                    } else {
+                        nextButton.disabled = true;
+                    }
+                } else {
+                    const maxDate = new Date(now);
+                    maxDate.setDate(now.getDate() + clientDaysOut);
+                    const endDate = new Date(currentWeekStart);
+                    endDate.setDate(endDate.getDate() + 20);
+                    nextButton.disabled = endDate >= maxDate;
+                }
             }
         }
         
@@ -2166,9 +2335,14 @@
             const timeForAppt = slot.apptFormat || slot.display;
             const appointmentText = formatAppointmentDate(selectedDate, timeForAppt);
             
-            // Update the lead record in Airtable with the appointment
+            // Update the lead record in Airtable with the appointment and rewrite summaries with appointment at top
             if (leadRecordId) {
                 try {
+                    const baseSummary = formData.fullSummary || '';
+                    const baseSummaryHTML = formData.fullSummaryHTML || '';
+                    const fullSummaryWithAppt = `Appointment: ${appointmentText}\n\n${baseSummary}`;
+                    const fullSummaryHTMLWithAppt = `Appointment: ${appointmentText}<BR><BR>${baseSummaryHTML}`;
+
                     const updateResponse = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}/${leadRecordId}`, {
                         method: 'PATCH',
                         headers: {
@@ -2177,61 +2351,29 @@
                         },
                         body: JSON.stringify({
                             fields: {
-                                'Appt': appointmentText
+                                'Appt': appointmentText,
+                                'Full Summary': fullSummaryWithAppt,
+                                'Full Summary HTML': fullSummaryHTMLWithAppt
                             }
                         })
                     });
                     
                     if (!updateResponse.ok) {
                         const errorText = await updateResponse.text();
-                        const error = new Error(`Failed to update appointment: ${errorText}`);
-                        throw error;
+                        throw new Error(`Failed to update appointment: ${errorText}`);
                     }
-                    console.log('Appointment saved to Airtable:', appointmentText);
                     
-                    // Send appointment notifications to contacts
-                    const clientToNotify = matchedClientData || campaignClientData;
-                    console.log('Appointment booking - clientToNotify:', clientToNotify);
-                    if (clientToNotify && clientToNotify.id) {
-                        console.log('Sending appointment notifications for client:', clientToNotify.id);
-                        // Get lead data for notification
-                        const leadFullName = formData.fullName || `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || 'Unknown';
-                        
-                        // Use stored summary HTML if available, otherwise build it
-                        let fullSummaryHTML = formData.fullSummaryHTML;
-                        if (!fullSummaryHTML) {
-                            const emailLineHTML = formData.email ? `Email: ${formData.email}<BR>` : '';
-                            fullSummaryHTML = `Windows Replacement Lead Information:<BR><BR>Name: ${leadFullName}<BR>Phone: ${formatPhoneForDisplay(formData.phone || '')}<BR>${emailLineHTML}Homeowner: ${formData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Timeline: ${getTimelineDisplay(formData.timeline)}<BR>Priority: ${getPriorityDisplay(formData.priority)}<BR><BR>Address:<BR>${formData.address?.street || ''}<BR>${formData.address?.city || ''}, ${formData.address?.state || ''} ${formData.address?.zip || ''}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
-                                weekday: 'long', 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric',
-                                hour: 'numeric',
-                                minute: '2-digit',
-                                hour12: true,
-                                timeZone: 'America/New_York'
-                            })} EST`;
-                        }
-                        
-                        // Send webhook if client is linked
-                        if (matchedClientData && matchedClientData.id && leadRecordId) {
-                            await sendLeadWebhook(
-                                leadRecordId,
-                                metaCampaignID,
-                                matchedClientData.id,
-                                appointmentText
-                            );
-                        }
-                        
-                        console.log('Appointment notifications sent');
-                    } else {
-                        console.log('No client found for appointment notifications');
+                    if (matchedClientData && matchedClientData.id) {
+                        await sendLeadWebhook(
+                            leadRecordId,
+                            metaCampaignID,
+                            matchedClientData.id,
+                            appointmentText
+                        );
                     }
                 } catch (error) {
                     console.error('Error updating appointment in Airtable:', error);
                 }
-            } else {
-                console.warn('No lead record ID available to update with appointment');
             }
             
             // Show confirmation screen with appointment-specific message
@@ -2243,79 +2385,76 @@
             document.getElementById('confirmationStep').classList.add('active');
         }
         
-        function showCalendarScreen() {
-            console.log('showCalendarScreen called');
+        async function showCalendarScreen() {
             const step7 = document.getElementById('step7');
             const calendarStep = document.getElementById('calendarStep');
             const progressBar = document.getElementById('progressBarContainer');
             const mainHeading = document.getElementById('mainHeading');
-            
-            // Get client timezone, availability, and days
             const activeClient = matchedClientData || campaignClientData;
-            if (activeClient && activeClient.fields) {
-                // Set timezone from client data
-                if (activeClient.fields['Timezone']) {
-                    clientTimezone = activeClient.fields['Timezone'];
-                    console.log('Using client timezone:', clientTimezone);
+            
+            // If client is "Home Pro MI", fetch Lead Perfection availability
+            if (isHomeProMIClient()) {
+                if (activeClient && activeClient.fields) {
+                    if (activeClient.fields['Timezone']) clientTimezone = activeClient.fields['Timezone'];
+                    if (activeClient.fields['Days Out'] !== undefined && activeClient.fields['Days Out'] !== null) {
+                        const daysOutValue = Number(activeClient.fields['Days Out']);
+                        clientDaysOut = (!isNaN(daysOutValue) && daysOutValue > 0) ? daysOutValue : 14;
+                    } else {
+                        clientDaysOut = 14;
+                    }
                 }
+                const zipCode = formData.address?.zip || '';
+                if (zipCode) {
+                    lpAvailabilityData = await fetchLeadPerfectionAvailability(zipCode);
+                }
+            } else if (activeClient && activeClient.fields) {
+                if (activeClient.fields['Timezone']) clientTimezone = activeClient.fields['Timezone'];
                 
-                // Set availability from client data
                 if (activeClient.fields['Availability']) {
-                    clientAvailability = Array.isArray(activeClient.fields['Availability']) 
-                        ? activeClient.fields['Availability'] 
-                        : [activeClient.fields['Availability']];
-                    console.log('Using client availability:', clientAvailability);
+                    const raw = activeClient.fields['Availability'];
+                    const arr = Array.isArray(raw) ? raw : [raw];
+                    const flattened = [];
+                    arr.forEach(item => {
+                        let str = typeof item === 'string' ? item : (item && (item.fields && (item.fields['Time'] || item.fields['Name'] || item.fields['Label'])) || item.name || '');
+                        if (typeof str !== 'string') return;
+                        str.split(/[\n,]+/).forEach(part => {
+                            const t = part.trim();
+                            if (t) flattened.push(t);
+                        });
+                    });
+                    clientAvailability = [...new Set(flattened)];
                 } else {
-                    console.warn('No Availability field found in client data');
                     clientAvailability = [];
                 }
                 
-                // Set available days from client data
-                if (activeClient.fields['Days']) {
-                    const daysArray = Array.isArray(activeClient.fields['Days']) 
-                        ? activeClient.fields['Days'] 
-                        : [activeClient.fields['Days']];
-                    
-                    // Convert day names to day numbers
-                    clientAvailableDays = daysArray
-                        .map(dayName => convertDayNameToNumber(dayName))
-                        .filter(dayNum => dayNum !== null);
-                    
-                    console.log('Using client available days:', daysArray, '->', clientAvailableDays);
-                    
-                    // If no valid days found, use default
-                    if (clientAvailableDays.length === 0) {
-                        console.warn('No valid days found, using default (Monday-Friday)');
-                        clientAvailableDays = [1, 2, 3, 4, 5];
-                    }
+                if (activeClient.fields['Min Hours In Advance'] !== undefined && activeClient.fields['Min Hours In Advance'] !== null) {
+                    const val = Number(activeClient.fields['Min Hours In Advance']);
+                    if (!isNaN(val) && val >= 0) clientMinHoursInAdvance = val;
+                } else if (activeClient.fields['Hours In Advance'] !== undefined && activeClient.fields['Hours In Advance'] !== null) {
+                    const val = Number(activeClient.fields['Hours In Advance']);
+                    if (!isNaN(val) && val >= 0) clientMinHoursInAdvance = val;
                 } else {
-                    console.warn('No Days field found in client data, using default (Monday-Friday)');
+                    clientMinHoursInAdvance = CALENDAR_CONFIG.minHoursInAdvance;
+                }
+                
+                if (activeClient.fields['Days']) {
+                    const daysArray = Array.isArray(activeClient.fields['Days']) ? activeClient.fields['Days'] : [activeClient.fields['Days']];
+                    clientAvailableDays = daysArray.map(dayName => convertDayNameToNumber(dayName)).filter(dayNum => dayNum !== null);
+                    if (clientAvailableDays.length === 0) clientAvailableDays = [1, 2, 3, 4, 5];
+                } else {
                     clientAvailableDays = [1, 2, 3, 4, 5];
                 }
                 
-                // Set days out from client data
                 if (activeClient.fields['Days Out'] !== undefined && activeClient.fields['Days Out'] !== null) {
                     const daysOutValue = Number(activeClient.fields['Days Out']);
-                    if (!isNaN(daysOutValue) && daysOutValue > 0) {
-                        clientDaysOut = daysOutValue;
-                        console.log('Using client days out:', clientDaysOut);
-                    } else {
-                        console.warn('Invalid Days Out value, using default (14)');
-                        clientDaysOut = 14;
-                    }
+                    clientDaysOut = (!isNaN(daysOutValue) && daysOutValue > 0) ? daysOutValue : 14;
                 } else {
-                    console.warn('No Days Out field found in client data, using default (14)');
                     clientDaysOut = 14;
                 }
             }
             
             if (step7) step7.classList.remove('active');
-            if (calendarStep) {
-                calendarStep.classList.add('active');
-                console.log('Calendar step activated');
-            } else {
-                console.error('Calendar step element not found!');
-            }
+            if (calendarStep) calendarStep.classList.add('active');
             if (progressBar) progressBar.style.display = 'none';
             if (mainHeading) mainHeading.style.display = 'none';
             
@@ -2568,14 +2707,14 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 timeZone: 'America/New_York'
             })} EST`;
             
-            // Store form data for later use (e.g., appointment notifications)
+            // Store form data for later use (e.g., appointment summary update)
             formData.phone = finalData.phone;
             formData.email = finalData.email || '';
             formData.fullName = `${finalData.firstName} ${finalData.lastName}`;
+            formData.fullSummary = fullSummary;
             formData.fullSummaryHTML = fullSummaryHTML;
             
             // Prepare lead data for Airtable
-            // Safety check: ensure address data exists
             if (!finalData.address) {
                 throw new Error('Address data is missing. Cannot submit lead without address information.');
             }
@@ -2591,7 +2730,8 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 address: formattedAddress,
                 city: finalData.address.city || '',
                 state: finalData.address.state || '',
-                zip: finalData.address.zip || ''
+                zip: finalData.address.zip || '',
+                uniqueId: eventId
             };
             
             // Submit to Airtable
@@ -2664,55 +2804,19 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             const normalizedType = submitScreenType.toLowerCase();
             
             if (normalizedType === 'redirect') {
-                // Redirect to URL from Redirect URL field
                 const redirectUrl = activeClient && activeClient.fields['Redirect URL'] ? activeClient.fields['Redirect URL'] : null;
                 if (redirectUrl) {
                     const clientId = activeClient ? activeClient.id : null;
-                    
-                    // Use leadData if available, otherwise fall back to formData
                     const dataForParams = leadData || formData;
-                    const fullName = dataForParams.fullName || (dataForParams.firstName && dataForParams.lastName ? `${dataForParams.firstName} ${dataForParams.lastName}`.trim() : '');
-                    const phone = dataForParams.phone || '';
-                    
-                    let finalRedirectUrl = redirectUrl;
-                    
-                    // Special handling for Elevated Kitchen & Bath
-                    if (clientId === 'receATe2XBIG7KSXS') {
-                        try {
-                            const url = new URL(redirectUrl);
-                            if (fullName) {
-                                url.searchParams.append('full_name', fullName);
-                            }
-                            if (phone) {
-                                url.searchParams.append('phone', phone);
-                            }
-                            finalRedirectUrl = url.toString();
-                        } catch (error) {
-                            console.error('Error building redirect URL:', error);
-                            // If URL parsing fails, try simple string concatenation
-                            const separator = redirectUrl.includes('?') ? '&' : '?';
-                            const params = [];
-                            if (fullName) params.push(`full_name=${encodeURIComponent(fullName)}`);
-                            if (phone) params.push(`phone=${encodeURIComponent(phone)}`);
-                            if (params.length > 0) {
-                                finalRedirectUrl = redirectUrl + separator + params.join('&');
-                            }
-                        }
-                    } else {
-                        // For other clients, use the dynamic URL parameters system
-                        const logData = {
-                            campaignID: metaCampaignID || initialCampaignID,
-                            clientAirtableID: clientId,
-                            leadAirtableID: leadRecordId
-                        };
-                        
-                        const urlParameters = await fetchUrlParametersForClient(clientId, logData);
-                        finalRedirectUrl = await buildRedirectUrlWithParameters(redirectUrl, urlParameters, dataForParams, logData);
-                    }
-                    
+                    const logData = {
+                        campaignID: metaCampaignID || initialCampaignID,
+                        clientAirtableID: clientId,
+                        leadAirtableID: leadRecordId
+                    };
+                    const urlParameters = await fetchUrlParametersForClient(clientId, logData);
+                    const finalRedirectUrl = await buildRedirectUrlWithParameters(redirectUrl, urlParameters, dataForParams, logData);
                     window.location.href = finalRedirectUrl;
                 } else {
-                    // If no redirect URL, show confirmation screen
                     console.warn('Redirect option selected but no Redirect URL found');
                     showConfirmationScreen();
                 }
