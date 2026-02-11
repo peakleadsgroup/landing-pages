@@ -2912,6 +2912,8 @@
             
             // If client is "Home Pro MI", fetch Lead Perfection availability
             if (isHomeProMIClient()) {
+                // Hardcoded 48 hours in advance for all clients (including Home Pro)
+                clientMinHoursInAdvance = 48;
                 if (activeClient && activeClient.fields) {
                     // Set timezone from client data
                     if (activeClient.fields['Timezone']) {
@@ -2961,16 +2963,8 @@
                     clientAvailability = [];
                     console.log('[Calendar] No client Availability field');
                 }
-                // Min hours in advance (client can override default 48)
-                if (activeClient.fields['Min Hours In Advance'] !== undefined && activeClient.fields['Min Hours In Advance'] !== null) {
-                    const val = Number(activeClient.fields['Min Hours In Advance']);
-                    if (!isNaN(val) && val >= 0) clientMinHoursInAdvance = val;
-                } else if (activeClient.fields['Hours In Advance'] !== undefined && activeClient.fields['Hours In Advance'] !== null) {
-                    const val = Number(activeClient.fields['Hours In Advance']);
-                    if (!isNaN(val) && val >= 0) clientMinHoursInAdvance = val;
-                } else {
-                    clientMinHoursInAdvance = CALENDAR_CONFIG.minHoursInAdvance;
-                }
+                // Hardcoded 48 hours in advance for all clients (including Home Pro)
+                clientMinHoursInAdvance = 48;
                 console.log('[Calendar] clientMinHoursInAdvance:', clientMinHoursInAdvance);
                 
                 // Set available days from client data
