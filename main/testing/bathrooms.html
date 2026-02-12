@@ -2295,30 +2295,39 @@
                 const lpSlots = getLPTimeSlotsForDay(dayData);
                 if (lpSlots.length === 0) return [];
                 
-                // Convert LP slots to the format expected by the calendar
-                const slots = lpSlots.map(lpSlot => {
+                const now = getCurrentDateInTimezone();
+                
+                // Convert LP slots to the format expected by the calendar, filtering by minimum hours in advance
+                const slots = [];
+                for (const lpSlot of lpSlots) {
                     // Parse the time string from LP (e.g., "8am - 10am", "10am - 12pm", etc.)
                     const timeDisplay = lpSlot.time;
-                    
-                    // Format for Appt field - use the start time
-                    // Extract start time from range like "8am - 10am"
                     const startTimeMatch = timeDisplay.match(/^(\d+)(am|pm)/i);
-                    let apptTimeFormat = timeDisplay;
-                    if (startTimeMatch) {
-                        const hour = parseInt(startTimeMatch[1]);
-                        const ampm = startTimeMatch[2].toUpperCase();
-                        apptTimeFormat = `${hour.toString().padStart(2, '0')}:00 ${ampm}`;
-                    }
+                    if (!startTimeMatch) continue;
                     
-                    return {
-                        time: new Date(dateObj), // Placeholder time object
+                    let hours = parseInt(startTimeMatch[1], 10);
+                    const ampm = startTimeMatch[2].toUpperCase();
+                    if (ampm === 'PM' && hours !== 12) hours += 12;
+                    else if (ampm === 'AM' && hours === 12) hours = 0;
+                    
+                    const slotTime = new Date(dateObj);
+                    slotTime.setHours(hours, 0, 0, 0);
+                    const hoursFromNow = (slotTime - now) / (1000 * 60 * 60);
+                    
+                    if (hoursFromNow < clientMinHoursInAdvance) continue;
+                    
+                    const displayHours12 = hours % 12 || 12;
+                    const ampmDisplay = hours >= 12 ? 'PM' : 'AM';
+                    const apptTimeFormat = `${displayHours12.toString().padStart(2, '0')}:00 ${ampmDisplay}`;
+                    slots.push({
+                        time: slotTime,
                         display: timeDisplay,
                         apptFormat: apptTimeFormat,
                         isoString: dateObj.toISOString(),
                         originalTime: timeDisplay,
                         slotIndex: lpSlot.slotIndex
-                    };
-                });
+                    });
+                }
                 
                 return slots;
             }
