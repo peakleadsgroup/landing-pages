@@ -122,15 +122,17 @@
 
     <script>
         function addContact() {
-            const contactName = 'HomeFix';
+            const firstName = 'HomeFix';
+            const lastName = 'Window Replacement';
             const phoneNumber = '1234567890'; // (123) 456-7890 without formatting for vCard
 
             // Create vCard 3.0 format - works on iOS and Android
+            // N:LastName;FirstName;MiddleName;Prefix;Suffix
             const vcard = [
                 'BEGIN:VCARD',
                 'VERSION:3.0',
-                'FN:' + contactName,
-                'N:' + contactName + ';;;',
+                'FN:' + firstName + ' ' + lastName,
+                'N:' + lastName + ';' + firstName + ';;;',
                 'TEL;TYPE=work,voice:' + phoneNumber,
                 'END:VCARD'
             ].join('\r\n');
@@ -139,7 +141,7 @@
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = contactName + '.vcf';
+            link.download = firstName + '.vcf';
             link.style.display = 'none';
             document.body.appendChild(link);
             link.click();
