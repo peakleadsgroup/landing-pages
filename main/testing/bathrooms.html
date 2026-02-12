@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
-    <title>Bathroom Remodel Qualification (TEST - No Airtable)</title>
+    <title>Bathroom Remodel Qualification</title>
     
     <!-- Meta Pixel Code - Will be dynamically set -->
     <script>
@@ -911,7 +911,6 @@
 </head>
 <body>
     <div class="form-container">
-        <div style="background:#d32f2f;color:#fff;padding:10px 16px;margin:-40px -40px 20px -40px;border-radius:20px 20px 0 0;text-align:center;font-weight:bold;">TEST MODE — Leads are NOT written to Airtable. Open console (F12) for zip/client search logs.</div>
         <div class="logo-container">
             <img id="logoImg" 
                  src="" 
@@ -1220,17 +1219,14 @@
         const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
         const AIRTABLE_BASE_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
         
-        const         TABLES = {
+        const TABLES = {
             CLIENTS: 'tblMl8Y97cMSbricC',
             CAMPAIGNS: 'tbl6uhtOFzGzA7EMu',
             B2C_LEADS: 'tblPt6Wc79hTBSmcD',
             B2C_ADS: 'tbl7ungQGMMLYwshw',
             URL_PARAMETERS: 'tbl5JDBRhTzuxzsc4',
         };
-
-        // TEST MODE: when true, do NOT write leads or appointment updates to Airtable (for zip/client debugging)
-        const TEST_MODE_NO_AIRTABLE = true;
-
+        
         // Lead Perfection API Configuration (via Make.com proxy)
         const LP_MAKE_WEBHOOK_URL = 'https://hook.us2.make.com/dn7kjdagrc6goimlozfan1zpt2dp9lvs';
         
@@ -1420,110 +1416,67 @@
         }
 
         async function findClientByZipCode(zipCode) {
-            const log = (...args) => console.log('[ZipClientSearch]', ...args);
             try {
                 const landingPageNiche = 'Bathrooms';
                 const zipStr = String(zipCode).trim();
 
-                log('========== START findClientByZipCode ==========');
-                log('Input zipCode (raw):', JSON.stringify(zipCode), 'type:', typeof zipCode);
-                log('Normalized zipStr:', JSON.stringify(zipStr), 'length:', zipStr.length);
-                log('Landing page niche:', landingPageNiche);
-
-                // Fetch ALL clients with pagination
+                // Fetch ALL clients (Airtable returns max 100 per request; paginate to get every record)
                 let allRecords = [];
                 let url = `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}`;
-                let pageNum = 0;
                 do {
-                    pageNum++;
-                    log('Fetching clients page', pageNum, 'url:', url.replace(AIRTABLE_API_KEY, '***'));
                     const page = await fetchAirtableData(url);
-                    const count = page.records ? page.records.length : 0;
-                    log('  Page', pageNum, 'returned', count, 'records', page.offset ? '(more pages follow)' : '(last page)');
                     if (page.records && page.records.length > 0) {
                         allRecords = allRecords.concat(page.records);
                     }
                     url = page.offset ? `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}?offset=${page.offset}` : null;
                 } while (url);
 
-                log('Total clients fetched:', allRecords.length);
-
                 if (allRecords.length === 0) {
-                    log('No client records returned from Airtable. Returning null.');
-                    log('========== END findClientByZipCode (no records) ==========');
                     return null;
                 }
 
                 const activeMatches = [];
                 const pausedMatches = [];
 
-                for (let i = 0; i < allRecords.length; i++) {
-                    const client = allRecords[i];
-                    const clientName = (client.fields && client.fields['Name']) ? client.fields['Name'] : '(no name)';
+                for (const client of allRecords) {
                     const status = client.fields['Status'];
-                    const clientNiche = client.fields['Niche'];
-                    const zipList = client.fields['Expanded Area Raw Zips'];
-
-                    log('--- Client', i + 1, 'of', allRecords.length, ':', clientName, '| id:', client.id, '| Status:', status);
-
                     if (status !== 'Active' && status !== 'Paused') {
-                        log('  SKIP: Status is not Active or Paused');
                         continue;
                     }
 
+                    const clientNiche = client.fields['Niche'];
                     if (!clientNiche) {
-                        log('  SKIP: No Niche field');
                         continue;
                     }
                     const nicheMatches = Array.isArray(clientNiche)
                         ? clientNiche.includes(landingPageNiche)
                         : clientNiche === landingPageNiche;
                     if (!nicheMatches) {
-                        log('  SKIP: Niche does not include', landingPageNiche, '| client Niche:', clientNiche);
                         continue;
                     }
 
-                    if (!zipList) {
-                        log('  SKIP: No Expanded Area Raw Zips');
-                        continue;
-                    }
+                    const zipList = client.fields['Expanded Area Raw Zips'];
+                    if (!zipList) continue;
 
                     const zipCodes = zipList.split(',').map(z => String(z).trim());
-                    const hasZip = zipCodes.includes(zipStr);
-                    if (hasZip) {
-                        log('  MATCH: zip', zipStr, 'found in client zips. Total zips for client:', zipCodes.length);
+                    if (zipCodes.includes(zipStr)) {
                         if (status === 'Active') {
                             activeMatches.push(client);
                         } else if (status === 'Paused') {
                             pausedMatches.push(client);
                         }
-                    } else {
-                        // Optional: log first few zips for this client to spot format issues (avoid huge logs)
-                        const sample = zipCodes.length <= 5 ? zipCodes : zipCodes.slice(0, 3).concat(['...']);
-                        const zipStrInList = zipCodes.some(z => z === zipStr);
-                        const zipStrInListLoose = zipCodes.some(z => String(z).trim() === zipStr);
-                        log('  No match. Sample zips:', sample.join(', '), '| zipStr in list (strict):', zipStrInList, '(trimmed):', zipStrInListLoose);
                     }
                 }
 
-                log('Result: activeMatches:', activeMatches.length, 'pausedMatches:', pausedMatches.length);
-
                 if (activeMatches.length > 0) {
-                    log('Returning first Active client:', activeMatches[0].fields && activeMatches[0].fields['Name']);
-                    log('========== END findClientByZipCode (matched Active) ==========');
                     return activeMatches[0];
                 }
                 if (pausedMatches.length > 0) {
-                    log('Returning first Paused client:', pausedMatches[0].fields && pausedMatches[0].fields['Name']);
-                    log('========== END findClientByZipCode (matched Paused) ==========');
                     return pausedMatches[0];
                 }
-
-                log('No client matched zip', zipStr, '. Returning null.');
-                log('========== END findClientByZipCode (no match) ==========');
                 return null;
             } catch (error) {
-                console.error('[ZipClientSearch] Error finding client by zip code:', error);
+                console.error('Error finding client by zip code:', error);
                 return null;
             }
         }
@@ -1567,87 +1520,9 @@
         }
 
         async function submitLeadToAirtable(leadData) {
-            try {
-                // Only set Lead Price when we have a matched client by zip; leave blank if no match
-                let leadPrice = null;
-                if (matchedClientData && matchedClientData.fields && matchedClientData.fields['Lead Price']) {
-                    leadPrice = matchedClientData.fields['Lead Price'];
-                }
-                
-                // Prepare the record
-                const record = {
-                    fields: {
-                        'Phone': leadData.phone,
-                        'Full Summary': leadData.fullSummary,
-                        'Full Summary HTML': leadData.fullSummaryHTML,
-                        'Full Name': leadData.fullName,
-                        'First Name': leadData.firstName,
-                        'Last Name': leadData.lastName,
-                        'Model': 'Lead',
-                        'Address': leadData.address,
-                        'City': leadData.city,
-                        'State': leadData.state,
-                        'Zip': leadData.zip
-                    }
-                };
-                
-                // Add email if provided
-                if (leadData.email && leadData.email.trim()) {
-                    record.fields['Email'] = leadData.email.trim();
-                }
-                
-                // Add Lead Price if available
-                if (leadPrice !== null && leadPrice !== undefined) {
-                    record.fields['Price'] = leadPrice;
-                }
-                
-                // Add linked client ONLY if we found a match by zip code (no fallback to campaign client)
-                if (matchedClientData && matchedClientData.id) {
-                    record.fields['Linked Client'] = [matchedClientData.id];
-                }
-                
-                // Always add Source Campaign if we have a campaign record ID
-                if (campaignRecordId) {
-                    record.fields['Source Campaign'] = [campaignRecordId];
-                }
-                
-                // Add linked ad if we found one
-                if (adRecordId) {
-                    record.fields['Ad'] = [adRecordId];
-                }
-                
-                // Add Unique ID (used for Meta lead deduplication) if provided
-                if (leadData.uniqueId) {
-                    record.fields['Unique ID'] = leadData.uniqueId;
-                }
-                
-                // Submit to Airtable
-                const response = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ records: [record] })
-                });
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Airtable submission failed: ${response.status} ${response.statusText} - ${errorText}`);
-                }
-                
-                const result = await response.json();
-                
-                // Store the lead record ID so we can update it with appointment later
-                if (result.records && result.records.length > 0) {
-                    leadRecordId = result.records[0].id;
-                }
-                
-                return result;
-            } catch (error) {
-                console.error('Error submitting lead to Airtable:', error);
-                throw error;
-            }
+            // TESTING MODE: Skip Airtable submission - leads are NOT posted to Airtable
+            console.log('[Testing] Skipping Airtable submission - lead would have been:', leadData);
+            return { records: [] };
         }
 
         function initializeMetaPixel(pixelId) {
@@ -2873,10 +2748,8 @@
             const timeForAppt = slot.apptFormat || slot.display;
             const appointmentText = formatAppointmentDate(selectedDate, timeForAppt);
             
-            // Update the lead record in Airtable with the appointment (skipped in TEST_MODE_NO_AIRTABLE)
-            if (TEST_MODE_NO_AIRTABLE) {
-                console.log('[TEST MODE] Skipping Airtable PATCH for appointment - no update written.');
-            } else if (leadRecordId) {
+            // Update the lead record in Airtable with the appointment and re-write summaries with appointment at top
+            if (leadRecordId) {
                 try {
                     const baseSummary = formData.fullSummary || '';
                     const baseSummaryHTML = formData.fullSummaryHTML || '';
@@ -2961,6 +2834,8 @@
             
             // If client is "Home Pro MI", fetch Lead Perfection availability
             if (isHomeProMIClient()) {
+                // Hardcoded 48 hours in advance for all clients (including Home Pro)
+                clientMinHoursInAdvance = 48;
                 if (activeClient && activeClient.fields) {
                     // Set timezone from client data
                     if (activeClient.fields['Timezone']) {
@@ -3010,16 +2885,8 @@
                     clientAvailability = [];
                     console.log('[Calendar] No client Availability field');
                 }
-                // Min hours in advance (client can override default 48)
-                if (activeClient.fields['Min Hours In Advance'] !== undefined && activeClient.fields['Min Hours In Advance'] !== null) {
-                    const val = Number(activeClient.fields['Min Hours In Advance']);
-                    if (!isNaN(val) && val >= 0) clientMinHoursInAdvance = val;
-                } else if (activeClient.fields['Hours In Advance'] !== undefined && activeClient.fields['Hours In Advance'] !== null) {
-                    const val = Number(activeClient.fields['Hours In Advance']);
-                    if (!isNaN(val) && val >= 0) clientMinHoursInAdvance = val;
-                } else {
-                    clientMinHoursInAdvance = CALENDAR_CONFIG.minHoursInAdvance;
-                }
+                // Hardcoded 48 hours in advance for all clients (including Home Pro)
+                clientMinHoursInAdvance = 48;
                 console.log('[Calendar] clientMinHoursInAdvance:', clientMinHoursInAdvance);
                 
                 // Set available days from client data
@@ -3630,12 +3497,12 @@
             
             // Find client by zip code
             try {
+                // Safety check: ensure address data exists
                 if (!finalData.address || !finalData.address.zip) {
                     throw new Error('Address data is missing or incomplete. Address object: ' + JSON.stringify(finalData.address));
                 }
-                console.log('[Submit] Looking up client for zip:', finalData.address.zip, '| full address:', finalData.address);
+                
                 matchedClientData = await findClientByZipCode(finalData.address.zip);
-                console.log('[Submit] findClientByZipCode result:', matchedClientData ? (matchedClientData.fields && matchedClientData.fields['Name']) : null);
                 // Update partner name in privacy policy if client was matched
                 updatePartnerNameInPrivacyPolicy();
             } catch (error) {
@@ -3723,25 +3590,25 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 uniqueId: eventId
             };
             
-            // Submit to Airtable (skipped in TEST_MODE_NO_AIRTABLE)
+            // Submit to Airtable
             let submissionSuccessful = false;
-            if (TEST_MODE_NO_AIRTABLE) {
-                console.log('[TEST MODE] Skipping submitLeadToAirtable - no lead written to Airtable.');
+            try {
+                await submitLeadToAirtable(leadData);
                 submissionSuccessful = true;
-            } else {
-                try {
-                    await submitLeadToAirtable(leadData);
-                    submissionSuccessful = true;
-                } catch (error) {
-                    console.error('Lead submission failed, showing generic confirmation:', error);
-                    showConfirmationScreen();
-                    isSubmitting = false;
-                    if (phoneSubmitBtn) {
-                        phoneSubmitBtn.disabled = false;
-                        phoneSubmitBtn.textContent = 'Get Quote';
-                    }
-                    return;
+                
+                // Submission completed successfully
+            } catch (error) {
+                // Error webhook already sent in submitLeadToAirtable
+                // Show generic confirmation screen instead of calendar/phone options
+                console.error('Lead submission failed, showing generic confirmation:', error);
+                showConfirmationScreen();
+                // Reset submission flag and button on error
+                isSubmitting = false;
+                if (phoneSubmitBtn) {
+                    phoneSubmitBtn.disabled = false;
+                    phoneSubmitBtn.textContent = 'Get Quote';
                 }
+                return; // Exit early - don't show calendar/phone options
             }
             
             // Only proceed to show submit screen if submission was successful
