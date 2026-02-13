@@ -384,6 +384,41 @@
             letter-spacing: 1px;
         }
 
+        /* Add Contact Button (Contact submit screen) */
+        .add-contact-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 320px;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .add-contact-button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+        }
+
+        .add-contact-button:active {
+            transform: translateY(0);
+        }
+
+        .person-icon {
+            width: 24px;
+            height: 24px;
+        }
+
         /* Calendar Styles */
         .calendar-step-header {
             font-size: 20px;
@@ -1066,6 +1101,20 @@
             </div>
         </div>
 
+        <!-- ADD CONTACT SCREEN (Contact submit type from Airtable) -->
+        <div class="form-step" id="contactStepAddContact">
+            <div style="text-align: center;">
+                <div style="font-size: 24px; color: black; margin-bottom: 20px; font-weight: bold;">Don't Miss Our Call! Save This Number Now</div>
+                <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Tap the button below, then press "Create Contact" (iPhone) or "Save" (Android). We'll give you a call ASAP to schedule your free estimate!</div>
+                <button type="button" class="add-contact-button" id="addContactBtn" onclick="addContact()">
+                    <svg class="person-icon" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                    Add Contact
+                </button>
+            </div>
+        </div>
+
         <!-- CALENDAR BOOKING SCREEN -->
         <div class="form-step" id="calendarStep">
             <div class="calendar-step-header">We'll reach out soon to schedule your free estimate!</div>
@@ -1153,6 +1202,20 @@
                     </a>
                     
                     <div class="phone-number-display" id="phoneNumberDisplayBelow"></div>
+                </div>
+            </div>
+
+            <!-- DUPLICATE ADD CONTACT SCREEN -->
+            <div class="form-step cta-block" id="contactStepAddContactBelow">
+                <div style="text-align: center;">
+                    <div style="font-size: 24px; color: black; margin-bottom: 20px; font-weight: bold;">Don't Miss Our Call! Save This Number Now</div>
+                    <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Tap the button below, then press "Create Contact" (iPhone) or "Save" (Android). We'll give you a call ASAP to schedule your free estimate!</div>
+                    <button type="button" class="add-contact-button" id="addContactBtnBelow" onclick="addContact()">
+                        <svg class="person-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                        Add Contact
+                    </button>
                 </div>
             </div>
 
@@ -3046,6 +3109,60 @@
             return phoneNumber;
         }
 
+        // Add Contact function (same as testing/addcontact.html) - for Contact submit screen
+        // Uses Name from Airtable client as first name, "Bathroom Remodel" as last name, Phone from Airtable
+        function addContact() {
+            const activeClient = matchedClientData || campaignClientData;
+            if (!activeClient || !activeClient.fields) return;
+
+            const firstName = String(activeClient.fields['Name'] || '').trim() || 'Contact';
+            const lastName = 'Bathroom Remodel';
+            let phoneNumber = activeClient.fields['Phone'] || '';
+            // Strip to digits only for vCard
+            phoneNumber = String(phoneNumber).replace(/\D/g, '');
+
+            if (!phoneNumber) return;
+
+            // Create vCard 3.0 format - works on iOS and Android (same as addcontact.html)
+            const vcard = [
+                'BEGIN:VCARD',
+                'VERSION:3.0',
+                'FN:' + firstName + ' ' + lastName,
+                'N:' + lastName + ';' + firstName + ';;;',
+                'TEL;TYPE=work,voice:' + phoneNumber,
+                'END:VCARD'
+            ].join('\r\n');
+
+            const blob = new Blob([vcard], { type: 'text/vcard;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = firstName + '.vcf';
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function showContactAddContactScreen() {
+            const activeClient = matchedClientData || campaignClientData;
+            if (!activeClient) {
+                showConfirmationScreen();
+                return;
+            }
+
+            document.getElementById('step7').classList.remove('active');
+            document.getElementById('contactStep').classList.remove('active');
+            document.getElementById('contactStepAddContact').classList.add('active');
+            document.getElementById('progressBarContainer').style.display = 'none';
+            document.getElementById('mainHeading').style.display = 'none';
+
+            setTimeout(() => {
+                showReviewsModal();
+            }, 500);
+        }
+
         function showContactScreen(submitScreenType) {
             // Get lead's name
             const firstName = document.getElementById('firstName')?.value.trim() || '';
@@ -3104,6 +3221,7 @@
             
             // Show the contact screen
             document.getElementById('step7').classList.remove('active');
+            document.getElementById('contactStepAddContact').classList.remove('active');
             document.getElementById('contactStep').classList.add('active');
             document.getElementById('progressBarContainer').style.display = 'none';
             document.getElementById('mainHeading').style.display = 'none';
@@ -3230,11 +3348,13 @@
         function showDuplicateCallToAction() {
             const ctaSection = document.getElementById('ctaSection');
             const contactStepBelow = document.getElementById('contactStepBelow');
+            const contactStepAddContactBelow = document.getElementById('contactStepAddContactBelow');
             const calendarStepBelow = document.getElementById('calendarStepBelow');
             const confirmationStepBelow = document.getElementById('confirmationStepBelow');
             
             // Hide all initially
             if (contactStepBelow) contactStepBelow.style.display = 'none';
+            if (contactStepAddContactBelow) contactStepAddContactBelow.style.display = 'none';
             if (calendarStepBelow) calendarStepBelow.style.display = 'none';
             if (confirmationStepBelow) confirmationStepBelow.style.display = 'none';
             
@@ -3266,6 +3386,12 @@
                     ctaSection.classList.add('active');
                     // Set up contact buttons below
                     setupContactButtonsBelow(currentSubmitScreenType);
+                }
+            } else if (currentSubmitScreenType === 'Contact') {
+                // Show Add Contact screen below
+                if (contactStepAddContactBelow) {
+                    contactStepAddContactBelow.style.display = 'block';
+                    ctaSection.classList.add('active');
                 }
             } else {
                 // For 'None' option, show only the thank you/confirmation screen below
@@ -3762,6 +3888,9 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             } else if (normalizedType === 'phone/text') {
                 currentSubmitScreenType = 'Phone/Text';
                 showContactScreen('Phone/Text');
+            } else if (normalizedType === 'contact') {
+                currentSubmitScreenType = 'Contact';
+                showContactAddContactScreen();
             } else {
                 // None or default
                 currentSubmitScreenType = null;
