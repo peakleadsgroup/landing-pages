@@ -21,7 +21,29 @@
     </style>
 </head>
 <body class="bg-gray-50">
-    <div class="min-h-screen p-6">
+    <!-- Email Verification Gate -->
+    <div id="emailGate" class="min-h-screen flex items-center justify-center p-6">
+        <div class="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+            <div class="text-center mb-6">
+                <img src="https://github.com/peakleadsgroup/landing-pages/blob/main/Images/Peak%20Leads%20Flattened%20Logo.png?raw=true" alt="Peak Leads Logo" class="h-10 w-auto mx-auto mb-4">
+                <h2 class="text-xl font-semibold text-gray-900 mb-2">Access Your Dashboard</h2>
+                <p class="text-gray-600 text-sm">Enter an email associated with this account to access this data.</p>
+            </div>
+            <form id="emailGateForm" onsubmit="return verifyEmail(event)" class="space-y-4">
+                <div>
+                    <label for="emailInput" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="emailInput" required placeholder="you@example.com" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div id="emailGateError" class="hidden text-sm text-red-600"></div>
+                <button type="submit" id="emailGateSubmit" class="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    Continue
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Dashboard (hidden until verified) -->
+    <div id="dashboardContent" class="hidden min-h-screen p-6">
         <div class="max-w-7xl mx-auto">
             <!-- Header -->
             <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -37,16 +59,11 @@
                             </svg>
                             Billing
                         </button>
-                        <button onclick="openExportModal()" id="reportingBtn" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                        <button onclick="openExportModal()" id="reportingBtn" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                             Reporting
-                        </button>
-                        <button onclick="fetchRecords()" id="refreshBtn" class="flex items-center justify-center p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                            <svg id="refreshIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                            </svg>
                         </button>
                     </div>
                 </div>
@@ -192,6 +209,8 @@
             baseId: 'appmBb0lzqRK9dI8v',
             tableName: 'B2C Leads',
             clientsTableName: 'Clients',
+            contactsTableName: 'Contacts',
+            contactsLinkedField: 'Contacts',
             stripeCustomersTableName: 'Customers',
             chargesTableName: 'Charges',
             apiKey: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589',
@@ -221,6 +240,70 @@
         function getURLParameter(name) {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(name);
+        }
+
+        async function getContactEmailsForClient(clientRecordId) {
+            const clientResponse = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.clientsTableName)}/${clientRecordId}`, {
+                headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
+            });
+            if (!clientResponse.ok) throw new Error('Failed to fetch client');
+            const clientData = await clientResponse.json();
+            const contactIds = clientData.fields[CONFIG.contactsLinkedField];
+            if (!contactIds || !Array.isArray(contactIds) || contactIds.length === 0) {
+                return [];
+            }
+            const emails = [];
+            for (const contactId of contactIds) {
+                const contactResponse = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.contactsTableName)}/${contactId}`, {
+                    headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
+                });
+                if (contactResponse.ok) {
+                    const contactData = await contactResponse.json();
+                    const email = contactData.fields['Email'];
+                    if (email) emails.push(String(email).trim().toLowerCase());
+                }
+            }
+            return emails;
+        }
+
+        async function verifyEmail(event) {
+            event.preventDefault();
+            const atid = getURLParameter('ATID');
+            if (!atid) {
+                document.getElementById('emailGateError').textContent = 'Invalid link. No client identifier found.';
+                document.getElementById('emailGateError').classList.remove('hidden');
+                return false;
+            }
+            const emailInput = document.getElementById('emailInput');
+            const submitBtn = document.getElementById('emailGateSubmit');
+            const errorEl = document.getElementById('emailGateError');
+            const enteredEmail = (emailInput.value || '').trim().toLowerCase();
+            if (!enteredEmail) return false;
+
+            errorEl.classList.add('hidden');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Verifying...';
+
+            try {
+                const allowedEmails = await getContactEmailsForClient(atid);
+                if (allowedEmails.length === 0) {
+                    throw new Error('No contacts are associated with this account. Please contact support.');
+                }
+                if (!allowedEmails.includes(enteredEmail)) {
+                    throw new Error('This email is not associated with this account. Please try a different email.');
+                }
+                document.getElementById('emailGate').classList.add('hidden');
+                document.getElementById('dashboardContent').classList.remove('hidden');
+                currentClientRecordId = atid;
+                await initializeDashboard();
+            } catch (err) {
+                errorEl.textContent = err.message;
+                errorEl.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Continue';
+            }
+            return false;
         }
 
         async function fetchClientName(recordId) {
@@ -278,8 +361,6 @@
         }
 
         async function fetchRecords() {
-            const refreshBtn = document.getElementById('refreshBtn');
-            const refreshIcon = document.getElementById('refreshIcon');
             const loadingState = document.getElementById('loadingState');
             const errorMessage = document.getElementById('errorMessage');
             const recordsContainer = document.getElementById('recordsContainer');
@@ -289,8 +370,6 @@
             recordsContainer.classList.add('hidden');
             noRecordsState.classList.add('hidden');
             loadingState.classList.remove('hidden');
-            refreshBtn.disabled = true;
-            refreshIcon.classList.add('animate-spin');
 
             try {
                 let filterFormula;
@@ -356,8 +435,6 @@
                 errorMessage.classList.remove('hidden');
             } finally {
                 loadingState.classList.add('hidden');
-                refreshBtn.disabled = false;
-                refreshIcon.classList.remove('animate-spin');
             }
         }
 
@@ -1328,7 +1405,13 @@
             closeExportModal();
         }
 
-        initializeDashboard();
+        (function init() {
+            const atid = getURLParameter('ATID');
+            if (!atid) {
+                document.getElementById('emailGateError').textContent = 'Invalid link. Please add ?ATID=your_record_id to the URL.';
+                document.getElementById('emailGateError').classList.remove('hidden');
+            }
+        })();
     </script>
 </body>
 </html>
