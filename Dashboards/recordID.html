@@ -37,6 +37,12 @@
                             </svg>
                             Billing
                         </button>
+                        <button onclick="openExportModal()" id="reportingBtn" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Reporting
+                        </button>
                         <button onclick="fetchRecords()" id="refreshBtn" class="flex items-center justify-center p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                             <svg id="refreshIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -145,6 +151,41 @@
         </div>
     </div>
 
+    <!-- Export Leads Modal -->
+    <div id="exportModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-lg shadow-lg rounded-md bg-white">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">Reporting</h3>
+                <button onclick="closeExportModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="border border-gray-200 rounded-lg p-6 bg-gray-50">
+                <h4 class="text-lg font-semibold text-gray-900 mb-1">Export Leads</h4>
+                <p class="text-sm text-gray-600 mb-6">Create an export of all your lead information</p>
+                <div class="space-y-4">
+                    <div>
+                        <label for="exportStartDate" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                        <input type="date" id="exportStartDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label for="exportEndDate" class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                        <input type="date" id="exportEndDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </div>
+                    <button onclick="exportLeadsToExcel()" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Export to Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <script>
         // Configuration
         const CONFIG = {
@@ -165,6 +206,7 @@
                 'Status',
                 'Created',
                 'Phone',
+                'Email',
                 'Address',
                 'Price',
                 'Appt',
@@ -870,7 +912,7 @@
                     record.fields['Unqualified Reasoning'] = reasoningValue;
                 }
 
-                displayRecords();
+                filterRecords();
                 closeEditModal();
                 alert('Unqualified report submitted successfully!');
             } catch (err) {
@@ -909,7 +951,7 @@
                     record.fields['Notes'] = newNotes;
                 }
 
-                displayRecords();
+                filterRecords();
                 closeEditModal();
                 alert('Changes saved successfully!');
             } catch (err) {
@@ -1184,6 +1226,107 @@
         document.getElementById('billingModal').addEventListener('click', function(e) {
             if (e.target === this) { closeBillingModal(); }
         });
+
+        function openExportModal() {
+            const modal = document.getElementById('exportModal');
+            const startInput = document.getElementById('exportStartDate');
+            const endInput = document.getElementById('exportEndDate');
+            const now = new Date();
+            const oneYearAgo = new Date(now);
+            oneYearAgo.setFullYear(now.getFullYear() - 1);
+            startInput.value = oneYearAgo.toISOString().slice(0, 10);
+            endInput.value = now.toISOString().slice(0, 10);
+            modal.classList.remove('hidden');
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.add('hidden');
+        }
+
+        document.getElementById('exportModal').addEventListener('click', function(e) {
+            if (e.target === this) { closeExportModal(); }
+        });
+
+        function formatValueForExport(value, key) {
+            if (value === null || value === undefined) return '';
+            if (Array.isArray(value)) return value.join(', ');
+            if (key === 'Created' && value) {
+                try {
+                    const date = new Date(value);
+                    if (!isNaN(date.getTime())) {
+                        return date.toLocaleString('en-US', {
+                            month: 'short', day: 'numeric', year: 'numeric',
+                            hour: 'numeric', minute: '2-digit', hour12: true
+                        });
+                    }
+                } catch (e) {}
+            }
+            if (key === 'Phone' && value && String(value).trim() !== '') {
+                const cleaned = String(value).replace(/\D/g, '');
+                if (cleaned.length === 10) {
+                    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+                }
+            }
+            if (key === 'Price' && value && String(value).trim() !== '') {
+                const cleanValue = String(value).replace(/[\$,]/g, '');
+                const num = Number(cleanValue);
+                return Number.isFinite(num) ? `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '';
+            }
+            return String(value);
+        }
+
+        function exportLeadsToExcel() {
+            const startDate = document.getElementById('exportStartDate').value;
+            const endDate = document.getElementById('exportEndDate').value;
+
+            if (!startDate || !endDate) {
+                alert('Please select both start and end dates.');
+                return;
+            }
+
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+
+            if (start > end) {
+                alert('Start date must be before or equal to end date.');
+                return;
+            }
+
+            const recordsToExport = allRecords.filter(record => {
+                const created = record.fields['Created'];
+                if (!created) return false;
+                const recordDate = new Date(created);
+                return recordDate >= start && recordDate <= end;
+            });
+
+            if (recordsToExport.length === 0) {
+                alert('No leads found in the selected date range.');
+                return;
+            }
+
+            const fieldKeys = CONFIG.displayColumns;
+            const headerRow = fieldKeys.slice();
+            const dataRows = recordsToExport.map(record => {
+                return fieldKeys.map(key => formatValueForExport(record.fields[key], key));
+            });
+
+            const wsData = [headerRow, ...dataRows];
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+            const colWidths = fieldKeys.map((_, i) => ({
+                wch: Math.max(12, Math.min(50, (wsData[0][i] || '').length + 2))
+            }));
+            ws['!cols'] = colWidths;
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Leads');
+
+            const fileName = `leads_export_${startDate}_to_${endDate}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+
+            closeExportModal();
+        }
 
         initializeDashboard();
     </script>
