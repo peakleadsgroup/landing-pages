@@ -203,6 +203,7 @@
     </div>
 
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         // Configuration
         const CONFIG = {
@@ -1064,6 +1065,31 @@
                 const clientData = await clientResponse.json();
                 const stripeCustomerLinks = clientData.fields[CONFIG.stripeCustomerLinkedField];
 
+                // Fetch billing contact (Contact with "Billing" in Notifications)
+                let billingContact = null;
+                const contactIds = clientData.fields[CONFIG.contactsLinkedField];
+                if (contactIds && Array.isArray(contactIds)) {
+                    for (const cid of contactIds) {
+                        try {
+                            const contactRes = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.contactsTableName)}/${cid}`, {
+                                headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
+                            });
+                            if (contactRes.ok) {
+                                const contactData = await contactRes.json();
+                                const notifs = contactData.fields['Notifications'];
+                                if (notifs && Array.isArray(notifs) && notifs.some(n => String(n).toLowerCase() === 'billing')) {
+                                    billingContact = {
+                                        name: contactData.fields['Name'] || '',
+                                        email: contactData.fields['Email'] || '',
+                                        company: contactData.fields['Company'] || clientData.fields[CONFIG.clientNameField] || ''
+                                    };
+                                    break;
+                                }
+                            }
+                        } catch (e) { /* skip */ }
+                    }
+                }
+
                 if (!stripeCustomerLinks || stripeCustomerLinks.length === 0) {
                     content.innerHTML = '<div class="text-center py-8"><svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><h3 class="text-lg font-semibold text-gray-900 mb-2">No Billing Information</h3><p class="text-gray-600">No Stripe customer is linked to this client.</p></div>';
                     return;
@@ -1177,7 +1203,10 @@
                                 return dateB - dateA;
                             });
                             
-                            const chargesRows = validCharges.map(charge => {
+                            // Store for PDF generation
+                            window._billingModalData = { validCharges, billingContact, clientName: clientData.fields[CONFIG.clientNameField] || customerName };
+
+                            const chargesRows = validCharges.map((charge, idx) => {
                                 const model = charge.fields['Model'] || '';
                                 const created = charge.fields['Created'] || '';
                                 const status = charge.fields['Status'] || '';
@@ -1232,6 +1261,12 @@
                                         <td class="px-4 py-3 text-sm">${statusBadge}</td>
                                         <td class="px-4 py-3 text-sm font-medium text-gray-900">${formattedPrice}</td>
                                         <td class="px-4 py-3 text-sm text-gray-600">${number}</td>
+                                        <td class="px-4 py-3 text-sm">
+                                            <button onclick="generateInvoicePDF(${idx})" class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                Invoice PDF
+                                            </button>
+                                        </td>
                                     </tr>
                                 `;
                             }).join('');
@@ -1248,6 +1283,7 @@
                                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
                                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Number</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
                                             </tr>
                                         </thead>
                                         <tbody class="bg-white divide-y divide-gray-200">
@@ -1293,6 +1329,175 @@
                     </div>
                 `;
             }
+        }
+
+        const LOGO_URL = 'https://github.com/peakleadsgroup/landing-pages/blob/main/Images/Peak%20Leads%20Flattened%20Logo.png?raw=true';
+
+        async function generateInvoicePDF(chargeIndex) {
+            const data = window._billingModalData;
+            if (!data || !data.validCharges || !data.validCharges[chargeIndex]) {
+                alert('Unable to generate invoice. Please close and reopen the billing modal.');
+                return;
+            }
+            const charge = data.validCharges[chargeIndex];
+            const billingContact = data.billingContact;
+            const clientName = data.clientName || '';
+
+            const chargeId = charge.fields['Charge ID'] || charge.id || 'N/A';
+            const description = charge.fields['Description'] || charge.fields['Model'] || '';
+            const created = charge.fields['Created'] || '';
+            const price = charge.fields['Price'];
+            const number = charge.fields['Number'];
+
+            let formattedDate = '';
+            if (created) {
+                try {
+                    const d = new Date(created);
+                    if (!isNaN(d.getTime())) {
+                        formattedDate = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                    }
+                } catch (e) {}
+            }
+
+            const amount = (price !== null && price !== undefined && Number.isFinite(Number(price))) ? Number(price) : 0;
+            const qty = (number !== null && number !== undefined && Number(number) > 0) ? Number(number) : 1;
+            const unitPrice = qty > 0 ? amount / qty : amount;
+
+            const billToName = billingContact ? (billingContact.company ? `${billingContact.name} - ${billingContact.company}` : billingContact.name) : (clientName || '');
+            const billToEmail = billingContact ? billingContact.email : '';
+
+            const jspdfLib = window.jspdf || window.jsPDF;
+            const jsPDF = (jspdfLib && jspdfLib.jsPDF) ? jspdfLib.jsPDF : jspdfLib;
+            const doc = new jsPDF();
+
+            const pageW = doc.internal.pageSize.getWidth();
+            const margin = 20;
+            let y = 20;
+
+            // Logo in top right (load async, draw placeholder first)
+            const logoW = 50;
+            const logoH = 20;
+            const logoX = pageW - margin - logoW;
+
+            try {
+                const imgData = await new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.naturalWidth;
+                        canvas.height = img.naturalHeight;
+                        const ctx = canvas.getContext('2d');
+                        ctx.fillStyle = '#fff';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0);
+                        resolve(canvas.toDataURL('image/png'));
+                    };
+                    img.onerror = () => resolve(null);
+                    img.src = LOGO_URL;
+                });
+                if (imgData) {
+                    doc.addImage(imgData, 'PNG', logoX, y, logoW, logoH);
+                } else {
+                    doc.setFontSize(14);
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Peak Leads Group', logoX, y + 8);
+                }
+            } catch (e) {
+                doc.setFontSize(14);
+                doc.setFont(undefined, 'bold');
+                doc.text('Peak Leads Group', logoX, y + 8);
+            }
+
+            // Invoice title (left)
+            doc.setFontSize(28);
+            doc.setFont(undefined, 'bold');
+            doc.text('Invoice', margin, y + 15);
+            y += 35;
+
+            // Charge ID and Date
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Charge ID ${chargeId}`, margin, y);
+            y += 6;
+            doc.text(`Date ${formattedDate}`, margin, y);
+            y += 20;
+
+            // Billing From
+            doc.text('Peak Leads Group', margin, y);
+            y += 6;
+            doc.text('105 Buckhaven Court', margin, y);
+            y += 6;
+            doc.text('Apex, North Carolina 27502', margin, y);
+            y += 6;
+            doc.text('United States', margin, y);
+            y += 15;
+
+            // Bill To
+            doc.setFont(undefined, 'bold');
+            doc.text('Bill to', margin, y);
+            doc.setFont(undefined, 'normal');
+            y += 6;
+            doc.text(billToName || '—', margin, y);
+            y += 6;
+            if (billToEmail) {
+                doc.text(billToEmail, margin, y);
+                y += 6;
+            }
+            y += 15;
+
+            // Amount due (no "due [DATE]")
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.text(`$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`, margin, y);
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'normal');
+            y += 10;
+
+            // Description
+            if (description) {
+                doc.text(description, margin, y);
+                y += 15;
+            }
+
+            // Horizontal line
+            y += 5;
+            doc.setDrawColor(200, 200, 200);
+            doc.line(margin, y, pageW - margin, y);
+            y += 15;
+
+            // Table headers
+            doc.setFont(undefined, 'bold');
+            const colDesc = margin;
+            const colQty = margin + 90;
+            const colUnit = margin + 115;
+            const colAmt = pageW - margin - 35;
+            doc.text('Description', colDesc, y);
+            doc.text('Qty', colQty, y);
+            doc.text('Unit price', colUnit, y);
+            doc.text('Amount', colAmt, y);
+            y += 8;
+
+            doc.setFont(undefined, 'normal');
+            doc.text(description || '—', colDesc, y);
+            doc.text(String(qty), colQty, y);
+            doc.text(`$${unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, colUnit, y);
+            doc.text(`$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, colAmt, y);
+            y += 25;
+
+            // Totals (right-aligned)
+            const totX = pageW - margin - 50;
+            doc.text('Subtotal', totX, y);
+            doc.text(`$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageW - margin, y);
+            y += 6;
+            doc.text('Total', totX, y);
+            doc.text(`$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageW - margin, y);
+            y += 6;
+            doc.setFont(undefined, 'bold');
+            doc.text('Amount due', totX, y);
+            doc.text(`$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`, pageW - margin, y);
+
+            doc.save(`invoice-${chargeId}.pdf`);
         }
 
         function closeBillingModal() {
