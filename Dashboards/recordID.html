@@ -1376,14 +1376,11 @@
             const margin = 20;
             let y = 15;
 
-            // Logo in top right corner
-            const logoW = 50;
-            const logoH = 20;
-            const logoX = pageW - margin - logoW;
-            const logoY = 8;
+            // Logo: top aligns with top of "Invoice" text
+            const invoiceTopY = 15;
 
             try {
-                const imgData = await new Promise((resolve) => {
+                const result = await new Promise((resolve) => {
                     const img = new Image();
                     img.crossOrigin = 'anonymous';
                     img.onload = () => {
@@ -1394,22 +1391,27 @@
                         ctx.fillStyle = '#fff';
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
                         ctx.drawImage(img, 0, 0);
-                        resolve(canvas.toDataURL('image/png'));
+                        const aspect = img.naturalWidth / img.naturalHeight;
+                        resolve({ data: canvas.toDataURL('image/png'), aspect });
                     };
                     img.onerror = () => resolve(null);
                     img.src = LOGO_URL;
                 });
-                if (imgData) {
-                    doc.addImage(imgData, 'PNG', logoX, logoY, logoW, logoH);
+                if (result && result.data) {
+                    const logoY = invoiceTopY;
+                    const maxW = 60, maxH = 24;
+                    const w = result.aspect >= maxW / maxH ? maxW : maxH * result.aspect;
+                    const h = result.aspect >= maxW / maxH ? maxW / result.aspect : maxH;
+                    doc.addImage(result.data, 'PNG', pageW - margin - w, logoY, w, h);
                 } else {
                     doc.setFontSize(12);
                     doc.setFont(undefined, 'bold');
-                    doc.text('Peak Leads Group', pageW - margin, logoY + 10, { align: 'right' });
+                    doc.text('Peak Leads Group', pageW - margin, invoiceTopY + 12, { align: 'right' });
                 }
             } catch (e) {
                 doc.setFontSize(12);
                 doc.setFont(undefined, 'bold');
-                doc.text('Peak Leads Group', pageW - margin, logoY + 10, { align: 'right' });
+                doc.text('Peak Leads Group', pageW - margin, invoiceTopY + 12, { align: 'right' });
             }
 
             // Invoice title (left)
