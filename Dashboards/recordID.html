@@ -1347,6 +1347,7 @@
             const description = charge.fields['Description'] || charge.fields['Model'] || '';
             const created = charge.fields['Created'] || '';
             const price = charge.fields['Price'];
+            const amountField = charge.fields['Amount'];
             const number = charge.fields['Number'];
 
             let formattedDate = '';
@@ -1359,9 +1360,10 @@
                 } catch (e) {}
             }
 
-            const amount = (price !== null && price !== undefined && Number.isFinite(Number(price))) ? Number(price) : 0;
+            // Total from "Amount" field; unit price from "Price" field
+            const totalAmount = (amountField !== null && amountField !== undefined && Number.isFinite(Number(amountField))) ? Number(amountField) : 0;
             const qty = (number !== null && number !== undefined && Number(number) > 0) ? Number(number) : 1;
-            const unitPrice = qty > 0 ? amount / qty : amount;
+            const unitPrice = (price !== null && price !== undefined && Number.isFinite(Number(price))) ? Number(price) : (qty > 0 ? totalAmount / qty : totalAmount);
 
             const billToName = billingContact ? (billingContact.company ? `${billingContact.name} - ${billingContact.company}` : billingContact.name) : (clientName || '');
             const billToEmail = billingContact ? billingContact.email : '';
@@ -1372,15 +1374,16 @@
 
             const pageW = doc.internal.pageSize.getWidth();
             const margin = 20;
-            let y = 20;
+            let y = 15;
 
-            // Logo in top right (load async, draw placeholder first)
+            // Logo in top right corner
             const logoW = 50;
             const logoH = 20;
             const logoX = pageW - margin - logoW;
+            const logoY = 8;
 
             try {
-                const imgData = await new Promise((resolve, reject) => {
+                const imgData = await new Promise((resolve) => {
                     const img = new Image();
                     img.crossOrigin = 'anonymous';
                     img.onload = () => {
@@ -1397,59 +1400,53 @@
                     img.src = LOGO_URL;
                 });
                 if (imgData) {
-                    doc.addImage(imgData, 'PNG', logoX, y, logoW, logoH);
+                    doc.addImage(imgData, 'PNG', logoX, logoY, logoW, logoH);
                 } else {
                     doc.setFontSize(14);
                     doc.setFont(undefined, 'bold');
-                    doc.text('Peak Leads Group', logoX, y + 8);
+                    doc.text('Peak Leads Group', logoX, logoY + 8, { align: 'right' });
                 }
             } catch (e) {
                 doc.setFontSize(14);
                 doc.setFont(undefined, 'bold');
-                doc.text('Peak Leads Group', logoX, y + 8);
+                doc.text('Peak Leads Group', pageW - margin, logoY + 8, { align: 'right' });
             }
 
             // Invoice title (left)
             doc.setFontSize(28);
             doc.setFont(undefined, 'bold');
-            doc.text('Invoice', margin, y + 15);
-            y += 35;
+            doc.text('Invoice', margin, y + 20);
+            y += 38;
 
-            // Charge ID and Date
+            // Charge ID and Date (with colons)
             doc.setFontSize(11);
             doc.setFont(undefined, 'normal');
-            doc.text(`Charge ID ${chargeId}`, margin, y);
+            doc.text(`Charge ID: ${chargeId}`, margin, y);
             y += 6;
-            doc.text(`Date ${formattedDate}`, margin, y);
-            y += 20;
+            doc.text(`Date: ${formattedDate}`, margin, y);
+            y += 22;
 
-            // Billing From
-            doc.text('Peak Leads Group', margin, y);
-            y += 6;
-            doc.text('105 Buckhaven Court', margin, y);
-            y += 6;
-            doc.text('Apex, North Carolina 27502', margin, y);
-            y += 6;
-            doc.text('United States', margin, y);
-            y += 15;
+            // Two-column layout: Billing From (left) | Bill To (right)
+            const colMid = pageW / 2;
+            const fromY = y;
+            doc.text('Peak Leads Group', margin, fromY);
+            doc.text('105 Buckhaven Court', margin, fromY + 6);
+            doc.text('Apex, North Carolina 27502', margin, fromY + 12);
+            doc.text('United States', margin, fromY + 18);
 
-            // Bill To
             doc.setFont(undefined, 'bold');
-            doc.text('Bill to', margin, y);
+            doc.text('Bill to', colMid, fromY);
             doc.setFont(undefined, 'normal');
-            y += 6;
-            doc.text(billToName || '—', margin, y);
-            y += 6;
+            doc.text(billToName || '—', colMid, fromY + 6);
             if (billToEmail) {
-                doc.text(billToEmail, margin, y);
-                y += 6;
+                doc.text(billToEmail, colMid, fromY + 12);
             }
-            y += 15;
+            y = fromY + 28;
 
             // Amount due (no "due [DATE]")
             doc.setFontSize(16);
             doc.setFont(undefined, 'bold');
-            doc.text(`$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`, margin, y);
+            doc.text(`$${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`, margin, y);
             doc.setFontSize(11);
             doc.setFont(undefined, 'normal');
             y += 10;
@@ -1460,42 +1457,53 @@
                 y += 15;
             }
 
-            // Horizontal line
+            // Horizontal line before table
             y += 5;
-            doc.setDrawColor(200, 200, 200);
+            doc.setDrawColor(180, 180, 180);
             doc.line(margin, y, pageW - margin, y);
-            y += 15;
+            y += 12;
 
-            // Table headers
+            // Table: Description | Qty | Unit price | Total (fixed column positions)
+            const colQty = 100;
+            const colUnit = 122;
+            const colTotalX = pageW - margin;
+
             doc.setFont(undefined, 'bold');
-            const colDesc = margin;
-            const colQty = margin + 90;
-            const colUnit = margin + 115;
-            const colAmt = pageW - margin - 35;
-            doc.text('Description', colDesc, y);
+            doc.text('Description', margin, y);
             doc.text('Qty', colQty, y);
             doc.text('Unit price', colUnit, y);
-            doc.text('Amount', colAmt, y);
+            doc.text('Total', colTotalX, y, { align: 'right' });
             y += 8;
 
+            // Table row underline
+            doc.setDrawColor(180, 180, 180);
+            doc.line(margin, y - 2, pageW - margin, y - 2);
+
             doc.setFont(undefined, 'normal');
-            doc.text(description || '—', colDesc, y);
+            doc.text(description || '—', margin, y);
             doc.text(String(qty), colQty, y);
             doc.text(`$${unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, colUnit, y);
-            doc.text(`$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, colAmt, y);
-            y += 25;
+            doc.text(`$${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, colTotalX, y, { align: 'right' });
+            y += 12;
 
-            // Totals (right-aligned)
-            const totX = pageW - margin - 50;
-            doc.text('Subtotal', totX, y);
-            doc.text(`$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageW - margin, y);
+            // Line between table and totals
+            doc.setDrawColor(180, 180, 180);
+            doc.line(margin, y, pageW - margin, y);
+            y += 12;
+
+            // Totals section: labels left, values right-aligned
+            const totLabelX = 130;
+            const totValX = pageW - margin;
+            const totStr = totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            doc.text('Subtotal', totLabelX, y);
+            doc.text(`$${totStr}`, totValX, y, { align: 'right' });
             y += 6;
-            doc.text('Total', totX, y);
-            doc.text(`$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageW - margin, y);
+            doc.text('Total', totLabelX, y);
+            doc.text(`$${totStr}`, totValX, y, { align: 'right' });
             y += 6;
             doc.setFont(undefined, 'bold');
-            doc.text('Amount due', totX, y);
-            doc.text(`$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`, pageW - margin, y);
+            doc.text('Amount due', totLabelX, y);
+            doc.text(`$${totStr} USD`, totValX, y, { align: 'right' });
 
             doc.save(`invoice-${chargeId}.pdf`);
         }
