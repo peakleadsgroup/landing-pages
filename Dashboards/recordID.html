@@ -1370,11 +1370,17 @@
                 return;
             }
 
-            const recordsToExport = allRecords.filter(record => {
+            let recordsToExport = allRecords.filter(record => {
                 const created = record.fields['Created'];
                 if (!created) return false;
                 const recordDate = new Date(created);
                 return recordDate >= start && recordDate <= end;
+            });
+
+            recordsToExport.sort((a, b) => {
+                const dateA = new Date(a.fields['Created'] || 0);
+                const dateB = new Date(b.fields['Created'] || 0);
+                return dateB - dateA;
             });
 
             if (recordsToExport.length === 0) {
@@ -1382,7 +1388,7 @@
                 return;
             }
 
-            const fieldKeys = CONFIG.displayColumns;
+            const fieldKeys = [...CONFIG.displayColumns, 'Full Summary'];
             const headerRow = fieldKeys.slice();
             const dataRows = recordsToExport.map(record => {
                 return fieldKeys.map(key => formatValueForExport(record.fields[key], key));
@@ -1391,9 +1397,13 @@
             const wsData = [headerRow, ...dataRows];
             const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-            const colWidths = fieldKeys.map((_, i) => ({
-                wch: Math.max(12, Math.min(50, (wsData[0][i] || '').length + 2))
-            }));
+            const colWidths = fieldKeys.map((key, i) => {
+                const isFullSummary = key === 'Full Summary';
+                const maxW = isFullSummary ? 80 : 50;
+                const headerLen = (wsData[0][i] || '').length + 2;
+                const maxDataLen = Math.max(...dataRows.map(row => String(row[i] || '').length), headerLen);
+                return { wch: Math.max(12, Math.min(maxW, maxDataLen + 2)) };
+            });
             ws['!cols'] = colWidths;
 
             const wb = XLSX.utils.book_new();
