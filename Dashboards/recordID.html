@@ -621,6 +621,29 @@
             displayRecords();
         }
 
+        function parseApptToDatetime(apptStr) {
+            if (!apptStr || apptStr.trim() === '') return null;
+            const match = apptStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+at\s+(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+            if (!match) return null;
+            const [, month, day, year, hour, min, ampm] = match;
+            let h = parseInt(hour, 10);
+            if (ampm.toUpperCase() === 'PM' && h !== 12) h += 12;
+            if (ampm.toUpperCase() === 'AM' && h === 12) h = 0;
+            const dateStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            const timeStr = `${String(h).padStart(2, '0')}:${min}`;
+            return { date: dateStr, time: timeStr };
+        }
+
+        function formatAppointmentForAirtable(dateStr, timeStr) {
+            if (!dateStr || !timeStr) return '';
+            const [y, m, d] = dateStr.split('-');
+            const [hour, min] = timeStr.split(':');
+            let h = parseInt(hour, 10);
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12 || 12;
+            return `${m}/${d}/${y} at ${String(h).padStart(2, '0')}:${min} ${ampm}`;
+        }
+
         function openEditModal(recordId) {
             const record = allRecords.find(r => r.id === recordId);
             if (!record) return;
@@ -667,6 +690,56 @@
             summaryDiv.appendChild(summaryValueDiv);
             container.appendChild(summaryDiv);
 
+            const apptDiv = document.createElement('div');
+            apptDiv.className = 'border-b border-gray-200 pb-3';
+
+            const apptLabel = document.createElement('label');
+            apptLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
+            apptLabel.textContent = 'Appointment Date & Time';
+
+            const apptRow = document.createElement('div');
+            apptRow.className = 'flex flex-wrap gap-3 items-end';
+
+            const apptDateInput = document.createElement('input');
+            apptDateInput.type = 'date';
+            apptDateInput.id = 'editApptDateField';
+            apptDateInput.className = 'px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+
+            const apptTimeInput = document.createElement('input');
+            apptTimeInput.type = 'time';
+            apptTimeInput.id = 'editApptTimeField';
+            apptTimeInput.className = 'px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+
+            const apptClearBtn = document.createElement('button');
+            apptClearBtn.type = 'button';
+            apptClearBtn.className = 'text-sm text-gray-500 hover:text-gray-700 underline';
+            apptClearBtn.textContent = 'Clear appointment';
+            apptClearBtn.onclick = function() {
+                apptDateInput.value = '';
+                apptTimeInput.value = '';
+                checkForChanges();
+            };
+
+            const apptValue = record.fields['Appt'];
+            if (apptValue && String(apptValue).trim() !== '') {
+                const parsed = parseApptToDatetime(String(apptValue).trim());
+                if (parsed) {
+                    apptDateInput.value = parsed.date;
+                    apptTimeInput.value = parsed.time;
+                }
+            }
+
+            apptRow.appendChild(apptDateInput);
+            apptRow.appendChild(apptTimeInput);
+            apptRow.appendChild(apptClearBtn);
+            apptDiv.appendChild(apptLabel);
+            apptDiv.appendChild(apptRow);
+            const apptHint = document.createElement('small');
+            apptHint.className = 'block text-gray-500 mt-1';
+            apptHint.textContent = 'Leave empty to keep current or clear appointment';
+            apptDiv.appendChild(apptHint);
+            container.appendChild(apptDiv);
+
             const stage = record.fields['Stage'];
             let stageValue = '';
 
@@ -706,6 +779,8 @@
             });
 
             const originalStage = stageValue;
+            const originalAppt = record.fields['Appt'];
+            const originalApptStr = (originalAppt != null && originalAppt !== undefined) ? String(originalAppt).trim() : '';
 
             const stageUnsavedMessage = document.createElement('div');
             stageUnsavedMessage.id = 'stageUnsavedMessage';
@@ -769,11 +844,19 @@
                 checkForChanges();
             });
 
+            apptDateInput.addEventListener('change', checkForChanges);
+            apptTimeInput.addEventListener('input', checkForChanges);
+
             function checkForChanges() {
+                const apptDate = apptDateInput.value;
+                const apptTime = apptTimeInput.value;
+                const newApptStr = (apptDate && apptTime) ? formatAppointmentForAirtable(apptDate, apptTime) : '';
+                const apptChanged = newApptStr !== originalApptStr;
+
                 const stageChanged = stageSelect.value !== originalStage;
                 const notesChanged = notesTextarea.value !== originalNotes;
 
-                if (stageChanged || notesChanged) {
+                if (stageChanged || notesChanged || apptChanged) {
                     saveBtn.classList.remove('hidden');
                     if (stageChanged) stageUnsavedMessage.classList.remove('hidden');
                     if (notesChanged) unsavedMessage.classList.remove('hidden');
@@ -998,11 +1081,57 @@
             }
         }
 
+        function getBaseSummaryWithoutAppt(fullSummary) {
+            if (!fullSummary || typeof fullSummary !== 'string') return fullSummary || '';
+            const match = fullSummary.match(/^Appointment:\s*[^\n]+\n\n?/i);
+            if (match) return fullSummary.slice(match[0].length).trim();
+            return fullSummary;
+        }
+
+        function getBaseSummaryHTMLWithoutAppt(fullSummaryHTML) {
+            if (!fullSummaryHTML || typeof fullSummaryHTML !== 'string') return fullSummaryHTML || '';
+            const match = fullSummaryHTML.match(/^Appointment:\s*[^<]+<BR>\s*<BR>\s*/i);
+            if (match) return fullSummaryHTML.slice(match[0].length).trim();
+            return fullSummaryHTML;
+        }
+
         async function saveChanges(recordId) {
             const stageField = document.getElementById('editStageField');
             const notesField = document.getElementById('editNotesField');
+            const apptDateField = document.getElementById('editApptDateField');
+            const apptTimeField = document.getElementById('editApptTimeField');
             const newStage = stageField.value;
             const newNotes = notesField.value;
+            const newAppt = (apptDateField && apptTimeField && apptDateField.value && apptTimeField.value)
+                ? formatAppointmentForAirtable(apptDateField.value, apptTimeField.value)
+                : '';
+
+            const record = allRecords.find(r => r.id === recordId);
+            let fullSummaryUpdate = null;
+            let fullSummaryHTMLUpdate = null;
+
+            if (record && (newAppt || record.fields['Appt'])) {
+                const baseSummary = getBaseSummaryWithoutAppt(record.fields['Full Summary']);
+                const baseSummaryHTML = getBaseSummaryHTMLWithoutAppt(record.fields['Full Summary HTML']);
+                if (newAppt) {
+                    fullSummaryUpdate = `Appointment: ${newAppt}\n\n${baseSummary}`;
+                    fullSummaryHTMLUpdate = `Appointment: ${newAppt}<BR><BR>${baseSummaryHTML}`;
+                } else {
+                    fullSummaryUpdate = baseSummary;
+                    fullSummaryHTMLUpdate = baseSummaryHTML;
+                }
+            }
+
+            const fieldsToUpdate = { 'Stage': newStage, 'Notes': newNotes };
+            if (apptDateField && apptTimeField) {
+                fieldsToUpdate['Appt'] = newAppt;
+            }
+            if (fullSummaryUpdate !== null) {
+                fieldsToUpdate['Full Summary'] = fullSummaryUpdate;
+            }
+            if (fullSummaryHTMLUpdate !== null) {
+                fieldsToUpdate['Full Summary HTML'] = fullSummaryHTMLUpdate;
+            }
 
             try {
                 const response = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${recordId}`, {
@@ -1011,22 +1140,19 @@
                         'Authorization': `Bearer ${CONFIG.apiKey}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ 
-                        fields: { 
-                            'Stage': newStage,
-                            'Notes': newNotes 
-                        } 
-                    })
+                    body: JSON.stringify({ fields: fieldsToUpdate })
                 });
 
                 if (!response.ok) {
                     throw new Error('Failed to save changes');
                 }
 
-                const record = allRecords.find(r => r.id === recordId);
-                if (record) { 
+                if (record) {
                     record.fields['Stage'] = newStage;
                     record.fields['Notes'] = newNotes;
+                    record.fields['Appt'] = newAppt;
+                    if (fullSummaryUpdate !== null) record.fields['Full Summary'] = fullSummaryUpdate;
+                    if (fullSummaryHTMLUpdate !== null) record.fields['Full Summary HTML'] = fullSummaryHTMLUpdate;
                 }
 
                 filterRecords();
