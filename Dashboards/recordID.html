@@ -1331,7 +1331,7 @@
             }
         }
 
-        const LOGO_URL = 'https://github.com/peakleadsgroup/landing-pages/blob/main/Images/Peak%20Leads%20Flattened%20Logo.png?raw=true';
+        const LOGO_URL = 'https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/Peak%20Leads%20Flattened%20Logo.png';
 
         async function generateInvoicePDF(chargeIndex) {
             const data = window._billingModalData;
@@ -1402,14 +1402,14 @@
                 if (imgData) {
                     doc.addImage(imgData, 'PNG', logoX, logoY, logoW, logoH);
                 } else {
-                    doc.setFontSize(14);
+                    doc.setFontSize(12);
                     doc.setFont(undefined, 'bold');
-                    doc.text('Peak Leads Group', logoX, logoY + 8, { align: 'right' });
+                    doc.text('Peak Leads Group', pageW - margin, logoY + 10, { align: 'right' });
                 }
             } catch (e) {
-                doc.setFontSize(14);
+                doc.setFontSize(12);
                 doc.setFont(undefined, 'bold');
-                doc.text('Peak Leads Group', pageW - margin, logoY + 8, { align: 'right' });
+                doc.text('Peak Leads Group', pageW - margin, logoY + 10, { align: 'right' });
             }
 
             // Invoice title (left)
@@ -1473,11 +1473,7 @@
             doc.text('Qty', colQty, y);
             doc.text('Unit price', colUnit, y);
             doc.text('Total', colTotalX, y, { align: 'right' });
-            y += 8;
-
-            // Table row underline
-            doc.setDrawColor(180, 180, 180);
-            doc.line(margin, y - 2, pageW - margin, y - 2);
+            y += 10;
 
             doc.setFont(undefined, 'normal');
             doc.text(description || '—', margin, y);
@@ -1502,7 +1498,7 @@
             doc.text(`$${totStr}`, totValX, y, { align: 'right' });
             y += 6;
             doc.setFont(undefined, 'bold');
-            doc.text('Amount due', totLabelX, y);
+            doc.text('Amount charged', totLabelX, y);
             doc.text(`$${totStr} USD`, totValX, y, { align: 'right' });
 
             doc.save(`invoice-${chargeId}.pdf`);
