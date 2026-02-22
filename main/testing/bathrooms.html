@@ -945,7 +945,8 @@
     </style>
 </head>
 <body>
-    <div class="form-container">
+    <div id="testingBanner" style="position:fixed;top:0;left:0;right:0;background:#ff9800;color:#000;padding:8px 16px;text-align:center;font-weight:bold;z-index:9999;font-size:14px;">TESTING MODE - No Airtable writes. Check console for [APPT] and [TESTING] logs.</div>
+    <div class="form-container" style="padding-top:36px;">
         <div class="logo-container">
             <img id="logoImg" 
                  src="" 
@@ -1276,6 +1277,11 @@
 
     <script>
         // ============================================
+        // TESTING MODE - No Airtable writes, detailed appointment logging
+        // ============================================
+        const TESTING_MODE = true;
+        
+        // ============================================
         // AIRTABLE CONFIGURATION
         // ============================================
         const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
@@ -1583,9 +1589,100 @@
         }
 
         async function submitLeadToAirtable(leadData) {
-            // TESTING MODE: Skip Airtable submission - leads are NOT posted to Airtable
-            console.log('[Testing] Skipping Airtable submission - lead would have been:', leadData);
-            return { records: [] };
+            try {
+                // Only set Lead Price when we have a matched client by zip; leave blank if no match
+                let leadPrice = null;
+                if (matchedClientData && matchedClientData.fields && matchedClientData.fields['Lead Price']) {
+                    leadPrice = matchedClientData.fields['Lead Price'];
+                }
+                
+                // Prepare the record
+                const record = {
+                    fields: {
+                        'Phone': leadData.phone,
+                        'Full Summary': leadData.fullSummary,
+                        'Full Summary HTML': leadData.fullSummaryHTML,
+                        'Full Name': leadData.fullName,
+                        'First Name': leadData.firstName,
+                        'Last Name': leadData.lastName,
+                        'Model': 'Lead',
+                        'Address': leadData.address,
+                        'City': leadData.city,
+                        'State': leadData.state,
+                        'Zip': leadData.zip
+                    }
+                };
+                
+                // Add email if provided
+                if (leadData.email && leadData.email.trim()) {
+                    record.fields['Email'] = leadData.email.trim();
+                }
+                
+                // Add Lead Price if available
+                if (leadPrice !== null && leadPrice !== undefined) {
+                    record.fields['Price'] = leadPrice;
+                }
+                
+                // Add linked client ONLY if we found a match by zip code (no fallback to campaign client)
+                if (matchedClientData && matchedClientData.id) {
+                    record.fields['Linked Client'] = [matchedClientData.id];
+                }
+                
+                // Always add Source Campaign if we have a campaign record ID
+                if (campaignRecordId) {
+                    record.fields['Source Campaign'] = [campaignRecordId];
+                }
+                
+                // Add linked ad if we found one
+                if (adRecordId) {
+                    record.fields['Ad'] = [adRecordId];
+                }
+                
+                // Add Unique ID (used for Meta lead deduplication) if provided
+                if (leadData.uniqueId) {
+                    record.fields['Unique ID'] = leadData.uniqueId;
+                }
+                
+                // Submit to Airtable (SKIPPED in testing mode)
+                if (TESTING_MODE) {
+                    console.log('[TESTING] submitLeadToAirtable: SKIPPED - would have POSTed lead to Airtable', {
+                        recordFields: Object.keys(record.fields),
+                        phone: record.fields['Phone'],
+                        fullName: record.fields['Full Name'],
+                        address: record.fields['Address'],
+                        linkedClient: record.fields['Linked Client']
+                    });
+                    leadRecordId = 'recTEST_' + Date.now();
+                    console.log('[TESTING] Using mock leadRecordId:', leadRecordId);
+                    return { records: [{ id: leadRecordId, fields: record.fields }] };
+                }
+                
+                const response = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ records: [record] })
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Airtable submission failed: ${response.status} ${response.statusText} - ${errorText}`);
+                }
+                
+                const result = await response.json();
+                
+                // Store the lead record ID so we can update it with appointment later
+                if (result.records && result.records.length > 0) {
+                    leadRecordId = result.records[0].id;
+                }
+                
+                return result;
+            } catch (error) {
+                console.error('Error submitting lead to Airtable:', error);
+                throw error;
+            }
         }
 
         function initializeMetaPixel(pixelId) {
@@ -2490,6 +2587,7 @@
             try {
                 // Only count appointments for this client's leads; otherwise we'd block slots used by other clients
                 if (!linkedClientId) {
+                    console.log('[APPT] getBookedAppointments: no linkedClientId, returning []');
                     return [];
                 }
                 const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -2499,9 +2597,11 @@
                 // Filter: Appt contains this date AND lead is linked to this client (so we don't block slots with other clients' leads)
                 const filterByFormula = `AND(SEARCH("${datePrefix}", {Appt}), FIND("${linkedClientId}", ARRAYJOIN({Linked Client})) > 0)`;
                 const leadsUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}?filterByFormula=${encodeURIComponent(filterByFormula)}`;
+                console.log('[APPT] getBookedAppointments: fetching', { date: datePrefix, linkedClientId, filterByFormula });
                 const leadsData = await fetchAirtableData(leadsUrl);
                 
                 if (!leadsData.records || leadsData.records.length === 0) {
+                    console.log('[APPT] getBookedAppointments: no records found for date', datePrefix);
                     return [];
                 }
                 
@@ -2516,9 +2616,17 @@
                     }
                 });
                 
+                console.log('[APPT] getBookedAppointments: result', {
+                    date: datePrefix,
+                    linkedClientId,
+                    recordsFound: leadsData.records.length,
+                    bookedTimes,
+                    leadIds: leadsData.records.map(r => r.id),
+                    apptValues: leadsData.records.map(r => r.fields['Appt'])
+                });
                 return bookedTimes;
             } catch (error) {
-                console.error('Error fetching booked appointments:', error);
+                console.error('[APPT] getBookedAppointments: Error fetching booked appointments:', error);
                 return [];
             }
         }
@@ -2724,6 +2832,12 @@
             // Create a new Date object to avoid reference issues
             selectedDate = new Date(date);
             selectedTime = null;
+            console.log('[APPT] selectCalendarDay: user selected date', {
+                date: selectedDate.toISOString(),
+                fullDate,
+                isBottomCalendar,
+                linkedClientId: (matchedClientData && matchedClientData.id) || (campaignClientData && campaignClientData.id) || null
+            });
             
             // If isBottomCalendar wasn't passed, try to determine which calendar is active
             if (isBottomCalendar === null) {
@@ -2786,8 +2900,9 @@
             
             // Create a new Date object to ensure we're using the correct date
             const dateToUse = new Date(selectedDate);
+            console.log('[APPT] renderTimes: fetching slots for date', { date: dateToUse.toISOString(), isBottomCalendar });
             const slots = await getAvailableTimesForDate(dateToUse);
-            
+            console.log('[APPT] renderTimes: got slots', { date: dateToUse.toISOString(), slotsCount: slots.length, displayTimes: slots.map(s => s.display) });
             timeGrid.innerHTML = '';
             
             if (slots.length === 0) {
@@ -2820,39 +2935,60 @@
             const timeForAppt = slot.apptFormat || slot.display;
             const appointmentText = formatAppointmentDate(selectedDate, timeForAppt);
             
+            console.log('[APPT] selectCalendarTime: user selected time', {
+                slot,
+                timeForAppt,
+                appointmentText,
+                selectedDate: selectedDate ? selectedDate.toISOString() : null,
+                leadRecordId,
+                isHomeProMI: isHomeProMIClient()
+            });
+            
             // Update the lead record in Airtable with the appointment and re-write summaries with appointment at top
             if (leadRecordId) {
-                try {
-                    const baseSummary = formData.fullSummary || '';
-                    const baseSummaryHTML = formData.fullSummaryHTML || '';
-                    const fullSummaryWithAppt = `Appointment: ${appointmentText}\n\n${baseSummary}`;
-                    const fullSummaryHTMLWithAppt = `Appointment: ${appointmentText}<BR><BR>${baseSummaryHTML}`;
-
-                    const updateResponse = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}/${leadRecordId}`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            fields: {
-                                'Appt': appointmentText,
-                                'Full Summary': fullSummaryWithAppt,
-                                'Full Summary HTML': fullSummaryHTMLWithAppt
-                            }
-                        })
-                    });
-                    
-                    if (!updateResponse.ok) {
-                        const errorText = await updateResponse.text();
-                        const error = new Error(`Failed to update appointment: ${errorText}`);
-                        throw error;
+                const baseSummary = formData.fullSummary || '';
+                const baseSummaryHTML = formData.fullSummaryHTML || '';
+                const fullSummaryWithAppt = `Appointment: ${appointmentText}\n\n${baseSummary}`;
+                const fullSummaryHTMLWithAppt = `Appointment: ${appointmentText}<BR><BR>${baseSummaryHTML}`;
+                
+                const patchPayload = {
+                    fields: {
+                        'Appt': appointmentText,
+                        'Full Summary': fullSummaryWithAppt,
+                        'Full Summary HTML': fullSummaryHTMLWithAppt
                     }
-                } catch (error) {
-                    console.error('Error updating appointment in Airtable:', error);
+                };
+                
+                if (TESTING_MODE) {
+                    console.log('[APPT] selectCalendarTime: SKIPPED PATCH - would have updated Airtable', {
+                        leadRecordId,
+                        url: `${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}/${leadRecordId}`,
+                        patchPayload,
+                        apptFieldValue: appointmentText
+                    });
+                } else {
+                    try {
+                        const updateResponse = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}/${leadRecordId}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(patchPayload)
+                        });
+                        
+                        if (!updateResponse.ok) {
+                            const errorText = await updateResponse.text();
+                            const error = new Error(`Failed to update appointment: ${errorText}`);
+                            throw error;
+                        }
+                        console.log('[APPT] selectCalendarTime: PATCH successful', { leadRecordId, appointmentText });
+                    } catch (error) {
+                        console.error('Error updating appointment in Airtable:', error);
+                    }
                 }
             } else {
-                console.warn('No lead record ID available to update with appointment');
+                console.warn('[APPT] selectCalendarTime: No lead record ID available to update with appointment');
             }
             
             appointmentTimeSelected = true; // So showDuplicateCallToAction shows confirmation below, not calendar
@@ -2906,7 +3042,7 @@
             
             // If client is "Home Pro MI", fetch Lead Perfection availability
             if (isHomeProMIClient()) {
-                // Hardcoded 48 hours in advance for all clients (including Home Pro)
+                // 48 hours in advance for Home Pro
                 clientMinHoursInAdvance = 48;
                 if (activeClient && activeClient.fields) {
                     // Set timezone from client data
@@ -3002,6 +3138,15 @@
             if (progressBar) progressBar.style.display = 'none';
             if (mainHeading) mainHeading.style.display = 'none';
             
+            console.log('[APPT] showCalendarScreen: initializing calendar', {
+                clientTimezone,
+                clientAvailability,
+                clientAvailableDays,
+                clientDaysOut,
+                clientMinHoursInAdvance,
+                isHomeProMI: isHomeProMIClient(),
+                lpAvailabilityDataLength: lpAvailabilityData?.length || 0
+            });
             initializeCalendar();
             
             // Show reviews modal if reviews exist
@@ -3798,8 +3943,16 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                     console.warn('Redirect option selected but no Redirect URL found');
                     showConfirmationScreen();
                 }
-            } else if (normalizedType === 'calendar') {
+            } else             if (normalizedType === 'calendar') {
                 currentSubmitScreenType = 'calendar';
+                console.log('[APPT] submitFinalForm: showing calendar screen', {
+                    leadRecordId,
+                    clientName: (matchedClientData || campaignClientData)?.fields?.['Name'],
+                    clientAvailability,
+                    clientAvailableDays,
+                    clientDaysOut,
+                    clientMinHoursInAdvance
+                });
                 showCalendarScreen();
             } else if (normalizedType === 'phone') {
                 currentSubmitScreenType = 'Phone';
