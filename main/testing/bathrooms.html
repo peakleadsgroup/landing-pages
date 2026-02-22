@@ -2592,10 +2592,13 @@
                 }
                 const month = (date.getMonth() + 1).toString().padStart(2, '0');
                 const day = date.getDate().toString().padStart(2, '0');
+                const monthUnpadded = (date.getMonth() + 1).toString();
+                const dayUnpadded = date.getDate().toString();
                 const year = date.getFullYear();
                 const datePrefix = `${month}/${day}/${year} at `;
-                // Filter: Appt contains this date AND lead is linked to this client (so we don't block slots with other clients' leads)
-                const filterByFormula = `AND(SEARCH("${datePrefix}", {Appt}), FIND("${linkedClientId}", ARRAYJOIN({Linked Client})) > 0)`;
+                const datePrefixAlt = `${monthUnpadded}/${dayUnpadded}/${year} at `;
+                // Filter by date only - ARRAYJOIN with linked records is unreliable in Airtable formulas; filter client-side
+                const filterByFormula = `OR(SEARCH("${datePrefix}", {Appt}), SEARCH("${datePrefixAlt}", {Appt}))`;
                 const leadsUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}?filterByFormula=${encodeURIComponent(filterByFormula)}`;
                 console.log('[APPT] getBookedAppointments: fetching', { date: datePrefix, linkedClientId, filterByFormula });
                 const leadsData = await fetchAirtableData(leadsUrl);
@@ -2607,9 +2610,18 @@
                 
                 const bookedTimes = [];
                 leadsData.records.forEach(lead => {
+                    // Filter client-side: only count leads linked to this client
+                    const linkedClients = lead.fields['Linked Client'];
+                    const isLinkedToClient = Array.isArray(linkedClients) && linkedClients.includes(linkedClientId);
+                    if (!isLinkedToClient) return;
+                    
                     const appt = lead.fields['Appt'];
-                    if (appt && appt.startsWith(datePrefix)) {
-                        const timePart = appt.substring(datePrefix.length).trim();
+                    if (!appt) return;
+                    // Match both "02/25/2026 at " and "2/25/2026 at " formats
+                    const prefixMatch = appt.startsWith(datePrefix) || appt.startsWith(datePrefixAlt);
+                    if (prefixMatch) {
+                        const prefixLen = appt.startsWith(datePrefix) ? datePrefix.length : datePrefixAlt.length;
+                        const timePart = appt.substring(prefixLen).trim();
                         if (timePart) {
                             bookedTimes.push(timePart);
                         }
