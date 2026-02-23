@@ -22,10 +22,6 @@
     <noscript id="metaPixelNoscript"></noscript>
     <!-- End Meta Pixel Code -->
     
-    <!-- Calendly Embed -->
-    <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
-    <script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
-    
     <style>
         * {
             margin: 0;
@@ -422,34 +418,6 @@
             width: 24px;
             height: 24px;
         }
-
-        /* Calendly Embed Styles */
-        .calendly-embed-container {
-            min-width: 320px;
-            height: 700px;
-            width: 100%;
-        }
-
-        .calendly-log {
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 11px;
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 15px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .calendly-log-entry {
-            padding: 2px 0;
-            border-bottom: 1px solid #333;
-        }
-
-        .calendly-log-entry.event { color: #4fc3f7; }
-        .calendly-log-entry.payload { color: #81c784; }
-        .calendly-log-entry.time { color: #ffb74d; font-size: 10px; }
 
         /* Calendar Styles */
         .calendar-step-header {
@@ -977,8 +945,7 @@
     </style>
 </head>
 <body>
-    <div id="testingBanner" style="position:fixed;top:0;left:0;right:0;background:#ff9800;color:#000;padding:8px 16px;text-align:center;font-weight:bold;z-index:9999;font-size:14px;">TESTING MODE - No Airtable writes. Check console for [APPT] and [TESTING] logs.</div>
-    <div class="form-container" style="padding-top:36px;">
+    <div class="form-container">
         <div class="logo-container">
             <img id="logoImg" 
                  src="" 
@@ -1148,16 +1115,42 @@
             </div>
         </div>
 
-        <!-- CALENDAR BOOKING SCREEN (Calendly Embed) -->
+        <!-- CALENDAR BOOKING SCREEN -->
         <div class="form-step" id="calendarStep">
-            <div class="calendar-step-header">We'll reach out soon to schedule your free estimate!</div>
-            <div style="font-size: 16px; color: #666; margin-bottom: 25px; text-align: center;">Ready to schedule your free estimate now? Choose a time below (name & email pre-filled):</div>
+            <div class="calendar-step-header">We'll reach out soon to schedule your free in home estimate!</div>
+            <div style="font-size: 16px; color: #666; margin-bottom: 25px; text-align: center;">Ready to schedule your free in home estimate now? Choose a time below:</div>
             
-            <div id="calendly-embed" class="calendly-embed-container"></div>
+            <div class="calendar-header">
+                <div class="month-nav">
+                    <button class="nav-button" id="prevMonth" onclick="changeCalendarMonth(-1)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 18l-6-6 6-6"/>
+                        </svg>
+                    </button>
+                    <div class="month-display" id="monthDisplay"></div>
+                    <button class="nav-button" id="nextMonth" onclick="changeCalendarMonth(1)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 18l6-6-6-6"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
             
-            <div id="calendlyLog" class="calendly-log" style="display: none;">
-                <div style="font-weight: bold; margin-bottom: 8px; color: #fff;">Calendly Event Log</div>
-                <div id="calendlyLogEntries"></div>
+            <div class="weekday-header">
+                <div class="weekday-name">Sun</div>
+                <div class="weekday-name">Mon</div>
+                <div class="weekday-name">Tue</div>
+                <div class="weekday-name">Wed</div>
+                <div class="weekday-name">Thu</div>
+                <div class="weekday-name">Fri</div>
+                <div class="weekday-name">Sat</div>
+            </div>
+            
+            <div class="calendar-grid" id="calendarGrid"></div>
+            
+            <div id="timeSection" class="time-section" style="display: none;">
+                <div class="selected-info" id="selectedDayInfo"></div>
+                <div class="time-grid" id="timeGrid"></div>
             </div>
         </div>
 
@@ -1226,12 +1219,43 @@
                 </div>
             </div>
 
-            <!-- DUPLICATE CALENDAR SCREEN (Calendly Embed) -->
+            <!-- DUPLICATE CALENDAR SCREEN -->
             <div class="form-step cta-block" id="calendarStepBelow">
-                <div class="calendar-step-header">We'll reach out soon to schedule your free estimate!</div>
-                <div style="font-size: 16px; color: #666; margin-bottom: 25px; text-align: center;">Ready to schedule your free estimate now? Choose a time below:</div>
+                <div class="calendar-step-header">We'll reach out soon to schedule your free in home estimate!</div>
+                <div style="font-size: 16px; color: #666; margin-bottom: 25px; text-align: center;">Ready to schedule your free in home estimate now? Choose a time below:</div>
                 
-                <div id="calendly-embed-below" class="calendly-embed-container"></div>
+                <div class="calendar-header">
+                    <div class="month-nav">
+                        <button class="nav-button" id="prevMonthBelow" onclick="changeCalendarMonthBelow(-1)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M15 18l-6-6 6-6"/>
+                            </svg>
+                        </button>
+                        <div class="month-display" id="monthDisplayBelow"></div>
+                        <button class="nav-button" id="nextMonthBelow" onclick="changeCalendarMonthBelow(1)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="weekday-header">
+                    <div class="weekday-name">Sun</div>
+                    <div class="weekday-name">Mon</div>
+                    <div class="weekday-name">Tue</div>
+                    <div class="weekday-name">Wed</div>
+                    <div class="weekday-name">Thu</div>
+                    <div class="weekday-name">Fri</div>
+                    <div class="weekday-name">Sat</div>
+                </div>
+                
+                <div class="calendar-grid" id="calendarGridBelow"></div>
+                
+                <div id="timeSectionBelow" class="time-section" style="display: none;">
+                    <div class="selected-info" id="selectedDayInfoBelow"></div>
+                    <div class="time-grid" id="timeGridBelow"></div>
+                </div>
             </div>
 
             <!-- DUPLICATE CONFIRMATION/THANK YOU SCREEN -->
@@ -1252,16 +1276,14 @@
 
     <script>
         // ============================================
-        // TESTING MODE - No Airtable writes, detailed appointment logging
-        // ============================================
-        const TESTING_MODE = true;
-        
-        // ============================================
         // AIRTABLE CONFIGURATION
         // ============================================
         const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
         const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
         const AIRTABLE_BASE_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
+        
+        // TEST MODE: Set to true to skip Airtable writes (for testing)
+        const TEST_MODE = true;
         
         const TABLES = {
             CLIENTS: 'tblMl8Y97cMSbricC',
@@ -1281,9 +1303,6 @@
             minHoursInAdvance: 48,
             availableDaysOfWeek: [1, 2, 3, 4, 5] // Monday-Friday
         };
-        
-        // Calendly Embed Configuration (testing)
-        const CALENDLY_URL = 'https://calendly.com/drew-peakleadsgroup/30min';
         // ============================================
 
         let currentStep = 1;
@@ -1568,6 +1587,10 @@
 
         async function submitLeadToAirtable(leadData) {
             try {
+                if (TEST_MODE) {
+                    console.log('TEST MODE: Skipping Airtable lead submission');
+                    return { records: [] };
+                }
                 // Only set Lead Price when we have a matched client by zip; leave blank if no match
                 let leadPrice = null;
                 if (matchedClientData && matchedClientData.fields && matchedClientData.fields['Lead Price']) {
@@ -1621,20 +1644,7 @@
                     record.fields['Unique ID'] = leadData.uniqueId;
                 }
                 
-                // Submit to Airtable (SKIPPED in testing mode)
-                if (TESTING_MODE) {
-                    console.log('[TESTING] submitLeadToAirtable: SKIPPED - would have POSTed lead to Airtable', {
-                        recordFields: Object.keys(record.fields),
-                        phone: record.fields['Phone'],
-                        fullName: record.fields['Full Name'],
-                        address: record.fields['Address'],
-                        linkedClient: record.fields['Linked Client']
-                    });
-                    leadRecordId = 'recTEST_' + Date.now();
-                    console.log('[TESTING] Using mock leadRecordId:', leadRecordId);
-                    return { records: [{ id: leadRecordId, fields: record.fields }] };
-                }
-                
+                // Submit to Airtable
                 const response = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}`, {
                     method: 'POST',
                     headers: {
@@ -2312,139 +2322,12 @@
         }
         
         // ============================================
-        // CALENDAR FUNCTIONS (Calendly Embed)
+        // CALENDAR FUNCTIONS
         // ============================================
         
         let selectedDate = null;
         let selectedTime = null;
         let currentWeekStart = null;
-        
-        // Calendly event logging
-        function logCalendlyEvent(eventName, payload, extra) {
-            const ts = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            const logDiv = document.getElementById('calendlyLog');
-            const entriesDiv = document.getElementById('calendlyLogEntries');
-            if (!logDiv || !entriesDiv) return;
-            
-            console.log(`[CALENDLY] ${ts} ${eventName}`, payload || {}, extra || {});
-            
-            logDiv.style.display = 'block';
-            const entry = document.createElement('div');
-            entry.className = 'calendly-log-entry';
-            entry.innerHTML = `<span class="calendly-log-entry time">[${ts}]</span> <span class="calendly-log-entry event">${eventName}</span>` +
-                (payload && Object.keys(payload).length ? `<br><span class="calendly-log-entry payload">${JSON.stringify(payload)}</span>` : '') +
-                (extra ? `<br><span style="color:#b39ddb">${extra}</span>` : '');
-            entriesDiv.appendChild(entry);
-            entriesDiv.scrollTop = entriesDiv.scrollHeight;
-        }
-        
-        // Calendly message listener - must run early
-        document.addEventListener('DOMContentLoaded', function initCalendlyListener() {
-            window.addEventListener('message', function(e) {
-                if (e.origin !== 'https://calendly.com') return;
-                if (!e.data || typeof e.data.event !== 'string') return;
-                if (e.data.event.indexOf('calendly.') !== 0) return;
-                
-                const eventName = e.data.event;
-                const payload = e.data.payload || {};
-                
-                logCalendlyEvent(eventName, payload, 'origin: ' + e.origin);
-                
-                if (eventName === 'calendly.event_scheduled') {
-                    logCalendlyEvent('calendly.event_scheduled', payload, 'BOOKING COMPLETE - showing confirmation (no Airtable write)');
-                    handleCalendlyEventScheduled(payload);
-                } else if (eventName === 'calendly.date_and_time_selected') {
-                    logCalendlyEvent('calendly.date_and_time_selected', payload, 'User selected a date/time (payload may be empty)');
-                } else if (eventName === 'calendly.profile_page_viewed') {
-                    logCalendlyEvent('calendly.profile_page_viewed', payload, 'Calendly profile page loaded');
-                } else if (eventName === 'calendly.popup_opened') {
-                    logCalendlyEvent('calendly.popup_opened', payload, 'Calendly popup opened');
-                } else if (eventName === 'calendly.popup_closed') {
-                    logCalendlyEvent('calendly.popup_closed', payload, 'Calendly popup closed');
-                } else {
-                    logCalendlyEvent(eventName, payload, '');
-                }
-            });
-        });
-        
-        function initCalendlyEmbed() {
-            const fullName = formData.fullName || 
-                (formData.firstName && formData.lastName ? `${formData.firstName} ${formData.lastName}`.trim() : '') ||
-                '';
-            const email = formData.email || '';
-            
-            const prefill = {};
-            if (fullName) prefill.name = fullName;
-            if (email) prefill.email = email;
-            
-            logCalendlyEvent('initCalendlyEmbed', { prefill, url: CALENDLY_URL }, 
-                'Initializing Calendly with prefill: ' + (Object.keys(prefill).length ? JSON.stringify(prefill) : 'none'));
-            
-            if (typeof Calendly === 'undefined') {
-                logCalendlyEvent('initCalendlyEmbed', {}, 'Calendly script not loaded yet, retrying in 500ms...');
-                setTimeout(initCalendlyEmbed, 500);
-                return;
-            }
-            
-            // Top embed
-            const topEl = document.getElementById('calendly-embed');
-            if (topEl && topEl.innerHTML === '') {
-                Calendly.initInlineWidget({
-                    url: CALENDLY_URL,
-                    parentElement: topEl,
-                    prefill: prefill,
-                    utm: { utmSource: 'bathroom_testing', utmMedium: 'embed' }
-                });
-                logCalendlyEvent('Calendly.initInlineWidget', { target: 'top' }, 'Top embed initialized');
-            }
-            
-            // Bottom embed (duplicate for scroll-down section)
-            const bottomEl = document.getElementById('calendly-embed-below');
-            if (bottomEl && bottomEl.innerHTML === '') {
-                Calendly.initInlineWidget({
-                    url: CALENDLY_URL,
-                    parentElement: bottomEl,
-                    prefill: prefill,
-                    utm: { utmSource: 'bathroom_testing', utmMedium: 'embed' }
-                });
-                logCalendlyEvent('Calendly.initInlineWidget', { target: 'bottom' }, 'Bottom embed initialized');
-            }
-        }
-        
-        function handleCalendlyEventScheduled(payload) {
-            appointmentTimeSelected = true;
-            
-            const exclamationIconHtml = '<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#F9A825" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#FFF9C4" stroke="#F9A825"/><path d="M12 7 v6" stroke="#F9A825" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.5" fill="#F9A825"/></svg>';
-            const confirmationIcon = document.getElementById('confirmationIcon');
-            const confirmationIconBelow = document.getElementById('confirmationIconBelow');
-            if (confirmationIcon) confirmationIcon.innerHTML = exclamationIconHtml;
-            if (confirmationIconBelow) confirmationIconBelow.innerHTML = exclamationIconHtml;
-            
-            const confirmationTitle = document.getElementById('confirmationTitle');
-            const confirmationMessage = document.getElementById('confirmationMessage');
-            if (confirmationTitle) confirmationTitle.textContent = "IMPORTANT";
-            if (confirmationMessage) confirmationMessage.textContent = "Your appointment is not confirmed until we speak with you over the phone. We will call you as soon as possible to confirm your time!";
-            
-            document.getElementById('calendarStep').classList.remove('active');
-            document.getElementById('confirmationStep').classList.add('active');
-            
-            const calendarStepBelow = document.getElementById('calendarStepBelow');
-            const confirmationStepBelow = document.getElementById('confirmationStepBelow');
-            const ctaSection = document.getElementById('ctaSection');
-            if (calendarStepBelow) calendarStepBelow.style.display = 'none';
-            if (confirmationStepBelow) {
-                confirmationStepBelow.style.display = 'block';
-                const confirmationTitleBelow = document.getElementById('confirmationTitleBelow');
-                const confirmationMessageBelow = document.getElementById('confirmationMessageBelow');
-                if (confirmationTitleBelow) confirmationTitleBelow.textContent = "IMPORTANT";
-                if (confirmationMessageBelow) confirmationMessageBelow.textContent = "Your appointment is not confirmed until we speak with you over the phone. We will call you as soon as possible to confirm your time!";
-            }
-            if (ctaSection) ctaSection.classList.add('active');
-            
-            logCalendlyEvent('handleCalendlyEventScheduled', payload, 'Confirmation shown. NO Airtable write (testing).');
-            
-            setTimeout(function() { showReviewsModal(); }, 500);
-        }
         
         function getCurrentDateInTimezone() {
             return new Date(new Date().toLocaleString('en-US', { timeZone: clientTimezone }));
@@ -2692,7 +2575,6 @@
             try {
                 // Only count appointments for this client's leads; otherwise we'd block slots used by other clients
                 if (!linkedClientId) {
-                    console.log('[APPT] getBookedAppointments: no linkedClientId, returning []');
                     return [];
                 }
                 const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -2702,14 +2584,12 @@
                 const year = date.getFullYear();
                 const datePrefix = `${month}/${day}/${year} at `;
                 const datePrefixAlt = `${monthUnpadded}/${dayUnpadded}/${year} at `;
-                // Filter by date only - ARRAYJOIN with linked records is unreliable in Airtable formulas; filter client-side
+                // Filter by date only - ARRAYJOIN with linked records is unreliable in Airtable formulas
                 const filterByFormula = `OR(SEARCH("${datePrefix}", {Appt}), SEARCH("${datePrefixAlt}", {Appt}))`;
                 const leadsUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}?filterByFormula=${encodeURIComponent(filterByFormula)}`;
-                console.log('[APPT] getBookedAppointments: fetching', { date: datePrefix, linkedClientId, filterByFormula });
                 const leadsData = await fetchAirtableData(leadsUrl);
                 
                 if (!leadsData.records || leadsData.records.length === 0) {
-                    console.log('[APPT] getBookedAppointments: no records found for date', datePrefix);
                     return [];
                 }
                 
@@ -2733,17 +2613,9 @@
                     }
                 });
                 
-                console.log('[APPT] getBookedAppointments: result', {
-                    date: datePrefix,
-                    linkedClientId,
-                    recordsFound: leadsData.records.length,
-                    bookedTimes,
-                    leadIds: leadsData.records.map(r => r.id),
-                    apptValues: leadsData.records.map(r => r.fields['Appt'])
-                });
                 return bookedTimes;
             } catch (error) {
-                console.error('[APPT] getBookedAppointments: Error fetching booked appointments:', error);
+                console.error('Error fetching booked appointments:', error);
                 return [];
             }
         }
@@ -2949,12 +2821,6 @@
             // Create a new Date object to avoid reference issues
             selectedDate = new Date(date);
             selectedTime = null;
-            console.log('[APPT] selectCalendarDay: user selected date', {
-                date: selectedDate.toISOString(),
-                fullDate,
-                isBottomCalendar,
-                linkedClientId: (matchedClientData && matchedClientData.id) || (campaignClientData && campaignClientData.id) || null
-            });
             
             // If isBottomCalendar wasn't passed, try to determine which calendar is active
             if (isBottomCalendar === null) {
@@ -3017,9 +2883,8 @@
             
             // Create a new Date object to ensure we're using the correct date
             const dateToUse = new Date(selectedDate);
-            console.log('[APPT] renderTimes: fetching slots for date', { date: dateToUse.toISOString(), isBottomCalendar });
             const slots = await getAvailableTimesForDate(dateToUse);
-            console.log('[APPT] renderTimes: got slots', { date: dateToUse.toISOString(), slotsCount: slots.length, displayTimes: slots.map(s => s.display) });
+            
             timeGrid.innerHTML = '';
             
             if (slots.length === 0) {
@@ -3052,60 +2917,39 @@
             const timeForAppt = slot.apptFormat || slot.display;
             const appointmentText = formatAppointmentDate(selectedDate, timeForAppt);
             
-            console.log('[APPT] selectCalendarTime: user selected time', {
-                slot,
-                timeForAppt,
-                appointmentText,
-                selectedDate: selectedDate ? selectedDate.toISOString() : null,
-                leadRecordId,
-                isHomeProMI: isHomeProMIClient()
-            });
-            
             // Update the lead record in Airtable with the appointment and re-write summaries with appointment at top
-            if (leadRecordId) {
-                const baseSummary = formData.fullSummary || '';
-                const baseSummaryHTML = formData.fullSummaryHTML || '';
-                const fullSummaryWithAppt = `Appointment: ${appointmentText}\n\n${baseSummary}`;
-                const fullSummaryHTMLWithAppt = `Appointment: ${appointmentText}<BR><BR>${baseSummaryHTML}`;
-                
-                const patchPayload = {
-                    fields: {
-                        'Appt': appointmentText,
-                        'Full Summary': fullSummaryWithAppt,
-                        'Full Summary HTML': fullSummaryHTMLWithAppt
-                    }
-                };
-                
-                if (TESTING_MODE) {
-                    console.log('[APPT] selectCalendarTime: SKIPPED PATCH - would have updated Airtable', {
-                        leadRecordId,
-                        url: `${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}/${leadRecordId}`,
-                        patchPayload,
-                        apptFieldValue: appointmentText
+            if (leadRecordId && !TEST_MODE) {
+                try {
+                    const baseSummary = formData.fullSummary || '';
+                    const baseSummaryHTML = formData.fullSummaryHTML || '';
+                    const fullSummaryWithAppt = `Appointment: ${appointmentText}\n\n${baseSummary}`;
+                    const fullSummaryHTMLWithAppt = `Appointment: ${appointmentText}<BR><BR>${baseSummaryHTML}`;
+
+                    const updateResponse = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}/${leadRecordId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            fields: {
+                                'Appt': appointmentText,
+                                'Full Summary': fullSummaryWithAppt,
+                                'Full Summary HTML': fullSummaryHTMLWithAppt
+                            }
+                        })
                     });
-                } else {
-                    try {
-                        const updateResponse = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}/${leadRecordId}`, {
-                            method: 'PATCH',
-                            headers: {
-                                'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(patchPayload)
-                        });
-                        
-                        if (!updateResponse.ok) {
-                            const errorText = await updateResponse.text();
-                            const error = new Error(`Failed to update appointment: ${errorText}`);
-                            throw error;
-                        }
-                        console.log('[APPT] selectCalendarTime: PATCH successful', { leadRecordId, appointmentText });
-                    } catch (error) {
-                        console.error('Error updating appointment in Airtable:', error);
+                    
+                    if (!updateResponse.ok) {
+                        const errorText = await updateResponse.text();
+                        const error = new Error(`Failed to update appointment: ${errorText}`);
+                        throw error;
                     }
+                } catch (error) {
+                    console.error('Error updating appointment in Airtable:', error);
                 }
             } else {
-                console.warn('[APPT] selectCalendarTime: No lead record ID available to update with appointment');
+                console.warn('No lead record ID available to update with appointment');
             }
             
             appointmentTimeSelected = true; // So showDuplicateCallToAction shows confirmation below, not calendar
@@ -3255,11 +3099,7 @@
             if (progressBar) progressBar.style.display = 'none';
             if (mainHeading) mainHeading.style.display = 'none';
             
-            console.log('[APPT] showCalendarScreen: initializing Calendly embed', {
-                prefillFrom: { fullName: formData.fullName, firstName: formData.firstName, lastName: formData.lastName, email: formData.email },
-                calendlyUrl: CALENDLY_URL
-            });
-            initCalendlyEmbed();
+            initializeCalendar();
             
             // Show reviews modal if reviews exist
             setTimeout(() => {
@@ -3539,10 +3379,11 @@
             
             // Duplicate whatever is shown at the top - show only that screen below reviews
             if (currentSubmitScreenType === 'calendar' && !appointmentTimeSelected) {
-                // Show calendar below only if user hasn't selected a time yet (Calendly embed already initialized)
+                // Show calendar below only if user hasn't selected a time yet
                 if (calendarStepBelow) {
                     calendarStepBelow.style.display = 'block';
                     ctaSection.classList.add('active');
+                    initializeCalendarBelow();
                 }
             } else if (currentSubmitScreenType === 'calendar' && appointmentTimeSelected) {
                 // User already selected a time on top calendar - show confirmation below so they can't pick a second time
@@ -4054,16 +3895,8 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                     console.warn('Redirect option selected but no Redirect URL found');
                     showConfirmationScreen();
                 }
-            } else             if (normalizedType === 'calendar') {
+            } else if (normalizedType === 'calendar') {
                 currentSubmitScreenType = 'calendar';
-                console.log('[APPT] submitFinalForm: showing calendar screen', {
-                    leadRecordId,
-                    clientName: (matchedClientData || campaignClientData)?.fields?.['Name'],
-                    clientAvailability,
-                    clientAvailableDays,
-                    clientDaysOut,
-                    clientMinHoursInAdvance
-                });
                 showCalendarScreen();
             } else if (normalizedType === 'phone') {
                 currentSubmitScreenType = 'Phone';
