@@ -22,6 +22,10 @@
     <noscript id="metaPixelNoscript"></noscript>
     <!-- End Meta Pixel Code -->
     
+    <!-- Calendly Embed -->
+    <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
+    <script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
+    
     <style>
         * {
             margin: 0;
@@ -418,6 +422,34 @@
             width: 24px;
             height: 24px;
         }
+
+        /* Calendly Embed Styles */
+        .calendly-embed-container {
+            min-width: 320px;
+            height: 700px;
+            width: 100%;
+        }
+
+        .calendly-log {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 11px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .calendly-log-entry {
+            padding: 2px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .calendly-log-entry.event { color: #4fc3f7; }
+        .calendly-log-entry.payload { color: #81c784; }
+        .calendly-log-entry.time { color: #ffb74d; font-size: 10px; }
 
         /* Calendar Styles */
         .calendar-step-header {
@@ -1116,42 +1148,16 @@
             </div>
         </div>
 
-        <!-- CALENDAR BOOKING SCREEN -->
+        <!-- CALENDAR BOOKING SCREEN (Calendly Embed) -->
         <div class="form-step" id="calendarStep">
             <div class="calendar-step-header">We'll reach out soon to schedule your free estimate!</div>
-            <div style="font-size: 16px; color: #666; margin-bottom: 25px; text-align: center;">Ready to schedule your free estimate now? Choose a time below:</div>
+            <div style="font-size: 16px; color: #666; margin-bottom: 25px; text-align: center;">Ready to schedule your free estimate now? Choose a time below (name & email pre-filled):</div>
             
-            <div class="calendar-header">
-                <div class="month-nav">
-                    <button class="nav-button" id="prevMonth" onclick="changeCalendarMonth(-1)">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M15 18l-6-6 6-6"/>
-                        </svg>
-                    </button>
-                    <div class="month-display" id="monthDisplay"></div>
-                    <button class="nav-button" id="nextMonth" onclick="changeCalendarMonth(1)">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9 18l6-6-6-6"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
+            <div id="calendly-embed" class="calendly-embed-container"></div>
             
-            <div class="weekday-header">
-                <div class="weekday-name">Sun</div>
-                <div class="weekday-name">Mon</div>
-                <div class="weekday-name">Tue</div>
-                <div class="weekday-name">Wed</div>
-                <div class="weekday-name">Thu</div>
-                <div class="weekday-name">Fri</div>
-                <div class="weekday-name">Sat</div>
-            </div>
-            
-            <div class="calendar-grid" id="calendarGrid"></div>
-            
-            <div id="timeSection" class="time-section" style="display: none;">
-                <div class="selected-info" id="selectedDayInfo"></div>
-                <div class="time-grid" id="timeGrid"></div>
+            <div id="calendlyLog" class="calendly-log" style="display: none;">
+                <div style="font-weight: bold; margin-bottom: 8px; color: #fff;">Calendly Event Log</div>
+                <div id="calendlyLogEntries"></div>
             </div>
         </div>
 
@@ -1220,43 +1226,12 @@
                 </div>
             </div>
 
-            <!-- DUPLICATE CALENDAR SCREEN -->
+            <!-- DUPLICATE CALENDAR SCREEN (Calendly Embed) -->
             <div class="form-step cta-block" id="calendarStepBelow">
                 <div class="calendar-step-header">We'll reach out soon to schedule your free estimate!</div>
                 <div style="font-size: 16px; color: #666; margin-bottom: 25px; text-align: center;">Ready to schedule your free estimate now? Choose a time below:</div>
                 
-                <div class="calendar-header">
-                    <div class="month-nav">
-                        <button class="nav-button" id="prevMonthBelow" onclick="changeCalendarMonthBelow(-1)">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M15 18l-6-6 6-6"/>
-                            </svg>
-                        </button>
-                        <div class="month-display" id="monthDisplayBelow"></div>
-                        <button class="nav-button" id="nextMonthBelow" onclick="changeCalendarMonthBelow(1)">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M9 18l6-6-6-6"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="weekday-header">
-                    <div class="weekday-name">Sun</div>
-                    <div class="weekday-name">Mon</div>
-                    <div class="weekday-name">Tue</div>
-                    <div class="weekday-name">Wed</div>
-                    <div class="weekday-name">Thu</div>
-                    <div class="weekday-name">Fri</div>
-                    <div class="weekday-name">Sat</div>
-                </div>
-                
-                <div class="calendar-grid" id="calendarGridBelow"></div>
-                
-                <div id="timeSectionBelow" class="time-section" style="display: none;">
-                    <div class="selected-info" id="selectedDayInfoBelow"></div>
-                    <div class="time-grid" id="timeGridBelow"></div>
-                </div>
+                <div id="calendly-embed-below" class="calendly-embed-container"></div>
             </div>
 
             <!-- DUPLICATE CONFIRMATION/THANK YOU SCREEN -->
@@ -1306,6 +1281,9 @@
             minHoursInAdvance: 48,
             availableDaysOfWeek: [1, 2, 3, 4, 5] // Monday-Friday
         };
+        
+        // Calendly Embed Configuration (testing)
+        const CALENDLY_URL = 'https://calendly.com/drew-peakleadsgroup/30min';
         // ============================================
 
         let currentStep = 1;
@@ -2334,12 +2312,139 @@
         }
         
         // ============================================
-        // CALENDAR FUNCTIONS
+        // CALENDAR FUNCTIONS (Calendly Embed)
         // ============================================
         
         let selectedDate = null;
         let selectedTime = null;
         let currentWeekStart = null;
+        
+        // Calendly event logging
+        function logCalendlyEvent(eventName, payload, extra) {
+            const ts = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const logDiv = document.getElementById('calendlyLog');
+            const entriesDiv = document.getElementById('calendlyLogEntries');
+            if (!logDiv || !entriesDiv) return;
+            
+            console.log(`[CALENDLY] ${ts} ${eventName}`, payload || {}, extra || {});
+            
+            logDiv.style.display = 'block';
+            const entry = document.createElement('div');
+            entry.className = 'calendly-log-entry';
+            entry.innerHTML = `<span class="calendly-log-entry time">[${ts}]</span> <span class="calendly-log-entry event">${eventName}</span>` +
+                (payload && Object.keys(payload).length ? `<br><span class="calendly-log-entry payload">${JSON.stringify(payload)}</span>` : '') +
+                (extra ? `<br><span style="color:#b39ddb">${extra}</span>` : '');
+            entriesDiv.appendChild(entry);
+            entriesDiv.scrollTop = entriesDiv.scrollHeight;
+        }
+        
+        // Calendly message listener - must run early
+        document.addEventListener('DOMContentLoaded', function initCalendlyListener() {
+            window.addEventListener('message', function(e) {
+                if (e.origin !== 'https://calendly.com') return;
+                if (!e.data || typeof e.data.event !== 'string') return;
+                if (e.data.event.indexOf('calendly.') !== 0) return;
+                
+                const eventName = e.data.event;
+                const payload = e.data.payload || {};
+                
+                logCalendlyEvent(eventName, payload, 'origin: ' + e.origin);
+                
+                if (eventName === 'calendly.event_scheduled') {
+                    logCalendlyEvent('calendly.event_scheduled', payload, 'BOOKING COMPLETE - showing confirmation (no Airtable write)');
+                    handleCalendlyEventScheduled(payload);
+                } else if (eventName === 'calendly.date_and_time_selected') {
+                    logCalendlyEvent('calendly.date_and_time_selected', payload, 'User selected a date/time (payload may be empty)');
+                } else if (eventName === 'calendly.profile_page_viewed') {
+                    logCalendlyEvent('calendly.profile_page_viewed', payload, 'Calendly profile page loaded');
+                } else if (eventName === 'calendly.popup_opened') {
+                    logCalendlyEvent('calendly.popup_opened', payload, 'Calendly popup opened');
+                } else if (eventName === 'calendly.popup_closed') {
+                    logCalendlyEvent('calendly.popup_closed', payload, 'Calendly popup closed');
+                } else {
+                    logCalendlyEvent(eventName, payload, '');
+                }
+            });
+        });
+        
+        function initCalendlyEmbed() {
+            const fullName = formData.fullName || 
+                (formData.firstName && formData.lastName ? `${formData.firstName} ${formData.lastName}`.trim() : '') ||
+                '';
+            const email = formData.email || '';
+            
+            const prefill = {};
+            if (fullName) prefill.name = fullName;
+            if (email) prefill.email = email;
+            
+            logCalendlyEvent('initCalendlyEmbed', { prefill, url: CALENDLY_URL }, 
+                'Initializing Calendly with prefill: ' + (Object.keys(prefill).length ? JSON.stringify(prefill) : 'none'));
+            
+            if (typeof Calendly === 'undefined') {
+                logCalendlyEvent('initCalendlyEmbed', {}, 'Calendly script not loaded yet, retrying in 500ms...');
+                setTimeout(initCalendlyEmbed, 500);
+                return;
+            }
+            
+            // Top embed
+            const topEl = document.getElementById('calendly-embed');
+            if (topEl && topEl.innerHTML === '') {
+                Calendly.initInlineWidget({
+                    url: CALENDLY_URL,
+                    parentElement: topEl,
+                    prefill: prefill,
+                    utm: { utmSource: 'bathroom_testing', utmMedium: 'embed' }
+                });
+                logCalendlyEvent('Calendly.initInlineWidget', { target: 'top' }, 'Top embed initialized');
+            }
+            
+            // Bottom embed (duplicate for scroll-down section)
+            const bottomEl = document.getElementById('calendly-embed-below');
+            if (bottomEl && bottomEl.innerHTML === '') {
+                Calendly.initInlineWidget({
+                    url: CALENDLY_URL,
+                    parentElement: bottomEl,
+                    prefill: prefill,
+                    utm: { utmSource: 'bathroom_testing', utmMedium: 'embed' }
+                });
+                logCalendlyEvent('Calendly.initInlineWidget', { target: 'bottom' }, 'Bottom embed initialized');
+            }
+        }
+        
+        function handleCalendlyEventScheduled(payload) {
+            appointmentTimeSelected = true;
+            
+            const exclamationIconHtml = '<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#F9A825" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#FFF9C4" stroke="#F9A825"/><path d="M12 7 v6" stroke="#F9A825" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.5" fill="#F9A825"/></svg>';
+            const confirmationIcon = document.getElementById('confirmationIcon');
+            const confirmationIconBelow = document.getElementById('confirmationIconBelow');
+            if (confirmationIcon) confirmationIcon.innerHTML = exclamationIconHtml;
+            if (confirmationIconBelow) confirmationIconBelow.innerHTML = exclamationIconHtml;
+            
+            const confirmationTitle = document.getElementById('confirmationTitle');
+            const confirmationMessage = document.getElementById('confirmationMessage');
+            if (confirmationTitle) confirmationTitle.textContent = "IMPORTANT";
+            if (confirmationMessage) confirmationMessage.textContent = "Your appointment is not confirmed until we speak with you over the phone. We will call you as soon as possible to confirm your time!";
+            
+            document.getElementById('calendarStep').classList.remove('active');
+            document.getElementById('confirmationStep').classList.add('active');
+            
+            const calendarStepBelow = document.getElementById('calendarStepBelow');
+            const confirmationStepBelow = document.getElementById('confirmationStepBelow');
+            const ctaSection = document.getElementById('ctaSection');
+            if (calendarStepBelow) calendarStepBelow.style.display = 'none';
+            if (confirmationStepBelow) {
+                confirmationStepBelow.style.display = 'block';
+                const confirmationTitleBelow = document.getElementById('confirmationTitleBelow');
+                const confirmationMessageBelow = document.getElementById('confirmationMessageBelow');
+                if (confirmationTitleBelow) confirmationTitleBelow.textContent = "IMPORTANT";
+                if (confirmationMessageBelow) confirmationMessageBelow.textContent = "Your appointment is not confirmed until we speak with you over the phone. We will call you as soon as possible to confirm your time!";
+            }
+            if (ctaSection) ctaSection.classList.add('active');
+            
+            logCalendlyEvent('handleCalendlyEventScheduled', payload, 'Confirmation shown. NO Airtable write (testing).');
+            
+            setTimeout(function() { showReviewsModal(); }, 500);
+        }
         
         function getCurrentDateInTimezone() {
             return new Date(new Date().toLocaleString('en-US', { timeZone: clientTimezone }));
@@ -3150,16 +3255,11 @@
             if (progressBar) progressBar.style.display = 'none';
             if (mainHeading) mainHeading.style.display = 'none';
             
-            console.log('[APPT] showCalendarScreen: initializing calendar', {
-                clientTimezone,
-                clientAvailability,
-                clientAvailableDays,
-                clientDaysOut,
-                clientMinHoursInAdvance,
-                isHomeProMI: isHomeProMIClient(),
-                lpAvailabilityDataLength: lpAvailabilityData?.length || 0
+            console.log('[APPT] showCalendarScreen: initializing Calendly embed', {
+                prefillFrom: { fullName: formData.fullName, firstName: formData.firstName, lastName: formData.lastName, email: formData.email },
+                calendlyUrl: CALENDLY_URL
             });
-            initializeCalendar();
+            initCalendlyEmbed();
             
             // Show reviews modal if reviews exist
             setTimeout(() => {
@@ -3439,11 +3539,10 @@
             
             // Duplicate whatever is shown at the top - show only that screen below reviews
             if (currentSubmitScreenType === 'calendar' && !appointmentTimeSelected) {
-                // Show calendar below only if user hasn't selected a time yet
+                // Show calendar below only if user hasn't selected a time yet (Calendly embed already initialized)
                 if (calendarStepBelow) {
                     calendarStepBelow.style.display = 'block';
                     ctaSection.classList.add('active');
-                    initializeCalendarBelow();
                 }
             } else if (currentSubmitScreenType === 'calendar' && appointmentTimeSelected) {
                 // User already selected a time on top calendar - show confirmation below so they can't pick a second time
