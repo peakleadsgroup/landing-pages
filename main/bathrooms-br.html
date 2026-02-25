@@ -201,23 +201,27 @@
             <div class="progress-fill" id="progressFill" style="width: 12.5%"></div>
         </div>
         <div class="form-body">
-                <!-- Step 1: Homeowner -->
+                <!-- Step 1: Homeowner - NO auto-advance; user must click Continue/Yes continue -->
                 <div class="form-step active" data-step="1">
                     <h2 class="modal-title">Let's see what your remodel could cost</h2>
-                    <p class="modal-subtitle">Are you the homeowner? Or authorized to make decisions on the property?</p>
-                    <div class="option-card" data-value="own" onclick="selectOption(this, 'homeowner', 'own')">
+                    <p class="modal-subtitle">Are you the homeowner?</p>
+                    <div class="option-card" data-value="own" id="step1OptionOwn">
                         <input type="radio" name="homeowner" id="ho_own">
                         <label for="ho_own">I own the home</label>
                     </div>
-                    <div class="option-card" data-value="rent" onclick="selectOption(this, 'homeowner', 'rent')">
+                    <div class="option-card" data-value="rent" id="step1OptionRent">
                         <input type="radio" name="homeowner" id="ho_rent">
                         <label for="ho_rent">I'm renting</label>
                     </div>
                     <div class="why-box" id="rentingWarning" style="display:none;">
                         <span class="why-icon-wrap">⚠️</span>
                         <div>
-                            <div class="why-title">Unfortunately we can only remodel if you own the home. Would you still like to continue?</div>
+                            <div class="why-title">Unfortunately we can only remodel if you own the home</div>
+                            <button type="button" class="nav-btn nav-btn-primary" style="margin-top:12px;" onclick="step1AdvanceFromRent()">Yes, continue</button>
                         </div>
+                    </div>
+                    <div class="nav-buttons" id="step1ContinueRow" style="display:none;">
+                        <button class="nav-btn nav-btn-primary" onclick="step1AdvanceFromOwn()">Continue</button>
                     </div>
                     <div class="why-box">
                         <span class="why-icon-wrap">💡</span>
@@ -760,6 +764,43 @@
         // ============================================
         // MODAL & FORM LOGIC
         // ============================================
+        function initStep1Br() {
+            const optOwn = document.getElementById('step1OptionOwn');
+            const optRent = document.getElementById('step1OptionRent');
+            const continueRow = document.getElementById('step1ContinueRow');
+            const rentingWarning = document.getElementById('rentingWarning');
+            if (!optOwn || !optRent) return;
+            optOwn.onclick = function() {
+                optOwn.classList.add('selected');
+                optRent.classList.remove('selected');
+                optOwn.querySelector('input').checked = true;
+                optRent.querySelector('input').checked = false;
+                formData.homeowner = 'own';
+                rentingWarning.style.display = 'none';
+                continueRow.style.display = 'flex';
+            };
+            optRent.onclick = function() {
+                optRent.classList.add('selected');
+                optOwn.classList.remove('selected');
+                optRent.querySelector('input').checked = true;
+                optOwn.querySelector('input').checked = false;
+                formData.homeowner = 'rent';
+                continueRow.style.display = 'none';
+                rentingWarning.style.display = 'flex';
+            };
+        }
+
+        function step1AdvanceFromOwn() {
+            if (formData.homeowner !== 'own') return;
+            advanceStep(1);
+        }
+
+        function step1AdvanceFromRent() {
+            if (formData.homeowner !== 'rent') return;
+            document.getElementById('rentingWarning').style.display = 'none';
+            advanceStep(1);
+        }
+
         function selectOption(el, field, value) {
             const cards = el.parentElement.querySelectorAll('.option-card');
             cards.forEach(c => c.classList.remove('selected'));
@@ -767,8 +808,6 @@
             el.querySelector('input').checked = true;
             formData[field] = value;
 
-            if (field === 'homeowner' && value === 'rent') document.getElementById('rentingWarning').style.display = 'flex';
-            else document.getElementById('rentingWarning').style.display = 'none';
             if (field === 'homeType' && value === 'mobile') document.getElementById('mobileHomeWarning').style.display = 'flex';
             else document.getElementById('mobileHomeWarning').style.display = 'none';
             if (field === 'existingOrNew' && value === 'newbuild') document.getElementById('newBuildWarning').style.display = 'flex';
@@ -776,7 +815,7 @@
             if (field === 'material' && value === 'tile') document.getElementById('tileWarning').style.display = 'flex';
             else document.getElementById('tileWarning').style.display = 'none';
 
-            // Auto-advance to next step
+            if (field === 'homeowner') return;
             setTimeout(() => advanceStep(1), 150);
         }
 
@@ -793,6 +832,24 @@
 
             currentModalStep = nextStep;
             document.getElementById('progressFill').style.width = (currentModalStep / TOTAL_STEPS * 100) + '%';
+
+            if (nextStep === 1) {
+                const continueRow = document.getElementById('step1ContinueRow');
+                const rentingWarning = document.getElementById('rentingWarning');
+                const optOwn = document.getElementById('step1OptionOwn');
+                const optRent = document.getElementById('step1OptionRent');
+                if (formData.homeowner === 'own' && continueRow) {
+                    continueRow.style.display = 'flex';
+                    if (rentingWarning) rentingWarning.style.display = 'none';
+                    if (optOwn) { optOwn.classList.add('selected'); optOwn.querySelector('input').checked = true; }
+                    if (optRent) { optRent.classList.remove('selected'); optRent.querySelector('input').checked = false; }
+                } else if (formData.homeowner === 'rent' && rentingWarning) {
+                    rentingWarning.style.display = 'flex';
+                    if (continueRow) continueRow.style.display = 'none';
+                    if (optRent) { optRent.classList.add('selected'); optRent.querySelector('input').checked = true; }
+                    if (optOwn) { optOwn.classList.remove('selected'); optOwn.querySelector('input').checked = false; }
+                }
+            }
 
             if (currentModalStep === TOTAL_STEPS) {
                 document.getElementById('formSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -897,6 +954,7 @@
         (async function() {
             clientData = await loadClientFromCampaign();
             applyClientBranding();
+            initStep1Br();
             initGallery();
             updateReview();
             trackStep(0, 'Page view / Session started', {});
