@@ -25,50 +25,58 @@
         }
         .modal-header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 20px 24px; border-bottom: 1px solid #eee;
+            padding: 20px 24px 16px; 
         }
         .modal-logo { max-height: 50px; max-width: 180px; object-fit: contain; }
+        #modalLogoFallback { font-weight: 700; color: #5dade2; font-size: 18px; }
         .modal-close {
-            background: none; border: none; font-size: 24px; cursor: pointer;
+            background: none; border: none; font-size: 22px; cursor: pointer;
             color: #666; padding: 0; width: 32px; height: 32px; line-height: 1;
         }
         .modal-close:hover { color: #333; }
         
         .progress-bar {
             height: 6px; background: #e9ecef; border-radius: 3px;
-            margin: 0 24px; overflow: hidden;
+            margin: 0 24px 20px; overflow: hidden;
         }
         .progress-fill {
             height: 100%; background: #5dade2; border-radius: 3px;
             transition: width 0.3s ease;
         }
         
-        .modal-body { padding: 24px; }
-        .modal-title { font-size: 24px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; }
-        .modal-subtitle { font-size: 15px; color: #666; margin-bottom: 24px; }
+        .modal-body { padding: 0 24px 32px; }
+        .modal-title { font-size: 22px; font-weight: 700; color: #2c3e50; margin-bottom: 12px; line-height: 1.3; }
+        .modal-subtitle { font-size: 15px; color: #666; margin-bottom: 20px; line-height: 1.5; }
         
         .option-card {
-            display: flex; align-items: center; gap: 12px;
-            background: #fff; border: 2px solid #e9ecef; border-radius: 12px;
-            padding: 16px 20px; margin-bottom: 12px; cursor: pointer;
+            display: flex; align-items: center; gap: 14px;
+            background: #fff; border: 2px solid #e0e0e0; border-radius: 12px;
+            padding: 18px 20px; margin-bottom: 14px; cursor: pointer;
             transition: all 0.2s ease;
         }
+        .option-card:last-of-type { margin-bottom: 0; }
         .option-card:hover { border-color: #5dade2; background: #f8fcff; }
         .option-card.selected { border-color: #5dade2; background: #e8f6fc; }
-        .option-card input[type="radio"] { width: 20px; height: 20px; accent-color: #5dade2; }
+        .option-card input[type="radio"] { width: 20px; height: 20px; accent-color: #5dade2; flex-shrink: 0; }
+        .option-card label { cursor: pointer; flex: 1; font-size: 16px; color: #2c3e50; }
         
         .why-box {
-            background: #e8f4fc; border-radius: 12px; padding: 16px; margin-top: 24px;
-            display: flex; gap: 12px; align-items: flex-start;
+            background: #e8f4fc; border-radius: 12px; padding: 18px 20px; margin-top: 24px;
+            display: flex; gap: 14px; align-items: flex-start;
         }
-        .why-icon { width: 24px; height: 24px; flex-shrink: 0; color: #5dade2; }
-        .why-title { font-weight: 600; color: #2c3e50; margin-bottom: 4px; }
-        .why-text { font-size: 14px; color: #666; }
+        .why-icon-wrap {
+            width: 36px; height: 36px; min-width: 36px;
+            background: #b8e0f0; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #3498db; font-size: 18px;
+        }
+        .why-title { font-weight: 600; color: #2c3e50; margin-bottom: 6px; font-size: 15px; }
+        .why-text { font-size: 14px; color: #666; line-height: 1.5; }
         
         .form-step { display: none; }
         .form-step.active { display: block; }
         
-        .nav-buttons { margin-top: 24px; display: flex; gap: 12px; }
+        .nav-buttons { margin-top: 28px; display: flex; gap: 12px; }
         .nav-btn {
             flex: 1; padding: 14px 24px; border-radius: 10px; font-size: 16px; font-weight: 600;
             cursor: pointer; border: none; transition: all 0.2s;
@@ -220,14 +228,14 @@
                         <label for="ho_rent">I'm renting</label>
                     </div>
                     <div class="why-box" id="rentingWarning" style="display:none;">
-                        <span class="why-icon">⚠️</span>
+                        <span class="why-icon-wrap">⚠️</span>
                         <div>
                             <div class="why-title">Unfortunately we can only remodel if you own the home.</div>
                             <div class="why-text">Would you still like to continue?</div>
                         </div>
                     </div>
                     <div class="why-box">
-                        <span class="why-icon">💡</span>
+                        <span class="why-icon-wrap">💡</span>
                         <div>
                             <div class="why-title">Why do we ask?</div>
                             <div class="why-text">We legally require the property owner or authorized decision-maker to make changes to the property.</div>
@@ -255,7 +263,7 @@
                         <label for="ht_mobile">Mobile home</label>
                     </div>
                     <div class="why-box" id="mobileHomeWarning" style="display:none;">
-                        <span class="why-icon">⚠️</span>
+                        <span class="why-icon-wrap">⚠️</span>
                         <div>
                             <div class="why-title">We don't service mobile homes.</div>
                             <div class="why-text">Would you still like to continue?</div>
@@ -361,7 +369,7 @@
                         <label for="m_notsure">Not sure</label>
                     </div>
                     <div class="why-box" id="tileWarning" style="display:none;">
-                        <span class="why-icon">⚠️</span>
+                        <span class="why-icon-wrap">⚠️</span>
                         <div>
                             <div class="why-title">We don't install tile.</div>
                             <div class="why-text">Would you still like to continue?</div>
