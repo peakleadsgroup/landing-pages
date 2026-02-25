@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
+    <title>Bathroom Remodel - Get Your Free Quote</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
+        
+        /* Modal overlay */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4); z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.hidden { display: none; }
+        
+        .modal-content {
+            background: white; border-radius: 16px; max-width: 500px; width: 100%;
+            max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 24px; border-bottom: 1px solid #eee;
+        }
+        .modal-logo { max-height: 50px; max-width: 180px; object-fit: contain; }
+        .modal-close {
+            background: none; border: none; font-size: 24px; cursor: pointer;
+            color: #666; padding: 0; width: 32px; height: 32px; line-height: 1;
+        }
+        .modal-close:hover { color: #333; }
+        
+        .progress-bar {
+            height: 6px; background: #e9ecef; border-radius: 3px;
+            margin: 0 24px; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; background: #5dade2; border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        
+        .modal-body { padding: 24px; }
+        .modal-title { font-size: 24px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; }
+        .modal-subtitle { font-size: 15px; color: #666; margin-bottom: 24px; }
+        
+        .option-card {
+            display: flex; align-items: center; gap: 12px;
+            background: #fff; border: 2px solid #e9ecef; border-radius: 12px;
+            padding: 16px 20px; margin-bottom: 12px; cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .option-card:hover { border-color: #5dade2; background: #f8fcff; }
+        .option-card.selected { border-color: #5dade2; background: #e8f6fc; }
+        .option-card input[type="radio"] { width: 20px; height: 20px; accent-color: #5dade2; }
+        
+        .why-box {
+            background: #e8f4fc; border-radius: 12px; padding: 16px; margin-top: 24px;
+            display: flex; gap: 12px; align-items: flex-start;
+        }
+        .why-icon { width: 24px; height: 24px; flex-shrink: 0; color: #5dade2; }
+        .why-title { font-weight: 600; color: #2c3e50; margin-bottom: 4px; }
+        .why-text { font-size: 14px; color: #666; }
+        
+        .form-step { display: none; }
+        .form-step.active { display: block; }
+        
+        .nav-buttons { margin-top: 24px; display: flex; gap: 12px; }
+        .nav-btn {
+            flex: 1; padding: 14px 24px; border-radius: 10px; font-size: 16px; font-weight: 600;
+            cursor: pointer; border: none; transition: all 0.2s;
+        }
+        .nav-btn-primary { background: #5dade2; color: white; }
+        .nav-btn-primary:hover { background: #3498db; }
+        .nav-btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+        .nav-btn-secondary { background: #f8f9fa; color: #333; }
+        .nav-btn-secondary:hover { background: #e9ecef; }
+        
+        .address-input, .name-input {
+            width: 100%; padding: 14px; border: 2px solid #e9ecef; border-radius: 8px;
+            font-size: 16px; margin-bottom: 12px;
+        }
+        .address-input:focus, .name-input:focus {
+            outline: none; border-color: #5dade2;
+        }
+        .address-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .address-label { font-weight: 600; margin-bottom: 6px; display: block; color: #2c3e50; font-size: 14px; }
+        
+        .privacy-text { font-size: 11px; color: #666; margin-top: 16px; line-height: 1.5; }
+        .privacy-text a { color: #5dade2; text-decoration: underline; }
+        
+        /* Page sections */
+        .section { padding: 60px 24px; max-width: 900px; margin: 0 auto; }
+        .section-title { font-size: 32px; font-weight: 700; color: #2c3e50; text-align: center; margin-bottom: 12px; }
+        .section-subtitle { font-size: 18px; color: #666; text-align: center; margin-bottom: 40px; }
+        
+        .hero-section { padding-top: 80px; }
+        .hero-title { font-size: 36px; font-weight: 700; color: #2c3e50; text-align: center; margin-bottom: 8px; line-height: 1.2; }
+        .hero-subtitle { font-size: 18px; color: #666; text-align: center; margin-bottom: 32px; }
+        
+        .feature-list { list-style: none; margin-bottom: 40px; }
+        .feature-list li {
+            display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+            font-size: 17px; color: #2c3e50;
+        }
+        .feature-check { width: 24px; height: 24px; background: #5dade2; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; }
+        
+        .hero-image {
+            width: 100%; border-radius: 16px; overflow: hidden; margin-top: 24px;
+        }
+        .hero-image img { width: 100%; height: auto; display: block; }
+        
+        .features-section { background: #fff; }
+        .feature-card {
+            background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+        }
+        .feature-card img { width: 100%; height: 220px; object-fit: cover; }
+        .feature-card-content { padding: 24px; }
+        .feature-card-title { font-size: 20px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; }
+        .feature-card-desc { font-size: 15px; color: #666; }
+        
+        .benefits-section { background: #e8f4fc; }
+        .benefit-card {
+            background: white; border-radius: 16px; padding: 24px; margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .benefit-icon { width: 48px; height: 48px; background: #e8f6fc; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: #5dade2; font-size: 24px; }
+        .benefit-title { font-size: 18px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; }
+        .benefit-desc { font-size: 15px; color: #666; }
+        
+        .cta-box {
+            background: white; border-radius: 16px; padding: 40px; text-align: center; margin-top: 40px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .cta-title { font-size: 28px; font-weight: 700; color: #2c3e50; margin-bottom: 12px; }
+        .cta-desc { font-size: 16px; color: #666; margin-bottom: 24px; }
+        
+        .gallery-section { background: #fff; }
+        .gallery-main { border-radius: 16px; overflow: hidden; margin-bottom: 16px; }
+        .gallery-main img { width: 100%; height: auto; display: block; }
+        .gallery-dots { display: flex; justify-content: center; gap: 8px; margin: 16px 0; }
+        .gallery-dot { width: 10px; height: 10px; border-radius: 50%; background: #ddd; cursor: pointer; }
+        .gallery-dot.active { background: #5dade2; }
+        
+        .reviews-section { background: #e8f4fc; }
+        .review-card {
+            background: white; border-radius: 16px; padding: 24px; margin-bottom: 20px;
+            border: 2px solid #e8f6fc; display: flex; gap: 20px; align-items: flex-start;
+        }
+        .review-avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .review-stars { color: #5dade2; font-size: 18px; margin-bottom: 8px; }
+        .review-name { font-weight: 700; color: #2c3e50; margin-bottom: 4px; }
+        .review-text { font-size: 15px; color: #666; font-style: italic; }
+        .review-nav { display: flex; justify-content: center; gap: 12px; margin-top: 16px; }
+        .review-nav-btn { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #e9ecef; background: white; cursor: pointer; color: #5dade2; font-size: 18px; }
+        .review-nav-btn:hover { border-color: #5dade2; background: #f8fcff; }
+        
+        .faq-section { background: #fff; }
+        .faq-item {
+            background: #f8f9fa; border-radius: 12px; margin-bottom: 12px; overflow: hidden;
+        }
+        .faq-question {
+            padding: 18px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+            font-weight: 600; color: #2c3e50; font-size: 16px;
+        }
+        .faq-question:hover { background: #f0f0f0; }
+        .faq-chevron { transition: transform 0.3s; color: #666; }
+        .faq-item.open .faq-chevron { transform: rotate(180deg); }
+        .faq-answer { padding: 0 20px 18px; font-size: 15px; color: #666; line-height: 1.6; display: none; }
+        .faq-item.open .faq-answer { display: block; }
+        
+        .footer { padding: 40px 24px; text-align: center; border-top: 1px solid #eee; }
+        .footer-logo { max-height: 60px; margin-bottom: 20px; }
+        .footer-links { margin-bottom: 16px; }
+        .footer-links a { color: #666; text-decoration: none; margin: 0 12px; }
+        .footer-links a:hover { color: #333; }
+        .footer-copy { font-size: 14px; color: #999; }
+        
+        .cta-button {
+            display: inline-block; background: #5dade2; color: white; padding: 16px 40px;
+            border-radius: 12px; font-size: 18px; font-weight: 600; text-decoration: none;
+            border: none; cursor: pointer; transition: all 0.2s;
+        }
+        .cta-button:hover { background: #3498db; transform: translateY(-2px); }
+        
+        @media (max-width: 768px) {
+            .address-row { grid-template-columns: 1fr; }
+            .hero-title { font-size: 28px; }
+            .section-title { font-size: 26px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Modal: Multi-step form -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <img id="modalLogo" class="modal-logo" src="" alt="" style="display:none;">
+                <span id="modalLogoFallback" style="font-weight:700;color:#5dade2;font-size:18px;">Project Find</span>
+                <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 12.5%"></div>
+            </div>
+            <div class="modal-body">
+                <!-- Step 1: Homeowner -->
+                <div class="form-step active" data-step="1">
+                    <h2 class="modal-title">Let's see what your remodel could cost</h2>
+                    <p class="modal-subtitle">Are you the homeowner? Or authorized to make decisions on the property?</p>
+                    <div class="option-card" data-value="own" onclick="selectOption(this, 'homeowner', 'own')">
+                        <input type="radio" name="homeowner" id="ho_own">
+                        <label for="ho_own">I own the home</label>
+                    </div>
+                    <div class="option-card" data-value="rent" onclick="selectOption(this, 'homeowner', 'rent')">
+                        <input type="radio" name="homeowner" id="ho_rent">
+                        <label for="ho_rent">I'm renting</label>
+                    </div>
+                    <div class="why-box" id="rentingWarning" style="display:none;">
+                        <span class="why-icon">⚠️</span>
+                        <div>
+                            <div class="why-title">Unfortunately we can only remodel if you own the home.</div>
+                            <div class="why-text">Would you still like to continue?</div>
+                        </div>
+                    </div>
+                    <div class="why-box">
+                        <span class="why-icon">💡</span>
+                        <div>
+                            <div class="why-title">Why do we ask?</div>
+                            <div class="why-text">We legally require the property owner or authorized decision-maker to make changes to the property.</div>
+                        </div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn nav-btn-primary" id="step1Next" onclick="advanceStep(1)" disabled>Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Type of home -->
+                <div class="form-step" data-step="2">
+                    <h2 class="modal-title">What type of home is this?</h2>
+                    <p class="modal-subtitle">Select the option that best describes your property</p>
+                    <div class="option-card" data-value="single" onclick="selectOption(this, 'homeType', 'single')">
+                        <input type="radio" name="homeType" id="ht_single">
+                        <label for="ht_single">Single family home</label>
+                    </div>
+                    <div class="option-card" data-value="town" onclick="selectOption(this, 'homeType', 'town')">
+                        <input type="radio" name="homeType" id="ht_town">
+                        <label for="ht_town">Town home</label>
+                    </div>
+                    <div class="option-card" data-value="mobile" onclick="selectOption(this, 'homeType', 'mobile')">
+                        <input type="radio" name="homeType" id="ht_mobile">
+                        <label for="ht_mobile">Mobile home</label>
+                    </div>
+                    <div class="why-box" id="mobileHomeWarning" style="display:none;">
+                        <span class="why-icon">⚠️</span>
+                        <div>
+                            <div class="why-title">We don't service mobile homes.</div>
+                            <div class="why-text">Would you still like to continue?</div>
+                        </div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn nav-btn-secondary" onclick="advanceStep(-1)">Back</button>
+                        <button class="nav-btn nav-btn-primary" id="step2Next" onclick="advanceStep(2)" disabled>Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Existing or new build -->
+                <div class="form-step" data-step="3">
+                    <h2 class="modal-title">Is this an existing shower or tub?</h2>
+                    <p class="modal-subtitle">Let us know the current setup</p>
+                    <div class="option-card" data-value="existing" onclick="selectOption(this, 'existingOrNew', 'existing')">
+                        <input type="radio" name="existingOrNew" id="en_existing">
+                        <label for="en_existing">Existing</label>
+                    </div>
+                    <div class="option-card" data-value="newbuild" onclick="selectOption(this, 'existingOrNew', 'newbuild')">
+                        <input type="radio" name="existingOrNew" id="en_newbuild">
+                        <label for="en_newbuild">New build</label>
+                    </div>
+                    <div class="why-box" id="newBuildWarning" style="display:none;">
+                        <span class="why-icon">⚠️</span>
+                        <div>
+                            <div class="why-title">Unfortunately, we don't service new builds.</div>
+                            <div class="why-text">Would you still like to continue?</div>
+                        </div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn nav-btn-secondary" onclick="advanceStep(-1)">Back</button>
+                        <button class="nav-btn nav-btn-primary" id="step3Next" onclick="advanceStep(3)" disabled>Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Project type -->
+                <div class="form-step" data-step="4">
+                    <h2 class="modal-title">What type of project is this?</h2>
+                    <p class="modal-subtitle">Select the option that best describes your project</p>
+                    <div class="option-card" data-value="tub_to_shower" onclick="selectOption(this, 'projectType', 'tub_to_shower')">
+                        <input type="radio" name="projectType" id="pt_tub2shower">
+                        <label for="pt_tub2shower">Tub-to-Shower Conversion <small style="color:#666;font-weight:normal;">($10,000 - $22,000+)</small></label>
+                    </div>
+                    <div class="option-card" data-value="shower_to_tub" onclick="selectOption(this, 'projectType', 'shower_to_tub')">
+                        <input type="radio" name="projectType" id="pt_shower2tub">
+                        <label for="pt_shower2tub">Shower-to-Tub conversion <small style="color:#666;font-weight:normal;">($9,000 - $20,000+)</small></label>
+                    </div>
+                    <div class="option-card" data-value="shower_replacement" onclick="selectOption(this, 'projectType', 'shower_replacement')">
+                        <input type="radio" name="projectType" id="pt_shower">
+                        <label for="pt_shower">Shower Replacement <small style="color:#666;font-weight:normal;">($10,000 - $22,000+)</small></label>
+                    </div>
+                    <div class="option-card" data-value="tub_replacement" onclick="selectOption(this, 'projectType', 'tub_replacement')">
+                        <input type="radio" name="projectType" id="pt_tub">
+                        <label for="pt_tub">Tub Replacement <small style="color:#666;font-weight:normal;">($9,000 - $20,000+)</small></label>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn nav-btn-secondary" onclick="advanceStep(-1)">Back</button>
+                        <button class="nav-btn nav-btn-primary" id="step4Next" onclick="advanceStep(4)" disabled>Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 5: I want to -->
+                <div class="form-step" data-step="5">
+                    <h2 class="modal-title">"I want to…"</h2>
+                    <p class="modal-subtitle">What's your main goal for this remodel?</p>
+                    <div class="option-card" data-value="accessibility" onclick="selectOption(this, 'goal', 'accessibility')">
+                        <input type="radio" name="goal" id="g_accessibility">
+                        <label for="g_accessibility">Improve accessibility/safety</label>
+                    </div>
+                    <div class="option-card" data-value="look_function" onclick="selectOption(this, 'goal', 'look_function')">
+                        <input type="radio" name="goal" id="g_look">
+                        <label for="g_look">Improve look/function</label>
+                    </div>
+                    <div class="option-card" data-value="repair" onclick="selectOption(this, 'goal', 'repair')">
+                        <input type="radio" name="goal" id="g_repair">
+                        <label for="g_repair">Repair damage</label>
+                    </div>
+                    <div class="option-card" data-value="value" onclick="selectOption(this, 'goal', 'value')">
+                        <input type="radio" name="goal" id="g_value">
+                        <label for="g_value">Increase home value</label>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn nav-btn-secondary" onclick="advanceStep(-1)">Back</button>
+                        <button class="nav-btn nav-btn-primary" id="step5Next" onclick="advanceStep(5)" disabled>Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 6: Material preferences -->
+                <div class="form-step" data-step="6">
+                    <h2 class="modal-title">Do you have any material preferences?</h2>
+                    <p class="modal-subtitle">Select your preferred material</p>
+                    <div class="option-card" data-value="tile" onclick="selectOption(this, 'material', 'tile')">
+                        <input type="radio" name="material" id="m_tile">
+                        <label for="m_tile">Tile</label>
+                    </div>
+                    <div class="option-card" data-value="acrylic" onclick="selectOption(this, 'material', 'acrylic')">
+                        <input type="radio" name="material" id="m_acrylic">
+                        <label for="m_acrylic">Acrylic</label>
+                    </div>
+                    <div class="option-card" data-value="not_sure" onclick="selectOption(this, 'material', 'not_sure')">
+                        <input type="radio" name="material" id="m_notsure">
+                        <label for="m_notsure">Not sure</label>
+                    </div>
+                    <div class="why-box" id="tileWarning" style="display:none;">
+                        <span class="why-icon">⚠️</span>
+                        <div>
+                            <div class="why-title">We don't install tile.</div>
+                            <div class="why-text">Would you still like to continue?</div>
+                        </div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn nav-btn-secondary" onclick="advanceStep(-1)">Back</button>
+                        <button class="nav-btn nav-btn-primary" id="step6Next" onclick="advanceStep(6)" disabled>Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 7: Timeline -->
+                <div class="form-step" data-step="7">
+                    <h2 class="modal-title">How soon would you like this project to be completed?</h2>
+                    <p class="modal-subtitle">We only give an estimate for projects that can start soon so pricing is accurate</p>
+                    <div class="option-card" data-value="asap" onclick="selectOption(this, 'timeline', 'asap')">
+                        <input type="radio" name="timeline" id="tl_asap">
+                        <label for="tl_asap">ASAP</label>
+                    </div>
+                    <div class="option-card" data-value="1month" onclick="selectOption(this, 'timeline', '1month')">
+                        <input type="radio" name="timeline" id="tl_1m">
+                        <label for="tl_1m">Within a month</label>
+                    </div>
+                    <div class="option-card" data-value="3months" onclick="selectOption(this, 'timeline', '3months')">
+                        <input type="radio" name="timeline" id="tl_3m">
+                        <label for="tl_3m">Within 3 months</label>
+                    </div>
+                    <div class="option-card" data-value="6months" onclick="selectOption(this, 'timeline', '6months')">
+                        <input type="radio" name="timeline" id="tl_6m">
+                        <label for="tl_6m">Within 6 months</label>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn nav-btn-secondary" onclick="advanceStep(-1)">Back</button>
+                        <button class="nav-btn nav-btn-primary" id="step7Next" onclick="advanceStep(7)" disabled>Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 8: Estimate -->
+                <div class="form-step" data-step="8">
+                    <h2 class="modal-title">Have you already gotten an estimate?</h2>
+                    <p class="modal-subtitle">This helps us understand where you are in the process</p>
+                    <div class="option-card" data-value="yes" onclick="selectOption(this, 'hasEstimate', 'yes')">
+                        <input type="radio" name="hasEstimate" id="he_yes">
+                        <label for="he_yes">Yes</label>
+                    </div>
+                    <div class="option-card" data-value="no" onclick="selectOption(this, 'hasEstimate', 'no')">
+                        <input type="radio" name="hasEstimate" id="he_no">
+                        <label for="he_no">No</label>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn nav-btn-secondary" onclick="advanceStep(-1)">Back</button>
+                        <button class="nav-btn nav-btn-primary" id="step8Next" onclick="advanceStep(8)" disabled>Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 9: Address -->
+                <div class="form-step" data-step="9">
+                    <h2 class="modal-title">What is the location of this project?</h2>
+                    <p class="modal-subtitle">Please enter your full address so we can confirm you're in our service area</p>
+                    <div>
+                        <label class="address-label">Street Address</label>
+                        <input type="text" class="address-input" id="street" placeholder="Street Address" oninput="validateAddress()">
+                    </div>
+                    <div>
+                        <label class="address-label">City</label>
+                        <input type="text" class="address-input" id="city" placeholder="City" oninput="validateAddress()">
+                    </div>
+                    <div class="address-row">
+                        <div>
+                            <label class="address-label">State</label>
+                            <input type="text" class="address-input" id="state" placeholder="State" maxlength="2" oninput="validateAddress()">
+                        </div>
+                        <div>
+                            <label class="address-label">Zip Code</label>
+                            <input type="text" class="address-input" id="zip" placeholder="Zip Code" maxlength="5" oninput="validateAddress()">
+                        </div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn nav-btn-secondary" onclick="advanceStep(-1)">Back</button>
+                        <button class="nav-btn nav-btn-primary" id="step9Next" onclick="advanceStep(9)" disabled>Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 10: Name -->
+                <div class="form-step" data-step="10">
+                    <h2 class="modal-title">Who will we be speaking with?</h2>
+                    <p class="modal-subtitle">Enter your name</p>
+                    <div>
+                        <label class="address-label">First Name</label>
+                        <input type="text" class="name-input" id="firstName" placeholder="First Name" oninput="validateName()">
+                    </div>
+                    <div>
+                        <label class="address-label">Last Name</label>
+                        <input type="text" class="name-input" id="lastName" placeholder="Last Name" oninput="validateName()">
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn nav-btn-secondary" onclick="advanceStep(-1)">Back</button>
+                        <button class="nav-btn nav-btn-primary" id="step10Next" onclick="advanceStep(10)" disabled>Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 11: Phone/Email -->
+                <div class="form-step" data-step="11">
+                    <h2 class="modal-title">Where can we reach you?</h2>
+                    <p class="modal-subtitle">We'll send your free quote to this number</p>
+                    <div>
+                        <label class="address-label">Phone</label>
+                        <input type="tel" class="address-input" id="phone" placeholder="(555) 555-5555" oninput="validatePhone()">
+                    </div>
+                    <div>
+                        <label class="address-label">Email</label>
+                        <input type="email" class="address-input" id="email" placeholder="your@email.com" oninput="validatePhone()">
+                    </div>
+                    <div class="privacy-text">
+                        <p>By submitting, I agree that <span id="partnerName">Peak Leads Group and its marketing partners</span> may contact me via phone, text, or email regarding my request. I agree to the <a href="privacypolicy.html" target="_blank">Terms & Conditions and Privacy Policy</a>.</p>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn nav-btn-secondary" onclick="advanceStep(-1)">Back</button>
+                        <button class="nav-btn nav-btn-primary" id="step11Submit" onclick="submitForm()" disabled>Get Quote</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="section hero-section" id="heroSection">
+        <h1 class="hero-title">Bathroom Remodeling &<br>Renovation</h1>
+        <p class="hero-subtitle">Transform your bathroom into a space you'll love:</p>
+        <ul class="feature-list">
+            <li><span class="feature-check">✓</span> Competitive local pricing</li>
+            <li><span class="feature-check">✓</span> Custom shower and tub solutions</li>
+            <li><span class="feature-check">✓</span> Premium materials and finishes</li>
+            <li><span class="feature-check">✓</span> Expert installation</li>
+            <li><span class="feature-check">✓</span> Superior style and comfort</li>
+        </ul>
+        <div class="hero-image">
+            <img src="https://images.unsplash.com/photo-1552321554-5fefe6c9ef14?w=800" alt="Modern bathroom">
+        </div>
+        <div style="text-align:center; margin-top:32px;">
+            <button class="cta-button" onclick="scrollToForm()">Get a Quote</button>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section features-section" id="featuresSection">
+        <h2 class="section-title">Features</h2>
+        <p class="section-subtitle">Our bathroom remodeling services bring your dream bathroom to life with modern designs and quality craftsmanship.</p>
+        <div class="feature-card">
+            <img src="https://images.unsplash.com/photo-1604014237800-1c910a4309e9?w=800" alt="Custom shower">
+            <div class="feature-card-content">
+                <h3 class="feature-card-title">Custom Showers & Tubs</h3>
+                <p class="feature-card-desc">Beautiful, functional solutions designed to maximize your space and style.</p>
+            </div>
+        </div>
+        <div class="feature-card">
+            <img src="https://images.unsplash.com/photo-1620626011761-996317b8d101?w=800" alt="Bathroom vanity">
+            <div class="feature-card-content">
+                <h3 class="feature-card-title">Premium Fixtures</h3>
+                <p class="feature-card-desc">Quality faucets, showerheads, and accessories for a polished finish.</p>
+            </div>
+        </div>
+        <div class="feature-card">
+            <img src="https://images.unsplash.com/photo-1552321554-5fefe6c9ef14?w=800" alt="Bathroom design">
+            <div class="feature-card-content">
+                <h3 class="feature-card-title">Stunning Surfaces</h3>
+                <p class="feature-card-desc">Choose from acrylic, solid surface, and other premium materials.</p>
+            </div>
+        </div>
+        <div style="text-align:center; margin-top:32px;">
+            <button class="cta-button" onclick="scrollToForm()">Get a Quote</button>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section class="section benefits-section" id="benefitsSection">
+        <h2 class="section-title">Advantages Of Bathroom Remodeling</h2>
+        <div class="benefit-card">
+            <div class="benefit-icon">🔥</div>
+            <h3 class="benefit-title">Better Daily Experience</h3>
+            <p class="benefit-desc">Modern layouts and fixtures make your routine easier and more enjoyable.</p>
+        </div>
+        <div class="benefit-card">
+            <div class="benefit-icon">🏠</div>
+            <h3 class="benefit-title">More Storage</h3>
+            <p class="benefit-desc">Custom vanities and smart organization solutions maximize your space.</p>
+        </div>
+        <div class="benefit-card">
+            <div class="benefit-icon">✨</div>
+            <h3 class="benefit-title">Modern Style</h3>
+            <p class="benefit-desc">Contemporary designs with the latest trends in colors, finishes, and fixtures.</p>
+        </div>
+        <div class="benefit-card">
+            <div class="benefit-icon">📈</div>
+            <h3 class="benefit-title">Increased Home Value</h3>
+            <p class="benefit-desc">Bathroom remodels offer one of the highest returns on investment for home improvements.</p>
+        </div>
+        <div class="cta-box">
+            <h3 class="cta-title">Ready to Transform Your Home?</h3>
+            <p class="cta-desc">Get started with your free estimate today. Our team is ready to help bring your vision to life.</p>
+            <button class="cta-button" onclick="scrollToForm()">Get Your Free Quote</button>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section class="section gallery-section" id="gallerySection">
+        <h2 class="section-title">Photo Gallery of Completed Bathroom Projects</h2>
+        <div class="gallery-main">
+            <img id="galleryImg" src="https://images.unsplash.com/photo-1604014237800-1c910a4309e9?w=800" alt="Bathroom project">
+        </div>
+        <div class="gallery-dots" id="galleryDots"></div>
+        <div style="text-align:center;">
+            <button class="cta-button" onclick="scrollToForm()">Get a Quote</button>
+        </div>
+    </section>
+
+    <!-- Reviews Section -->
+    <section class="section reviews-section" id="reviewsSection">
+        <h2 class="section-title">Reviews for Bathroom Contractors Near You</h2>
+        <div class="review-card" id="reviewCard">
+            <img class="review-avatar" id="reviewAvatar" src="https://i.pravatar.cc/100?img=1" alt="">
+            <div>
+                <div class="review-stars" id="reviewStars">★★★★★</div>
+                <div class="review-name" id="reviewName">Michael T.</div>
+                <p class="review-text" id="reviewText">"Our new bathroom exceeded all expectations. The contractor was professional, on time, and the quality of work was outstanding."</p>
+            </div>
+        </div>
+        <div class="review-nav">
+            <button class="review-nav-btn" onclick="prevReview()">‹</button>
+            <button class="review-nav-btn" onclick="nextReview()">›</button>
+        </div>
+        <div style="text-align:center; margin-top:32px;">
+            <button class="cta-button" onclick="scrollToForm()">Get a Quote</button>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="section faq-section" id="faqSection">
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">What is the cost of a bathroom remodel? <span class="faq-chevron">▼</span></div>
+            <div class="faq-answer">Costs vary based on project scope. Tub-to-shower conversions typically range from $10,000-$22,000+, while tub replacements range from $9,000-$20,000+. Get a free quote for an accurate estimate.</div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">How long does a bathroom remodel take? <span class="faq-chevron">▼</span></div>
+            <div class="faq-answer">Most shower and tub projects can be completed in 1-2 days. Full bathroom remodels may take 1-2 weeks depending on scope.</div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">Can I use my bathroom during the remodel? <span class="faq-chevron">▼</span></div>
+            <div class="faq-answer">For shower or tub replacements, you may need to use an alternative bathroom for 24-48 hours. We'll discuss your specific situation during the estimate.</div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">What materials do you offer? <span class="faq-chevron">▼</span></div>
+            <div class="faq-answer">We offer acrylic, solid surface, and other premium materials. We do not install tile. Our team can help you choose the best option for your needs and budget.</div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">Should I replace or reface my tub? <span class="faq-chevron">▼</span></div>
+            <div class="faq-answer">If your tub is damaged, outdated, or you want a different style, replacement is often the best option. Refacing may be suitable for minor updates—we can assess during your free estimate.</div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">How can I maximize my bathroom storage? <span class="faq-chevron">▼</span></div>
+            <div class="faq-answer">We offer custom vanities, shelving solutions, and built-in storage options. Our team will work with you to design a layout that maximizes your space.</div>
+        </div>
+        <div style="text-align:center; margin-top:32px;">
+            <button class="cta-button" onclick="scrollToForm()">Get a Quote</button>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <img id="footerLogo" class="footer-logo" src="" alt="" style="display:none;">
+        <span id="footerLogoFallback" style="font-weight:700;color:#5dade2;font-size:20px;">Project Find</span>
+        <div class="footer-links">
+            <a href="#">Home</a>
+            <a href="privacypolicy.html">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+        </div>
+        <div class="footer-copy">© 2026 Project Find. All rights reserved.</div>
+    </footer>
+
+    <script>
+        // ============================================
+        // URL PARAMETERS - Campaign & Ad Tracking
+        // ============================================
+        const urlParams = new URLSearchParams(window.location.search);
+        const TRACKING_PARAMS = {
+            campaignID: urlParams.get('campaignID') || urlParams.get('utm_campaign'),
+            adATID: urlParams.get('adATID'),
+            utm_source: urlParams.get('utm_source'),
+            utm_medium: urlParams.get('utm_medium'),
+            utm_campaign: urlParams.get('utm_campaign'),
+            utm_content: urlParams.get('utm_content'),
+            utm_term: urlParams.get('utm_term')
+        };
+
+        // ============================================
+        // AIRTABLE CONFIG (for logo/name - READ only)
+        // Set WRITE_TO_AIRTABLE = true when ready to enable tracking writes
+        // ============================================
+        const WRITE_TO_AIRTABLE = false; // Toggle to true when ready to write tracking data
+        const WRITE_LEADS_TO_AIRTABLE = false; // Toggle to true when ready to write leads to Airtable
+        const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
+        const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
+        const AIRTABLE_BASE_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
+        const TABLES = {
+            CLIENTS: 'tblMl8Y97cMSbricC',
+            CAMPAIGNS: 'tbl6uhtOFzGzA7EMu',
+            FUNNEL_TRACKING: 'REPLACE_WITH_YOUR_TABLE_ID' // Create this table - see TRACKING_SETUP.md
+        };
+
+        let clientData = null;
+        let formData = {};
+        let currentModalStep = 1;
+        const TOTAL_STEPS = 11;
+        let sessionId = 'br_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+
+        // Load client/logo from campaignID
+        async function loadClientFromCampaign() {
+            const campaignID = TRACKING_PARAMS.campaignID;
+            if (!campaignID) return null;
+            try {
+                const campaignUrl = `${AIRTABLE_BASE_URL}/${TABLES.CAMPAIGNS}?filterByFormula={Campaign ID}="${campaignID}"`;
+                const res = await fetch(campaignUrl, {
+                    headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
+                });
+                const data = await res.json();
+                if (data.records && data.records.length > 0 && data.records[0].fields.Client) {
+                    const clientId = data.records[0].fields.Client[0];
+                    const clientRes = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}/${clientId}`, {
+                        headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
+                    });
+                    clientData = await clientRes.json();
+                    return clientData;
+                }
+            } catch (e) { console.warn('Could not load client:', e); }
+            return null;
+        }
+
+        // TODO: Enable when WRITE_LEADS_TO_AIRTABLE = true. Requires findClientByZipCode, match to B2C_LEADS schema.
+        async function submitLeadToAirtable(leadData) {
+            const formattedAddress = `${leadData.address.street}, ${leadData.address.city}, ${leadData.address.state} ${leadData.address.zip}`;
+            const record = {
+                fields: {
+                    'Phone': leadData.phone,
+                    'Full Name': `${leadData.firstName} ${leadData.lastName}`,
+                    'First Name': leadData.firstName,
+                    'Last Name': leadData.lastName,
+                    'Address': formattedAddress,
+                    'City': leadData.address.city,
+                    'State': leadData.address.state,
+                    'Zip': leadData.address.zip,
+                    'Email': leadData.email || '',
+                    'Model': 'Lead',
+                    'Full Summary': `Bathroom Remodel - ${leadData.projectType || 'N/A'} - ${leadData.goal || 'N/A'}`,
+                    'Full Summary HTML': `Bathroom Remodel - ${leadData.projectType || 'N/A'} - ${leadData.goal || 'N/A'}`
+                }
+            };
+            const res = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ records: [record] })
+            });
+            if (!res.ok) throw new Error(await res.text());
+        }
+
+        function applyClientBranding() {
+            if (clientData && clientData.fields) {
+                const logoUrl = clientData.fields['Logo Link'];
+                const name = clientData.fields['Name'] || '';
+                if (logoUrl) {
+                    document.getElementById('modalLogo').src = logoUrl;
+                    document.getElementById('modalLogo').style.display = 'block';
+                    document.getElementById('modalLogoFallback').style.display = 'none';
+                    const fl = document.getElementById('footerLogo');
+                    if (fl) { fl.src = logoUrl; fl.style.display = 'block'; }
+                    document.getElementById('footerLogoFallback').style.display = 'none';
+                }
+                if (name) {
+                    const pn = document.getElementById('partnerName');
+                    if (pn) pn.textContent = name;
+                }
+            }
+        }
+
+        // ============================================
+        // TRACKING - Writes to Airtable when enabled
+        // Each step completion is tracked to see where users drop off
+        // ============================================
+        async function trackStep(stepNumber, stepName, formDataSnapshot = {}) {
+            const payload = {
+                'Session ID': sessionId,
+                'Campaign ID': TRACKING_PARAMS.campaignID || '',
+                'Ad ID': TRACKING_PARAMS.adATID || '',
+                'UTM Source': TRACKING_PARAMS.utm_source || '',
+                'UTM Medium': TRACKING_PARAMS.utm_medium || '',
+                'UTM Campaign': TRACKING_PARAMS.utm_campaign || '',
+                'UTM Content': TRACKING_PARAMS.utm_content || '',
+                'UTM Term': TRACKING_PARAMS.utm_term || '',
+                'Step Number': stepNumber,
+                'Step Name': stepName,
+                'Timestamp': new Date().toISOString(),
+                'Form Data': JSON.stringify(formDataSnapshot)
+            };
+
+            console.log('[Tracking]', stepName, payload);
+
+            if (WRITE_TO_AIRTABLE && TABLES.FUNNEL_TRACKING !== 'REPLACE_WITH_YOUR_TABLE_ID') {
+                try {
+                    await fetch(`${AIRTABLE_BASE_URL}/${TABLES.FUNNEL_TRACKING}`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ records: [{ fields: payload }] })
+                    });
+                } catch (e) { console.error('Tracking write failed:', e); }
+            }
+        }
+
+        // ============================================
+        // MODAL & FORM LOGIC
+        // ============================================
+        function selectOption(el, field, value) {
+            const cards = el.parentElement.querySelectorAll('.option-card');
+            cards.forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            el.querySelector('input').checked = true;
+            formData[field] = value;
+
+            if (field === 'homeowner' && value === 'rent') document.getElementById('rentingWarning').style.display = 'flex';
+            else document.getElementById('rentingWarning').style.display = 'none';
+            if (field === 'homeType' && value === 'mobile') document.getElementById('mobileHomeWarning').style.display = 'flex';
+            else document.getElementById('mobileHomeWarning').style.display = 'none';
+            if (field === 'existingOrNew' && value === 'newbuild') document.getElementById('newBuildWarning').style.display = 'flex';
+            else document.getElementById('newBuildWarning').style.display = 'none';
+            if (field === 'material' && value === 'tile') document.getElementById('tileWarning').style.display = 'flex';
+            else document.getElementById('tileWarning').style.display = 'none';
+
+            const step = parseInt(el.closest('.form-step').dataset.step);
+            document.getElementById('step' + step + 'Next').disabled = false;
+        }
+
+        function advanceStep(direction) {
+            const steps = document.querySelectorAll('.modal-body .form-step');
+            const nextStep = direction > 0 ? currentModalStep + 1 : currentModalStep - 1;
+            if (nextStep < 1 || nextStep > TOTAL_STEPS) return;
+
+            trackStep(currentModalStep, 'Step ' + currentModalStep + ' completed', formData);
+
+            steps.forEach(s => s.classList.remove('active'));
+            const target = document.querySelector(`.form-step[data-step="${nextStep}"]`);
+            if (target) target.classList.add('active');
+
+            currentModalStep = nextStep;
+            document.getElementById('progressFill').style.width = (currentModalStep / TOTAL_STEPS * 100) + '%';
+
+            if (currentModalStep === TOTAL_STEPS) {
+                document.getElementById('modalOverlay').scrollTop = 0;
+            }
+        }
+
+        function validateAddress() {
+            const street = document.getElementById('street').value.trim();
+            const city = document.getElementById('city').value.trim();
+            const state = document.getElementById('state').value.trim();
+            const zip = document.getElementById('zip').value.replace(/\D/g, '');
+            const valid = street && street.match(/^\d/) && city && state.length === 2 && zip.length === 5;
+            document.getElementById('step9Next').disabled = !valid;
+        }
+
+        function validateName() {
+            const fn = document.getElementById('firstName').value.trim();
+            const ln = document.getElementById('lastName').value.trim();
+            document.getElementById('step10Next').disabled = !(fn && ln);
+        }
+
+        function validatePhone() {
+            const phone = document.getElementById('phone').value.replace(/\D/g, '');
+            const email = document.getElementById('email').value.trim();
+            const valid = phone.length >= 10 || email.includes('@');
+            document.getElementById('step11Submit').disabled = !valid;
+        }
+
+        function scrollToForm() {
+            document.getElementById('modalOverlay').classList.remove('hidden');
+            document.getElementById('modalOverlay').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function submitForm() {
+            const street = document.getElementById('street').value.trim();
+            const city = document.getElementById('city').value.trim();
+            const state = document.getElementById('state').value.trim();
+            const zip = document.getElementById('zip').value.trim();
+            formData.address = { street, city, state, zip };
+            formData.firstName = document.getElementById('firstName').value.trim();
+            formData.lastName = document.getElementById('lastName').value.trim();
+            formData.phone = document.getElementById('phone').value.replace(/\D/g, '');
+            formData.email = document.getElementById('email').value.trim();
+
+            trackStep(11, 'Form submitted (lead)', formData);
+
+            // Write lead to Airtable when WRITE_LEADS_TO_AIRTABLE = true
+            if (WRITE_LEADS_TO_AIRTABLE) {
+                try {
+                    await submitLeadToAirtable(formData);
+                } catch (e) {
+                    console.error('Lead submission failed:', e);
+                }
+            }
+            alert('Thank you! We\'ll contact you soon with your free quote.');
+            document.getElementById('modalOverlay').classList.add('hidden');
+        }
+
+        document.getElementById('modalClose').onclick = () => {
+            document.getElementById('modalOverlay').classList.add('hidden');
+        };
+
+        // FAQ
+        function toggleFaq(el) {
+            el.closest('.faq-item').classList.toggle('open');
+        }
+
+        // Gallery
+        const galleryImgs = [
+            'https://images.unsplash.com/photo-1604014237800-1c910a4309e9?w=800',
+            'https://images.unsplash.com/photo-1552321554-5fefe6c9ef14?w=800',
+            'https://images.unsplash.com/photo-1620626011761-996317b8d101?w=800'
+        ];
+        let galleryIdx = 0;
+        function initGallery() {
+            const dots = document.getElementById('galleryDots');
+            galleryImgs.forEach((_, i) => {
+                const d = document.createElement('div');
+                d.className = 'gallery-dot' + (i === 0 ? ' active' : '');
+                d.onclick = () => { galleryIdx = i; updateGallery(); };
+                dots.appendChild(d);
+            });
+        }
+        function updateGallery() {
+            document.getElementById('galleryImg').src = galleryImgs[galleryIdx];
+            document.querySelectorAll('.gallery-dot').forEach((d, i) => d.classList.toggle('active', i === galleryIdx));
+        }
+        setInterval(() => { galleryIdx = (galleryIdx + 1) % galleryImgs.length; updateGallery(); }, 5000);
+
+        // Reviews
+        const reviews = [
+            { name: 'Michael T.', stars: 5, text: '"Our new bathroom exceeded all expectations. The contractor was professional, on time, and the quality of work was outstanding."', img: 1 },
+            { name: 'Jennifer H.', stars: 5, text: '"From design to completion, the entire process was seamless. We love our new shower and the modern fixtures."', img: 5 },
+            { name: 'David R.', stars: 4, text: '"Best decision we made for our home. The bathroom remodel increased our home value and we use it more than ever."', img: 12 }
+        ];
+        let reviewIdx = 0;
+        function updateReview() {
+            const r = reviews[reviewIdx];
+            document.getElementById('reviewName').textContent = r.name;
+            document.getElementById('reviewStars').textContent = '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars);
+            document.getElementById('reviewText').textContent = r.text;
+            document.getElementById('reviewAvatar').src = `https://i.pravatar.cc/100?img=${r.img}`;
+        }
+        function prevReview() { reviewIdx = (reviewIdx - 1 + reviews.length) % reviews.length; updateReview(); }
+        function nextReview() { reviewIdx = (reviewIdx + 1) % reviews.length; updateReview(); }
+
+        // Init
+        (async function() {
+            clientData = await loadClientFromCampaign();
+            applyClientBranding();
+            initGallery();
+            updateReview();
+            trackStep(0, 'Page view / Session started', {});
+        })();
+    </script>
+</body>
+</html>
