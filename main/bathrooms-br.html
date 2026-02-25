@@ -204,7 +204,7 @@
                 <!-- Step 1: Homeowner -->
                 <div class="form-step active" data-step="1">
                     <h2 class="modal-title">Let's see what your remodel could cost</h2>
-                    <p class="modal-subtitle">Are you the homeowner?</p>
+                    <p class="modal-subtitle">Are you the homeowner? Or authorized to make decisions on the property?</p>
                     <div class="option-card" data-value="own" onclick="selectOption(this, 'homeowner', 'own')">
                         <input type="radio" name="homeowner" id="ho_own">
                         <label for="ho_own">I own the home</label>
@@ -216,8 +216,7 @@
                     <div class="why-box" id="rentingWarning" style="display:none;">
                         <span class="why-icon-wrap">⚠️</span>
                         <div>
-                            <div class="why-title">Unfortunately we can only remodel if you own the home.</div>
-                            <div class="why-text">Would you still like to continue?</div>
+                            <div class="why-title">Unfortunately we can only remodel if you own the home. Would you still like to continue?</div>
                         </div>
                     </div>
                     <div class="why-box">
@@ -232,7 +231,6 @@
                 <!-- Step 2: Type of home -->
                 <div class="form-step" data-step="2">
                     <h2 class="modal-title">What type of home is this?</h2>
-                    <p class="modal-subtitle">Select the option that best describes your property</p>
                     <div class="option-card" data-value="single" onclick="selectOption(this, 'homeType', 'single')">
                         <input type="radio" name="homeType" id="ht_single">
                         <label for="ht_single">Single family home</label>
@@ -248,8 +246,7 @@
                     <div class="why-box" id="mobileHomeWarning" style="display:none;">
                         <span class="why-icon-wrap">⚠️</span>
                         <div>
-                            <div class="why-title">We don't service mobile homes.</div>
-                            <div class="why-text">Would you still like to continue?</div>
+                            <div class="why-title">We don't service mobile homes. Would you still like to continue?</div>
                         </div>
                     </div>
                     <div class="nav-buttons">
@@ -260,7 +257,6 @@
                 <!-- Step 3: Existing or new build -->
                 <div class="form-step" data-step="3">
                     <h2 class="modal-title">Is this an existing shower or tub?</h2>
-                    <p class="modal-subtitle">Let us know the current setup</p>
                     <div class="option-card" data-value="existing" onclick="selectOption(this, 'existingOrNew', 'existing')">
                         <input type="radio" name="existingOrNew" id="en_existing">
                         <label for="en_existing">Existing</label>
@@ -272,8 +268,7 @@
                     <div class="why-box" id="newBuildWarning" style="display:none;">
                         <span class="why-icon-wrap">⚠️</span>
                         <div>
-                            <div class="why-title">Unfortunately, we don't service new builds.</div>
-                            <div class="why-text">Would you still like to continue?</div>
+                            <div class="why-title">Unfortunately, we don't service new builds. Would you still like to continue?</div>
                         </div>
                     </div>
                     <div class="nav-buttons">
@@ -284,22 +279,21 @@
                 <!-- Step 4: Project type -->
                 <div class="form-step" data-step="4">
                     <h2 class="modal-title">What type of project is this?</h2>
-                    <p class="modal-subtitle">Select the option that best describes your project</p>
                     <div class="option-card" data-value="tub_to_shower" onclick="selectOption(this, 'projectType', 'tub_to_shower')">
                         <input type="radio" name="projectType" id="pt_tub2shower">
-                        <label for="pt_tub2shower">Tub-to-Shower Conversion <small style="color:#666;font-weight:normal;">($10,000 - $22,000+)</small></label>
+                        <label for="pt_tub2shower">Tub-to-Shower Conversion <small style="color:#666;font-weight:normal;">Range from $10,000 - $22,000+</small></label>
                     </div>
                     <div class="option-card" data-value="shower_to_tub" onclick="selectOption(this, 'projectType', 'shower_to_tub')">
                         <input type="radio" name="projectType" id="pt_shower2tub">
-                        <label for="pt_shower2tub">Shower-to-Tub conversion <small style="color:#666;font-weight:normal;">($9,000 - $20,000+)</small></label>
+                        <label for="pt_shower2tub">Shower-to-Tub conversion <small style="color:#666;font-weight:normal;">Range from $9,000 - $20,000+</small></label>
                     </div>
                     <div class="option-card" data-value="shower_replacement" onclick="selectOption(this, 'projectType', 'shower_replacement')">
                         <input type="radio" name="projectType" id="pt_shower">
-                        <label for="pt_shower">Shower Replacement <small style="color:#666;font-weight:normal;">($10,000 - $22,000+)</small></label>
+                        <label for="pt_shower">Shower Replacement <small style="color:#666;font-weight:normal;">Range from $10,000 - $22,000+</small></label>
                     </div>
                     <div class="option-card" data-value="tub_replacement" onclick="selectOption(this, 'projectType', 'tub_replacement')">
                         <input type="radio" name="projectType" id="pt_tub">
-                        <label for="pt_tub">Tub Replacement <small style="color:#666;font-weight:normal;">($9,000 - $20,000+)</small></label>
+                        <label for="pt_tub">Tub Replacement <small style="color:#666;font-weight:normal;">Range from $9,000 - $20,000+</small></label>
                     </div>
                     <div class="nav-buttons">
                         <button class="nav-btn nav-btn-secondary" onclick="advanceStep(-1)">Back</button>
@@ -309,7 +303,6 @@
                 <!-- Step 5: I want to -->
                 <div class="form-step" data-step="5">
                     <h2 class="modal-title">"I want to…"</h2>
-                    <p class="modal-subtitle">What's your main goal for this remodel?</p>
                     <div class="option-card" data-value="accessibility" onclick="selectOption(this, 'goal', 'accessibility')">
                         <input type="radio" name="goal" id="g_accessibility">
                         <label for="g_accessibility">Improve accessibility/safety</label>
@@ -334,7 +327,6 @@
                 <!-- Step 6: Material preferences -->
                 <div class="form-step" data-step="6">
                     <h2 class="modal-title">Do you have any material preferences?</h2>
-                    <p class="modal-subtitle">Select your preferred material</p>
                     <div class="option-card" data-value="tile" onclick="selectOption(this, 'material', 'tile')">
                         <input type="radio" name="material" id="m_tile">
                         <label for="m_tile">Tile</label>
@@ -350,8 +342,7 @@
                     <div class="why-box" id="tileWarning" style="display:none;">
                         <span class="why-icon-wrap">⚠️</span>
                         <div>
-                            <div class="why-title">We don't install tile.</div>
-                            <div class="why-text">Would you still like to continue?</div>
+                            <div class="why-title">We don't install tile. Would you still like to continue?</div>
                         </div>
                     </div>
                     <div class="nav-buttons">
@@ -387,7 +378,6 @@
                 <!-- Step 8: Estimate -->
                 <div class="form-step" data-step="8">
                     <h2 class="modal-title">Have you already gotten an estimate?</h2>
-                    <p class="modal-subtitle">This helps us understand where you are in the process</p>
                     <div class="option-card" data-value="yes" onclick="selectOption(this, 'hasEstimate', 'yes')">
                         <input type="radio" name="hasEstimate" id="he_yes">
                         <label for="he_yes">Yes</label>
