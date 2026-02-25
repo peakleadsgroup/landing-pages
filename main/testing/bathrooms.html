@@ -152,6 +152,84 @@
             color: #1976d2;
         }
 
+        .why-box {
+            background: #e8f4fc;
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-top: 20px;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            text-align: left;
+        }
+
+        .why-icon-wrap {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            background: #b8e0f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #3498db;
+            font-size: 18px;
+        }
+
+        .why-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 6px;
+            font-size: 15px;
+        }
+
+        .why-text {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .warning-box {
+            background: #fff3e0;
+            border: 2px solid #ff9800;
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-top: 20px;
+            display: none;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 14px;
+            align-items: flex-start;
+            text-align: left;
+        }
+
+        .warning-box.visible {
+            display: flex;
+        }
+
+        .warning-continue-btn {
+            align-self: flex-start;
+            padding: 10px 20px;
+            background: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .warning-continue-btn:hover {
+            background: #f57c00;
+        }
+
+        .step-nav-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            justify-content: flex-start;
+        }
+
         .address-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -236,7 +314,19 @@
         .nav-buttons {
             display: flex;
             justify-content: center;
+            gap: 12px;
             margin-top: 30px;
+        }
+
+        .nav-btn-secondary {
+            background: #fff;
+            color: #333;
+            border: 2px solid #e0e0e0;
+        }
+
+        .nav-btn-secondary:hover {
+            background: #f5f5f5;
+            border-color: #ccc;
         }
 
         .nav-btn {
@@ -956,7 +1046,7 @@
 
         <div id="mainHeading">
             <h1 class="main-heading">
-                Take our 30 second quiz to get a <span class="highlight">fast and free quote</span>
+                Let's see what your remodel could cost
             </h1>
         </div>
 
@@ -964,35 +1054,69 @@
             <div class="progress-fill" id="progressFill" style="width: 9.1%"></div>
         </div>
 
-        <!-- STEP 1: Homeowner -->
+        <!-- STEP 1: Homeowner (PDF Q1) -->
         <div class="form-step active" id="step1">
-            <div class="question">Are you the homeowner? Or authorized to make decisions on the property?</div>
+            <div class="question">Are you the homeowner? <em>Or authorized to make decisions on the property?</em></div>
             <div class="options">
                 <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'own')">I own the home</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'rent')">I'm renting</div>
+                <div class="option" onclick="selectOptionWithWarning(this, 'homeowner', 'rent', 'rentingWarning')">I'm renting</div>
+            </div>
+            <div class="warning-box" id="rentingWarning">
+                <span class="why-icon-wrap">⚠️</span>
+                <div>
+                    <div class="why-title">Unfortunately we can only remodel if you own the home. Would you still like to continue?</div>
+                    <button type="button" class="warning-continue-btn" onclick="continueFromWarning('rentingWarning')">Yes, continue</button>
+                </div>
+            </div>
+            <div class="why-box">
+                <span class="why-icon-wrap">💡</span>
+                <div>
+                    <div class="why-title">Why do we ask?</div>
+                    <div class="why-text">We legally require the property owner or authorized decision-maker to make changes to the property.</div>
+                </div>
             </div>
         </div>
 
-        <!-- STEP 2: Type of home -->
+        <!-- STEP 2: Type of home (PDF Q2) -->
         <div class="form-step" id="step2">
             <div class="question">What type of home is this?</div>
             <div class="options">
                 <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'single')">Single family home</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'town')">Town home</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'mobile')">Mobile home</div>
+                <div class="option" onclick="selectOptionWithWarning(this, 'homeType', 'mobile', 'mobileHomeWarning')">Mobile home</div>
+            </div>
+            <div class="warning-box" id="mobileHomeWarning">
+                <span class="why-icon-wrap">⚠️</span>
+                <div>
+                    <div class="why-title">We don't service mobile homes. Would you still like to continue?</div>
+                    <button type="button" class="warning-continue-btn" onclick="continueFromWarning('mobileHomeWarning')">Yes, continue</button>
+                </div>
+            </div>
+            <div class="step-nav-row">
+                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
             </div>
         </div>
 
-        <!-- STEP 3: Existing or new build -->
+        <!-- STEP 3: Existing or new build (PDF Q3) -->
         <div class="form-step" id="step3">
             <div class="question">Is this an existing shower or tub?</div>
             <div class="options">
                 <div class="option" onclick="selectOptionAndAdvance(this, 'existingOrNew', 'existing')">Existing</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'existingOrNew', 'newbuild')">New build</div>
+                <div class="option" onclick="selectOptionWithWarning(this, 'existingOrNew', 'newbuild', 'newBuildWarning')">New build</div>
+            </div>
+            <div class="warning-box" id="newBuildWarning">
+                <span class="why-icon-wrap">⚠️</span>
+                <div>
+                    <div class="why-title">Unfortunately, we don't service new builds. Would you still like to continue?</div>
+                    <button type="button" class="warning-continue-btn" onclick="continueFromWarning('newBuildWarning')">Yes, continue</button>
+                </div>
+            </div>
+            <div class="step-nav-row">
+                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
             </div>
         </div>
 
-        <!-- STEP 4: Project Type -->
+        <!-- STEP 4: Project Type (PDF Q4) -->
         <div class="form-step" id="step4">
             <div class="question">What type of project is this?</div>
             <div class="options">
@@ -1001,9 +1125,12 @@
                 <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'shower_replacement')">Shower Replacement (Range from $10,000 - $22,000+)</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'tub_replacement')">Tub Replacement (Range from $9,000 - $20,000+)</div>
             </div>
+            <div class="step-nav-row">
+                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
+            </div>
         </div>
 
-        <!-- STEP 5: I want to -->
+        <!-- STEP 5: I want to (PDF Q5) -->
         <div class="form-step" id="step5">
             <div class="question">"I want to…"</div>
             <div class="options">
@@ -1012,19 +1139,32 @@
                 <div class="option" onclick="selectOptionAndAdvance(this, 'goal', 'repair')">Repair damage</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'goal', 'value')">Increase home value</div>
             </div>
-        </div>
-
-        <!-- STEP 6: Materials -->
-        <div class="form-step" id="step6">
-            <div class="question">Do you have any material preferences?</div>
-            <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'material', 'tile')">Tile</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'material', 'acrylic')">Acrylic</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'material', 'not_sure')">Not sure</div>
+            <div class="step-nav-row">
+                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
             </div>
         </div>
 
-        <!-- STEP 7: Timeline -->
+        <!-- STEP 6: Materials (PDF Q6) -->
+        <div class="form-step" id="step6">
+            <div class="question">Do you have any material preferences?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionWithWarning(this, 'material', 'tile', 'tileWarning')">Tile</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'material', 'acrylic')">Acrylic</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'material', 'not_sure')">Not sure</div>
+            </div>
+            <div class="warning-box" id="tileWarning">
+                <span class="why-icon-wrap">⚠️</span>
+                <div>
+                    <div class="why-title">We don't install tile. Would you still like to continue?</div>
+                    <button type="button" class="warning-continue-btn" onclick="continueFromWarning('tileWarning')">Yes, continue</button>
+                </div>
+            </div>
+            <div class="step-nav-row">
+                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
+            </div>
+        </div>
+
+        <!-- STEP 7: Timeline (PDF Q7) -->
         <div class="form-step" id="step7">
             <div class="question">How soon would you like this project to be completed?</div>
             <div class="sub-heading">We only give an estimate for projects that can start soon so pricing is accurate.</div>
@@ -1034,14 +1174,20 @@
                 <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', '3months')">Within 3 months</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', '6months')">Within 6 months</div>
             </div>
+            <div class="step-nav-row">
+                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
+            </div>
         </div>
 
-        <!-- STEP 8: Have you gotten estimate -->
+        <!-- STEP 8: Have you gotten estimate (PDF Q8) -->
         <div class="form-step" id="step8">
             <div class="question">Have you already gotten an estimate?</div>
             <div class="options">
                 <div class="option" onclick="selectOptionAndAdvance(this, 'hasEstimate', 'yes')">Yes</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'hasEstimate', 'no')">No</div>
+            </div>
+            <div class="step-nav-row">
+                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
             </div>
         </div>
 
@@ -1073,6 +1219,7 @@
                 </div>
             </div>
             <div class="nav-buttons">
+                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
                 <button class="nav-btn" onclick="goToStep10()" id="submitFormBtn" disabled>Next</button>
             </div>
         </div>
@@ -1091,6 +1238,7 @@
                 </div>
             </div>
             <div class="nav-buttons">
+                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
                 <button class="nav-btn" onclick="goToStep11()" id="nameNextBtn" disabled>Next</button>
             </div>
         </div>
@@ -1111,6 +1259,7 @@
                 </div>
             </div>
             <div class="nav-buttons">
+                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
                 <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Get Quote</button>
             </div>
             <div class="privacy-policy-text" id="privacyPolicyText">
@@ -1932,6 +2081,70 @@
             setTimeout(() => {
                 nextStep();
             }, 200);
+        }
+
+        function selectOptionWithWarning(element, field, value, warningId) {
+            const options = element.parentElement.querySelectorAll('.option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            element.classList.add('selected');
+            formData[field] = value;
+            
+            if (!hasTrackedEngagement) {
+                if (typeof fbq !== 'undefined' && clientData && clientData.fields['Meta Pixel']) {
+                    fbq('track', 'ViewContent', {
+                        content_category: 'home_improvement',
+                        content_name: 'bathroom_remodel_quiz_start'
+                    });
+                }
+                hasTrackedEngagement = true;
+            }
+            
+            const warning = document.getElementById(warningId);
+            if (warning) {
+                warning.classList.add('visible');
+            }
+        }
+
+        function continueFromWarning(warningId) {
+            const warning = document.getElementById(warningId);
+            if (warning) {
+                warning.classList.remove('visible');
+            }
+            nextStep();
+        }
+
+        function goBackStep() {
+            if (currentStep > 1) {
+                hideAllWarnings();
+                const prevStep = document.getElementById('step' + currentStep);
+                if (prevStep) prevStep.classList.remove('active');
+                currentStep--;
+                const nextStepEl = document.getElementById('step' + currentStep);
+                if (nextStepEl) nextStepEl.classList.add('active');
+                updateProgress();
+                showWarningsForCurrentStep();
+            }
+        }
+
+        function hideAllWarnings() {
+            ['rentingWarning', 'mobileHomeWarning', 'newBuildWarning', 'tileWarning'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('visible');
+            });
+        }
+
+        function showWarningsForCurrentStep() {
+            hideAllWarnings();
+            if (currentStep === 1 && formData.homeowner === 'rent') {
+                document.getElementById('rentingWarning')?.classList.add('visible');
+            } else if (currentStep === 2 && formData.homeType === 'mobile') {
+                document.getElementById('mobileHomeWarning')?.classList.add('visible');
+            } else if (currentStep === 3 && formData.existingOrNew === 'newbuild') {
+                document.getElementById('newBuildWarning')?.classList.add('visible');
+            } else if (currentStep === 6 && formData.material === 'tile') {
+                document.getElementById('tileWarning')?.classList.add('visible');
+            }
         }
 
         function validateAddressForm() {
