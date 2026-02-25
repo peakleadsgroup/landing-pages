@@ -1071,7 +1071,6 @@
                 <span class="why-icon-wrap">⚠️</span>
                 <div>
                     <div class="why-title">Unfortunately we can only remodel if you own the home</div>
-                    <button type="button" class="warning-continue-btn" id="step1RentContinueBtn" onclick="step1AdvanceFromRent()">Yes, continue</button>
                 </div>
             </div>
             <div class="step1-continue-row" id="step1ContinueRow" style="display:none;">
@@ -2106,12 +2105,6 @@
 
         function step1AdvanceFromOwn() {
             if (formData.homeowner !== 'own') return;
-            nextStep();
-        }
-
-        function step1AdvanceFromRent() {
-            if (formData.homeowner !== 'rent') return;
-            document.getElementById('rentingWarning').classList.remove('visible');
             nextStep();
         }
 
