@@ -289,10 +289,12 @@
 
         .form-step {
             display: none;
+            pointer-events: none;
         }
 
         .form-step.active {
             display: block;
+            pointer-events: auto;
         }
 
         .progress-bar {
@@ -1059,7 +1061,7 @@
             <div class="question">Are you the homeowner?</div>
             <div class="options">
                 <div class="option" onclick="selectOption(this, 'homeowner', 'own')">I own the home</div>
-                <div class="option" onclick="selectRentOnly(this)">I'm renting</div>
+                <div class="option" onclick="event.stopPropagation(); event.preventDefault(); selectRentOnly(this); return false;">I'm renting</div>
             </div>
             <div class="warning-box" id="rentingWarning">
                 <span class="why-icon-wrap">⚠️</span>
@@ -2062,8 +2064,9 @@
         }
 
         function selectRentOnly(element) {
-            const options = element.parentElement.querySelectorAll('.option');
-            options.forEach(opt => opt.classList.remove('selected'));
+            if (!element || !element.closest('#step1')) return;
+            const opts = element.parentElement.querySelectorAll('.option');
+            opts.forEach(o => o.classList.remove('selected'));
             element.classList.add('selected');
             formData.homeowner = 'rent';
             if (!hasTrackedEngagement) {
