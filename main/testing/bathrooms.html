@@ -230,6 +230,10 @@
             justify-content: flex-start;
         }
 
+        .step1-continue-row {
+            margin-top: 24px;
+        }
+
         .address-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -1056,19 +1060,22 @@
             <div class="progress-fill" id="progressFill" style="width: 9.1%"></div>
         </div>
 
-        <!-- STEP 1: Homeowner (PDF Q1) -->
+        <!-- STEP 1: Homeowner (PDF Q1) - NO auto-advance; user must click Continue/Yes continue -->
         <div class="form-step active" id="step1">
             <div class="question">Are you the homeowner?</div>
-            <div class="options">
-                <div class="option" onclick="selectOption(this, 'homeowner', 'own')">I own the home</div>
-                <div class="option" onclick="event.stopPropagation(); event.preventDefault(); selectRentOnly(this); return false;">I'm renting</div>
+            <div class="options" id="step1Options">
+                <div class="option" id="step1OptionOwn" data-value="own">I own the home</div>
+                <div class="option" id="step1OptionRent" data-value="rent">I'm renting</div>
             </div>
             <div class="warning-box" id="rentingWarning">
                 <span class="why-icon-wrap">⚠️</span>
                 <div>
                     <div class="why-title">Unfortunately we can only remodel if you own the home</div>
-                    <button type="button" class="warning-continue-btn" onclick="continueFromWarning('rentingWarning')">Yes, continue</button>
+                    <button type="button" class="warning-continue-btn" id="step1RentContinueBtn" onclick="step1AdvanceFromRent()">Yes, continue</button>
                 </div>
+            </div>
+            <div class="step1-continue-row" id="step1ContinueRow" style="display:none;">
+                <button type="button" class="nav-btn" id="step1OwnContinueBtn" onclick="step1AdvanceFromOwn()">Continue</button>
             </div>
             <div class="why-box">
                 <span class="why-icon-wrap">💡</span>
@@ -2036,6 +2043,8 @@
                 // Initial update
                 setTimeout(updateBackgroundHeight, 100);
                 
+                initStep1();
+                
                 // If client data is already loaded, ensure logo is displayed
                 if (clientData && clientData.fields && clientData.fields['Logo Link']) {
                     const logoImg = document.getElementById('logoImg');
@@ -2046,6 +2055,7 @@
             });
         } else {
             updateBackgroundHeight();
+            initStep1();
             // If client data is already loaded, ensure logo is displayed
             if (clientData && clientData.fields && clientData.fields['Logo Link']) {
                 const logoImg = document.getElementById('logoImg');
@@ -2063,23 +2073,46 @@
             return 'event_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
 
-        function selectRentOnly(element) {
-            if (!element || !element.closest('#step1')) return;
-            const opts = element.parentElement.querySelectorAll('.option');
-            opts.forEach(o => o.classList.remove('selected'));
-            element.classList.add('selected');
-            formData.homeowner = 'rent';
-            if (!hasTrackedEngagement) {
-                if (typeof fbq !== 'undefined' && clientData && clientData.fields['Meta Pixel']) {
-                    fbq('track', 'ViewContent', {
-                        content_category: 'home_improvement',
-                        content_name: 'bathroom_remodel_quiz_start'
-                    });
-                }
+        function initStep1() {
+            const optOwn = document.getElementById('step1OptionOwn');
+            const optRent = document.getElementById('step1OptionRent');
+            const continueRow = document.getElementById('step1ContinueRow');
+            const rentingWarning = document.getElementById('rentingWarning');
+            if (!optOwn || !optRent) return;
+            optOwn.onclick = function() {
+                optOwn.classList.add('selected');
+                optRent.classList.remove('selected');
+                formData.homeowner = 'own';
+                trackEngagementOnce();
+                rentingWarning.classList.remove('visible');
+                continueRow.style.display = 'block';
+            };
+            optRent.onclick = function() {
+                optRent.classList.add('selected');
+                optOwn.classList.remove('selected');
+                formData.homeowner = 'rent';
+                trackEngagementOnce();
+                continueRow.style.display = 'none';
+                rentingWarning.classList.add('visible');
+            };
+        }
+
+        function trackEngagementOnce() {
+            if (!hasTrackedEngagement && typeof fbq !== 'undefined' && clientData && clientData.fields['Meta Pixel']) {
+                fbq('track', 'ViewContent', { content_category: 'home_improvement', content_name: 'bathroom_remodel_quiz_start' });
                 hasTrackedEngagement = true;
             }
-            const w = document.getElementById('rentingWarning');
-            if (w) w.classList.add('visible');
+        }
+
+        function step1AdvanceFromOwn() {
+            if (formData.homeowner !== 'own') return;
+            nextStep();
+        }
+
+        function step1AdvanceFromRent() {
+            if (formData.homeowner !== 'rent') return;
+            document.getElementById('rentingWarning').classList.remove('visible');
+            nextStep();
         }
 
         function selectOption(element, field, value) {
@@ -2089,15 +2122,7 @@
             element.classList.add('selected');
             formData[field] = value;
             
-            if (!hasTrackedEngagement) {
-                if (typeof fbq !== 'undefined' && clientData && clientData.fields['Meta Pixel']) {
-                    fbq('track', 'ViewContent', {
-                        content_category: 'home_improvement',
-                        content_name: 'bathroom_remodel_quiz_start'
-                    });
-                }
-                hasTrackedEngagement = true;
-            }
+            trackEngagementOnce();
             
             const warningId = element.getAttribute('data-warning');
             if (warningId) {
@@ -2153,8 +2178,21 @@
 
         function showWarningsForCurrentStep() {
             hideAllWarnings();
-            if (currentStep === 1 && formData.homeowner === 'rent') {
-                document.getElementById('rentingWarning')?.classList.add('visible');
+            if (currentStep === 1) {
+                const rentWarn = document.getElementById('rentingWarning');
+                const continueRow = document.getElementById('step1ContinueRow');
+                const optOwn = document.getElementById('step1OptionOwn');
+                const optRent = document.getElementById('step1OptionRent');
+                if (formData.homeowner === 'rent' && rentWarn) {
+                    rentWarn.classList.add('visible');
+                    if (continueRow) continueRow.style.display = 'none';
+                    if (optRent) optRent.classList.add('selected');
+                    if (optOwn) optOwn.classList.remove('selected');
+                } else if (formData.homeowner === 'own' && continueRow) {
+                    continueRow.style.display = 'block';
+                    if (optOwn) optOwn.classList.add('selected');
+                    if (optRent) optRent.classList.remove('selected');
+                }
             } else if (currentStep === 2 && formData.homeType === 'mobile') {
                 document.getElementById('mobileHomeWarning')?.classList.add('visible');
             } else if (currentStep === 3 && formData.existingOrNew === 'newbuild') {
