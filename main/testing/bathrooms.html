@@ -1094,7 +1094,7 @@
                 </div>
             </div>
             <div class="step-nav-row">
-                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
+                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
             </div>
         </div>
 
@@ -1113,7 +1113,7 @@
                 </div>
             </div>
             <div class="step-nav-row">
-                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
+                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
             </div>
         </div>
 
@@ -1127,7 +1127,7 @@
                 <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'tub_replacement')">Tub Replacement (Range from $9,000 - $20,000+)</div>
             </div>
             <div class="step-nav-row">
-                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
+                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
             </div>
         </div>
 
@@ -1141,7 +1141,7 @@
                 <div class="option" onclick="selectOptionAndAdvance(this, 'goal', 'value')">Increase home value</div>
             </div>
             <div class="step-nav-row">
-                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
+                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
             </div>
         </div>
 
@@ -1161,7 +1161,7 @@
                 </div>
             </div>
             <div class="step-nav-row">
-                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
+                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
             </div>
         </div>
 
@@ -1176,7 +1176,7 @@
                 <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', '6months')">Within 6 months</div>
             </div>
             <div class="step-nav-row">
-                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
+                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
             </div>
         </div>
 
@@ -1188,7 +1188,7 @@
                 <div class="option" onclick="selectOptionAndAdvance(this, 'hasEstimate', 'no')">No</div>
             </div>
             <div class="step-nav-row">
-                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
+                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
             </div>
         </div>
 
@@ -1220,7 +1220,7 @@
                 </div>
             </div>
             <div class="nav-buttons">
-                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
+                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
                 <button class="nav-btn" onclick="goToStep10()" id="submitFormBtn" disabled>Next</button>
             </div>
         </div>
@@ -1239,7 +1239,7 @@
                 </div>
             </div>
             <div class="nav-buttons">
-                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
+                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
                 <button class="nav-btn" onclick="goToStep11()" id="nameNextBtn" disabled>Next</button>
             </div>
         </div>
@@ -1260,7 +1260,7 @@
                 </div>
             </div>
             <div class="nav-buttons">
-                <button class="nav-btn nav-btn-secondary" onclick="goBackStep()">Back</button>
+                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
                 <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Get Quote</button>
             </div>
             <div class="privacy-policy-text" id="privacyPolicyText">
@@ -2137,16 +2137,15 @@
         }
 
         function goBackStep() {
-            if (currentStep > 1) {
-                hideAllWarnings();
-                const prevStep = document.getElementById('step' + currentStep);
-                if (prevStep) prevStep.classList.remove('active');
-                currentStep--;
-                const nextStepEl = document.getElementById('step' + currentStep);
-                if (nextStepEl) nextStepEl.classList.add('active');
-                updateProgress();
-                showWarningsForCurrentStep();
-            }
+            if (currentStep <= 1) return;
+            hideAllWarnings();
+            const targetStep = currentStep - 1;
+            document.querySelectorAll('.form-step').forEach(el => el.classList.remove('active'));
+            currentStep = targetStep;
+            const targetEl = document.getElementById('step' + currentStep);
+            if (targetEl) targetEl.classList.add('active');
+            updateProgress();
+            showWarningsForCurrentStep();
         }
 
         function hideAllWarnings() {
