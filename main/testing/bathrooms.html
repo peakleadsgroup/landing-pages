@@ -1056,15 +1056,15 @@
 
         <!-- STEP 1: Homeowner (PDF Q1) -->
         <div class="form-step active" id="step1">
-            <div class="question">Are you the homeowner? <em>Or authorized to make decisions on the property?</em></div>
+            <div class="question">Are you the homeowner?</div>
             <div class="options">
                 <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'own')">I own the home</div>
-                <div class="option" onclick="selectOptionWithWarning(this, 'homeowner', 'rent', 'rentingWarning')">I'm renting</div>
+                <div class="option" onclick="selectOptionWithWarning(event, this, 'homeowner', 'rent', 'rentingWarning')">I'm renting</div>
             </div>
             <div class="warning-box" id="rentingWarning">
                 <span class="why-icon-wrap">⚠️</span>
                 <div>
-                    <div class="why-title">Unfortunately we can only remodel if you own the home. Would you still like to continue?</div>
+                    <div class="why-title">Unfortunately we can only remodel if you own the home</div>
                     <button type="button" class="warning-continue-btn" onclick="continueFromWarning('rentingWarning')">Yes, continue</button>
                 </div>
             </div>
@@ -1083,7 +1083,7 @@
             <div class="options">
                 <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'single')">Single family home</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'town')">Town home</div>
-                <div class="option" onclick="selectOptionWithWarning(this, 'homeType', 'mobile', 'mobileHomeWarning')">Mobile home</div>
+                <div class="option" onclick="selectOptionWithWarning(event, this, 'homeType', 'mobile', 'mobileHomeWarning')">Mobile home</div>
             </div>
             <div class="warning-box" id="mobileHomeWarning">
                 <span class="why-icon-wrap">⚠️</span>
@@ -1148,7 +1148,7 @@
         <div class="form-step" id="step6">
             <div class="question">Do you have any material preferences?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionWithWarning(this, 'material', 'tile', 'tileWarning')">Tile</div>
+                <div class="option" onclick="selectOptionWithWarning(event, this, 'material', 'tile', 'tileWarning')">Tile</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'material', 'acrylic')">Acrylic</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'material', 'not_sure')">Not sure</div>
             </div>
@@ -2083,7 +2083,11 @@
             }, 200);
         }
 
-        function selectOptionWithWarning(element, field, value, warningId) {
+        function selectOptionWithWarning(event, element, field, value, warningId) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
             const options = element.parentElement.querySelectorAll('.option');
             options.forEach(opt => opt.classList.remove('selected'));
             
