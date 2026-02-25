@@ -911,6 +911,38 @@
             updateReview();
             trackStep(0, 'Page view / Session started', {});
         })();
+
+        // Google Places Autocomplete for address
+        window.__attachPlaces = function(){
+            if(!window.google || !google.maps || !google.maps.places) return;
+            const addressInput = document.getElementById('street');
+            if (!addressInput) return;
+            const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+                types: ['address'],
+                componentRestrictions: { country: ['us'] },
+                fields: ['address_components','formatted_address','geometry']
+            });
+            autocomplete.addListener('place_changed', ()=>{
+                const place = autocomplete.getPlace();
+                if(!place || !place.address_components) return;
+                const comps = Object.fromEntries(place.address_components.flatMap(c => c.types.map(t => [t, c])));
+                let streetAddress = '';
+                if(comps.street_number) streetAddress += comps.street_number.long_name + ' ';
+                if(comps.route) streetAddress += comps.route.long_name;
+                if(streetAddress.trim()) addressInput.value = streetAddress.trim();
+                const cityInput = document.getElementById('city');
+                const stateInput = document.getElementById('state');
+                const zipInput = document.getElementById('zip');
+                if(comps.locality && cityInput) cityInput.value = comps.locality.long_name;
+                else if(comps.sublocality && cityInput) cityInput.value = comps.sublocality.long_name;
+                if(comps.administrative_area_level_1 && stateInput) stateInput.value = comps.administrative_area_level_1.short_name;
+                if(comps.postal_code && zipInput) zipInput.value = comps.postal_code.long_name;
+                validateAddress();
+            });
+        };
+    </script>
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&libraries=places&callback=__attachPlaces">
     </script>
 </body>
 </html>
