@@ -961,50 +961,92 @@
         </div>
 
         <div class="progress-bar" id="progressBarContainer">
-            <div class="progress-fill" id="progressFill" style="width: 14.3%"></div>
+            <div class="progress-fill" id="progressFill" style="width: 9.1%"></div>
         </div>
 
         <!-- STEP 1: Homeowner -->
         <div class="form-step active" id="step1">
-            <div class="question">Are you a homeowner?</div>
+            <div class="question">Are you the homeowner? Or authorized to make decisions on the property?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'yes')">Yes</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'no')">No</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'own')">I own the home</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'rent')">I'm renting</div>
             </div>
         </div>
 
-        <!-- STEP 2: Last Updated -->
+        <!-- STEP 2: Type of home -->
         <div class="form-step" id="step2">
-            <div class="question">When was your bathroom last updated?</div>
+            <div class="question">What type of home is this?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'lastUpdated', 'less_than_10')">Less than 10 years ago</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'lastUpdated', 'more_than_10')">More than 10 years ago</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'single')">Single family home</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'town')">Town home</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'mobile')">Mobile home</div>
             </div>
         </div>
 
-        <!-- STEP 3: Project Type -->
+        <!-- STEP 3: Existing or new build -->
         <div class="form-step" id="step3">
-            <div class="question">Which best describes this project?</div>
+            <div class="question">Is this an existing shower or tub?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'full_remodel')">Full remodel</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'shower_replacement')">Shower replacement</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'tub_replacement')">Tub replacement</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'existingOrNew', 'existing')">Existing</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'existingOrNew', 'newbuild')">New build</div>
             </div>
         </div>
 
-        <!-- STEP 4: Main Goal -->
+        <!-- STEP 4: Project Type -->
         <div class="form-step" id="step4">
-            <div class="question">What do you want most in your remodel?</div>
+            <div class="question">What type of project is this?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'function_accessibility')">Accessibility</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'prevent_damage')">Repair damage</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'update_look')">Update look</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'home_value')">Increase value</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'tub_to_shower')">Tub-to-Shower Conversion (Range from $10,000 - $22,000+)</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'shower_to_tub')">Shower-to-Tub conversion (Range from $9,000 - $20,000+)</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'shower_replacement')">Shower Replacement (Range from $10,000 - $22,000+)</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'tub_replacement')">Tub Replacement (Range from $9,000 - $20,000+)</div>
             </div>
         </div>
 
-        <!-- STEP 5: Address -->
+        <!-- STEP 5: I want to -->
         <div class="form-step" id="step5">
+            <div class="question">"I want to…"</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'goal', 'accessibility')">Improve accessibility/safety</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'goal', 'look_function')">Improve look/function</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'goal', 'repair')">Repair damage</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'goal', 'value')">Increase home value</div>
+            </div>
+        </div>
+
+        <!-- STEP 6: Materials -->
+        <div class="form-step" id="step6">
+            <div class="question">Do you have any material preferences?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'material', 'tile')">Tile</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'material', 'acrylic')">Acrylic</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'material', 'not_sure')">Not sure</div>
+            </div>
+        </div>
+
+        <!-- STEP 7: Timeline -->
+        <div class="form-step" id="step7">
+            <div class="question">How soon would you like this project to be completed?</div>
+            <div class="sub-heading">We only give an estimate for projects that can start soon so pricing is accurate.</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'asap')">ASAP</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', '1month')">Within a month</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', '3months')">Within 3 months</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', '6months')">Within 6 months</div>
+            </div>
+        </div>
+
+        <!-- STEP 8: Have you gotten estimate -->
+        <div class="form-step" id="step8">
+            <div class="question">Have you already gotten an estimate?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'hasEstimate', 'yes')">Yes</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'hasEstimate', 'no')">No</div>
+            </div>
+        </div>
+
+        <!-- STEP 9: Address -->
+        <div class="form-step" id="step9">
             <div class="question">What is the location of this project?</div>
             <div class="sub-heading">Please make sure your address is full and correct so we can confirm you are within our service area</div>
             <div class="address-grid">
@@ -1031,12 +1073,12 @@
                 </div>
             </div>
             <div class="nav-buttons">
-                <button class="nav-btn" onclick="goToStep6()" id="submitFormBtn" disabled>Next</button>
+                <button class="nav-btn" onclick="goToStep10()" id="submitFormBtn" disabled>Next</button>
             </div>
         </div>
 
-        <!-- STEP 6: NAME -->
-        <div class="form-step" id="step6">
+        <!-- STEP 10: NAME -->
+        <div class="form-step" id="step10">
             <div class="question">Who will we be speaking with?</div>
             <div class="name-grid">
                 <div>
@@ -1049,12 +1091,12 @@
                 </div>
             </div>
             <div class="nav-buttons">
-                <button class="nav-btn" onclick="goToStep7()" id="nameNextBtn" disabled>Next</button>
+                <button class="nav-btn" onclick="goToStep11()" id="nameNextBtn" disabled>Next</button>
             </div>
         </div>
 
-        <!-- STEP 7: PHONE -->
-        <div class="form-step" id="step7">
+        <!-- STEP 11: PHONE -->
+        <div class="form-step" id="step11">
             <div class="question">Where can we reach you?</div>
             <div class="row">
                 <div id="phoneWrap">
@@ -1941,25 +1983,33 @@
             }
         }
 
+        const TOTAL_FORM_STEPS = 11;
+
         function updateProgress() {
             const progressFill = document.getElementById('progressFill');
-            const percentage = (currentStep / 7) * 100;
+            const percentage = (currentStep / TOTAL_FORM_STEPS) * 100;
             progressFill.style.width = percentage + '%';
         }
 
         function nextStep() {
-            if (currentStep < 7) {
-                document.getElementById('step' + currentStep).classList.remove('active');
+            if (currentStep < TOTAL_FORM_STEPS) {
+                const prevStep = document.getElementById('step' + currentStep);
+                if (prevStep) prevStep.classList.remove('active');
                 currentStep++;
-                document.getElementById('step' + currentStep).classList.add('active');
+                const nextStepEl = document.getElementById('step' + currentStep);
+                if (nextStepEl) nextStepEl.classList.add('active');
                 updateProgress();
             }
         }
 
-        function goToStep6() {
+        function goToStep10() {
             validateAddressForm();
             if (formData.address) {
-                nextStep();
+                const prevStep = document.getElementById('step' + currentStep);
+                if (prevStep) prevStep.classList.remove('active');
+                currentStep = 10;
+                document.getElementById('step10').classList.add('active');
+                updateProgress();
             }
         }
 
@@ -1978,10 +2028,14 @@
             }
         }
 
-        function goToStep7() {
+        function goToStep11() {
             validateNameForm();
             if (formData.firstName && formData.lastName) {
-                nextStep();
+                const prevStep = document.getElementById('step' + currentStep);
+                if (prevStep) prevStep.classList.remove('active');
+                currentStep = 11;
+                document.getElementById('step11').classList.add('active');
+                updateProgress();
                 setupPhoneValidation();
             }
         }
@@ -2993,7 +3047,7 @@
         }
         
         async function showCalendarScreen() {
-            const step7 = document.getElementById('step7');
+            const step11 = document.getElementById('step11');
             const calendarStep = document.getElementById('calendarStep');
             const progressBar = document.getElementById('progressBarContainer');
             const mainHeading = document.getElementById('mainHeading');
@@ -3090,7 +3144,7 @@
                 }
             }
             
-            if (step7) step7.classList.remove('active');
+            if (step11) step11.classList.remove('active');
             if (calendarStep) {
                 calendarStep.classList.add('active');
             } else {
@@ -3171,7 +3225,7 @@
                 return;
             }
 
-            document.getElementById('step7').classList.remove('active');
+            document.getElementById('step11').classList.remove('active');
             document.getElementById('contactStep').classList.remove('active');
             document.getElementById('contactStepAddContact').classList.add('active');
             document.getElementById('progressBarContainer').style.display = 'none';
@@ -3266,7 +3320,7 @@
             if (confirmationMessage) {
                 confirmationMessage.textContent = "We'll give you a call soon to schedule your free estimate.";
             }
-            document.getElementById('step7').classList.remove('active');
+            document.getElementById('step11').classList.remove('active');
             document.getElementById('confirmationStep').classList.add('active');
             document.getElementById('progressBarContainer').style.display = 'none';
             document.getElementById('mainHeading').style.display = 'none';
@@ -3664,10 +3718,32 @@
             return options[value] || value;
         }
 
+        function getHomeTypeDisplay(value) {
+            const options = { 'single': 'Single family home', 'town': 'Town home', 'mobile': 'Mobile home' };
+            return options[value] || value || '—';
+        }
+
+        function getExistingOrNewDisplay(value) {
+            const options = { 'existing': 'Existing', 'newbuild': 'New build' };
+            return options[value] || value || '—';
+        }
+
+        function getMaterialDisplay(value) {
+            const options = { 'tile': 'Tile', 'acrylic': 'Acrylic', 'not_sure': 'Not sure' };
+            return options[value] || value || '—';
+        }
+
+        function getTimelineDisplay(value) {
+            const options = { 'asap': 'ASAP', '1month': 'Within a month', '3months': 'Within 3 months', '6months': 'Within 6 months' };
+            return options[value] || value || '—';
+        }
+
         function getProjectTypeDisplay(value) {
             const options = {
-                'shower_replacement': 'Shower replacement',
-                'tub_replacement': 'Tub replacement',
+                'tub_to_shower': 'Tub-to-Shower Conversion',
+                'shower_to_tub': 'Shower-to-Tub conversion',
+                'shower_replacement': 'Shower Replacement',
+                'tub_replacement': 'Tub Replacement',
                 'full_remodel': 'Full remodel'
             };
             return options[value] || value;
@@ -3675,6 +3751,10 @@
 
         function getMainGoalDisplay(value) {
             const options = {
+                'accessibility': 'Improve accessibility/safety',
+                'look_function': 'Improve look/function',
+                'repair': 'Repair damage',
+                'value': 'Increase home value',
                 'function_accessibility': 'Improving function/accessibility',
                 'prevent_damage': 'Fixing/preventing home damage',
                 'update_look': 'Updating the look',
@@ -3718,8 +3798,12 @@
                     currency: 'USD',
                     homeowner_status: finalData.homeowner,
                     project_type: finalData.projectType,
-                    main_goal: finalData.mainGoal,
-                    last_updated: finalData.lastUpdated
+                    main_goal: finalData.goal || finalData.mainGoal,
+                    home_type: finalData.homeType,
+                    existing_or_new: finalData.existingOrNew,
+                    material: finalData.material,
+                    timeline: finalData.timeline,
+                    has_estimate: finalData.hasEstimate
                 };
                 
                 fbq('track', 'Lead', leadEventData, {
@@ -3758,10 +3842,14 @@
 
 Name: ${finalData.firstName} ${finalData.lastName}
 Phone: ${formatPhoneForDisplay(finalData.phone)}
-${emailLine}Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}
-Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}
+${emailLine}Homeowner: ${finalData.homeowner === 'own' ? 'Yes' : (finalData.homeowner === 'rent' ? 'Renting' : (finalData.homeowner === 'yes' ? 'Yes' : 'No'))}
+Home Type: ${getHomeTypeDisplay(finalData.homeType)}
+Existing/New: ${getExistingOrNewDisplay(finalData.existingOrNew)}
 Project Type: ${getProjectTypeDisplay(finalData.projectType)}
-Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}
+Goal: ${getMainGoalDisplay(finalData.goal || finalData.mainGoal)}
+Material: ${getMaterialDisplay(finalData.material)}
+Timeline: ${getTimelineDisplay(finalData.timeline)}
+Has Estimate: ${finalData.hasEstimate === 'yes' ? 'Yes' : (finalData.hasEstimate === 'no' ? 'No' : (finalData.hasEstimate || '—'))}
 
 Address:
 ${finalData.address.street}
@@ -3783,7 +3871,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             
             // Build HTML version of full summary
             const emailLineHTML = finalData.email ? `Email: ${finalData.email}<BR>` : '';
-            const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR>${emailLineHTML}Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Last Updated: ${getLastUpdatedDisplay(finalData.lastUpdated)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+            const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR>${emailLineHTML}Homeowner: ${finalData.homeowner === 'own' ? 'Yes' : (finalData.homeowner === 'rent' ? 'Renting' : (finalData.homeowner === 'yes' ? 'Yes' : 'No'))}<BR>Home Type: ${getHomeTypeDisplay(finalData.homeType)}<BR>Existing/New: ${getExistingOrNewDisplay(finalData.existingOrNew)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Goal: ${getMainGoalDisplay(finalData.goal || finalData.mainGoal)}<BR>Material: ${getMaterialDisplay(finalData.material)}<BR>Timeline: ${getTimelineDisplay(finalData.timeline)}<BR>Has Estimate: ${finalData.hasEstimate === 'yes' ? 'Yes' : (finalData.hasEstimate === 'no' ? 'No' : (finalData.hasEstimate || '—'))}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
                 weekday: 'long', 
                 year: 'numeric', 
                 month: 'long', 
