@@ -1059,7 +1059,7 @@
             <div class="question">Are you the homeowner?</div>
             <div class="options">
                 <div class="option" onclick="selectOption(this, 'homeowner', 'own')">I own the home</div>
-                <div class="option" data-warning="rentingWarning" onclick="selectOption(this, 'homeowner', 'rent')">I'm renting</div>
+                <div class="option" onclick="selectRentOnly(this)">I'm renting</div>
             </div>
             <div class="warning-box" id="rentingWarning">
                 <span class="why-icon-wrap">⚠️</span>
@@ -2059,6 +2059,24 @@
 
         function generateEventId() {
             return 'event_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function selectRentOnly(element) {
+            const options = element.parentElement.querySelectorAll('.option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            formData.homeowner = 'rent';
+            if (!hasTrackedEngagement) {
+                if (typeof fbq !== 'undefined' && clientData && clientData.fields['Meta Pixel']) {
+                    fbq('track', 'ViewContent', {
+                        content_category: 'home_improvement',
+                        content_name: 'bathroom_remodel_quiz_start'
+                    });
+                }
+                hasTrackedEngagement = true;
+            }
+            const w = document.getElementById('rentingWarning');
+            if (w) w.classList.add('visible');
         }
 
         function selectOption(element, field, value) {
