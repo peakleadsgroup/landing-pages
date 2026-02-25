@@ -17,7 +17,7 @@
             box-shadow: 0 2px 12px rgba(0,0,0,0.08);
         }
         .form-header {
-            display: flex; justify-content: flex-start; align-items: center;
+            display: flex; justify-content: center; align-items: center;
             margin-bottom: 16px;
         }
         .form-logo { max-height: 50px; max-width: 180px; object-fit: contain; }
@@ -32,9 +32,9 @@
             transition: width 0.3s ease;
         }
         
-        .form-body { padding: 0; }
-        .modal-title { font-size: 22px; font-weight: 700; color: #2c3e50; margin-bottom: 12px; line-height: 1.3; }
-        .modal-subtitle { font-size: 15px; color: #666; margin-bottom: 20px; line-height: 1.5; }
+        .form-body { padding: 0; position: relative; }
+        .modal-title { font-size: 22px; font-weight: 700; color: #2c3e50; margin-bottom: 12px; line-height: 1.3; text-align: center; }
+        .modal-subtitle { font-size: 15px; color: #666; margin-bottom: 20px; line-height: 1.5; text-align: center; }
         
         .option-card {
             display: flex; align-items: center; gap: 14px;
@@ -61,8 +61,8 @@
         .why-title { font-weight: 600; color: #2c3e50; margin-bottom: 6px; font-size: 15px; }
         .why-text { font-size: 14px; color: #666; line-height: 1.5; }
         
-        .form-step { display: none; }
-        .form-step.active { display: block; }
+        .form-step { display: none !important; position: absolute; top: 0; left: 0; right: 0; }
+        .form-step.active { display: block !important; position: relative; }
         
         .nav-buttons { margin-top: 28px; display: flex; gap: 12px; }
         .nav-btn {
@@ -72,8 +72,8 @@
         .nav-btn-primary { background: #5dade2; color: white; }
         .nav-btn-primary:hover { background: #3498db; }
         .nav-btn-primary:disabled { background: #ccc; cursor: not-allowed; }
-        .nav-btn-secondary { background: #f8f9fa; color: #333; }
-        .nav-btn-secondary:hover { background: #e9ecef; }
+        .nav-btn-secondary { background: #fff; color: #333; border: 2px solid #e0e0e0; }
+        .nav-btn-secondary:hover { background: #f5f5f5; border-color: #ccc; }
         
         .address-input, .name-input {
             width: 100%; padding: 14px; border: 2px solid #e9ecef; border-radius: 8px;
@@ -195,7 +195,7 @@
     <section class="form-section" id="formSection">
         <div class="form-header">
             <img id="formLogo" class="form-logo" src="" alt="" style="display:none;">
-            <span id="formLogoFallback">Project Find</span>
+            <span id="formLogoFallback" style="display:none;"></span>
         </div>
         <div class="progress-bar">
             <div class="progress-fill" id="progressFill" style="width: 12.5%"></div>
@@ -204,7 +204,7 @@
                 <!-- Step 1: Homeowner -->
                 <div class="form-step active" data-step="1">
                     <h2 class="modal-title">Let's see what your remodel could cost</h2>
-                    <p class="modal-subtitle">Are you the homeowner? Or authorized to make decisions on the property?</p>
+                    <p class="modal-subtitle">Are you the homeowner?</p>
                     <div class="option-card" data-value="own" onclick="selectOption(this, 'homeowner', 'own')">
                         <input type="radio" name="homeowner" id="ho_own">
                         <label for="ho_own">I own the home</label>
@@ -226,9 +226,6 @@
                             <div class="why-title">Why do we ask?</div>
                             <div class="why-text">We legally require the property owner or authorized decision-maker to make changes to the property.</div>
                         </div>
-                    </div>
-                    <div class="nav-buttons">
-                        <button class="nav-btn nav-btn-primary" id="step1Next" onclick="advanceStep(1)" disabled>Next</button>
                     </div>
                 </div>
 
@@ -257,7 +254,6 @@
                     </div>
                     <div class="nav-buttons">
                         <button class="nav-btn nav-btn-secondary" onclick="advanceStep(-1)">Back</button>
-                        <button class="nav-btn nav-btn-primary" id="step2Next" onclick="advanceStep(2)" disabled>Next</button>
                     </div>
                 </div>
 
@@ -282,7 +278,6 @@
                     </div>
                     <div class="nav-buttons">
                         <button class="nav-btn nav-btn-secondary" onclick="advanceStep(-1)">Back</button>
-                        <button class="nav-btn nav-btn-primary" id="step3Next" onclick="advanceStep(3)" disabled>Next</button>
                     </div>
                 </div>
 
@@ -308,7 +303,6 @@
                     </div>
                     <div class="nav-buttons">
                         <button class="nav-btn nav-btn-secondary" onclick="advanceStep(-1)">Back</button>
-                        <button class="nav-btn nav-btn-primary" id="step4Next" onclick="advanceStep(4)" disabled>Next</button>
                     </div>
                 </div>
 
@@ -334,7 +328,6 @@
                     </div>
                     <div class="nav-buttons">
                         <button class="nav-btn nav-btn-secondary" onclick="advanceStep(-1)">Back</button>
-                        <button class="nav-btn nav-btn-primary" id="step5Next" onclick="advanceStep(5)" disabled>Next</button>
                     </div>
                 </div>
 
@@ -363,7 +356,6 @@
                     </div>
                     <div class="nav-buttons">
                         <button class="nav-btn nav-btn-secondary" onclick="advanceStep(-1)">Back</button>
-                        <button class="nav-btn nav-btn-primary" id="step6Next" onclick="advanceStep(6)" disabled>Next</button>
                     </div>
                 </div>
 
@@ -389,7 +381,6 @@
                     </div>
                     <div class="nav-buttons">
                         <button class="nav-btn nav-btn-secondary" onclick="advanceStep(-1)">Back</button>
-                        <button class="nav-btn nav-btn-primary" id="step7Next" onclick="advanceStep(7)" disabled>Next</button>
                     </div>
                 </div>
 
@@ -407,7 +398,6 @@
                     </div>
                     <div class="nav-buttons">
                         <button class="nav-btn nav-btn-secondary" onclick="advanceStep(-1)">Back</button>
-                        <button class="nav-btn nav-btn-primary" id="step8Next" onclick="advanceStep(8)" disabled>Next</button>
                     </div>
                 </div>
 
@@ -435,7 +425,7 @@
                     </div>
                     <div class="nav-buttons">
                         <button class="nav-btn nav-btn-secondary" onclick="advanceStep(-1)">Back</button>
-                        <button class="nav-btn nav-btn-primary" id="step9Next" onclick="advanceStep(9)" disabled>Next</button>
+                        <button class="nav-btn nav-btn-secondary" id="step9Next" onclick="advanceStep(1)" disabled>Continue</button>
                     </div>
                 </div>
 
@@ -632,7 +622,7 @@
             <a href="privacypolicy.html">Privacy Policy</a>
             <a href="#">Terms of Service</a>
         </div>
-        <div class="footer-copy">© 2026 Project Find. All rights reserved.</div>
+        <div class="footer-copy">© 2026. All rights reserved.</div>
     </footer>
 
     <script>
@@ -801,7 +791,7 @@
         }
 
         function advanceStep(direction) {
-            const steps = document.querySelectorAll('.modal-body .form-step');
+            const steps = document.querySelectorAll('.form-body .form-step');
             const nextStep = direction > 0 ? currentModalStep + 1 : currentModalStep - 1;
             if (nextStep < 1 || nextStep > TOTAL_STEPS) return;
 
