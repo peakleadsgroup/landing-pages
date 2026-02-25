@@ -8,43 +8,31 @@
     <title>Bathroom Remodel - Get Your Free Quote</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
         
-        /* Modal overlay */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.4); z-index: 1000;
-            display: flex; align-items: center; justify-content: center;
-            padding: 20px;
+        /* Form section - inline at top of page */
+        .form-section {
+            background: white; padding: 32px 24px 48px;
+            max-width: 500px; margin: 24px auto 0;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
         }
-        .modal-overlay.hidden { display: none; }
-        
-        .modal-content {
-            background: white; border-radius: 16px; max-width: 500px; width: 100%;
-            max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        .form-header {
+            display: flex; justify-content: flex-start; align-items: center;
+            margin-bottom: 16px;
         }
-        .modal-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 20px 24px 16px; 
-        }
-        .modal-logo { max-height: 50px; max-width: 180px; object-fit: contain; }
-        #modalLogoFallback { font-weight: 700; color: #5dade2; font-size: 18px; }
-        .modal-close {
-            background: none; border: none; font-size: 22px; cursor: pointer;
-            color: #666; padding: 0; width: 32px; height: 32px; line-height: 1;
-        }
-        .modal-close:hover { color: #333; }
+        .form-logo { max-height: 50px; max-width: 180px; object-fit: contain; }
+        #formLogoFallback { font-weight: 700; color: #5dade2; font-size: 18px; }
         
         .progress-bar {
             height: 6px; background: #e9ecef; border-radius: 3px;
-            margin: 0 24px 20px; overflow: hidden;
+            margin: 0 0 24px; overflow: hidden;
         }
         .progress-fill {
             height: 100%; background: #5dade2; border-radius: 3px;
             transition: width 0.3s ease;
         }
         
-        .modal-body { padding: 0 24px 32px; }
+        .form-body { padding: 0; }
         .modal-title { font-size: 22px; font-weight: 700; color: #2c3e50; margin-bottom: 12px; line-height: 1.3; }
         .modal-subtitle { font-size: 15px; color: #666; margin-bottom: 20px; line-height: 1.5; }
         
@@ -105,7 +93,7 @@
         .section-title { font-size: 32px; font-weight: 700; color: #2c3e50; text-align: center; margin-bottom: 12px; }
         .section-subtitle { font-size: 18px; color: #666; text-align: center; margin-bottom: 40px; }
         
-        .hero-section { padding-top: 80px; }
+        .hero-section { padding-top: 40px; }
         .hero-title { font-size: 36px; font-weight: 700; color: #2c3e50; text-align: center; margin-bottom: 8px; line-height: 1.2; }
         .hero-subtitle { font-size: 18px; color: #666; text-align: center; margin-bottom: 32px; }
         
@@ -203,18 +191,16 @@
     </style>
 </head>
 <body>
-    <!-- Modal: Multi-step form -->
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <img id="modalLogo" class="modal-logo" src="" alt="" style="display:none;">
-                <span id="modalLogoFallback" style="font-weight:700;color:#5dade2;font-size:18px;">Project Find</span>
-                <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill" style="width: 12.5%"></div>
-            </div>
-            <div class="modal-body">
+    <!-- Form section - inline at top, above other sections -->
+    <section class="form-section" id="formSection">
+        <div class="form-header">
+            <img id="formLogo" class="form-logo" src="" alt="" style="display:none;">
+            <span id="formLogoFallback">Project Find</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 12.5%"></div>
+        </div>
+        <div class="form-body">
                 <!-- Step 1: Homeowner -->
                 <div class="form-step active" data-step="1">
                     <h2 class="modal-title">Let's see what your remodel could cost</h2>
@@ -288,7 +274,7 @@
                         <label for="en_newbuild">New build</label>
                     </div>
                     <div class="why-box" id="newBuildWarning" style="display:none;">
-                        <span class="why-icon">⚠️</span>
+                        <span class="why-icon-wrap">⚠️</span>
                         <div>
                             <div class="why-title">Unfortunately, we don't service new builds.</div>
                             <div class="why-text">Would you still like to continue?</div>
@@ -491,9 +477,8 @@
                         <button class="nav-btn nav-btn-primary" id="step11Submit" onclick="submitForm()" disabled>Get Quote</button>
                     </div>
                 </div>
-            </div>
         </div>
-    </div>
+    </section>
 
     <!-- Hero Section -->
     <section class="section hero-section" id="heroSection">
@@ -677,6 +662,7 @@
         const TABLES = {
             CLIENTS: 'tblMl8Y97cMSbricC',
             CAMPAIGNS: 'tbl6uhtOFzGzA7EMu',
+            B2C_LEADS: 'tblPt6Wc79hTBSmcD',
             FUNNEL_TRACKING: 'REPLACE_WITH_YOUR_TABLE_ID' // Create this table - see TRACKING_SETUP.md
         };
 
@@ -740,9 +726,10 @@
                 const logoUrl = clientData.fields['Logo Link'];
                 const name = clientData.fields['Name'] || '';
                 if (logoUrl) {
-                    document.getElementById('modalLogo').src = logoUrl;
-                    document.getElementById('modalLogo').style.display = 'block';
-                    document.getElementById('modalLogoFallback').style.display = 'none';
+                    const formLogo = document.getElementById('formLogo');
+                    const formLogoFallback = document.getElementById('formLogoFallback');
+                    if (formLogo) { formLogo.src = logoUrl; formLogo.style.display = 'block'; }
+                    if (formLogoFallback) formLogoFallback.style.display = 'none';
                     const fl = document.getElementById('footerLogo');
                     if (fl) { fl.src = logoUrl; fl.style.display = 'block'; }
                     document.getElementById('footerLogoFallback').style.display = 'none';
@@ -828,7 +815,7 @@
             document.getElementById('progressFill').style.width = (currentModalStep / TOTAL_STEPS * 100) + '%';
 
             if (currentModalStep === TOTAL_STEPS) {
-                document.getElementById('modalOverlay').scrollTop = 0;
+                document.getElementById('formSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }
 
@@ -855,8 +842,7 @@
         }
 
         function scrollToForm() {
-            document.getElementById('modalOverlay').classList.remove('hidden');
-            document.getElementById('modalOverlay').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('formSection').scrollIntoView({ behavior: 'smooth' });
         }
 
         async function submitForm() {
@@ -881,12 +867,7 @@
                 }
             }
             alert('Thank you! We\'ll contact you soon with your free quote.');
-            document.getElementById('modalOverlay').classList.add('hidden');
         }
-
-        document.getElementById('modalClose').onclick = () => {
-            document.getElementById('modalOverlay').classList.add('hidden');
-        };
 
         // FAQ
         function toggleFaq(el) {
