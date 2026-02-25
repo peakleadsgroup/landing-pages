@@ -1058,8 +1058,8 @@
         <div class="form-step active" id="step1">
             <div class="question">Are you the homeowner?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'own')">I own the home</div>
-                <div class="option" onclick="selectOptionWithWarning(event, this, 'homeowner', 'rent', 'rentingWarning')">I'm renting</div>
+                <div class="option" onclick="selectOption(this, 'homeowner', 'own')">I own the home</div>
+                <div class="option" data-warning="rentingWarning" onclick="selectOption(this, 'homeowner', 'rent')">I'm renting</div>
             </div>
             <div class="warning-box" id="rentingWarning">
                 <span class="why-icon-wrap">⚠️</span>
@@ -2061,7 +2061,7 @@
             return 'event_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
 
-        function selectOptionAndAdvance(element, field, value) {
+        function selectOption(element, field, value) {
             const options = element.parentElement.querySelectorAll('.option');
             options.forEach(opt => opt.classList.remove('selected'));
             
@@ -2078,9 +2078,18 @@
                 hasTrackedEngagement = true;
             }
             
-            setTimeout(() => {
-                nextStep();
-            }, 200);
+            const warningId = element.getAttribute('data-warning');
+            if (warningId) {
+                const warning = document.getElementById(warningId);
+                if (warning) warning.classList.add('visible');
+                return;
+            }
+            
+            setTimeout(() => nextStep(), 200);
+        }
+
+        function selectOptionAndAdvance(element, field, value) {
+            selectOption(element, field, value);
         }
 
         function selectOptionWithWarning(event, element, field, value, warningId) {
@@ -2088,26 +2097,9 @@
                 event.preventDefault();
                 event.stopPropagation();
             }
-            const options = element.parentElement.querySelectorAll('.option');
-            options.forEach(opt => opt.classList.remove('selected'));
-            
-            element.classList.add('selected');
-            formData[field] = value;
-            
-            if (!hasTrackedEngagement) {
-                if (typeof fbq !== 'undefined' && clientData && clientData.fields['Meta Pixel']) {
-                    fbq('track', 'ViewContent', {
-                        content_category: 'home_improvement',
-                        content_name: 'bathroom_remodel_quiz_start'
-                    });
-                }
-                hasTrackedEngagement = true;
-            }
-            
-            const warning = document.getElementById(warningId);
-            if (warning) {
-                warning.classList.add('visible');
-            }
+            element.setAttribute('data-warning', warningId);
+            selectOption(element, field, value);
+            element.removeAttribute('data-warning');
         }
 
         function continueFromWarning(warningId) {
