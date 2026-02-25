@@ -786,8 +786,8 @@
             if (field === 'material' && value === 'tile') document.getElementById('tileWarning').style.display = 'flex';
             else document.getElementById('tileWarning').style.display = 'none';
 
-            const step = parseInt(el.closest('.form-step').dataset.step);
-            document.getElementById('step' + step + 'Next').disabled = false;
+            // Auto-advance to next step
+            setTimeout(() => advanceStep(1), 150);
         }
 
         function advanceStep(direction) {
