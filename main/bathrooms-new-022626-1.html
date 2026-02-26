@@ -783,6 +783,19 @@
         }
         
 
+        /* Post-Submit Header & Numbered Sections */
+        .post-submit-intro { text-align: left; margin-bottom: 30px; }
+        .post-submit-main-title { font-size: 24px; color: #000; font-weight: bold; margin-bottom: 8px; line-height: 1.3; }
+        .post-submit-subtitle { font-size: 16px; color: #666; margin-bottom: 24px; }
+        .post-submit-step { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
+        .post-submit-step-num { width: 28px; height: 28px; min-width: 28px; background: #2196f3; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+        .post-submit-step-title { font-size: 16px; font-weight: bold; color: #000; margin-bottom: 4px; }
+        .post-submit-step-desc { font-size: 14px; color: #666; line-height: 1.5; }
+        .post-submit-cta-block { margin-top: 28px; padding-top: 24px; border-top: 1px solid #e9ecef; }
+        .post-submit-cta-title { font-size: 18px; font-weight: bold; color: #000; margin-bottom: 8px; }
+        .post-submit-cta-subtitle { font-size: 15px; color: #666; line-height: 1.5; margin-bottom: 20px; }
+        #calendarStep .calendar-header { margin-top: 20px; }
+
         /* Reviews Section Styles */
         .reviews-section {
             display: none;
@@ -1261,11 +1274,35 @@
 
         <!-- PHONE/TEXT CONTACT SCREEN -->
         <div class="form-step" id="contactStep">
-            <div style="text-align: center;">
-                <div style="font-size: 24px; color: #000; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your free estimate!</div>
-                <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Or if you're ready to schedule now you can contact us by clicking one of the buttons below</div>
-                
-                <a id="callButtonLink" href="#" class="contact-button call-button" style="display: none;">
+            <div>
+                <div class="post-submit-intro">
+                    <h2 class="post-submit-main-title">You're one step closer to a new bathroom!</h2>
+                    <p class="post-submit-subtitle">Here's what happens now</p>
+                    <div class="post-submit-step">
+                        <div class="post-submit-step-num">1</div>
+                        <div>
+                            <h3 class="post-submit-step-title">Save our contact</h3>
+                            <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate—save our contact so you know it's us.</p>
+                        </div>
+                    </div>
+                    <div class="post-submit-step">
+                        <div class="post-submit-step-num">2</div>
+                        <div>
+                            <h3 class="post-submit-step-title">In-Home Estimate</h3>
+                            <p class="post-submit-step-desc">A design specialist will help design your new shower and provide a straightforward, no-obligation estimate with no sales pressure.</p>
+                        </div>
+                    </div>
+                    <div class="post-submit-step">
+                        <div class="post-submit-step-num">3</div>
+                        <div>
+                            <h3 class="post-submit-step-title">Approval & Installation</h3>
+                            <p class="post-submit-step-desc">Once you're happy with the design and estimate, we handle the rest—from scheduling to professional installation.</p>
+                        </div>
+                    </div>
+                    <div class="post-submit-cta-block" style="text-align: center;">
+                        <h3 class="post-submit-cta-title">Ready to get started now?</h3>
+                        <p class="post-submit-cta-subtitle" id="contactReadySubtitle">Can't wait to hear from us? Call or text us below to schedule your free estimate.</p>
+                        <a id="callButtonLink" href="#" class="contact-button call-button" style="display: none;">
                     <svg class="phone-icon" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
                     </svg>
@@ -1280,28 +1317,84 @@
                 </a>
                 
                 <div class="phone-number-display" id="phoneNumberDisplay"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- ADD CONTACT SCREEN (Contact submit type from Airtable) -->
         <div class="form-step" id="contactStepAddContact">
-            <div style="text-align: center;">
-                <div style="font-size: 24px; color: #000; margin-bottom: 20px; font-weight: bold;">Don't Miss Our Call! Save This Number Now</div>
-                <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Tap the button below, then press "Create Contact" (iPhone) or "Save" (Android). We'll give you a call ASAP to schedule your free estimate!</div>
-                <button type="button" class="add-contact-button" id="addContactBtn" onclick="addContact()">
+            <div>
+                <div class="post-submit-intro">
+                    <h2 class="post-submit-main-title">You're one step closer to a new bathroom!</h2>
+                    <p class="post-submit-subtitle">Here's what happens now</p>
+                    <div class="post-submit-step">
+                        <div class="post-submit-step-num">1</div>
+                        <div>
+                            <h3 class="post-submit-step-title">Save our contact</h3>
+                            <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate—save our contact so you know it's us.</p>
+                        </div>
+                    </div>
+                    <div class="post-submit-step">
+                        <div class="post-submit-step-num">2</div>
+                        <div>
+                            <h3 class="post-submit-step-title">In-Home Estimate</h3>
+                            <p class="post-submit-step-desc">A design specialist will help design your new shower and provide a straightforward, no-obligation estimate with no sales pressure.</p>
+                        </div>
+                    </div>
+                    <div class="post-submit-step">
+                        <div class="post-submit-step-num">3</div>
+                        <div>
+                            <h3 class="post-submit-step-title">Approval & Installation</h3>
+                            <p class="post-submit-step-desc">Once you're happy with the design and estimate, we handle the rest—from scheduling to professional installation.</p>
+                        </div>
+                    </div>
+                    <div class="post-submit-cta-block" style="text-align: center;">
+                        <h3 class="post-submit-cta-title">Ready to get started now?</h3>
+                        <p class="post-submit-cta-subtitle" id="contactAddReadySubtitle">Can't wait to hear from us? Save our contact below so we can reach you.</p>
+                        <button type="button" class="add-contact-button" id="addContactBtn" onclick="addContact()">
                     <svg class="person-icon" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                     </svg>
                     Add Contact
                 </button>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- CALENDAR BOOKING SCREEN -->
         <div class="form-step" id="calendarStep">
-            <div class="calendar-step-header">We'll reach out soon to schedule your free in home estimate!</div>
-            <div style="font-size: 16px; color: #666; margin-bottom: 25px; text-align: center;">Ready to schedule your free in home estimate now? Choose a time below:</div>
-            
+            <div style="padding: 0 20px 20px;">
+            <div class="post-submit-intro">
+                <h2 class="post-submit-main-title">You're one step closer to a new bathroom!</h2>
+                <p class="post-submit-subtitle">Here's what happens now</p>
+                <div class="post-submit-step">
+                    <div class="post-submit-step-num">1</div>
+                    <div>
+                        <h3 class="post-submit-step-title">Save our contact</h3>
+                        <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate—save our contact so you know it's us.</p>
+                    </div>
+                </div>
+                <div class="post-submit-step">
+                    <div class="post-submit-step-num">2</div>
+                    <div>
+                        <h3 class="post-submit-step-title">In-Home Estimate</h3>
+                        <p class="post-submit-step-desc">A design specialist will help design your new shower and provide a straightforward, no-obligation estimate with no sales pressure.</p>
+                    </div>
+                </div>
+                <div class="post-submit-step">
+                    <div class="post-submit-step-num">3</div>
+                    <div>
+                        <h3 class="post-submit-step-title">Approval & Installation</h3>
+                        <p class="post-submit-step-desc">Once you're happy with the design and estimate, we handle the rest—from scheduling to professional installation.</p>
+                    </div>
+                </div>
+                <div class="post-submit-cta-block">
+                    <h3 class="post-submit-cta-title">Ready to get started now?</h3>
+                    <p class="post-submit-cta-subtitle" id="calendarReadySubtitle">Request a time for your free estimate then our team will reach out to confirm our availability.</p>
+                </div>
+            </div>
             <div class="calendar-header">
                 <div class="month-nav">
                     <button class="nav-button" id="prevMonth" onclick="changeCalendarMonth(-1)">
@@ -1330,23 +1423,45 @@
             
             <div class="calendar-grid" id="calendarGrid"></div>
             
-            <div id="timeSection" class="time-section" style="display: none;">
+                <div id="timeSection" class="time-section" style="display: none;">
                 <div class="selected-info" id="selectedDayInfo"></div>
                 <div class="time-grid" id="timeGrid"></div>
+            </div>
             </div>
         </div>
 
         <!-- CONFIRMATION/THANK YOU SCREEN -->
         <div class="form-step" id="confirmationStep">
-            <div style="text-align: center; padding: 40px 20px;">
-                <div id="confirmationIcon" style="margin-bottom: 30px;">
-                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;">
-                        <circle cx="12" cy="12" r="10" fill="#e8f5e9"/>
-                        <path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/>
-                    </svg>
+            <div style="padding: 40px 20px;">
+                <div class="post-submit-intro">
+                    <h2 class="post-submit-main-title">You're one step closer to a new bathroom!</h2>
+                    <p class="post-submit-subtitle">Here's what happens now</p>
+                    <div class="post-submit-step">
+                        <div class="post-submit-step-num">1</div>
+                        <div>
+                            <h3 class="post-submit-step-title">Save our contact</h3>
+                            <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate—save our contact so you know it's us.</p>
+                        </div>
+                    </div>
+                    <div class="post-submit-step">
+                        <div class="post-submit-step-num">2</div>
+                        <div>
+                            <h3 class="post-submit-step-title">In-Home Estimate</h3>
+                            <p class="post-submit-step-desc">A design specialist will help design your new shower and provide a straightforward, no-obligation estimate with no sales pressure.</p>
+                        </div>
+                    </div>
+                    <div class="post-submit-step">
+                        <div class="post-submit-step-num">3</div>
+                        <div>
+                            <h3 class="post-submit-step-title">Approval & Installation</h3>
+                            <p class="post-submit-step-desc">Once you're happy with the design and estimate, we handle the rest—from scheduling to professional installation.</p>
+                        </div>
+                    </div>
+                    <div class="post-submit-cta-block">
+                        <h3 class="post-submit-cta-title">Ready to get started now?</h3>
+                        <p class="post-submit-cta-subtitle" id="confirmationReadySubtitle">Can't wait to hear from us? We'll give you a call soon to schedule your free estimate.</p>
+                    </div>
                 </div>
-                <div id="confirmationTitle" style="font-size: 28px; color: #000; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
-                <div id="confirmationMessage" style="font-size: 18px; color: #666; line-height: 1.6;">We'll give you a call soon to schedule your free estimate.</div>
             </div>
         </div>
     </div>
@@ -3110,20 +3225,13 @@
             
             appointmentTimeSelected = true; // So showDuplicateCallToAction shows confirmation below, not calendar
             
-            // Exclamation mark icon for appointment confirmation (replaces check mark)
-            const confirmationIcon = document.getElementById('confirmationIcon');
             const confirmationIconBelow = document.getElementById('confirmationIconBelow');
-            if (confirmationIcon) confirmationIcon.innerHTML = exclamationIconHtml;
             if (confirmationIconBelow) confirmationIconBelow.innerHTML = exclamationIconHtml;
             
             // Show confirmation screen with appointment-specific message
-            const confirmationTitle = document.getElementById('confirmationTitle');
-            const confirmationMessage = document.getElementById('confirmationMessage');
-            if (confirmationTitle) {
-                confirmationTitle.textContent = "IMPORTANT";
-            }
-            if (confirmationMessage) {
-                confirmationMessage.textContent = "Your appointment is not confirmed until we speak with you over the phone. We will call you as soon as possible to confirm your time!";
+            const confirmationReadySubtitle = document.getElementById('confirmationReadySubtitle');
+            if (confirmationReadySubtitle) {
+                confirmationReadySubtitle.textContent = "IMPORTANT: Your appointment is not confirmed until we speak with you over the phone. We will call you as soon as possible to confirm your time!";
             }
             document.getElementById('calendarStep').classList.remove('active');
             document.getElementById('confirmationStep').classList.add('active');
@@ -3308,6 +3416,17 @@
         }
 
         function showContactScreen(submitScreenType) {
+            // Set "Ready to get started now?" subtitle based on screen type
+            const contactReadySubtitle = document.getElementById('contactReadySubtitle');
+            if (contactReadySubtitle) {
+                const subtitles = {
+                    'Phone': "Can't wait to hear from us? Call us below to schedule your free estimate.",
+                    'Text': "Can't wait to hear from us? Text us below to schedule your free estimate.",
+                    'Phone/Text': "Can't wait to hear from us? Call or text us below to schedule your free estimate."
+                };
+                contactReadySubtitle.textContent = subtitles[submitScreenType] || subtitles['Phone/Text'];
+            }
+            
             // Get lead's name
             const firstName = document.getElementById('firstName')?.value.trim() || '';
             
@@ -3379,16 +3498,9 @@
         const exclamationIconHtml = '<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#F9A825" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#FFF9C4" stroke="#F9A825"/><path d="M12 7 v6" stroke="#F9A825" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.5" fill="#F9A825"/></svg>';
         function showConfirmationScreen() {
             // Show the confirmation/thank you screen
-            // Reset to default message and check mark icon for non-appointment bookings
-            const confirmationIcon = document.getElementById('confirmationIcon');
-            if (confirmationIcon) confirmationIcon.innerHTML = checkMarkIconHtml;
-            const confirmationTitle = document.getElementById('confirmationTitle');
-            const confirmationMessage = document.getElementById('confirmationMessage');
-            if (confirmationTitle) {
-                confirmationTitle.textContent = "Thank you!";
-            }
-            if (confirmationMessage) {
-                confirmationMessage.textContent = "We'll give you a call soon to schedule your free estimate.";
+            const confirmationReadySubtitle = document.getElementById('confirmationReadySubtitle');
+            if (confirmationReadySubtitle) {
+                confirmationReadySubtitle.textContent = "Can't wait to hear from us? We'll give you a call soon to schedule your free estimate.";
             }
             document.getElementById('step10').classList.remove('active');
             document.getElementById('confirmationStep').classList.add('active');
@@ -3438,20 +3550,22 @@
                 }
             }
 
-            // Only show reviews section if there are reviews
-            if (reviews.length > 0) {
+            // Post-submit: hide reviews/pictures, show only CTA (calendar/contact/confirmation)
+            if (currentSubmitScreenType) {
+                const reviewsSection = document.getElementById('reviewsSection');
+                if (reviewsSection) reviewsSection.classList.remove('active');
+                showDuplicateCallToAction();
+                setTimeout(() => {
+                    if (typeof updateBackgroundHeight === 'function') {
+                        updateBackgroundHeight();
+                    }
+                }, 300);
+            } else if (reviews.length > 0) {
+                // Page load: show reviews below form
                 buildReviewBlocks();
                 document.getElementById('reviewsSection').classList.add('active');
-                
-                // Show duplicate call to action below reviews only after form submission
-                if (currentSubmitScreenType) {
-                    showDuplicateCallToAction();
-                } else {
-                    const ctaSection = document.getElementById('ctaSection');
-                    if (ctaSection) ctaSection.classList.remove('active');
-                }
-                
-                // Update background height after reviews are displayed
+                const ctaSection = document.getElementById('ctaSection');
+                if (ctaSection) ctaSection.classList.remove('active');
                 setTimeout(() => {
                     if (typeof updateBackgroundHeight === 'function') {
                         updateBackgroundHeight();
