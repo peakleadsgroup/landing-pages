@@ -204,7 +204,7 @@
                 <!-- Step 1: Homeowner - NO auto-advance; user must click Continue/Yes continue -->
                 <div class="form-step active" data-step="1">
                     <h2 class="modal-title">Let's see what your remodel could cost</h2>
-                    <p class="modal-subtitle">Are you the homeowner?</p>
+                    <p class="modal-subtitle">Are you the homeowner? Or authorized to make decisions on the property?</p>
                     <div class="option-card" data-value="own" id="step1OptionOwn">
                         <input type="radio" name="homeowner" id="ho_own">
                         <label for="ho_own">I own the home</label>
@@ -216,7 +216,7 @@
                     <div class="why-box" id="rentingWarning" style="display:none;">
                         <span class="why-icon-wrap">⚠️</span>
                         <div>
-                            <div class="why-title">Unfortunately we can only remodel if you own the home</div>
+                            <div class="why-title">Unfortunately we can only remodel if you own the home. Would you still like to continue?</div>
                         </div>
                     </div>
                     <div class="why-box">
@@ -289,7 +289,7 @@
                     </div>
                     <div class="option-card" data-value="shower_replacement" onclick="selectOption(this, 'projectType', 'shower_replacement')">
                         <input type="radio" name="projectType" id="pt_shower">
-                        <label for="pt_shower">Shower Replacement <small style="color:#666;font-weight:normal;">Range from $10,000 - $22,000+</small></label>
+                        <label for="pt_shower">Shower Replacement <small style="color:#666;font-weight:normal;">Range from $10,000 to $22,000+</small></label>
                     </div>
                     <div class="option-card" data-value="tub_replacement" onclick="selectOption(this, 'projectType', 'tub_replacement')">
                         <input type="radio" name="projectType" id="pt_tub">
