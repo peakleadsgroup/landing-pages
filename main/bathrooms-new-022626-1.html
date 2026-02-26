@@ -45,6 +45,7 @@
         }
 
         .logo-container {
+            margin-top: 30px;
             margin-bottom: 30px;
             height: 80px;
             display: flex;
@@ -434,7 +435,7 @@
             background: #fff;
         }
 
-        /* Phone/Text Button Styles */
+        /* Phone/Text Button Styles - match Save Contact button */
         .contact-button {
             display: inline-flex;
             align-items: center;
@@ -442,35 +443,30 @@
             gap: 12px;
             color: white;
             text-decoration: none;
-            padding: 18px 40px;
-            border-radius: 50px;
-            font-size: 20px;
+            padding: 16px 40px;
+            border-radius: 12px;
+            font-size: 18px;
             font-weight: 600;
-            transition: all 0.3s ease;
-            width: 100%;
+            transition: all 0.2s ease;
             margin-bottom: 15px;
         }
         
         .call-button {
             background: #2196f3;
-            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
         }
         
         .call-button:hover {
             background: #1976d2;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.5);
         }
         
         .text-button {
             background: #2196f3;
-            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
         }
         
         .text-button:hover {
             background: #1976d2;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.5);
         }
         
         .contact-button:active {
@@ -786,16 +782,16 @@
 
         /* Post-Submit Header & Numbered Sections */
         .post-submit-intro { text-align: left; margin-bottom: 30px; }
-        .post-submit-main-title { font-size: 24px; color: #000; font-weight: bold; margin-bottom: 8px; line-height: 1.3; }
-        .post-submit-subtitle { font-size: 16px; color: #666; margin-bottom: 24px; }
+        .post-submit-main-title { font-size: 24px; color: #000; font-weight: bold; margin-bottom: 8px; line-height: 1.3; text-align: center; }
+        .post-submit-subtitle { font-size: 16px; color: #666; margin-bottom: 24px; text-align: center; }
         .post-submit-step { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
         .post-submit-step-num { width: 28px; height: 28px; min-width: 28px; background: #2196f3; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
         .post-submit-step-title { font-size: 16px; font-weight: bold; color: #000; margin-bottom: 4px; }
         .post-submit-step-desc { font-size: 16px; color: #666; line-height: 1.5; font-weight: 500; }
         .save-contact-btn {
-            display: inline-block; background: #2196f3; color: white; padding: 16px 40px;
+            display: block; background: #2196f3; color: white; padding: 16px 40px;
             border-radius: 12px; font-size: 18px; font-weight: 600; border: none;
-            cursor: pointer; margin-top: 16px; transition: all 0.2s;
+            cursor: pointer; margin: 16px auto 0; transition: all 0.2s;
         }
         .save-contact-btn:hover { background: #1976d2; transform: translateY(-2px); }
         .post-submit-cta-block { margin-top: 28px; padding-top: 24px; border-top: 1px solid #e9ecef; }
@@ -860,19 +856,12 @@
             position: relative;
         }
 
-        .review-text::before,
-        .review-text::after {
-            display: none;
-        }
-
         .review-text::before {
-            left: 0;
-            top: -10px;
+            content: '"';
         }
 
         .review-text::after {
-            right: 0;
-            bottom: -30px;
+            content: '"';
         }
 
         .review-stars {
@@ -899,7 +888,7 @@
             max-width: 100%;
             height: auto;
             border-radius: 10px;
-            margin-top: 20px;
+            margin-bottom: 20px;
         }
 
         @media (max-width: 768px) {
@@ -1291,7 +1280,7 @@
         <div class="form-step" id="contactStep">
             <div>
                 <div class="post-submit-intro">
-                    <h2 class="post-submit-main-title">You're one step closer to a new bathroom!</h2>
+                    <h2 class="post-submit-main-title">You're one step closer to your dream bathroom!</h2>
                     <p class="post-submit-subtitle">Here's what happens now...</p>
                     <div class="post-submit-step">
                         <div class="post-submit-step-num">1</div>
@@ -1342,7 +1331,7 @@
         <div class="form-step" id="contactStepAddContact">
             <div>
                 <div class="post-submit-intro">
-                    <h2 class="post-submit-main-title">You're one step closer to a new bathroom!</h2>
+                    <h2 class="post-submit-main-title">You're one step closer to your dream bathroom!</h2>
                     <p class="post-submit-subtitle">Here's what happens now...</p>
                     <div class="post-submit-step">
                         <div class="post-submit-step-num">1</div>
@@ -1384,7 +1373,7 @@
         <div class="form-step" id="calendarStep">
             <div style="padding: 0 20px 20px;">
             <div class="post-submit-intro">
-                <h2 class="post-submit-main-title">You're one step closer to a new bathroom!</h2>
+                <h2 class="post-submit-main-title">You're one step closer to your dream bathroom!</h2>
                 <p class="post-submit-subtitle">Here's what happens now...</p>
                 <div class="post-submit-step">
                     <div class="post-submit-step-num">1</div>
@@ -1451,7 +1440,7 @@
         <div class="form-step" id="confirmationStep">
             <div style="padding: 40px 20px;">
                 <div class="post-submit-intro">
-                    <h2 class="post-submit-main-title">You're one step closer to a new bathroom!</h2>
+                    <h2 class="post-submit-main-title">You're one step closer to your dream bathroom!</h2>
                     <p class="post-submit-subtitle">Here's what happens now...</p>
                     <div class="post-submit-step">
                         <div class="post-submit-step-num">1</div>
@@ -3274,7 +3263,6 @@
                 if (confirmationTitleBelow) confirmationTitleBelow.textContent = "IMPORTANT";
                 if (confirmationMessageBelow) confirmationMessageBelow.textContent = "Your appointment is not confirmed until we speak with you over the phone. We will call you as soon as possible to confirm your time!";
             }
-            if (ctaSection) ctaSection.classList.add('active');
             
             // Show reviews modal if reviews exist
             setTimeout(() => {
@@ -3576,11 +3564,12 @@
                 }
             }
 
-            // Post-submit: hide reviews/pictures, show only CTA (calendar/contact/confirmation)
+            // Post-submit: hide reviews/pictures, don't show duplicate CTA below
             if (currentSubmitScreenType) {
                 const reviewsSection = document.getElementById('reviewsSection');
                 if (reviewsSection) reviewsSection.classList.remove('active');
-                showDuplicateCallToAction();
+                const ctaSection = document.getElementById('ctaSection');
+                if (ctaSection) ctaSection.classList.remove('active');
                 setTimeout(() => {
                     if (typeof updateBackgroundHeight === 'function') {
                         updateBackgroundHeight();
@@ -3623,6 +3612,7 @@
                 }
                 
                 reviewBlock.innerHTML = `
+                    ${imageHtml}
                     <div class="review-text">${escapeHtml(review.text)}</div>
                     <div class="review-stars">
                         <span class="review-star">★</span>
@@ -3632,7 +3622,6 @@
                         <span class="review-star">★</span>
                     </div>
                     <div class="review-name">${escapeHtml(review.name)}</div>
-                    ${imageHtml}
                 `;
                 container.appendChild(reviewBlock);
             });
