@@ -376,14 +376,17 @@
             el.querySelector('input').checked = true;
             formData[field] = value;
 
-            if (field === 'homeType' && value === 'mobile') document.getElementById('mobileHomeWarning').style.display = 'flex';
-            else document.getElementById('mobileHomeWarning').style.display = 'none';
-            if (field === 'existingOrNew' && value === 'newbuild') document.getElementById('newBuildWarning').style.display = 'flex';
-            else document.getElementById('newBuildWarning').style.display = 'none';
-            if (field === 'material' && value === 'tile') document.getElementById('tileWarning').style.display = 'flex';
-            else document.getElementById('tileWarning').style.display = 'none';
+            const showMobileWarning = field === 'homeType' && value === 'mobile';
+            const showNewBuildWarning = field === 'existingOrNew' && value === 'newbuild';
+            const showTileWarning = field === 'material' && value === 'tile';
 
-            setTimeout(() => advanceStep(1), 150);
+            document.getElementById('mobileHomeWarning').style.display = showMobileWarning ? 'flex' : 'none';
+            document.getElementById('newBuildWarning').style.display = showNewBuildWarning ? 'flex' : 'none';
+            document.getElementById('tileWarning').style.display = showTileWarning ? 'flex' : 'none';
+
+            if (!showMobileWarning && !showNewBuildWarning && !showTileWarning) {
+                setTimeout(() => advanceStep(1), 150);
+            }
         }
 
         function advanceStep(direction) {
