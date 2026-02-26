@@ -60,7 +60,7 @@
 
         .step-header {
             font-size: 24px;
-            color: #2c3e50;
+            color: #000;
             margin-bottom: 10px;
             line-height: 1.4;
             font-weight: bold;
@@ -71,6 +71,44 @@
             color: #666;
             margin-bottom: 25px;
             font-weight: 500;
+        }
+
+        .why-we-ask {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: #e0f7fa;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 25px;
+            text-align: left;
+        }
+
+        .why-we-ask-icon {
+            color: #81d4fa;
+            flex-shrink: 0;
+        }
+
+        .why-we-ask-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .why-we-ask-content {
+            flex: 1;
+        }
+
+        .why-we-ask-header {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .why-we-ask-text {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
         }
 
         .sub-heading {
@@ -149,7 +187,7 @@
         .address-label {
             font-weight: bold;
             margin-bottom: 8px;
-            color: #2c3e50;
+            color: #555;
             text-align: left;
             font-size: 14px;
         }
@@ -183,9 +221,30 @@
             overflow: hidden;
         }
 
+        .progress-area {
+            text-align: left;
+        }
+
+        .back-button {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 10px 0;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .back-button:hover {
+            color: #555;
+        }
+
         .progress-fill {
             height: 100%;
-            background: #4CAF50;
+            background: #2196f3;
             border-radius: 3px;
             transition: width 0.3s ease;
         }
@@ -197,7 +256,7 @@
         }
 
         .nav-btn {
-            background: #4CAF50;
+            background: #2196f3;
             color: white;
             border: none;
             padding: 15px 30px;
@@ -209,7 +268,7 @@
         }
 
         .nav-btn:hover {
-            background: #45a049;
+            background: #1976d2;
             transform: translateY(-2px);
         }
 
@@ -251,7 +310,7 @@
             font-weight: 600;
             margin-bottom: 6px;
             display: block;
-            color: #2c3e50;
+            color: #555;
             text-align: left;
         }
 
@@ -334,7 +393,7 @@
         }
         
         .phone-number-display {
-            color: black;
+            color: #555;
             font-size: 24px;
             font-weight: 700;
             margin-top: 20px;
@@ -358,13 +417,13 @@
             transition: all 0.3s ease;
             width: 100%;
             max-width: 320px;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
         }
 
         .add-contact-button:hover {
-            background: #45a049;
+            background: #1976d2;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.5);
         }
 
         .add-contact-button:active {
@@ -381,7 +440,7 @@
             font-size: 20px;
             font-weight: 600;
             margin-bottom: 20px;
-            color: #2c3e50;
+            color: #000;
             text-align: center;
         }
 
@@ -402,7 +461,7 @@
         .month-display {
             font-size: 18px;
             font-weight: 600;
-            color: #2c3e50;
+            color: #000;
             min-width: 180px;
             text-align: center;
         }
@@ -421,8 +480,8 @@
         }
 
         .nav-button:hover:not(:disabled) {
-            background: #4CAF50;
-            border-color: #4CAF50;
+            background: #2196f3;
+            border-color: #2196f3;
             color: white;
         }
 
@@ -485,7 +544,7 @@
             transition: all 0.3s ease;
             font-size: 16px;
             font-weight: 500;
-            color: #333;
+            color: #555;
             position: relative;
         }
 
@@ -494,16 +553,16 @@
             top: 4px;
             font-size: 10px;
             font-weight: 600;
-            color: #4CAF50;
+            color: #2196f3;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .calendar-day:hover:not(.disabled) {
             transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
-            border-color: #4CAF50;
-            background: #4CAF50;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+            border-color: #2196f3;
+            background: #2196f3;
             color: white;
         }
 
@@ -530,7 +589,7 @@
         }
 
         .calendar-day.today {
-            border-color: #4CAF50;
+            border-color: #2196f3;
             font-weight: 700;
         }
 
@@ -675,7 +734,7 @@
 
         .review-text {
             font-size: 18px;
-            color: #2c3e50;
+            color: #555;
             line-height: 1.8;
             margin-bottom: 25px;
             font-style: italic;
@@ -900,8 +959,11 @@
     </div>
 
     <div class="form-wrapper">
-        <div class="progress-bar" id="progressBarContainer">
-            <div class="progress-fill" id="progressFill" style="width: 10%"></div>
+        <div class="progress-area" id="progressArea">
+            <div class="progress-bar" id="progressBarContainer">
+                <div class="progress-fill" id="progressFill" style="width: 10%"></div>
+            </div>
+            <button type="button" class="back-button" id="backButton" onclick="prevStep()" style="display: none;">← Back</button>
         </div>
 
         <!-- STEP 1: Homeowner -->
@@ -909,8 +971,19 @@
             <div class="step-header">Let's see what your remodel could cost</div>
             <div class="step-subheader">Are you the homeowner?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'own')">I own the home</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'renting')">I'm renting</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'yes')">Yes</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'no')">No</div>
+            </div>
+            <div class="why-we-ask">
+                <div class="why-we-ask-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/>
+                    </svg>
+                </div>
+                <div class="why-we-ask-content">
+                    <div class="why-we-ask-header">Why do we ask?</div>
+                    <div class="why-we-ask-text">Because legally, only the property owner—or someone they've authorized—can approve changes to the property.</div>
+                </div>
             </div>
         </div>
 
@@ -983,11 +1056,11 @@
             <div class="step-header">Who will we be speaking with?</div>
             <div class="name-grid">
                 <div>
-                    <label for="firstName" style="margin-bottom: 10px; display: block; color: #2c3e50; text-align: center;">First Name</label>
+                    <label for="firstName" style="margin-bottom: 10px; display: block; color: #555; text-align: center;">First Name</label>
                     <input type="text" class="address-input" id="firstName" placeholder="First Name" required autocomplete="given-name" oninput="validateNameForm()">
                 </div>
                 <div>
-                    <label for="lastName" style="margin-bottom: 10px; display: block; color: #2c3e50; text-align: center;">Last Name</label>
+                    <label for="lastName" style="margin-bottom: 10px; display: block; color: #555; text-align: center;">Last Name</label>
                     <input type="text" class="address-input" id="lastName" placeholder="Last Name" required autocomplete="family-name" oninput="validateNameForm()">
                 </div>
             </div>
@@ -1055,7 +1128,7 @@
         <!-- PHONE/TEXT CONTACT SCREEN -->
         <div class="form-step" id="contactStep">
             <div style="text-align: center;">
-                <div style="font-size: 24px; color: black; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your free estimate!</div>
+                <div style="font-size: 24px; color: #000; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your free estimate!</div>
                 <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Or if you're ready to schedule now you can contact us by clicking one of the buttons below</div>
                 
                 <a id="callButtonLink" href="#" class="contact-button call-button" style="display: none;">
@@ -1079,7 +1152,7 @@
         <!-- ADD CONTACT SCREEN (Contact submit type from Airtable) -->
         <div class="form-step" id="contactStepAddContact">
             <div style="text-align: center;">
-                <div style="font-size: 24px; color: black; margin-bottom: 20px; font-weight: bold;">Don't Miss Our Call! Save This Number Now</div>
+                <div style="font-size: 24px; color: #000; margin-bottom: 20px; font-weight: bold;">Don't Miss Our Call! Save This Number Now</div>
                 <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Tap the button below, then press "Create Contact" (iPhone) or "Save" (Android). We'll give you a call ASAP to schedule your free estimate!</div>
                 <button type="button" class="add-contact-button" id="addContactBtn" onclick="addContact()">
                     <svg class="person-icon" fill="currentColor" viewBox="0 0 24 24">
@@ -1138,7 +1211,7 @@
                         <path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/>
                     </svg>
                 </div>
-                <div id="confirmationTitle" style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
+                <div id="confirmationTitle" style="font-size: 28px; color: #000; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
                 <div id="confirmationMessage" style="font-size: 18px; color: #666; line-height: 1.6;">We'll give you a call soon to schedule your free estimate.</div>
             </div>
         </div>
@@ -1159,7 +1232,7 @@
             <!-- DUPLICATE CONTACT SCREEN -->
             <div class="form-step cta-block" id="contactStepBelow">
                 <div style="text-align: center;">
-                    <div style="font-size: 24px; color: black; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your free estimate!</div>
+                    <div style="font-size: 24px; color: #000; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your free estimate!</div>
                     <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Or if you're ready to schedule now you can contact us by clicking one of the buttons below</div>
                     
                     <a id="callButtonLinkBelow" href="#" class="contact-button call-button" style="display: none;">
@@ -1183,7 +1256,7 @@
             <!-- DUPLICATE ADD CONTACT SCREEN -->
             <div class="form-step cta-block" id="contactStepAddContactBelow">
                 <div style="text-align: center;">
-                    <div style="font-size: 24px; color: black; margin-bottom: 20px; font-weight: bold;">Don't Miss Our Call! Save This Number Now</div>
+                    <div style="font-size: 24px; color: #000; margin-bottom: 20px; font-weight: bold;">Don't Miss Our Call! Save This Number Now</div>
                     <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Tap the button below, then press "Create Contact" (iPhone) or "Save" (Android). We'll give you a call ASAP to schedule your free estimate!</div>
                     <button type="button" class="add-contact-button" id="addContactBtnBelow" onclick="addContact()">
                         <svg class="person-icon" fill="currentColor" viewBox="0 0 24 24">
@@ -1242,7 +1315,7 @@
                             <path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/>
                         </svg>
                     </div>
-                    <div id="confirmationTitleBelow" style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
+                    <div id="confirmationTitleBelow" style="font-size: 28px; color: #000; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
                     <div id="confirmationMessageBelow" style="font-size: 18px; color: #666; line-height: 1.6;">We'll give you a call soon to schedule your free estimate.</div>
                 </div>
             </div>
@@ -1942,12 +2015,30 @@
             progressFill.style.width = percentage + '%';
         }
 
+        function updateBackButtonVisibility() {
+            const backBtn = document.getElementById('backButton');
+            if (backBtn) {
+                backBtn.style.display = currentStep > 1 ? 'flex' : 'none';
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                document.getElementById('step' + currentStep).classList.remove('active');
+                currentStep--;
+                document.getElementById('step' + currentStep).classList.add('active');
+                updateProgress();
+                updateBackButtonVisibility();
+            }
+        }
+
         function nextStep() {
             if (currentStep < 10) {
                 document.getElementById('step' + currentStep).classList.remove('active');
                 currentStep++;
                 document.getElementById('step' + currentStep).classList.add('active');
                 updateProgress();
+                updateBackButtonVisibility();
             }
         }
 
@@ -2827,7 +2918,7 @@
         async function showCalendarScreen() {
             const step10El = document.getElementById('step10');
             const calendarStep = document.getElementById('calendarStep');
-            const progressBar = document.getElementById('progressBarContainer');
+            const progressArea = document.getElementById('progressArea');
             
             // Get client timezone, availability, and days
             const activeClient = matchedClientData || campaignClientData;
@@ -2899,7 +2990,7 @@
             } else {
                 console.error('Calendar step element not found!');
             }
-            if (progressBar) progressBar.style.display = 'none';
+            if (progressArea) progressArea.style.display = 'none';
             
             initializeCalendar();
             
@@ -2976,7 +3067,7 @@
             document.getElementById('step10').classList.remove('active');
             document.getElementById('contactStep').classList.remove('active');
             document.getElementById('contactStepAddContact').classList.add('active');
-            document.getElementById('progressBarContainer').style.display = 'none';
+            document.getElementById('progressArea').style.display = 'none';
 
             setTimeout(() => {
                 showReviewsModal();
@@ -3043,7 +3134,7 @@
             document.getElementById('step10').classList.remove('active');
             document.getElementById('contactStepAddContact').classList.remove('active');
             document.getElementById('contactStep').classList.add('active');
-            document.getElementById('progressBarContainer').style.display = 'none';
+            document.getElementById('progressArea').style.display = 'none';
             
             // Show reviews modal if reviews exist
             setTimeout(() => {
@@ -3068,7 +3159,7 @@
             }
             document.getElementById('step10').classList.remove('active');
             document.getElementById('confirmationStep').classList.add('active');
-            document.getElementById('progressBarContainer').style.display = 'none';
+            document.getElementById('progressArea').style.display = 'none';
             
             // Show reviews modal if reviews exist
             setTimeout(() => {
@@ -3429,7 +3520,7 @@
         }
 
         function getHomeownerDisplay(value) {
-            const options = { 'own': 'I own the home', 'renting': "I'm renting" };
+            const options = { 'yes': 'Yes', 'no': 'No' };
             return options[value] || value;
         }
         function getHomeTypeDisplay(value) {
