@@ -142,6 +142,68 @@
             line-height: 1.5;
         }
 
+        .mobile-home-message {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: #e0f7fa;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 25px;
+            text-align: left;
+        }
+
+        .mobile-home-content {
+            flex: 1;
+        }
+
+        .mobile-home-continue-btn {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: background 0.2s;
+        }
+
+        .mobile-home-continue-btn:hover {
+            background: #1976d2;
+        }
+
+        .repair-damage-message {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: #ffebee;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 25px;
+            text-align: left;
+        }
+
+        .repair-damage-content {
+            flex: 1;
+        }
+
+        .tile-message {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: #ffebee;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 25px;
+            text-align: left;
+        }
+
+        .tile-message-content {
+            flex: 1;
+        }
+
         .sub-heading {
             font-size: 14px;
             color: #666;
@@ -335,13 +397,10 @@
             grid-template-columns: 1fr 1fr;
             gap: 15px;
             margin-bottom: 30px;
+            text-align: left;
         }
 
-        .phone-step label {
-            font-weight: 600;
-            margin-bottom: 6px;
-            display: block;
-            color: #555;
+        #phoneWrap {
             text-align: left;
         }
 
@@ -1018,9 +1077,10 @@
             </div>
             <div class="homeowner-no-message" id="homeownerNoMessage" style="display: none;">
                 <div class="homeowner-no-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10"/>
-                        <path d="M12 8v4M12 16h.01"/>
+                        <path d="M12 8v4"/>
+                        <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
                     </svg>
                 </div>
                 <div class="homeowner-no-content">
@@ -1037,6 +1097,17 @@
                 <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'town_home')">Town home</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'vacation_home')">Vacation home</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'mobile_home')">Mobile home</div>
+            </div>
+            <div class="mobile-home-message" id="mobileHomeMessage" style="display: none;">
+                <div class="why-we-ask-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/>
+                    </svg>
+                </div>
+                <div class="mobile-home-content">
+                    <div class="why-we-ask-text">We're only able to install showers in mobile homes if they have permanent plumbing fixtures. Would you still like to continue?</div>
+                    <button type="button" class="mobile-home-continue-btn" onclick="continueMobileHome()">Continue</button>
+                </div>
             </div>
         </div>
 
@@ -1057,8 +1128,20 @@
             <div class="options">
                 <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'accessibility_safety')">Improve accessibility/safety</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'look_function')">Improve look/function</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'repair_damage')">Repair damage</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'home_value')">Increase home value</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'repair_damage')">Repair damage</div>
+            </div>
+            <div class="repair-damage-message" id="repairDamageMessage" style="display: none;">
+                <div class="homeowner-no-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v4"/>
+                        <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div class="repair-damage-content">
+                    <div class="homeowner-no-text">We don't offer small repairs. We specialize exclusively in full replacements and conversions.</div>
+                </div>
             </div>
         </div>
 
@@ -1066,16 +1149,29 @@
         <div class="form-step" id="step5">
             <div class="step-header">Do you have any material preferences?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'materialPref', 'tile')">Tile</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'materialPref', 'acrylic')">Acrylic</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'materialPref', 'composite_stone')">Composite stone</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'materialPref', 'tile')">Tile</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'materialPref', 'not_sure')">Not sure</div>
+            </div>
+            <div class="tile-message" id="tileMessage" style="display: none;">
+                <div class="homeowner-no-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v4"/>
+                        <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div class="tile-message-content">
+                    <div class="homeowner-no-text">We do not install tile systems. Please select another material for your estimate.</div>
+                </div>
             </div>
         </div>
 
         <!-- STEP 6: Timeline -->
         <div class="form-step" id="step6">
-            <div class="question">How soon would you like this project to be completed?</div>
-            <div class="sub-heading">We only give estimates for projects that can start soon so pricing is accurate</div>
+            <div class="step-header">How soon would you like this project to be completed?</div>
+            <div class="step-subheader">We only give estimates for projects that can start soon so pricing is accurate</div>
             <div class="options">
                 <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'asap')">ASAP</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'within_month')">Within a month</div>
@@ -1097,12 +1193,12 @@
         <div class="form-step" id="step8">
             <div class="step-header">Who will we be speaking with?</div>
             <div class="name-grid">
-                <div>
-                    <label for="firstName" style="margin-bottom: 10px; display: block; color: #555; text-align: center;">First Name</label>
+                <div class="address-field">
+                    <label class="address-label" for="firstName">First Name</label>
                     <input type="text" class="address-input" id="firstName" placeholder="First Name" required autocomplete="given-name" oninput="validateNameForm()">
                 </div>
-                <div>
-                    <label for="lastName" style="margin-bottom: 10px; display: block; color: #555; text-align: center;">Last Name</label>
+                <div class="address-field">
+                    <label class="address-label" for="lastName">Last Name</label>
                     <input type="text" class="address-input" id="lastName" placeholder="Last Name" required autocomplete="family-name" oninput="validateNameForm()">
                 </div>
             </div>
@@ -1145,12 +1241,11 @@
 
         <!-- STEP 10: PHONE -->
         <div class="form-step" id="step10">
-            <div class="step-header">Where can we reach you to schedule your free estimate?</div>
+            <div class="step-header">Where can we reach you to schedule your free in-home estimate?</div>
             <div class="row">
-                <div id="phoneWrap">
-                    <label for="phone">Phone</label>
-                    <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required autocomplete="tel" aria-describedby="phoneHelp">
-                    <small id="phoneHelp" class="phone-help">US number, 10 digits.</small>
+                <div id="phoneWrap" class="address-field">
+                    <label class="address-label" for="phone">Phone</label>
+                    <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required autocomplete="tel" class="address-input">
                     <input type="hidden" id="phone_digits" name="phone_digits" value="">
                 </div>
                 <div id="emailWrap" style="display:none">
@@ -1159,7 +1254,7 @@
                 </div>
             </div>
             <div class="nav-buttons">
-                <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Get Quote</button>
+                <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Schedule Estimate</button>
             </div>
             <div class="privacy-policy-text" id="privacyPolicyText">
                 <p>By clicking "NEXT STEP" and submitting this form, (i) I agree that <span id="partnerBusinessName">Peak Leads Group and it's marketing partners</span> may use automated technology to call or text my phone number (provided above) or email me regarding my request, and I may revoke this consent at any time, and (ii) I agree to the <a href="privacypolicy.html" target="_blank">Terms & Conditions and Privacy Policy</a>.</p>
@@ -1839,6 +1934,9 @@
                 if (campaignClientData) {
                     clientData = campaignClientData;
                     
+                    // Show reviews below form immediately when client data has reviews
+                    tryShowReviewsOnLoad();
+                    
                     // Load logo immediately when we get the URL
                     const logoUrl = campaignClientData.fields['Logo Link'];
                     if (logoUrl) {
@@ -1957,9 +2055,13 @@
                         loadLogo(clientData.fields['Logo Link']);
                     }
                 }
+                
+                // Show reviews below form when DOM is ready (if client data already loaded)
+                tryShowReviewsOnLoad();
             });
         } else {
             updateBackgroundHeight();
+            tryShowReviewsOnLoad();
             // If client data is already loaded, ensure logo is displayed
             if (clientData && clientData.fields && clientData.fields['Logo Link']) {
                 const logoImg = document.getElementById('logoImg');
@@ -2011,9 +2113,48 @@
                 }
             }
             
+            // Home type step: show blue message when "Mobile home" selected, don't advance
+            if (field === 'homeType') {
+                const mobileHomeMsg = document.getElementById('mobileHomeMessage');
+                if (value === 'mobile_home') {
+                    if (mobileHomeMsg) mobileHomeMsg.style.display = 'flex';
+                    return;
+                } else {
+                    if (mobileHomeMsg) mobileHomeMsg.style.display = 'none';
+                }
+            }
+            
+            // Main goal step: show red message when "Repair damage" selected, don't advance
+            if (field === 'mainGoal') {
+                const repairDamageMsg = document.getElementById('repairDamageMessage');
+                if (value === 'repair_damage') {
+                    if (repairDamageMsg) repairDamageMsg.style.display = 'flex';
+                    return;
+                } else {
+                    if (repairDamageMsg) repairDamageMsg.style.display = 'none';
+                }
+            }
+            
+            // Material preferences step: show red message when "Tile" selected, don't advance
+            if (field === 'materialPref') {
+                const tileMsg = document.getElementById('tileMessage');
+                if (value === 'tile') {
+                    if (tileMsg) tileMsg.style.display = 'flex';
+                    return;
+                } else {
+                    if (tileMsg) tileMsg.style.display = 'none';
+                }
+            }
+            
             setTimeout(() => {
                 nextStep();
             }, 200);
+        }
+
+        function continueMobileHome() {
+            const mobileHomeMsg = document.getElementById('mobileHomeMessage');
+            if (mobileHomeMsg) mobileHomeMsg.style.display = 'none';
+            nextStep();
         }
 
         function validateAddressForm() {
@@ -2095,6 +2236,33 @@
                     } else {
                         if (whyWeAsk) whyWeAsk.style.display = 'flex';
                         if (homeownerNoMsg) homeownerNoMsg.style.display = 'none';
+                    }
+                }
+                // Reset mobile home message visibility when returning to step 2
+                if (currentStep === 2) {
+                    const mobileHomeMsg = document.getElementById('mobileHomeMessage');
+                    if (formData.homeType === 'mobile_home' && mobileHomeMsg) {
+                        mobileHomeMsg.style.display = 'flex';
+                    } else if (mobileHomeMsg) {
+                        mobileHomeMsg.style.display = 'none';
+                    }
+                }
+                // Reset repair damage message visibility when returning to step 4
+                if (currentStep === 4) {
+                    const repairDamageMsg = document.getElementById('repairDamageMessage');
+                    if (formData.mainGoal === 'repair_damage' && repairDamageMsg) {
+                        repairDamageMsg.style.display = 'flex';
+                    } else if (repairDamageMsg) {
+                        repairDamageMsg.style.display = 'none';
+                    }
+                }
+                // Reset tile message visibility when returning to step 5
+                if (currentStep === 5) {
+                    const tileMsg = document.getElementById('tileMessage');
+                    if (formData.materialPref === 'tile' && tileMsg) {
+                        tileMsg.style.display = 'flex';
+                    } else if (tileMsg) {
+                        tileMsg.style.display = 'none';
                     }
                 }
             }
@@ -2277,9 +2445,9 @@
                 phoneError.style.marginTop = '5px';
                 phoneError.style.display = 'none';
                 
-                const phoneHelp = document.getElementById('phoneHelp');
-                if (phoneHelp) {
-                    phoneHelp.parentNode.insertBefore(phoneError, phoneHelp.nextSibling);
+                const phoneDigitsInput = document.getElementById('phone_digits');
+                if (phoneDigitsInput) {
+                    phoneDigitsInput.parentNode.insertBefore(phoneError, phoneDigitsInput);
                 }
             }
 
@@ -3238,6 +3406,12 @@
         // Reviews Section Functions
         let reviews = [];
 
+        function tryShowReviewsOnLoad() {
+            if (campaignClientData && document.getElementById('reviewsSection')) {
+                showReviewsModal();
+            }
+        }
+
         function showReviewsModal() {
             // Get reviews from client data
             const activeClient = matchedClientData || campaignClientData;
@@ -3272,8 +3446,13 @@
                 buildReviewBlocks();
                 document.getElementById('reviewsSection').classList.add('active');
                 
-                // Show duplicate call to action below reviews
-                showDuplicateCallToAction();
+                // Show duplicate call to action below reviews only after form submission
+                if (currentSubmitScreenType) {
+                    showDuplicateCallToAction();
+                } else {
+                    const ctaSection = document.getElementById('ctaSection');
+                    if (ctaSection) ctaSection.classList.remove('active');
+                }
                 
                 // Update background height after reviews are displayed
                 setTimeout(() => {
@@ -3619,7 +3798,7 @@
             return options[value] || value;
         }
         function getMaterialPrefDisplay(value) {
-            const options = { 'tile': 'Tile', 'acrylic': 'Acrylic', 'not_sure': 'Not sure' };
+            const options = { 'acrylic': 'Acrylic', 'composite_stone': 'Composite stone', 'tile': 'Tile', 'not_sure': 'Not sure' };
             return options[value] || value;
         }
         function getTimelineDisplay(value) {
@@ -3804,7 +3983,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 isSubmitting = false;
                 if (phoneSubmitBtn) {
                     phoneSubmitBtn.disabled = false;
-                    phoneSubmitBtn.textContent = 'Get Quote';
+                    phoneSubmitBtn.textContent = 'Schedule Estimate';
                 }
                 return; // Exit early - don't show calendar/phone options
             }
@@ -3889,7 +4068,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 isSubmitting = false;
                 if (phoneSubmitBtn) {
                     phoneSubmitBtn.disabled = false;
-                    phoneSubmitBtn.textContent = 'Get Quote';
+                    phoneSubmitBtn.textContent = 'Schedule Estimate';
                 }
             }
         }
