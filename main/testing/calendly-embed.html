@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Schedule a Meeting - Calendly</title>
+    <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            max-width: 700px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .calendly-inline-widget {
+            margin-bottom: 30px;
+        }
+
+        .selected-date-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .selected-date-section label {
+            display: block;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .date-display {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f8f9fa;
+            color: #2c3e50;
+        }
+
+        .date-display:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .date-display.empty {
+            color: #868e96;
+            font-style: italic;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .calendly-inline-widget {
+                min-height: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Schedule a 30-Minute Meeting</h1>
+        <p class="subtitle">Select a date and time below to book your appointment</p>
+
+        <div class="calendly-inline-widget" data-url="https://calendly.com/drew-peakleadsgroup/30min" data-resize="true" style="min-width:320px;height:700px;"></div>
+
+        <div class="selected-date-section">
+            <label for="selectedDate">Selected Date & Time</label>
+            <input type="text" id="selectedDate" class="date-display empty" readonly 
+                   placeholder="Your selected date and time will appear here after booking">
+        </div>
+    </div>
+
+    <script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
+    <script>
+        // Listen for Calendly postMessage events
+        function isCalendlyEvent(e) {
+            return e.origin === 'https://calendly.com' && e.data.event?.startsWith('calendly.');
+        }
+
+        function formatDateFromPayload(payload) {
+            if (!payload) return null;
+
+            // event_scheduled payload may include: event, invitee, questions_and_answers
+            // The payload structure varies - check for common date fields
+            if (payload.invitee?.scheduled_event?.start_time) {
+                const date = new Date(payload.invitee.scheduled_event.start_time);
+                return date.toLocaleString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+            }
+            if (payload.event?.start_time) {
+                const date = new Date(payload.event.start_time);
+                return date.toLocaleString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+            }
+            if (payload.start_time) {
+                const date = new Date(payload.start_time);
+                return date.toLocaleString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+            }
+            return null;
+        }
+
+        window.addEventListener('message', function(e) {
+            if (!isCalendlyEvent(e)) return;
+
+            const eventName = e.data.event;
+            const payload = e.data.payload || {};
+            const dateInput = document.getElementById('selectedDate');
+
+            if (eventName === 'calendly.event_scheduled') {
+                const formattedDate = formatDateFromPayload(payload);
+                if (formattedDate) {
+                    dateInput.value = formattedDate;
+                    dateInput.classList.remove('empty');
+                } else {
+                    dateInput.value = 'Booking confirmed! (Check your email for details)';
+                    dateInput.classList.remove('empty');
+                }
+            } else if (eventName === 'calendly.date_and_time_selected') {
+                const formattedDate = formatDateFromPayload(payload);
+                if (formattedDate) {
+                    dateInput.value = formattedDate;
+                    dateInput.classList.remove('empty');
+                } else {
+                    dateInput.value = 'Date selected - please complete your booking';
+                    dateInput.classList.remove('empty');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
