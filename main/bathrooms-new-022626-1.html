@@ -452,25 +452,25 @@
         }
         
         .call-button {
-            background: #10b981;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            background: #2196f3;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
         }
         
         .call-button:hover {
-            background: #059669;
+            background: #1976d2;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.5);
         }
         
         .text-button {
-            background: #3b82f6;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            background: #2196f3;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
         }
         
         .text-button:hover {
-            background: #2563eb;
+            background: #1976d2;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.5);
         }
         
         .contact-button:active {
@@ -497,7 +497,7 @@
             align-items: center;
             justify-content: center;
             gap: 12px;
-            background: #4CAF50;
+            background: #2196f3;
             color: white;
             border: none;
             padding: 18px 40px;
@@ -791,10 +791,16 @@
         .post-submit-step { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
         .post-submit-step-num { width: 28px; height: 28px; min-width: 28px; background: #2196f3; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
         .post-submit-step-title { font-size: 16px; font-weight: bold; color: #000; margin-bottom: 4px; }
-        .post-submit-step-desc { font-size: 14px; color: #666; line-height: 1.5; }
+        .post-submit-step-desc { font-size: 16px; color: #666; line-height: 1.5; font-weight: 500; }
+        .save-contact-btn {
+            display: inline-block; background: #2196f3; color: white; padding: 16px 40px;
+            border-radius: 12px; font-size: 18px; font-weight: 600; border: none;
+            cursor: pointer; margin-top: 16px; transition: all 0.2s;
+        }
+        .save-contact-btn:hover { background: #1976d2; transform: translateY(-2px); }
         .post-submit-cta-block { margin-top: 28px; padding-top: 24px; border-top: 1px solid #e9ecef; }
-        .post-submit-cta-title { font-size: 18px; font-weight: bold; color: #000; margin-bottom: 8px; }
-        .post-submit-cta-subtitle { font-size: 15px; color: #666; line-height: 1.5; margin-bottom: 20px; }
+        .post-submit-cta-title { font-size: 16px; font-weight: bold; color: #000; margin-bottom: 8px; }
+        .post-submit-cta-subtitle { font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 20px; font-weight: 500; }
         #calendarStep .calendar-header { margin-top: 20px; }
 
         /* Reviews Section Styles */
@@ -1286,12 +1292,13 @@
             <div>
                 <div class="post-submit-intro">
                     <h2 class="post-submit-main-title">You're one step closer to a new bathroom!</h2>
-                    <p class="post-submit-subtitle">Here's what happens now</p>
+                    <p class="post-submit-subtitle">Here's what happens now...</p>
                     <div class="post-submit-step">
                         <div class="post-submit-step-num">1</div>
                         <div>
                             <h3 class="post-submit-step-title">Save our contact</h3>
                             <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate—save our contact so you know it's us.</p>
+                            <button type="button" class="save-contact-btn" onclick="addContact()">Save Contact</button>
                         </div>
                     </div>
                     <div class="post-submit-step">
@@ -1336,12 +1343,13 @@
             <div>
                 <div class="post-submit-intro">
                     <h2 class="post-submit-main-title">You're one step closer to a new bathroom!</h2>
-                    <p class="post-submit-subtitle">Here's what happens now</p>
+                    <p class="post-submit-subtitle">Here's what happens now...</p>
                     <div class="post-submit-step">
                         <div class="post-submit-step-num">1</div>
                         <div>
                             <h3 class="post-submit-step-title">Save our contact</h3>
                             <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate—save our contact so you know it's us.</p>
+                            <button type="button" class="save-contact-btn" onclick="addContact()">Save Contact</button>
                         </div>
                     </div>
                     <div class="post-submit-step">
@@ -1377,7 +1385,7 @@
             <div style="padding: 0 20px 20px;">
             <div class="post-submit-intro">
                 <h2 class="post-submit-main-title">You're one step closer to a new bathroom!</h2>
-                <p class="post-submit-subtitle">Here's what happens now</p>
+                <p class="post-submit-subtitle">Here's what happens now...</p>
                 <div class="post-submit-step">
                     <div class="post-submit-step-num">1</div>
                     <div>
@@ -1444,12 +1452,13 @@
             <div style="padding: 40px 20px;">
                 <div class="post-submit-intro">
                     <h2 class="post-submit-main-title">You're one step closer to a new bathroom!</h2>
-                    <p class="post-submit-subtitle">Here's what happens now</p>
+                    <p class="post-submit-subtitle">Here's what happens now...</p>
                     <div class="post-submit-step">
                         <div class="post-submit-step-num">1</div>
                         <div>
                             <h3 class="post-submit-step-title">Save our contact</h3>
                             <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate—save our contact so you know it's us.</p>
+                            <button type="button" class="save-contact-btn" onclick="addContact()">Save Contact</button>
                         </div>
                     </div>
                     <div class="post-submit-step">
@@ -3437,7 +3446,7 @@
             const contactReadySubtitle = document.getElementById('contactReadySubtitle');
             if (contactReadySubtitle) {
                 const subtitles = {
-                    'Phone': "Can't wait to hear from us? Call us below to schedule your free estimate.",
+                    'Phone': "Can't wait to hear from us? Click the button below to call us now.",
                     'Text': "Can't wait to hear from us? Text us below to schedule your free estimate.",
                     'Phone/Text': "Can't wait to hear from us? Call or text us below to schedule your free estimate."
                 };
