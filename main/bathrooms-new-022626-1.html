@@ -807,6 +807,13 @@
             display: block;
         }
 
+        .get-quote-bottom-btn {
+            display: inline-block; background: #2196f3; color: white; padding: 16px 40px;
+            border-radius: 12px; font-size: 18px; font-weight: 600; border: none;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .get-quote-bottom-btn:hover { background: #1976d2; transform: translateY(-2px); }
+
         .reviews-content {
             max-width: 500px;
             width: 100%;
@@ -1063,7 +1070,7 @@
              style="display: none;">
     </div>
 
-    <div class="form-wrapper">
+    <div class="form-wrapper" id="formSection">
         <div class="progress-area" id="progressArea">
             <div class="progress-bar" id="progressBarContainer">
                 <div class="progress-fill" id="progressFill" style="width: 10%"></div>
@@ -1473,6 +1480,9 @@
         <div class="reviews-content">
             <div class="reviews-container" id="reviewsContainer">
                 <!-- Review blocks will be dynamically added here -->
+            </div>
+            <div style="text-align: center; padding: 32px 0 0;">
+                <button class="get-quote-bottom-btn" onclick="scrollToForm()">Get Quote</button>
             </div>
         </div>
     </div>
@@ -2331,6 +2341,11 @@
             if (backBtn) {
                 backBtn.style.display = currentStep > 1 ? 'flex' : 'none';
             }
+        }
+
+        function scrollToForm() {
+            const formSection = document.getElementById('formSection');
+            if (formSection) formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function prevStep() {
