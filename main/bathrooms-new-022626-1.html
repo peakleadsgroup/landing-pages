@@ -85,7 +85,7 @@
         }
 
         .why-we-ask-icon {
-            color: #81d4fa;
+            color: #2196f3;
             flex-shrink: 0;
         }
 
@@ -108,6 +108,37 @@
         .why-we-ask-text {
             font-size: 14px;
             color: #666;
+            line-height: 1.5;
+        }
+
+        .homeowner-no-message {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: #ffebee;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 25px;
+            text-align: left;
+        }
+
+        .homeowner-no-icon {
+            color: #ef5350;
+            flex-shrink: 0;
+        }
+
+        .homeowner-no-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .homeowner-no-content {
+            flex: 1;
+        }
+
+        .homeowner-no-text {
+            font-size: 14px;
+            color: #c62828;
             line-height: 1.5;
         }
 
@@ -969,12 +1000,12 @@
         <!-- STEP 1: Homeowner -->
         <div class="form-step active" id="step1">
             <div class="step-header">Let's see what your remodel could cost</div>
-            <div class="step-subheader">Are you the homeowner?</div>
+            <div class="step-subheader">Are you the homeowner or authorized decision maker?</div>
             <div class="options">
                 <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'yes')">Yes</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'no')">No</div>
             </div>
-            <div class="why-we-ask">
+            <div class="why-we-ask" id="whyWeAsk">
                 <div class="why-we-ask-icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/>
@@ -983,6 +1014,17 @@
                 <div class="why-we-ask-content">
                     <div class="why-we-ask-header">Why do we ask?</div>
                     <div class="why-we-ask-text">Because legally, only the property owner—or someone they've authorized—can approve changes to the property.</div>
+                </div>
+            </div>
+            <div class="homeowner-no-message" id="homeownerNoMessage" style="display: none;">
+                <div class="homeowner-no-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v4M12 16h.01"/>
+                    </svg>
+                </div>
+                <div class="homeowner-no-content">
+                    <div class="homeowner-no-text">By law, we can only upgrade your bathroom if you are the homeowner or authorized decision maker.</div>
                 </div>
             </div>
         </div>
@@ -1955,6 +1997,20 @@
                 hasTrackedEngagement = true;
             }
             
+            // Homeowner step: show red message when "No" selected, don't advance
+            if (field === 'homeowner') {
+                const whyWeAsk = document.getElementById('whyWeAsk');
+                const homeownerNoMsg = document.getElementById('homeownerNoMessage');
+                if (value === 'no') {
+                    if (whyWeAsk) whyWeAsk.style.display = 'none';
+                    if (homeownerNoMsg) homeownerNoMsg.style.display = 'flex';
+                    return;
+                } else {
+                    if (whyWeAsk) whyWeAsk.style.display = 'flex';
+                    if (homeownerNoMsg) homeownerNoMsg.style.display = 'none';
+                }
+            }
+            
             setTimeout(() => {
                 nextStep();
             }, 200);
@@ -2029,6 +2085,18 @@
                 document.getElementById('step' + currentStep).classList.add('active');
                 updateProgress();
                 updateBackButtonVisibility();
+                // Reset homeowner step message visibility when returning to step 1
+                if (currentStep === 1) {
+                    const whyWeAsk = document.getElementById('whyWeAsk');
+                    const homeownerNoMsg = document.getElementById('homeownerNoMessage');
+                    if (formData.homeowner === 'no') {
+                        if (whyWeAsk) whyWeAsk.style.display = 'none';
+                        if (homeownerNoMsg) homeownerNoMsg.style.display = 'flex';
+                    } else {
+                        if (whyWeAsk) whyWeAsk.style.display = 'flex';
+                        if (homeownerNoMsg) homeownerNoMsg.style.display = 'none';
+                    }
+                }
             }
         }
 
