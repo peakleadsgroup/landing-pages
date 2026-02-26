@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
+    <title>Bathroom Remodel Qualification</title>
+    
+    <!-- Meta Pixel Code - Disabled for testing (set META_PIXEL_TEST_MODE = false to enable) -->
+    <script>
+    var META_PIXEL_TEST_MODE = true;
+    if (META_PIXEL_TEST_MODE) {
+        window.fbq = function() {
+            console.log('[Meta Pixel - TEST MODE] Would have called:', Array.prototype.slice.call(arguments));
+        };
+    } else {
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+    }
+    </script>
+    <noscript id="metaPixelNoscript"></noscript>
+    <!-- End Meta Pixel Code -->
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100%;
+            min-height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)), 
+                        url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
+            background-size: 100% auto;
+            background-position: center top;
+            background-repeat: repeat-y;
+            background-attachment: fixed;
+            z-index: -1;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        @media (max-width: 768px) {
+            body::before {
+                background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)), 
+                            url('https://github.com/peakleadsgroup/landing-pages/blob/main/Images/MobileBathroomBackground.jpg?raw=true');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+            }
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo-container {
+            margin-bottom: 30px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-img {
+            max-width: 200px;
+            max-height: 80px;
+            object-fit: contain;
+        }
+
+        .main-heading {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .question {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .sub-heading {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 25px;
+            font-style: italic;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .option {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .option:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .option.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            color: #1976d2;
+        }
+
+        .address-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .address-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .address-input {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f8f9fa;
+            width: 100%;
+        }
+
+        .address-input:focus {
+            outline: none;
+            border-color: #2196f3;
+            background: #fff;
+        }
+
+        .address-input.error {
+            border-color: #f44336;
+        }
+
+        .address-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .address-label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .address-error {
+            color: #f44336;
+            font-size: 12px;
+            margin-top: 5px;
+            text-align: left;
+            display: none;
+        }
+
+        .hidden-initially {
+            display: none !important;
+        }
+
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4CAF50;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .nav-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .privacy-policy-text {
+            margin-top: 20px;
+            font-size: 10px;
+            color: #666;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .privacy-policy-text p {
+            margin-bottom: 8px;
+        }
+
+        .privacy-policy-text a {
+            color: #2196f3;
+            text-decoration: underline;
+        }
+
+        .privacy-policy-text a:hover {
+            color: #1976d2;
+        }
+
+        .name-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .phone-step label {
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: block;
+            color: #2c3e50;
+            text-align: left;
+        }
+
+        .phone-help {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+            text-align: left;
+        }
+
+        .row {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        #phone, #email {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f8f9fa;
+            width: 100%;
+        }
+
+        #phone:focus, #email:focus {
+            outline: none;
+            border-color: #2196f3;
+            background: #fff;
+        }
+
+        @media (max-width: 600px) {
+            body::before { position: absolute; }
+            .form-container { padding: 25px; margin: 10px; }
+            .address-row { grid-template-columns: 1fr; }
+            .name-grid { grid-template-columns: 1fr; }
+            .main-heading { font-size: 20px; }
+            .question { font-size: 18px; }
+        }
+
+        @media (max-width: 768px) {
+            body::before { position: absolute; }
+        }
+
+        /* Confirmation screen */
+        .confirmation-content {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .confirmation-content svg {
+            margin: 0 auto 30px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="logo-container">
+            <img id="logoImg" src="" alt="" class="logo-img" style="display: none;">
+        </div>
+
+        <div id="mainHeading">
+            <h1 class="main-heading">Let's see what your remodel could cost</h1>
+        </div>
+
+        <div class="progress-bar" id="progressBarContainer">
+            <div class="progress-fill" id="progressFill" style="width: 10%"></div>
+        </div>
+
+        <!-- STEP 1: Homeowner -->
+        <div class="form-step active" id="step1">
+            <div class="question">Are you the homeowner?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'own')">I own the home</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'renting')">I'm renting</div>
+            </div>
+        </div>
+
+        <!-- STEP 2: Home Type -->
+        <div class="form-step" id="step2">
+            <div class="question">What type of home is this?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'single_family')">Single family home</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'town_home')">Town home</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'vacation_home')">Vacation home</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'mobile_home')">Mobile home</div>
+            </div>
+        </div>
+
+        <!-- STEP 3: Project Type -->
+        <div class="form-step" id="step3">
+            <div class="question">What type of project is this?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'tub_to_shower')">Tub to shower conversion</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'shower_to_tub')">Shower to tub conversion</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'shower_replacement')">Shower replacement</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'tub_replacement')">Tub replacement</div>
+            </div>
+        </div>
+
+        <!-- STEP 4: Main Goal -->
+        <div class="form-step" id="step4">
+            <div class="question">I want to...</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'accessibility_safety')">Improve accessibility/safety</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'look_function')">Improve look/function</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'repair_damage')">Repair damage</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'home_value')">Increase home value</div>
+            </div>
+        </div>
+
+        <!-- STEP 5: Material Preferences -->
+        <div class="form-step" id="step5">
+            <div class="question">Do you have any material preferences?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'material', 'tile')">Tile</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'material', 'acrylic')">Acrylic</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'material', 'not_sure')">Not sure</div>
+            </div>
+        </div>
+
+        <!-- STEP 6: Timeline -->
+        <div class="form-step" id="step6">
+            <div class="question">How soon would you like this project to be completed?</div>
+            <div class="sub-heading">We only give estimates for projects that can start soon so pricing is accurate</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'asap')">ASAP</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'within_month')">Within a month</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'within_3_months')">Within 3 months</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'within_6_months')">Within 6 months</div>
+            </div>
+        </div>
+
+        <!-- STEP 7: Already received estimate -->
+        <div class="form-step" id="step7">
+            <div class="question">Have you already received an estimate?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'hasEstimate', 'yes')">Yes</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'hasEstimate', 'no')">No</div>
+            </div>
+        </div>
+
+        <!-- STEP 8: Name -->
+        <div class="form-step" id="step8">
+            <div class="question">Who will we be speaking with?</div>
+            <div class="name-grid">
+                <div>
+                    <label for="firstName" style="margin-bottom: 10px; display: block; color: #2c3e50; text-align: left;">First Name</label>
+                    <input type="text" class="address-input" id="firstName" placeholder="First Name" required autocomplete="given-name" oninput="validateNameForm()">
+                </div>
+                <div>
+                    <label for="lastName" style="margin-bottom: 10px; display: block; color: #2c3e50; text-align: left;">Last Name</label>
+                    <input type="text" class="address-input" id="lastName" placeholder="Last Name" required autocomplete="family-name" oninput="validateNameForm()">
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="goToStep9()" id="nameNextBtn" disabled>Next</button>
+            </div>
+        </div>
+
+        <!-- STEP 9: Address -->
+        <div class="form-step" id="step9">
+            <div class="question">What is the location of this project?</div>
+            <div class="sub-heading">Please make sure your address is full and accurate so we can confirm you are within our service area</div>
+            <div class="address-grid">
+                <div class="address-field">
+                    <label class="address-label" for="street">Street Address</label>
+                    <input type="text" class="address-input" id="street" placeholder="Street Address" oninput="validateAddressForm()">
+                    <div class="address-error" id="streetError">Street address must start with a number</div>
+                </div>
+                <div id="cityField" class="address-field hidden-initially">
+                    <label class="address-label" for="city">City</label>
+                    <input type="text" class="address-input" id="city" placeholder="City" oninput="validateAddressForm()">
+                </div>
+                <div class="address-row hidden-initially" id="stateZipRow">
+                    <div class="address-field">
+                        <label class="address-label" for="state">State</label>
+                        <input type="text" class="address-input" id="state" placeholder="State" oninput="validateAddressForm()">
+                    </div>
+                    <div class="address-field">
+                        <label class="address-label" for="zip">Zip Code</label>
+                        <input type="text" class="address-input" id="zip" placeholder="Zip Code" oninput="validateAddressForm()" maxlength="5">
+                    </div>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="goToStep10()" id="submitFormBtn" disabled>Next</button>
+            </div>
+        </div>
+
+        <!-- STEP 10: Phone/Email -->
+        <div class="form-step" id="step10">
+            <div class="question">Where can we reach you to schedule your free estimate?</div>
+            <div class="row">
+                <div id="phoneWrap">
+                    <label for="phone">Phone</label>
+                    <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required autocomplete="tel" aria-describedby="phoneHelp">
+                    <small id="phoneHelp" class="phone-help">US number, 10 digits.</small>
+                    <input type="hidden" id="phone_digits" name="phone_digits" value="">
+                </div>
+                <div id="emailWrap" style="display:none">
+                    <label for="email">Email</label>
+                    <input id="email" name="email" type="email" inputmode="email" placeholder="your@email.com" autocomplete="email" required>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Get Quote</button>
+            </div>
+            <div class="privacy-policy-text" id="privacyPolicyText">
+                <p>By clicking "Get Quote" and submitting this form, (i) I agree that <span id="partnerBusinessName">Peak Leads Group and its marketing partners</span> may use automated technology to call or text my phone number (provided above) or email me regarding my request, and I may revoke this consent at any time, and (ii) I agree to the <a href="privacypolicy.html" target="_blank">Terms & Conditions and Privacy Policy</a>.</p>
+                <p>I understand that my authorization to receive calls, texts, and emails via automated technology is not a condition of purchasing any goods or services. Message frequency may vary. Msg & data rates may apply. Reply STOP to cancel. Reply HELP for assistance.</p>
+            </div>
+        </div>
+
+        <!-- CONFIRMATION SCREEN -->
+        <div class="form-step" id="confirmationStep">
+            <div class="confirmation-content">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" fill="#e8f5e9"/>
+                    <path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/>
+                </svg>
+                <div style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
+                <div style="font-size: 18px; color: #666; line-height: 1.6;">We'll give you a call soon to schedule your free estimate.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TOTAL_STEPS = 10;
+        let currentStep = 1;
+        let formData = {};
+        let isSubmitting = false;
+
+        // Meta Pixel: PageView on load (when not in test mode, call fbq('init', pixelId) first - pixel ID from campaign/client)
+        if (typeof fbq !== 'undefined') {
+            fbq('track', 'PageView');
+        }
+
+        function selectOptionAndAdvance(element, field, value) {
+            const options = element.parentElement.querySelectorAll('.option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            formData[field] = value;
+            setTimeout(() => nextStep(), 200);
+        }
+
+        function validateAddressForm() {
+            const street = document.getElementById('street').value.trim();
+            const city = document.getElementById('city').value.trim();
+            const state = document.getElementById('state').value.trim();
+            const zip = document.getElementById('zip').value.trim();
+            const cityField = document.getElementById('cityField');
+            const stateZipRow = document.getElementById('stateZipRow');
+            const streetInput = document.getElementById('street');
+            const streetError = document.getElementById('streetError');
+            const startsWithNumber = /^\d/.test(street);
+
+            if (street.length > 0) {
+                if (!startsWithNumber) {
+                    streetInput.classList.add('error');
+                    streetError.style.display = 'block';
+                } else {
+                    streetInput.classList.remove('error');
+                    streetError.style.display = 'none';
+                }
+                cityField.classList.remove('hidden-initially');
+                stateZipRow.classList.remove('hidden-initially');
+            } else {
+                streetInput.classList.remove('error');
+                streetError.style.display = 'none';
+                cityField.classList.add('hidden-initially');
+                stateZipRow.classList.add('hidden-initially');
+                document.getElementById('city').value = '';
+                document.getElementById('state').value = '';
+                document.getElementById('zip').value = '';
+            }
+
+            const submitBtn = document.getElementById('submitFormBtn');
+            if (submitBtn) submitBtn.disabled = !(street && city && state && zip && startsWithNumber);
+
+            if (street && city && state && zip && startsWithNumber) {
+                formData.address = { street, city, state, zip };
+            } else if (formData.address) delete formData.address;
+        }
+
+        function updateProgress() {
+            const progressFill = document.getElementById('progressFill');
+            if (progressFill) progressFill.style.width = (currentStep / TOTAL_STEPS) * 100 + '%';
+        }
+
+        function nextStep() {
+            if (currentStep < TOTAL_STEPS) {
+                document.getElementById('step' + currentStep).classList.remove('active');
+                currentStep++;
+                document.getElementById('step' + currentStep).classList.add('active');
+                updateProgress();
+            }
+        }
+
+        function goToStep9() {
+            validateNameForm();
+            if (formData.firstName && formData.lastName) nextStep();
+        }
+
+        function goToStep10() {
+            validateAddressForm();
+            if (formData.address) nextStep();
+        }
+
+        function validateNameForm() {
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const nameNextBtn = document.getElementById('nameNextBtn');
+            if (nameNextBtn) nameNextBtn.disabled = !(firstName && lastName);
+            if (firstName && lastName) {
+                formData.firstName = firstName;
+                formData.lastName = lastName;
+            }
+        }
+
+        function formatPhone(val) {
+            const d = val.replace(/\D/g,'').slice(0,10);
+            let f = d;
+            if(d.length > 6) f = `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+            else if(d.length > 3) f = `(${d.slice(0,3)}) ${d.slice(3)}`;
+            else if(d.length > 0) f = `(${d}`;
+            return {formatted:f, digits:d};
+        }
+
+        function isValidPhoneNumber(digits) {
+            if (digits.length !== 10) return { valid: false, error: 'Phone number must be 10 digits.' };
+            if (digits.charAt(0) === '1') return { valid: false, error: "Phone number shouldn't start with a 1." };
+            const areaCode = digits.substring(0, 3);
+            const exchange = digits.substring(3, 6);
+            const lineNumber = digits.substring(6, 10);
+            if (/^(\d)\1{2}$/.test(areaCode)) return { valid: false, error: 'Invalid area code.' };
+            if (areaCode === '555') return { valid: false, error: 'Area code 555 is not valid.' };
+            const tollFreeAreaCodes = ['800', '888', '877', '866', '855', '844', '833'];
+            if (tollFreeAreaCodes.includes(areaCode)) return { valid: false, error: 'Toll-free numbers are not accepted.' };
+            const specialExchanges = ['911', '411', '611'];
+            if (specialExchanges.includes(exchange)) return { valid: false, error: 'Invalid exchange code.' };
+            if (exchange.charAt(0) === '0' || exchange.charAt(0) === '1') return { valid: false, error: 'Invalid exchange code.' };
+            if (digits === '1234567890' || digits === '0123456789') return { valid: false, error: 'Sequential numbers are not valid.' };
+            if (/^(\d)\1{9}$/.test(digits)) return { valid: false, error: 'All digits cannot be the same.' };
+            if (areaCode === exchange && areaCode === lineNumber.substring(0, 3)) return { valid: false, error: 'Repeating patterns are not valid.' };
+            if (exchange === '555' && lineNumber.startsWith('01')) return { valid: false, error: 'Test numbers are not valid.' };
+            if (digits.includes('000') || digits.includes('0000')) return { valid: false, error: 'Invalid phone number format.' };
+            if (lineNumber === '9999' || exchange === '999') return { valid: false, error: 'Invalid phone number format.' };
+            return { valid: true, error: '' };
+        }
+
+        function isValidEmail(email) {
+            if (!email || email.trim() === '') return { valid: false, error: 'Email is required.' };
+            if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return { valid: true, error: '' };
+            return { valid: false, error: 'Please enter a valid email address.' };
+        }
+
+        function validatePhones() {
+            const phoneInput = document.getElementById('phone');
+            const emailInput = document.getElementById('email');
+            const emailWrap = document.getElementById('emailWrap');
+            const phoneDigits = document.getElementById('phone_digits');
+            const phoneSubmitBtn = document.getElementById('phoneSubmitBtn');
+            if (!phoneInput) return;
+
+            const p1 = formatPhone(phoneInput.value);
+            if (phoneInput.value !== p1.formatted) phoneInput.value = p1.formatted;
+            phoneDigits.value = p1.digits;
+
+            let phoneError = document.getElementById('phoneError');
+            if (!phoneError) {
+                phoneError = document.createElement('div');
+                phoneError.id = 'phoneError';
+                phoneError.style.cssText = 'color:red;font-size:12px;margin-top:5px;display:none';
+                const phoneHelp = document.getElementById('phoneHelp');
+                if (phoneHelp) phoneHelp.parentNode.insertBefore(phoneError, phoneHelp.nextSibling);
+            }
+
+            const validation = isValidPhoneNumber(p1.digits);
+            if (p1.digits.length > 0 && !validation.valid) {
+                phoneError.textContent = validation.error;
+                phoneError.style.display = 'block';
+                phoneInput.setCustomValidity(validation.error);
+            } else {
+                phoneError.style.display = 'none';
+                phoneInput.setCustomValidity(p1.digits.length === 10 && validation.valid ? '' : 'Please enter a valid 10-digit phone number.');
+            }
+
+            const shouldShowEmail = p1.digits.length === 10 && validation.valid;
+            emailWrap.style.display = shouldShowEmail ? '' : 'none';
+            if (emailInput) emailInput.required = true;
+
+            let emailValid = true;
+            if (emailInput) {
+                const emailValidation = isValidEmail(emailInput.value);
+                const emailTouched = emailInput.dataset.touched === 'true';
+                let emailError = document.getElementById('emailError');
+                if (!emailError && shouldShowEmail) {
+                    emailError = document.createElement('div');
+                    emailError.id = 'emailError';
+                    emailError.style.cssText = 'color:red;font-size:12px;margin-top:5px;display:none';
+                    emailInput.parentNode.appendChild(emailError);
+                }
+                if (!emailValidation.valid) {
+                    emailInput.setCustomValidity(emailValidation.error);
+                    if (emailTouched && emailError) {
+                        emailError.textContent = emailValidation.error;
+                        emailError.style.display = 'block';
+                    }
+                    emailValid = false;
+                } else {
+                    emailInput.setCustomValidity('');
+                    if (emailError) emailError.style.display = 'none';
+                    emailValid = true;
+                }
+            }
+
+            const phoneValid = p1.digits.length === 10 && validation.valid;
+            if (phoneSubmitBtn) phoneSubmitBtn.disabled = !(phoneValid && emailValid);
+            if (phoneValid) {
+                formData.phone = p1.digits;
+                if (emailValid && emailInput) formData.email = emailInput.value.trim();
+            }
+        }
+
+        function setupPhoneValidation() {
+            const phoneInput = document.getElementById('phone');
+            const emailInput = document.getElementById('email');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', validatePhones);
+                phoneInput.addEventListener('blur', validatePhones);
+            }
+            if (emailInput) {
+                emailInput.addEventListener('input', function() { emailInput.dataset.touched = 'true'; validatePhones(); });
+                emailInput.addEventListener('blur', function() { emailInput.dataset.touched = 'true'; validatePhones(); });
+            }
+        }
+
+        function formatPhoneForDisplay(digits) {
+            if (digits && digits.length === 10) return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+            return digits;
+        }
+
+        function getDisplayValue(field, value) {
+            const maps = {
+                homeowner: { own: 'I own the home', renting: "I'm renting" },
+                homeType: { single_family: 'Single family home', town_home: 'Town home', vacation_home: 'Vacation home', mobile_home: 'Mobile home' },
+                projectType: { tub_to_shower: 'Tub to shower conversion', shower_to_tub: 'Shower to tub conversion', shower_replacement: 'Shower replacement', tub_replacement: 'Tub replacement' },
+                mainGoal: { accessibility_safety: 'Improve accessibility/safety', look_function: 'Improve look/function', repair_damage: 'Repair damage', home_value: 'Increase home value' },
+                material: { tile: 'Tile', acrylic: 'Acrylic', not_sure: 'Not sure' },
+                timeline: { asap: 'ASAP', within_month: 'Within a month', within_3_months: 'Within 3 months', within_6_months: 'Within 6 months' },
+                hasEstimate: { yes: 'Yes', no: 'No' }
+            };
+            return (maps[field] && maps[field][value]) || value;
+        }
+
+        function showConfirmationScreen() {
+            document.getElementById('step10').classList.remove('active');
+            document.getElementById('confirmationStep').classList.add('active');
+            document.getElementById('progressBarContainer').style.display = 'none';
+            document.getElementById('mainHeading').style.display = 'none';
+        }
+
+        async function submitFinalForm() {
+            if (isSubmitting) return;
+            isSubmitting = true;
+            const phoneSubmitBtn = document.getElementById('phoneSubmitBtn');
+            if (phoneSubmitBtn) {
+                phoneSubmitBtn.disabled = true;
+                phoneSubmitBtn.textContent = 'Submitting...';
+            }
+
+            try {
+                const emailValue = document.getElementById('email') ? document.getElementById('email').value.trim() : '';
+                const finalData = {
+                    ...formData,
+                    phone: document.getElementById('phone_digits').value,
+                    email: emailValue
+                };
+
+                const formattedAddress = finalData.address 
+                    ? `${finalData.address.street}, ${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}` 
+                    : '';
+
+                const fullSummary = `Bathroom Remodel Lead Information (bathrooms-new):
+
+Name: ${finalData.firstName} ${finalData.lastName}
+Phone: ${formatPhoneForDisplay(finalData.phone)}
+Email: ${finalData.email || '(not provided)'}
+Homeowner: ${getDisplayValue('homeowner', finalData.homeowner)}
+Home Type: ${getDisplayValue('homeType', finalData.homeType)}
+Project Type: ${getDisplayValue('projectType', finalData.projectType)}
+Main Goal: ${getDisplayValue('mainGoal', finalData.mainGoal)}
+Material Preference: ${getDisplayValue('material', finalData.material)}
+Timeline: ${getDisplayValue('timeline', finalData.timeline)}
+Already Received Estimate: ${getDisplayValue('hasEstimate', finalData.hasEstimate)}
+
+Address:
+${formattedAddress}
+
+Lead generated on: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York' })} EST`;
+
+                const leadRecord = {
+                    fields: {
+                        'Phone': finalData.phone,
+                        'Email': finalData.email || '',
+                        'Full Summary': fullSummary,
+                        'Full Name': `${finalData.firstName} ${finalData.lastName}`,
+                        'First Name': finalData.firstName,
+                        'Last Name': finalData.lastName,
+                        'Model': 'Lead',
+                        'Address': formattedAddress,
+                        'City': finalData.address?.city || '',
+                        'State': finalData.address?.state || '',
+                        'Zip': finalData.address?.zip || '',
+                        'Homeowner': getDisplayValue('homeowner', finalData.homeowner),
+                        'Home Type': getDisplayValue('homeType', finalData.homeType),
+                        'Project Type': getDisplayValue('projectType', finalData.projectType),
+                        'Main Goal': getDisplayValue('mainGoal', finalData.mainGoal),
+                        'Material Preference': getDisplayValue('material', finalData.material),
+                        'Timeline': getDisplayValue('timeline', finalData.timeline),
+                        'Already Received Estimate': getDisplayValue('hasEstimate', finalData.hasEstimate)
+                    }
+                };
+
+                // Meta Pixel: Lead event (when not in test mode, ensure fbq('init', pixelId) was called first)
+                if (typeof fbq !== 'undefined') {
+                    fbq('track', 'Lead', {
+                        content_category: 'home_improvement',
+                        content_name: 'bathroom_remodel_quote',
+                        value: 1.00,
+                        currency: 'USD',
+                        homeowner_status: finalData.homeowner,
+                        home_type: finalData.homeType,
+                        project_type: finalData.projectType,
+                        main_goal: finalData.mainGoal,
+                        material: finalData.material,
+                        timeline: finalData.timeline,
+                        has_estimate: finalData.hasEstimate
+                    });
+                }
+
+                // AIRTABLE WRITE DISABLED FOR TESTING - Log what would be written
+                console.log('=== AIRTABLE LEAD (WRITE DISABLED - TEST MODE) ===');
+                console.log('Would submit to B2C_LEADS table:');
+                console.log(JSON.stringify(leadRecord, null, 2));
+                console.log('--- Full Summary (plain text) ---');
+                console.log(fullSummary);
+                console.log('=== END AIRTABLE LOG ===');
+
+                showConfirmationScreen();
+            } catch (error) {
+                console.error('Error in submitFinalForm:', error);
+                showConfirmationScreen();
+            } finally {
+                isSubmitting = false;
+                if (phoneSubmitBtn) {
+                    phoneSubmitBtn.disabled = false;
+                    phoneSubmitBtn.textContent = 'Get Quote';
+                }
+            }
+        }
+
+        // Setup phone validation when step 10 becomes active (or on load if already there)
+        function maybeSetupPhoneValidation() {
+            const step10 = document.getElementById('step10');
+            if (step10 && step10.classList.contains('active')) {
+                setupPhoneValidation();
+            }
+        }
+        const step10Observer = new MutationObserver(() => maybeSetupPhoneValidation());
+        const step10El = document.getElementById('step10');
+        if (step10El) {
+            step10Observer.observe(step10El, { attributes: true, attributeFilter: ['class'] });
+        }
+
+        // Google Places autocomplete
+        window.__attachPlaces = function() {
+            if (!window.google || !google.maps || !google.maps.places) return;
+            const addressInput = document.getElementById('street');
+            if (!addressInput) return;
+            const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+                types: ['address'],
+                componentRestrictions: { country: ['us'] },
+                fields: ['address_components', 'formatted_address', 'geometry']
+            });
+            autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace();
+                if (!place || !place.address_components) return;
+                const comps = Object.fromEntries(place.address_components.flatMap(c => c.types.map(t => [t, c])));
+                let streetAddress = '';
+                if (comps.street_number) streetAddress += comps.street_number.long_name + ' ';
+                if (comps.route) streetAddress += comps.route.long_name;
+                if (streetAddress.trim()) addressInput.value = streetAddress.trim();
+                const cityField = document.getElementById('cityField');
+                const stateZipRow = document.getElementById('stateZipRow');
+                if (streetAddress.trim()) {
+                    cityField.classList.remove('hidden-initially');
+                    stateZipRow.classList.remove('hidden-initially');
+                }
+                const cityInput = document.getElementById('city');
+                const stateInput = document.getElementById('state');
+                const zipInput = document.getElementById('zip');
+                if (comps.locality && cityInput) cityInput.value = comps.locality.long_name;
+                else if (comps.sublocality && cityInput) cityInput.value = comps.sublocality.long_name;
+                if (comps.administrative_area_level_1 && stateInput) stateInput.value = comps.administrative_area_level_1.short_name;
+                if (comps.postal_code && zipInput) zipInput.value = comps.postal_code.long_name;
+                validateAddressForm();
+            });
+        };
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&libraries=places&callback=__attachPlaces"></script>
+</body>
+</html>
