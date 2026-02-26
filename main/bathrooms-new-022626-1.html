@@ -781,21 +781,23 @@
         
 
         /* Post-Submit Header & Numbered Sections */
-        .post-submit-intro { text-align: left; margin-bottom: 30px; }
+        .post-submit-intro { text-align: center; margin-bottom: 30px; }
         .post-submit-header-block { padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px solid #e9ecef; }
         .post-submit-main-title { font-size: 24px; color: #000; font-weight: bold; margin-bottom: 8px; line-height: 1.3; text-align: center; }
         .post-submit-subtitle { font-size: 16px; color: #666; margin-bottom: 0; text-align: center; }
-        .post-submit-step { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
-        .post-submit-step-num { width: 28px; height: 28px; min-width: 28px; background: #2196f3; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
-        .post-submit-step-title { font-size: 16px; font-weight: bold; color: #000; margin-bottom: 4px; }
-        .post-submit-step-desc { font-size: 16px; color: #666; line-height: 1.5; font-weight: 500; }
+        .post-submit-step { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 24px; }
+        .post-submit-step-header { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px; }
+        .post-submit-step-num { width: 28px; height: 28px; min-width: 28px; background: #2196f3; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; flex-shrink: 0; }
+        .post-submit-step-title { font-size: 16px; font-weight: bold; color: #000; margin: 0; }
+        .post-submit-step-desc { font-size: 16px; color: #666; line-height: 1.5; font-weight: 500; margin: 0 0 16px 0; text-align: center; max-width: 400px; }
         .save-contact-btn {
             display: inline-flex; align-items: center; justify-content: center; gap: 12px;
             background: #2196f3; color: white; padding: 16px 40px;
             border-radius: 12px; font-size: 18px; font-weight: 600; border: none;
-            cursor: pointer; margin: 16px auto 0; transition: all 0.2s;
+            cursor: pointer; transition: all 0.2s;
         }
-        .save-contact-btn-wrap { text-align: center; }
+        .save-contact-btn-wrap { display: flex; justify-content: center; width: 100%; margin-top: 16px; }
+        .save-contact-btn-wrap .save-contact-btn { margin: 0; }
         .save-contact-btn:hover { background: #1976d2; transform: translateY(-2px); }
         .post-submit-cta-block { margin-top: 28px; padding-top: 24px; border-top: 1px solid #e9ecef; }
         .post-submit-cta-title { font-size: 16px; font-weight: bold; color: #000; margin-bottom: 8px; }
@@ -1288,33 +1290,33 @@
                         <p class="post-submit-subtitle">Here's what happens now...</p>
                     </div>
                     <div class="post-submit-step">
-                        <div class="post-submit-step-num">1</div>
-                        <div>
+                        <div class="post-submit-step-header">
+                            <span class="post-submit-step-num">1</span>
                             <h3 class="post-submit-step-title">Save our contact</h3>
-                            <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate—save our contact so you know it's us.</p>
-                            <div class="save-contact-btn-wrap">
-                                <button type="button" class="save-contact-btn" onclick="addContact()">
-                                    <svg class="person-icon" fill="currentColor" viewBox="0 0 24 24" style="width:24px;height:24px;">
-                                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                                    </svg>
-                                    Save Contact
-                                </button>
-                            </div>
+                        </div>
+                        <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate. Tap the button below, then press "Create Contact" (iPhone) or "Save" (Android) so you know it's us.</p>
+                        <div class="save-contact-btn-wrap">
+                            <button type="button" class="save-contact-btn" onclick="addContact()">
+                                <svg class="person-icon" fill="currentColor" viewBox="0 0 24 24" style="width:24px;height:24px;">
+                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                </svg>
+                                Save Contact
+                            </button>
                         </div>
                     </div>
                     <div class="post-submit-step">
-                        <div class="post-submit-step-num">2</div>
-                        <div>
+                        <div class="post-submit-step-header">
+                            <span class="post-submit-step-num">2</span>
                             <h3 class="post-submit-step-title">In-Home Estimate</h3>
-                            <p class="post-submit-step-desc">A design specialist will help design your new shower and provide a straightforward, no-obligation estimate with no sales pressure.</p>
                         </div>
+                        <p class="post-submit-step-desc">A design specialist will help design your new shower and provide a straightforward, no-obligation estimate with no sales pressure.</p>
                     </div>
                     <div class="post-submit-step">
-                        <div class="post-submit-step-num">3</div>
-                        <div>
+                        <div class="post-submit-step-header">
+                            <span class="post-submit-step-num">3</span>
                             <h3 class="post-submit-step-title">Approval & Installation</h3>
-                            <p class="post-submit-step-desc">Once you're happy with the design and estimate, we handle the rest—from scheduling to professional installation.</p>
                         </div>
+                        <p class="post-submit-step-desc">Once you're happy with the design and estimate, we handle the rest—from scheduling to professional installation.</p>
                     </div>
                     <div class="post-submit-cta-block" style="text-align: center;">
                         <h3 class="post-submit-cta-title">Ready to get started now?</h3>
@@ -1348,33 +1350,33 @@
                         <p class="post-submit-subtitle">Here's what happens now...</p>
                     </div>
                     <div class="post-submit-step">
-                        <div class="post-submit-step-num">1</div>
-                        <div>
+                        <div class="post-submit-step-header">
+                            <span class="post-submit-step-num">1</span>
                             <h3 class="post-submit-step-title">Save our contact</h3>
-                            <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate—save our contact so you know it's us.</p>
-                            <div class="save-contact-btn-wrap">
-                                <button type="button" class="save-contact-btn" onclick="addContact()">
-                                    <svg class="person-icon" fill="currentColor" viewBox="0 0 24 24" style="width:24px;height:24px;">
-                                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                                    </svg>
-                                    Save Contact
-                                </button>
-                            </div>
+                        </div>
+                        <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate. Tap the button below, then press "Create Contact" (iPhone) or "Save" (Android) so you know it's us.</p>
+                        <div class="save-contact-btn-wrap">
+                            <button type="button" class="save-contact-btn" onclick="addContact()">
+                                <svg class="person-icon" fill="currentColor" viewBox="0 0 24 24" style="width:24px;height:24px;">
+                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                </svg>
+                                Save Contact
+                            </button>
                         </div>
                     </div>
                     <div class="post-submit-step">
-                        <div class="post-submit-step-num">2</div>
-                        <div>
+                        <div class="post-submit-step-header">
+                            <span class="post-submit-step-num">2</span>
                             <h3 class="post-submit-step-title">In-Home Estimate</h3>
-                            <p class="post-submit-step-desc">A design specialist will help design your new shower and provide a straightforward, no-obligation estimate with no sales pressure.</p>
                         </div>
+                        <p class="post-submit-step-desc">A design specialist will help design your new shower and provide a straightforward, no-obligation estimate with no sales pressure.</p>
                     </div>
                     <div class="post-submit-step">
-                        <div class="post-submit-step-num">3</div>
-                        <div>
+                        <div class="post-submit-step-header">
+                            <span class="post-submit-step-num">3</span>
                             <h3 class="post-submit-step-title">Approval & Installation</h3>
-                            <p class="post-submit-step-desc">Once you're happy with the design and estimate, we handle the rest—from scheduling to professional installation.</p>
                         </div>
+                        <p class="post-submit-step-desc">Once you're happy with the design and estimate, we handle the rest—from scheduling to professional installation.</p>
                     </div>
                     <div class="post-submit-cta-block" style="text-align: center;">
                         <h3 class="post-submit-cta-title">Ready to get started now?</h3>
@@ -1399,25 +1401,25 @@
                     <p class="post-submit-subtitle">Here's what happens now...</p>
                 </div>
                 <div class="post-submit-step">
-                    <div class="post-submit-step-num">1</div>
-                    <div>
+                    <div class="post-submit-step-header">
+                        <span class="post-submit-step-num">1</span>
                         <h3 class="post-submit-step-title">Save our contact</h3>
-                        <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate—save our contact so you know it's us.</p>
                     </div>
+                    <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate. Tap the button below, then press "Create Contact" (iPhone) or "Save" (Android) so you know it's us.</p>
                 </div>
                 <div class="post-submit-step">
-                    <div class="post-submit-step-num">2</div>
-                    <div>
+                    <div class="post-submit-step-header">
+                        <span class="post-submit-step-num">2</span>
                         <h3 class="post-submit-step-title">In-Home Estimate</h3>
-                        <p class="post-submit-step-desc">A design specialist will help design your new shower and provide a straightforward, no-obligation estimate with no sales pressure.</p>
                     </div>
+                    <p class="post-submit-step-desc">A design specialist will help design your new shower and provide a straightforward, no-obligation estimate with no sales pressure.</p>
                 </div>
                 <div class="post-submit-step">
-                    <div class="post-submit-step-num">3</div>
-                    <div>
+                    <div class="post-submit-step-header">
+                        <span class="post-submit-step-num">3</span>
                         <h3 class="post-submit-step-title">Approval & Installation</h3>
-                        <p class="post-submit-step-desc">Once you're happy with the design and estimate, we handle the rest—from scheduling to professional installation.</p>
                     </div>
+                    <p class="post-submit-step-desc">Once you're happy with the design and estimate, we handle the rest—from scheduling to professional installation.</p>
                 </div>
                 <div class="post-submit-cta-block">
                     <h3 class="post-submit-cta-title">Ready to get started now?</h3>
@@ -1468,33 +1470,33 @@
                         <p class="post-submit-subtitle">Here's what happens now...</p>
                     </div>
                     <div class="post-submit-step">
-                        <div class="post-submit-step-num">1</div>
-                        <div>
+                        <div class="post-submit-step-header">
+                            <span class="post-submit-step-num">1</span>
                             <h3 class="post-submit-step-title">Save our contact</h3>
-                            <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate—save our contact so you know it's us.</p>
-                            <div class="save-contact-btn-wrap">
-                                <button type="button" class="save-contact-btn" onclick="addContact()">
-                                    <svg class="person-icon" fill="currentColor" viewBox="0 0 24 24" style="width:24px;height:24px;">
-                                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                                    </svg>
-                                    Save Contact
-                                </button>
-                            </div>
+                        </div>
+                        <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate. Tap the button below, then press "Create Contact" (iPhone) or "Save" (Android) so you know it's us.</p>
+                        <div class="save-contact-btn-wrap">
+                            <button type="button" class="save-contact-btn" onclick="addContact()">
+                                <svg class="person-icon" fill="currentColor" viewBox="0 0 24 24" style="width:24px;height:24px;">
+                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                </svg>
+                                Save Contact
+                            </button>
                         </div>
                     </div>
                     <div class="post-submit-step">
-                        <div class="post-submit-step-num">2</div>
-                        <div>
+                        <div class="post-submit-step-header">
+                            <span class="post-submit-step-num">2</span>
                             <h3 class="post-submit-step-title">In-Home Estimate</h3>
-                            <p class="post-submit-step-desc">A design specialist will help design your new shower and provide a straightforward, no-obligation estimate with no sales pressure.</p>
                         </div>
+                        <p class="post-submit-step-desc">A design specialist will help design your new shower and provide a straightforward, no-obligation estimate with no sales pressure.</p>
                     </div>
                     <div class="post-submit-step">
-                        <div class="post-submit-step-num">3</div>
-                        <div>
+                        <div class="post-submit-step-header">
+                            <span class="post-submit-step-num">3</span>
                             <h3 class="post-submit-step-title">Approval & Installation</h3>
-                            <p class="post-submit-step-desc">Once you're happy with the design and estimate, we handle the rest—from scheduling to professional installation.</p>
                         </div>
+                        <p class="post-submit-step-desc">Once you're happy with the design and estimate, we handle the rest—from scheduling to professional installation.</p>
                     </div>
                     <div class="post-submit-cta-block">
                         <h3 class="post-submit-cta-title">Ready to get started now?</h3>
