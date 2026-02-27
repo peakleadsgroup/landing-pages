@@ -192,6 +192,42 @@
             display: none;
         }
 
+        .contact-consent-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin: 20px 0;
+            padding: 18px 20px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            min-height: 56px;
+        }
+
+        .contact-consent-card:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .contact-consent-card input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            min-height: 24px;
+            cursor: pointer;
+            accent-color: #2196f3;
+        }
+
+        .contact-consent-text {
+            color: #2c3e50;
+            font-size: 15px;
+            line-height: 1.4;
+            flex: 1;
+        }
+
         .hidden-initially {
             display: none !important;
         }
@@ -735,10 +771,10 @@
                     <input id="email" name="email" type="email" inputmode="email" placeholder="your@email.com" autocomplete="email" required>
                 </div>
             </div>
-            <div class="contact-consent-row" style="margin: 20px 0; display: flex; align-items: flex-start; gap: 10px;">
-                <input type="checkbox" id="contactConsentCheckbox" onchange="validatePhones()" style="margin-top: 4px; flex-shrink: 0;">
-                <label for="contactConsentCheckbox" style="color: #2c3e50; font-size: 14px; line-height: 1.4; cursor: pointer;">I agree to be contacted regarding this windows estimate</label>
-            </div>
+            <label class="contact-consent-card" for="contactConsentCheckbox">
+                <input type="checkbox" id="contactConsentCheckbox" onchange="validatePhones()">
+                <span class="contact-consent-text">I agree to be contacted to schedule my windows estimate.</span>
+            </label>
             <div class="nav-buttons">
                 <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Book Quote</button>
             </div>
