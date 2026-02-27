@@ -1473,9 +1473,6 @@
             <div style="padding: 40px 20px;">
                 <div class="post-submit-intro">
                     <div class="post-submit-header-block">
-                        <div style="margin-bottom: 20px;">
-                            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#2196f3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#e3f2fd"/><path d="M9 12l2 2 4-4" stroke="#2196f3" stroke-width="3"/></svg>
-                        </div>
                         <h2 class="post-submit-main-title">You're one step closer to your dream bathroom!</h2>
                         <p class="post-submit-subtitle">Here's what happens now...</p>
                     </div>
@@ -1508,9 +1505,13 @@
                         </div>
                         <p class="post-submit-step-desc">Once you're happy with the design and estimate, we handle the rest—from scheduling to professional installation.</p>
                     </div>
-                    <div class="post-submit-cta-block">
+                    <div class="post-submit-cta-block" id="confirmationCtaBlock">
                         <h3 class="post-submit-cta-title">Ready to get started now?</h3>
                         <p class="post-submit-cta-subtitle" id="confirmationReadySubtitle">Can't wait to hear from us? We'll give you a call soon to schedule your free estimate.</p>
+                    </div>
+                    <div class="post-submit-cta-block" id="confirmationAppointmentBlock" style="display: none; margin-top: 28px;">
+                        <div id="confirmationAppointmentIcon" style="margin-bottom: 20px;"></div>
+                        <p id="confirmationAppointmentMessage" style="font-size: 16px; color: #666; line-height: 1.6; font-weight: 500; margin: 0; text-align: center;"></p>
                     </div>
                 </div>
             </div>
@@ -1675,6 +1676,7 @@
         let isSubmitting = false; // Flag to prevent duplicate submissions
         let currentSubmitScreenType = null; // Store the current submit screen type
         let appointmentTimeSelected = false; // True after user selects a time (so bottom shows confirmation, not calendar)
+        let lastAppointmentText = ''; // Formatted appointment date/time for confirmation message
         
         // Get campaign ID immediately from URL (before DOM is ready)
         const urlParams = new URLSearchParams(window.location.search);
@@ -3283,15 +3285,21 @@
             }
             
             appointmentTimeSelected = true; // So showDuplicateCallToAction shows confirmation below, not calendar
+            lastAppointmentText = appointmentText; // Store for showDuplicateCallToAction
+            
+            // Hide "Ready to get started now?" and subtext; show exclamation with appointment message
+            const confirmationCtaBlock = document.getElementById('confirmationCtaBlock');
+            const confirmationAppointmentBlock = document.getElementById('confirmationAppointmentBlock');
+            const confirmationAppointmentIcon = document.getElementById('confirmationAppointmentIcon');
+            const confirmationAppointmentMessage = document.getElementById('confirmationAppointmentMessage');
+            if (confirmationCtaBlock) confirmationCtaBlock.style.display = 'none';
+            if (confirmationAppointmentBlock) confirmationAppointmentBlock.style.display = 'block';
+            if (confirmationAppointmentIcon) confirmationAppointmentIcon.innerHTML = exclamationIconHtml;
+            if (confirmationAppointmentMessage) confirmationAppointmentMessage.textContent = "Your appointment is not officially booked until we speak with you over the phone. We'll give you a call as soon as possible to confirm your appointment at " + appointmentText + ".";
             
             const confirmationIconBelow = document.getElementById('confirmationIconBelow');
             if (confirmationIconBelow) confirmationIconBelow.innerHTML = exclamationIconHtml;
             
-            // Show confirmation screen with appointment-specific message
-            const confirmationReadySubtitle = document.getElementById('confirmationReadySubtitle');
-            if (confirmationReadySubtitle) {
-                confirmationReadySubtitle.textContent = "IMPORTANT: Your appointment is not confirmed until we speak with you over the phone. We will call you as soon as possible to confirm your time!";
-            }
             document.getElementById('calendarStep').classList.remove('active');
             document.getElementById('confirmationStep').classList.add('active');
             
@@ -3308,8 +3316,9 @@
                 confirmationStepBelow.style.display = 'block';
                 const confirmationTitleBelow = document.getElementById('confirmationTitleBelow');
                 const confirmationMessageBelow = document.getElementById('confirmationMessageBelow');
-                if (confirmationTitleBelow) confirmationTitleBelow.textContent = "IMPORTANT";
-                if (confirmationMessageBelow) confirmationMessageBelow.textContent = "Your appointment is not confirmed until we speak with you over the phone. We will call you as soon as possible to confirm your time!";
+                if (confirmationTitleBelow) confirmationTitleBelow.textContent = "";
+                if (confirmationTitleBelow) confirmationTitleBelow.style.display = 'none';
+                if (confirmationMessageBelow) confirmationMessageBelow.textContent = "Your appointment is not officially booked until we speak with you over the phone. We'll give you a call as soon as possible to confirm your appointment at " + appointmentText + ".";
             }
             
             // Show reviews modal if reviews exist
@@ -3559,7 +3568,11 @@
         const checkMarkIconHtml = '<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#2196f3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#e3f2fd"/><path d="M9 12l2 2 4-4" stroke="#2196f3" stroke-width="3"/></svg>';
         const exclamationIconHtml = '<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#F9A825" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#FFF9C4" stroke="#F9A825"/><path d="M12 7 v6" stroke="#F9A825" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.5" fill="#F9A825"/></svg>';
         function showConfirmationScreen() {
-            // Show the confirmation/thank you screen
+            // Show the confirmation/thank you screen (default state: show "Ready to get started now?", hide appointment block)
+            const confirmationCtaBlock = document.getElementById('confirmationCtaBlock');
+            const confirmationAppointmentBlock = document.getElementById('confirmationAppointmentBlock');
+            if (confirmationCtaBlock) confirmationCtaBlock.style.display = '';
+            if (confirmationAppointmentBlock) confirmationAppointmentBlock.style.display = 'none';
             const confirmationReadySubtitle = document.getElementById('confirmationReadySubtitle');
             if (confirmationReadySubtitle) {
                 confirmationReadySubtitle.textContent = "Can't wait to hear from us? We'll give you a call soon to schedule your free estimate.";
@@ -3705,8 +3718,8 @@
                     confirmationStepBelow.style.display = 'block';
                     const confirmationTitleBelow = document.getElementById('confirmationTitleBelow');
                     const confirmationMessageBelow = document.getElementById('confirmationMessageBelow');
-                    if (confirmationTitleBelow) confirmationTitleBelow.textContent = "IMPORTANT";
-                    if (confirmationMessageBelow) confirmationMessageBelow.textContent = "Your appointment is not confirmed until we speak with you over the phone. We will call you as soon as possible to confirm your time!";
+                    if (confirmationTitleBelow) confirmationTitleBelow.style.display = 'none';
+                    if (confirmationMessageBelow) confirmationMessageBelow.textContent = "Your appointment is not officially booked until we speak with you over the phone. We'll give you a call as soon as possible to confirm your appointment at " + lastAppointmentText + ".";
                 }
                 if (ctaSection) ctaSection.classList.add('active');
             } else if (currentSubmitScreenType === 'Phone' || currentSubmitScreenType === 'Text' || currentSubmitScreenType === 'Phone/Text') {
@@ -3726,7 +3739,14 @@
             } else {
                 // For 'None' option, show only the thank you/confirmation screen below
                 if (confirmationStepBelow) {
+                    const confirmationIconBelow = document.getElementById('confirmationIconBelow');
+                    const confirmationTitleBelow = document.getElementById('confirmationTitleBelow');
                     const confirmationMessageBelow = document.getElementById('confirmationMessageBelow');
+                    if (confirmationIconBelow) confirmationIconBelow.innerHTML = checkMarkIconHtml;
+                    if (confirmationTitleBelow) {
+                        confirmationTitleBelow.textContent = "Thank you!";
+                        confirmationTitleBelow.style.display = '';
+                    }
                     if (confirmationMessageBelow) {
                         confirmationMessageBelow.textContent = "We'll give you a call soon to schedule your free estimate.";
                     }
