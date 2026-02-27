@@ -7,8 +7,8 @@
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
     <title>Bathroom Remodel Qualification</title>
     
-    <!-- Meta Pixel DISABLED for testing -->
-    <!-- <script>
+    <!-- Meta Pixel -->
+    <script>
     !function(f,b,e,v,n,t,s)
     {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
     n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -17,7 +17,7 @@
     t.src=v;s=b.getElementsByTagName(e)[0];
     s.parentNode.insertBefore(t,s)}(window, document,'script',
     'https://connect.facebook.net/en_US/fbevents.js');
-    </script> -->
+    </script>
     <noscript id="metaPixelNoscript"></noscript>
     
     <style>
@@ -1630,7 +1630,7 @@
         // ============================================
         // TESTING MODE - Disables Airtable writes and Meta Pixel
         // ============================================
-        const TESTING_MODE = true; // Airtable writes and Meta Pixel disabled; console logs enabled
+        const TESTING_MODE = false; // Set to true to disable Airtable writes and Meta Pixel for testing
         if (TESTING_MODE) console.log('[TESTING_MODE] Page loaded - Airtable and Meta Pixel disabled for testing');
         
         // ============================================
@@ -4039,8 +4039,22 @@
                     email: emailValue
                 };
             
-            // Track Facebook event - DISABLED in testing mode
-            if (!TESTING_MODE && typeof fbq !== 'undefined' && clientData && clientData.fields['Meta Pixel']) {
+            // Find client by zip code
+            try {
+                // Safety check: ensure address data exists
+                if (!finalData.address || !finalData.address.zip) {
+                    throw new Error('Address data is missing or incomplete. Address object: ' + JSON.stringify(finalData.address));
+                }
+                
+                matchedClientData = await findClientByZipCode(finalData.address.zip);
+                // Update partner name in privacy policy if client was matched
+                updatePartnerNameInPrivacyPolicy();
+            } catch (error) {
+                console.error('Error finding client by zip code:', error);
+            }
+            
+            // Track Meta Pixel Lead event - only when matching zip code is found
+            if (!TESTING_MODE && typeof fbq !== 'undefined' && matchedClientData && matchedClientData.fields && matchedClientData.fields['Meta Pixel']) {
                 const leadEventData = {
                     content_category: 'home_improvement',
                     content_name: 'bathroom_remodel_quote',
@@ -4061,20 +4075,6 @@
             }
             if (TESTING_MODE) {
                 console.log('[TESTING_MODE] Meta Pixel Lead event would fire with:', { homeowner_status: finalData.homeowner, home_type: finalData.homeType, project_type: finalData.projectType, main_goal: finalData.mainGoal, material_pref: finalData.materialPref, timeline: finalData.timeline, has_estimate: finalData.hasEstimate });
-            }
-            
-            // Find client by zip code
-            try {
-                // Safety check: ensure address data exists
-                if (!finalData.address || !finalData.address.zip) {
-                    throw new Error('Address data is missing or incomplete. Address object: ' + JSON.stringify(finalData.address));
-                }
-                
-                matchedClientData = await findClientByZipCode(finalData.address.zip);
-                // Update partner name in privacy policy if client was matched
-                updatePartnerNameInPrivacyPolicy();
-            } catch (error) {
-                console.error('Error finding client by zip code:', error);
             }
             
             // Find ad by adATID from URL
