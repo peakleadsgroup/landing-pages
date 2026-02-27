@@ -3285,6 +3285,10 @@
             document.getElementById('calendarStep').classList.remove('active');
             document.getElementById('confirmationStep').classList.add('active');
             
+            // Scroll thank you screen into view so user sees it (they may have scrolled down to calendar)
+            const confirmationStep = document.getElementById('confirmationStep');
+            if (confirmationStep) confirmationStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
             // Show same confirmation screen in the bottom section so user can't select a second time
             const calendarStepBelow = document.getElementById('calendarStepBelow');
             const confirmationStepBelow = document.getElementById('confirmationStepBelow');
