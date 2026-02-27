@@ -84,6 +84,32 @@
             font-style: italic;
         }
 
+        .setup-notice {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #856404;
+        }
+
+        .setup-notice summary {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .setup-notice ol {
+            margin: 10px 0 0 20px;
+        }
+
+        .setup-notice code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 20px;
@@ -100,6 +126,17 @@
         <h1>Schedule a 30-Minute Meeting</h1>
         <p class="subtitle">Select a date and time below to book your appointment</p>
 
+        <details class="setup-notice">
+            <summary>To show the actual date (not just "Booking confirmed"): set up a Make.com proxy</summary>
+            <p>Calendly's embed only sends URIs in the payload, not the date. To display it:</p>
+            <ol>
+                <li>Create a Make.com scenario with <strong>Webhooks → Custom webhook</strong> as trigger</li>
+                <li>Add <strong>HTTP → Make a request</strong>: GET the <code>invitee.uri</code> from the webhook body, with header <code>Authorization: Bearer YOUR_CALENDLY_TOKEN</code></li>
+                <li>Add <strong>Webhooks → Webhook response</strong> with body: <code>{"start_time": "{{2.resource.event.start_time}}"}</code> (adjust path to match Calendly API response)</li>
+                <li>Paste the webhook URL into <code>CALENDLY_PROXY_URL</code> at the top of this page's script</li>
+            </ol>
+        </details>
+
         <div class="calendly-inline-widget" data-url="https://calendly.com/drew-peakleadsgroup/30min" data-resize="true" style="min-width:320px;height:700px;"></div>
 
         <div class="selected-date-section">
@@ -111,53 +148,74 @@
 
     <script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
     <script>
-        // Listen for Calendly postMessage events
+        // Optional: Make.com webhook URL that fetches event details from Calendly API.
+        // The embed only sends URIs, not the date. Set this to display the actual date.
+        const CALENDLY_PROXY_URL = '';  // e.g. 'https://hook.us2.make.com/xxxxx'
+
         function isCalendlyEvent(e) {
             return e.origin === 'https://calendly.com' && e.data.event?.startsWith('calendly.');
         }
 
-        function formatDateFromPayload(payload) {
-            if (!payload) return null;
-
-            // event_scheduled payload may include: event, invitee, questions_and_answers
-            // The payload structure varies - check for common date fields
-            if (payload.invitee?.scheduled_event?.start_time) {
-                const date = new Date(payload.invitee.scheduled_event.start_time);
-                return date.toLocaleString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: '2-digit',
-                    hour12: true
-                });
+        function findDateInPayload(obj, depth) {
+            if (!obj || depth > 5) return null;
+            if (typeof obj === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(obj)) {
+                const d = new Date(obj);
+                if (!isNaN(d.getTime())) return d;
             }
-            if (payload.event?.start_time) {
-                const date = new Date(payload.event.start_time);
-                return date.toLocaleString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: '2-digit',
-                    hour12: true
-                });
-            }
-            if (payload.start_time) {
-                const date = new Date(payload.start_time);
-                return date.toLocaleString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: '2-digit',
-                    hour12: true
-                });
+            if (typeof obj === 'object') {
+                for (const key of ['start_time', 'startTime', 'scheduled_event', 'event', 'invitee']) {
+                    const val = obj[key];
+                    if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(val)) {
+                        const d = new Date(val);
+                        if (!isNaN(d.getTime())) return d;
+                    }
+                    if (val && typeof val === 'object') {
+                        const found = findDateInPayload(val, depth + 1);
+                        if (found) return found;
+                    }
+                }
+                for (const val of Object.values(obj)) {
+                    const found = findDateInPayload(val, depth + 1);
+                    if (found) return found;
+                }
             }
             return null;
+        }
+
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            if (isNaN(date.getTime())) return null;
+            return date.toLocaleString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+
+        function setDateDisplay(value) {
+            const dateInput = document.getElementById('selectedDate');
+            dateInput.value = value;
+            dateInput.classList.remove('empty');
+        }
+
+        async function fetchDateFromProxy(payload) {
+            if (!CALENDLY_PROXY_URL) return null;
+            try {
+                const res = await fetch(CALENDLY_PROXY_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) return null;
+                const data = await res.json();
+                return data.start_time || data.startTime || null;
+            } catch (e) {
+                return null;
+            }
         }
 
         window.addEventListener('message', function(e) {
@@ -168,22 +226,32 @@
             const dateInput = document.getElementById('selectedDate');
 
             if (eventName === 'calendly.event_scheduled') {
-                const formattedDate = formatDateFromPayload(payload);
+                let formattedDate = formatDate(findDateInPayload(payload, 0));
                 if (formattedDate) {
-                    dateInput.value = formattedDate;
-                    dateInput.classList.remove('empty');
+                    setDateDisplay(formattedDate);
+                    return;
+                }
+                // Calendly embed only sends URIs - try proxy to fetch date from API
+                if (payload.invitee?.uri || payload.uri) {
+                    setDateDisplay('Loading...');
+                    fetchDateFromProxy(payload).then(function(startTime) {
+                        if (startTime) {
+                            setDateDisplay(formatDate(startTime));
+                        } else {
+                            setDateDisplay('Booking confirmed! (Check your email for details)');
+                        }
+                    }).catch(function() {
+                        setDateDisplay('Booking confirmed! (Check your email for details)');
+                    });
                 } else {
-                    dateInput.value = 'Booking confirmed! (Check your email for details)';
-                    dateInput.classList.remove('empty');
+                    setDateDisplay('Booking confirmed! (Check your email for details)');
                 }
             } else if (eventName === 'calendly.date_and_time_selected') {
-                const formattedDate = formatDateFromPayload(payload);
+                const formattedDate = formatDate(findDateInPayload(payload, 0));
                 if (formattedDate) {
-                    dateInput.value = formattedDate;
-                    dateInput.classList.remove('empty');
+                    setDateDisplay(formattedDate);
                 } else {
-                    dateInput.value = 'Date selected - please complete your booking';
-                    dateInput.classList.remove('empty');
+                    setDateDisplay('Date selected - please complete your booking');
                 }
             }
         });

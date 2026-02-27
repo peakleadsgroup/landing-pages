@@ -4093,7 +4093,7 @@ Project Type: ${getProjectTypeDisplay(finalData.projectType)}
 Goal: ${getMainGoalDisplay(finalData.goal || finalData.mainGoal)}
 Material: ${getMaterialDisplay(finalData.material)}
 Timeline: ${getTimelineDisplay(finalData.timeline)}
-Has Estimate: ${finalData.hasEstimate === 'yes' ? 'Yes' : (finalData.hasEstimate === 'no' ? 'No' : (finalData.hasEstimate || '—'))}
+Already received estimate? ${finalData.hasEstimate === 'yes' ? 'Yes' : (finalData.hasEstimate === 'no' ? 'No' : (finalData.hasEstimate || '—'))}
 
 Address:
 ${finalData.address.street}
@@ -4115,7 +4115,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             
             // Build HTML version of full summary
             const emailLineHTML = finalData.email ? `Email: ${finalData.email}<BR>` : '';
-            const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR>${emailLineHTML}Homeowner: ${finalData.homeowner === 'own' ? 'Yes' : (finalData.homeowner === 'rent' ? 'Renting' : (finalData.homeowner === 'yes' ? 'Yes' : 'No'))}<BR>Home Type: ${getHomeTypeDisplay(finalData.homeType)}<BR>Existing/New: ${getExistingOrNewDisplay(finalData.existingOrNew)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Goal: ${getMainGoalDisplay(finalData.goal || finalData.mainGoal)}<BR>Material: ${getMaterialDisplay(finalData.material)}<BR>Timeline: ${getTimelineDisplay(finalData.timeline)}<BR>Has Estimate: ${finalData.hasEstimate === 'yes' ? 'Yes' : (finalData.hasEstimate === 'no' ? 'No' : (finalData.hasEstimate || '—'))}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+            const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR>${emailLineHTML}Homeowner: ${finalData.homeowner === 'own' ? 'Yes' : (finalData.homeowner === 'rent' ? 'Renting' : (finalData.homeowner === 'yes' ? 'Yes' : 'No'))}<BR>Home Type: ${getHomeTypeDisplay(finalData.homeType)}<BR>Existing/New: ${getExistingOrNewDisplay(finalData.existingOrNew)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Goal: ${getMainGoalDisplay(finalData.goal || finalData.mainGoal)}<BR>Material: ${getMaterialDisplay(finalData.material)}<BR>Timeline: ${getTimelineDisplay(finalData.timeline)}<BR>Already received estimate? ${finalData.hasEstimate === 'yes' ? 'Yes' : (finalData.hasEstimate === 'no' ? 'No' : (finalData.hasEstimate || '—'))}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
                 weekday: 'long', 
                 year: 'numeric', 
                 month: 'long', 

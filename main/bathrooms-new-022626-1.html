@@ -658,8 +658,8 @@
         }
 
         .calendar-day.selected {
-            background: #4CAF50;
-            border-color: #4CAF50;
+            background: #2196f3;
+            border-color: #2196f3;
             color: white;
             transform: scale(1.05);
         }
@@ -725,8 +725,8 @@
         }
 
         .time-slot:hover {
-            background: #4CAF50;
-            border-color: #4CAF50;
+            background: #2196f3;
+            border-color: #2196f3;
             color: white;
             transform: translateY(-2px);
         }
@@ -1603,9 +1603,9 @@
             <div class="form-step cta-block" id="confirmationStepBelow">
                 <div style="text-align: center; padding: 40px 20px;">
                     <div id="confirmationIconBelow" style="margin-bottom: 30px;">
-                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;">
-                            <circle cx="12" cy="12" r="10" fill="#e8f5e9"/>
-                            <path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/>
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#2196f3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;">
+                            <circle cx="12" cy="12" r="10" fill="#e3f2fd"/>
+                            <path d="M9 12l2 2 4-4" stroke="#2196f3" stroke-width="3"/>
                         </svg>
                     </div>
                     <div id="confirmationTitleBelow" style="font-size: 28px; color: #000; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
@@ -3542,7 +3542,7 @@
             }, 500); // Small delay to let the contact screen appear first
         }
 
-        const checkMarkIconHtml = '<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#e8f5e9"/><path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/></svg>';
+        const checkMarkIconHtml = '<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#2196f3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#e3f2fd"/><path d="M9 12l2 2 4-4" stroke="#2196f3" stroke-width="3"/></svg>';
         const exclamationIconHtml = '<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#F9A825" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#FFF9C4" stroke="#F9A825"/><path d="M12 7 v6" stroke="#F9A825" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.5" fill="#F9A825"/></svg>';
         function showConfirmationScreen() {
             // Show the confirmation/thank you screen
@@ -4066,7 +4066,7 @@ Project Type: ${getProjectTypeDisplay(finalData.projectType)}
 Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}
 Material Preference: ${getMaterialPrefDisplay(finalData.materialPref)}
 Timeline: ${getTimelineDisplay(finalData.timeline)}
-Has Estimate: ${getHasEstimateDisplay(finalData.hasEstimate)}
+Already received estimate? ${getHasEstimateDisplay(finalData.hasEstimate)}
 
 Address:
 ${finalData.address.street}
@@ -4088,7 +4088,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             
             // Build HTML version of full summary
             const emailLineHTML = finalData.email ? `Email: ${finalData.email}<BR>` : '';
-            const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR>${emailLineHTML}Homeowner: ${getHomeownerDisplay(finalData.homeowner)}<BR>Home Type: ${getHomeTypeDisplay(finalData.homeType)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}<BR>Material Preference: ${getMaterialPrefDisplay(finalData.materialPref)}<BR>Timeline: ${getTimelineDisplay(finalData.timeline)}<BR>Has Estimate: ${getHasEstimateDisplay(finalData.hasEstimate)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+            const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR>${emailLineHTML}Homeowner: ${getHomeownerDisplay(finalData.homeowner)}<BR>Home Type: ${getHomeTypeDisplay(finalData.homeType)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}<BR>Material Preference: ${getMaterialPrefDisplay(finalData.materialPref)}<BR>Timeline: ${getTimelineDisplay(finalData.timeline)}<BR>Already received estimate? ${getHasEstimateDisplay(finalData.hasEstimate)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
     year: 'numeric', 
     month: 'long', 
