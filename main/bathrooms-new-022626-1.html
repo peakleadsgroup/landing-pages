@@ -3295,7 +3295,7 @@
             if (confirmationCtaBlock) confirmationCtaBlock.style.display = 'none';
             if (confirmationAppointmentBlock) confirmationAppointmentBlock.style.display = 'block';
             if (confirmationAppointmentIcon) confirmationAppointmentIcon.innerHTML = exclamationIconHtml;
-            if (confirmationAppointmentMessage) confirmationAppointmentMessage.textContent = "Your appointment is not officially booked until we speak with you over the phone. We'll give you a call as soon as possible to confirm your appointment at " + appointmentText + ".";
+            if (confirmationAppointmentMessage) confirmationAppointmentMessage.innerHTML = "Your appointment is not officially booked until we speak with you over the phone. We'll give you a call as soon as possible to confirm your appointment on <strong>" + appointmentText + "</strong>.";
             
             const confirmationIconBelow = document.getElementById('confirmationIconBelow');
             if (confirmationIconBelow) confirmationIconBelow.innerHTML = exclamationIconHtml;
@@ -3318,7 +3318,7 @@
                 const confirmationMessageBelow = document.getElementById('confirmationMessageBelow');
                 if (confirmationTitleBelow) confirmationTitleBelow.textContent = "";
                 if (confirmationTitleBelow) confirmationTitleBelow.style.display = 'none';
-                if (confirmationMessageBelow) confirmationMessageBelow.textContent = "Your appointment is not officially booked until we speak with you over the phone. We'll give you a call as soon as possible to confirm your appointment at " + appointmentText + ".";
+                if (confirmationMessageBelow) confirmationMessageBelow.innerHTML = "Your appointment is not officially booked until we speak with you over the phone. We'll give you a call as soon as possible to confirm your appointment on <strong>" + appointmentText + "</strong>.";
             }
             
             // Show reviews modal if reviews exist
@@ -3719,7 +3719,7 @@
                     const confirmationTitleBelow = document.getElementById('confirmationTitleBelow');
                     const confirmationMessageBelow = document.getElementById('confirmationMessageBelow');
                     if (confirmationTitleBelow) confirmationTitleBelow.style.display = 'none';
-                    if (confirmationMessageBelow) confirmationMessageBelow.textContent = "Your appointment is not officially booked until we speak with you over the phone. We'll give you a call as soon as possible to confirm your appointment at " + lastAppointmentText + ".";
+                    if (confirmationMessageBelow) confirmationMessageBelow.innerHTML = "Your appointment is not officially booked until we speak with you over the phone. We'll give you a call as soon as possible to confirm your appointment on <strong>" + lastAppointmentText + "</strong>.";
                 }
                 if (ctaSection) ctaSection.classList.add('active');
             } else if (currentSubmitScreenType === 'Phone' || currentSubmitScreenType === 'Text' || currentSubmitScreenType === 'Phone/Text') {
