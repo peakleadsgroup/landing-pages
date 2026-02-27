@@ -1136,8 +1136,6 @@
         <div class="form-step" id="step3">
             <div class="step-header">What type of project is this?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'tub_to_shower')">Tub to shower conversion</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'shower_to_tub')">Shower to tub conversion</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'shower_replacement')">Shower replacement</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'tub_replacement')">Tub replacement</div>
             </div>
@@ -1145,7 +1143,7 @@
 
         <!-- STEP 4: Main Goal -->
         <div class="form-step" id="step4">
-            <div class="step-header">I want to...</div>
+            <div class="step-header">My goal is to...</div>
             <div class="options">
                 <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'accessibility_safety')">Improve accessibility/safety</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'look_function')">Improve look/function</div>
@@ -1261,6 +1259,7 @@
         <!-- STEP 10: PHONE -->
         <div class="form-step" id="step10">
             <div class="step-header">Where can we reach you to schedule your free in-home estimate?</div>
+            <div class="step-subheader">To give you an accurate estimate, a design specialist will measure your space and show you design options that fit your home and budget</div>
             <div class="row">
                 <div id="phoneWrap" class="address-field">
                     <label class="address-label" for="phone">Phone</label>
@@ -1406,6 +1405,14 @@
                         <h3 class="post-submit-step-title">Save our contact</h3>
                     </div>
                     <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate. Tap the button below, then press "Create Contact" (iPhone) or "Save" (Android) so you know it's us.</p>
+                    <div class="save-contact-btn-wrap">
+                        <button type="button" class="save-contact-btn" onclick="addContact()">
+                            <svg class="person-icon" fill="currentColor" viewBox="0 0 24 24" style="width:24px;height:24px;">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                            </svg>
+                            Save Contact
+                        </button>
+                    </div>
                 </div>
                 <div class="post-submit-step">
                     <div class="post-submit-step-header">
@@ -1466,6 +1473,9 @@
             <div style="padding: 40px 20px;">
                 <div class="post-submit-intro">
                     <div class="post-submit-header-block">
+                        <div style="margin-bottom: 20px;">
+                            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#2196f3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#e3f2fd"/><path d="M9 12l2 2 4-4" stroke="#2196f3" stroke-width="3"/></svg>
+                        </div>
                         <h2 class="post-submit-main-title">You're one step closer to your dream bathroom!</h2>
                         <p class="post-submit-subtitle">Here's what happens now...</p>
                     </div>
