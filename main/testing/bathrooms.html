@@ -1966,10 +1966,11 @@
                 
                 if (hasLinkedClient && hasPhone) {
                     try {
-                        const phoneEscaped = String(leadData.phone).replace(/"/g, '\\"');
-                        const filterFormula = `{Phone}="${phoneEscaped}"`;
+                        // Normalize to digits-only for matching (Airtable may store as (218) 340-3538, 218-340-3538, etc.)
+                        const phoneDigits = String(leadData.phone).replace(/\D/g, '');
+                        const filterFormula = `REGEX_REPLACE({Phone}, "[^0-9]", "") = "${phoneDigits}"`;
                         const dupUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}?filterByFormula=${encodeURIComponent(filterFormula)}`;
-                        console.log('[Duplicate Check] Fetching existing leads with same phone. Filter:', filterFormula, '| URL:', dupUrl);
+                        console.log('[Duplicate Check] Fetching existing leads with same phone (digits-only match). Phone digits:', phoneDigits, '| Filter:', filterFormula);
                         
                         const dupData = await fetchAirtableData(dupUrl);
                         const recordCount = dupData.records?.length ?? 0;
