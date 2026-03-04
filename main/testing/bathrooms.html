@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
-    <title>Bathroom Remodel Qualification</title>
+    <title>Bathroom Remodel Qualification (Testing)</title>
     
-    <!-- Meta Pixel Code - Will be dynamically set -->
+    <!-- Meta Pixel -->
     <script>
     !function(f,b,e,v,n,t,s)
     {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -17,10 +17,8 @@
     t.src=v;s=b.getElementsByTagName(e)[0];
     s.parentNode.insertBefore(t,s)}(window, document,'script',
     'https://connect.facebook.net/en_US/fbevents.js');
-    // Meta Pixel will be initialized after client data is loaded
     </script>
     <noscript id="metaPixelNoscript"></noscript>
-    <!-- End Meta Pixel Code -->
     
     <style>
         * {
@@ -32,57 +30,23 @@
         body {
             font-family: 'Arial', sans-serif;
             min-height: 100vh;
+            background: #fff;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             padding: 20px;
+            padding-top: 48px; /* Extra space for testing banner */
             position: relative;
         }
-        
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100vw;
-            height: 100%;
-            min-height: 100vh;
-            background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)), 
-                        url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
-            background-size: 100% auto;
-            background-position: center top;
-            background-repeat: repeat-y;
-            background-attachment: fixed;
-            z-index: -1;
-            transform: translateZ(0);
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
-        }
 
-        @media (max-width: 768px) {
-            body::before {
-                background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)), 
-                            url('https://github.com/peakleadsgroup/landing-pages/blob/main/Images/MobileBathroomBackground.jpg?raw=true');
-                background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
-            }
-        }
-
-        .form-container {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        .form-wrapper {
             max-width: 500px;
             width: 100%;
             text-align: center;
         }
 
         .logo-container {
+            margin-top: 30px;
             margin-bottom: 30px;
             height: 80px;
             display: flex;
@@ -96,24 +60,150 @@
             object-fit: contain;
         }
 
-        .main-heading {
+        .step-header {
             font-size: 24px;
-            color: #2c3e50;
-            margin-bottom: 30px;
+            color: #000;
+            margin-bottom: 10px;
             line-height: 1.4;
-        }
-
-        .highlight {
-            background: #ffeb3b;
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-
-        .question {
-            font-size: 20px;
-            color: #2c3e50;
-            margin-bottom: 15px;
             font-weight: bold;
+        }
+
+        .step-subheader {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+
+        .why-we-ask {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: #e0f7fa;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 25px;
+            text-align: left;
+        }
+
+        .why-we-ask-icon {
+            color: #2196f3;
+            flex-shrink: 0;
+        }
+
+        .why-we-ask-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .why-we-ask-content {
+            flex: 1;
+        }
+
+        .why-we-ask-header {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .why-we-ask-text {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .homeowner-no-message {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: #ffebee;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 25px;
+            text-align: left;
+        }
+
+        .homeowner-no-icon {
+            color: #ef5350;
+            flex-shrink: 0;
+        }
+
+        .homeowner-no-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .homeowner-no-content {
+            flex: 1;
+        }
+
+        .homeowner-no-text {
+            font-size: 14px;
+            color: #c62828;
+            line-height: 1.5;
+        }
+
+        .mobile-home-message {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: #e0f7fa;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 25px;
+            text-align: left;
+        }
+
+        .mobile-home-content {
+            flex: 1;
+        }
+
+        .mobile-home-continue-btn {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: background 0.2s;
+        }
+
+        .mobile-home-continue-btn:hover {
+            background: #1976d2;
+        }
+
+        .repair-damage-message {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: #ffebee;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 25px;
+            text-align: left;
+        }
+
+        .repair-damage-content {
+            flex: 1;
+        }
+
+        .tile-message {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: #ffebee;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 25px;
+            text-align: left;
+        }
+
+        .tile-message-content {
+            flex: 1;
         }
 
         .sub-heading {
@@ -131,103 +221,26 @@
         }
 
         .option {
-            background: #f8f9fa;
-            border: 2px solid #e9ecef;
+            background: #fff;
+            border: 2px solid #e0e0e0;
             border-radius: 10px;
             padding: 15px 20px;
             font-size: 16px;
+            color: #666;
             cursor: pointer;
             transition: all 0.3s ease;
             text-align: center;
         }
 
         .option:hover {
-            background: #e3f2fd;
-            border-color: #2196f3;
+            background: #f5f5f5;
+            border-color: #bdbdbd;
         }
 
         .option.selected {
             background: #e3f2fd;
             border-color: #2196f3;
             color: #1976d2;
-        }
-
-        .why-box {
-            background: #e8f4fc;
-            border-radius: 12px;
-            padding: 18px 20px;
-            margin-top: 20px;
-            display: flex;
-            gap: 14px;
-            align-items: flex-start;
-            text-align: left;
-        }
-
-        .why-icon-wrap {
-            width: 36px;
-            height: 36px;
-            min-width: 36px;
-            background: #b8e0f0;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #3498db;
-            font-size: 18px;
-        }
-
-        .why-title {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 6px;
-            font-size: 15px;
-        }
-
-        .why-text {
-            font-size: 14px;
-            color: #666;
-            line-height: 1.5;
-        }
-
-        .warning-box {
-            background: #fff3e0;
-            border: 2px solid #ff9800;
-            border-radius: 12px;
-            padding: 18px 20px;
-            margin-top: 20px;
-            display: none;
-            flex-direction: row;
-            flex-wrap: wrap;
-            gap: 14px;
-            align-items: flex-start;
-            text-align: left;
-        }
-
-        .warning-box.visible {
-            display: flex;
-        }
-
-        .warning-continue-btn {
-            align-self: flex-start;
-            padding: 10px 20px;
-            background: #ff9800;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 15px;
-        }
-
-        .warning-continue-btn:hover {
-            background: #f57c00;
-        }
-
-        .step-nav-row {
-            display: flex;
-            gap: 12px;
-            margin-top: 24px;
-            justify-content: flex-start;
         }
 
         .address-grid {
@@ -270,7 +283,7 @@
         .address-label {
             font-weight: bold;
             margin-bottom: 8px;
-            color: #2c3e50;
+            color: #555;
             text-align: left;
             font-size: 14px;
         }
@@ -289,12 +302,10 @@
 
         .form-step {
             display: none;
-            pointer-events: none;
         }
 
         .form-step.active {
             display: block;
-            pointer-events: auto;
         }
 
         .progress-bar {
@@ -306,9 +317,30 @@
             overflow: hidden;
         }
 
+        .progress-area {
+            text-align: left;
+        }
+
+        .back-button {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 10px 0;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .back-button:hover {
+            color: #555;
+        }
+
         .progress-fill {
             height: 100%;
-            background: #4CAF50;
+            background: #2196f3;
             border-radius: 3px;
             transition: width 0.3s ease;
         }
@@ -316,23 +348,11 @@
         .nav-buttons {
             display: flex;
             justify-content: center;
-            gap: 12px;
             margin-top: 30px;
         }
 
-        .nav-btn-secondary {
-            background: #fff;
-            color: #333;
-            border: 2px solid #e0e0e0;
-        }
-
-        .nav-btn-secondary:hover {
-            background: #f5f5f5;
-            border-color: #ccc;
-        }
-
         .nav-btn {
-            background: #4CAF50;
+            background: #2196f3;
             color: white;
             border: none;
             padding: 15px 30px;
@@ -344,7 +364,7 @@
         }
 
         .nav-btn:hover {
-            background: #45a049;
+            background: #1976d2;
             transform: translateY(-2px);
         }
 
@@ -380,13 +400,10 @@
             grid-template-columns: 1fr 1fr;
             gap: 15px;
             margin-bottom: 30px;
+            text-align: left;
         }
 
-        .phone-step label {
-            font-weight: 600;
-            margin-bottom: 6px;
-            display: block;
-            color: #2c3e50;
+        #phoneWrap {
             text-align: left;
         }
 
@@ -419,7 +436,7 @@
             background: #fff;
         }
 
-        /* Phone/Text Button Styles */
+        /* Phone/Text Button Styles - match Save Contact button */
         .contact-button {
             display: inline-flex;
             align-items: center;
@@ -427,35 +444,30 @@
             gap: 12px;
             color: white;
             text-decoration: none;
-            padding: 18px 40px;
-            border-radius: 50px;
-            font-size: 20px;
+            padding: 16px 40px;
+            border-radius: 12px;
+            font-size: 18px;
             font-weight: 600;
-            transition: all 0.3s ease;
-            width: 100%;
+            transition: all 0.2s ease;
             margin-bottom: 15px;
         }
         
         .call-button {
-            background: #10b981;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            background: #2196f3;
         }
         
         .call-button:hover {
-            background: #059669;
+            background: #1976d2;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
         }
         
         .text-button {
-            background: #3b82f6;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            background: #2196f3;
         }
         
         .text-button:hover {
-            background: #2563eb;
+            background: #1976d2;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
         }
         
         .contact-button:active {
@@ -469,7 +481,7 @@
         }
         
         .phone-number-display {
-            color: black;
+            color: #555;
             font-size: 24px;
             font-weight: 700;
             margin-top: 20px;
@@ -482,7 +494,7 @@
             align-items: center;
             justify-content: center;
             gap: 12px;
-            background: #4CAF50;
+            background: #2196f3;
             color: white;
             border: none;
             padding: 18px 40px;
@@ -493,13 +505,13 @@
             transition: all 0.3s ease;
             width: 100%;
             max-width: 320px;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
         }
 
         .add-contact-button:hover {
-            background: #45a049;
+            background: #1976d2;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.5);
         }
 
         .add-contact-button:active {
@@ -516,7 +528,7 @@
             font-size: 20px;
             font-weight: 600;
             margin-bottom: 20px;
-            color: #2c3e50;
+            color: #000;
             text-align: center;
         }
 
@@ -537,7 +549,7 @@
         .month-display {
             font-size: 18px;
             font-weight: 600;
-            color: #2c3e50;
+            color: #000;
             min-width: 180px;
             text-align: center;
         }
@@ -556,8 +568,8 @@
         }
 
         .nav-button:hover:not(:disabled) {
-            background: #4CAF50;
-            border-color: #4CAF50;
+            background: #2196f3;
+            border-color: #2196f3;
             color: white;
         }
 
@@ -620,7 +632,7 @@
             transition: all 0.3s ease;
             font-size: 16px;
             font-weight: 500;
-            color: #333;
+            color: #555;
             position: relative;
         }
 
@@ -629,16 +641,16 @@
             top: 4px;
             font-size: 10px;
             font-weight: 600;
-            color: #4CAF50;
+            color: #2196f3;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .calendar-day:hover:not(.disabled) {
             transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
-            border-color: #4CAF50;
-            background: #4CAF50;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+            border-color: #2196f3;
+            background: #2196f3;
             color: white;
         }
 
@@ -647,8 +659,8 @@
         }
 
         .calendar-day.selected {
-            background: #4CAF50;
-            border-color: #4CAF50;
+            background: #2196f3;
+            border-color: #2196f3;
             color: white;
             transform: scale(1.05);
         }
@@ -665,7 +677,7 @@
         }
 
         .calendar-day.today {
-            border-color: #4CAF50;
+            border-color: #2196f3;
             font-weight: 700;
         }
 
@@ -714,8 +726,8 @@
         }
 
         .time-slot:hover {
-            background: #4CAF50;
-            border-color: #4CAF50;
+            background: #2196f3;
+            border-color: #2196f3;
             color: white;
             transform: translateY(-2px);
         }
@@ -732,13 +744,8 @@
         }
 
         @media (max-width: 600px) {
-            body::before {
-                position: absolute;
-            }
-
-            .form-container {
-                padding: 25px;
-                margin: 10px;
+            .form-wrapper {
+                padding: 0 10px;
             }
 
             .reviews-content {
@@ -764,21 +771,39 @@
                 grid-template-columns: 1fr;
             }
 
-            .main-heading {
+            .step-header {
                 font-size: 20px;
             }
 
-            .question {
-                font-size: 18px;
+            .step-subheader {
+                font-size: 15px;
             }
         }
         
-        /* Fix for iOS and other mobile browsers */
-        @media (max-width: 768px) {
-            body::before {
-                position: absolute;
-            }
+
+        /* Post-Submit Header & Numbered Sections */
+        .post-submit-intro { text-align: center; margin-bottom: 30px; }
+        .post-submit-header-block { padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px solid #e9ecef; }
+        .post-submit-main-title { font-size: 24px; color: #000; font-weight: bold; margin-bottom: 8px; line-height: 1.3; text-align: center; }
+        .post-submit-subtitle { font-size: 16px; color: #666; margin-bottom: 0; text-align: center; }
+        .post-submit-step { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 24px; }
+        .post-submit-step-header { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px; }
+        .post-submit-step-num { width: 28px; height: 28px; min-width: 28px; background: #2196f3; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; flex-shrink: 0; }
+        .post-submit-step-title { font-size: 16px; font-weight: bold; color: #000; margin: 0; }
+        .post-submit-step-desc { font-size: 16px; color: #666; line-height: 1.5; font-weight: 500; margin: 0 0 16px 0; text-align: center; max-width: 400px; }
+        .save-contact-btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 12px;
+            background: #2196f3; color: white; padding: 16px 40px;
+            border-radius: 12px; font-size: 18px; font-weight: 600; border: none;
+            cursor: pointer; transition: all 0.2s;
         }
+        .save-contact-btn-wrap { display: flex; justify-content: center; width: 100%; margin-top: 16px; }
+        .save-contact-btn-wrap .save-contact-btn { margin: 0; }
+        .save-contact-btn:hover { background: #1976d2; transform: translateY(-2px); }
+        .post-submit-cta-block { margin-top: 28px; padding-top: 24px; border-top: 1px solid #e9ecef; }
+        .post-submit-cta-title { font-size: 16px; font-weight: bold; color: #000; margin-bottom: 8px; }
+        .post-submit-cta-subtitle { font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 20px; font-weight: 500; }
+        #calendarStep .calendar-header { margin-top: 20px; }
 
         /* Reviews Section Styles */
         .reviews-section {
@@ -789,6 +814,13 @@
         .reviews-section.active {
             display: block;
         }
+
+        .get-quote-bottom-btn {
+            display: inline-block; background: #2196f3; color: white; padding: 16px 40px;
+            border-radius: 12px; font-size: 18px; font-weight: 600; border: none;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .get-quote-bottom-btn:hover { background: #1976d2; transform: translateY(-2px); }
 
         .reviews-content {
             max-width: 500px;
@@ -820,28 +852,22 @@
         }
 
         .review-text {
-            font-size: 18px;
-            color: #2c3e50;
-            line-height: 1.8;
+            font-size: 16px;
+            color: #666;
+            line-height: 1.5;
             margin-bottom: 25px;
-            font-style: italic;
+            font-style: normal;
+            font-weight: 500;
             padding: 0 40px;
             position: relative;
         }
 
-        .review-text::before,
-        .review-text::after {
-            display: none;
-        }
-
         .review-text::before {
-            left: 0;
-            top: -10px;
+            content: '"';
         }
 
         .review-text::after {
-            right: 0;
-            bottom: -30px;
+            content: '"';
         }
 
         .review-stars {
@@ -868,7 +894,7 @@
             max-width: 100%;
             height: auto;
             border-radius: 10px;
-            margin-top: 20px;
+            margin-bottom: 20px;
         }
 
         @media (max-width: 768px) {
@@ -881,7 +907,7 @@
             }
 
             .review-text {
-                font-size: 16px;
+                font-size: 15px;
                 padding: 0 10px;
             }
         }
@@ -1034,168 +1060,193 @@
                 gap: 2px;
             }
         }
+        
+        /* Testing version banner */
+        .testing-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #ff9800;
+            color: #000;
+            text-align: center;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 9999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
-    <div class="form-container">
-        <div class="logo-container">
-            <img id="logoImg" 
-                 src="" 
-                 alt="" 
-                 class="logo-img"
-                 style="display: none;">
+    <div class="testing-banner">⚠️ TESTING VERSION — No data will be sent to Airtable</div>
+    <div class="logo-container">
+        <img id="logoImg" 
+             src="" 
+             alt="" 
+             class="logo-img"
+             style="display: none;">
+    </div>
+
+    <div class="form-wrapper" id="formSection">
+        <div class="progress-area" id="progressArea">
+            <div class="progress-bar" id="progressBarContainer">
+                <div class="progress-fill" id="progressFill" style="width: 10%"></div>
+            </div>
+            <button type="button" class="back-button" id="backButton" onclick="prevStep()" style="display: none;">← Back</button>
         </div>
 
-        <div id="mainHeading">
-            <h1 class="main-heading">
-                Let's see what your remodel could cost
-            </h1>
-        </div>
-
-        <div class="progress-bar" id="progressBarContainer">
-            <div class="progress-fill" id="progressFill" style="width: 9.1%"></div>
-        </div>
-
-        <!-- STEP 1: Homeowner (PDF Q1) - NO auto-advance; user must click Continue/Yes continue -->
+        <!-- STEP 1: Homeowner -->
         <div class="form-step active" id="step1">
-            <div class="question">Are you the homeowner?</div>
-            <div class="options" id="step1Options">
-                <div class="option" id="step1OptionOwn" data-value="own">I own the home</div>
-                <div class="option" id="step1OptionRent" data-value="rent">I'm renting</div>
+            <div class="step-header">Let's see what your remodel could cost</div>
+            <div class="step-subheader">Are you the homeowner or authorized decision maker?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'yes')">Yes</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeowner', 'no')">No</div>
             </div>
-            <div class="warning-box" id="rentingWarning">
-                <span class="why-icon-wrap">⚠️</span>
-                <div>
-                    <div class="why-title">Unfortunately we can only remodel if you own the home</div>
+            <div class="why-we-ask" id="whyWeAsk">
+                <div class="why-we-ask-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/>
+                    </svg>
+                </div>
+                <div class="why-we-ask-content">
+                    <div class="why-we-ask-header">Why do we ask?</div>
+                    <div class="why-we-ask-text">Because legally, only the property owner—or someone they've authorized—can approve changes to the property.</div>
                 </div>
             </div>
-            <div class="why-box">
-                <span class="why-icon-wrap">💡</span>
-                <div>
-                    <div class="why-title">Why do we ask?</div>
-                    <div class="why-text">We legally require the property owner or authorized decision-maker to make changes to the property.</div>
+            <div class="homeowner-no-message" id="homeownerNoMessage" style="display: none;">
+                <div class="homeowner-no-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                    </svg>
+                </div>
+                <div class="homeowner-no-content">
+                    <div class="homeowner-no-text">By law, we can only upgrade your bathroom if you are the homeowner or authorized decision maker.</div>
                 </div>
             </div>
         </div>
 
-        <!-- STEP 2: Type of home (PDF Q2) -->
+        <!-- STEP 2: Home Type -->
         <div class="form-step" id="step2">
-            <div class="question">What type of home is this?</div>
+            <div class="step-header">What type of home is this?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'single')">Single family home</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'town')">Town home</div>
-                <div class="option" onclick="selectOptionWithWarning(event, this, 'homeType', 'mobile', 'mobileHomeWarning')">Mobile home</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'single_family')">Single family home</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'town_home')">Town home</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'apartment')">Apartment</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'vacation_home')">Vacation home</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'homeType', 'mobile_home')">Mobile home</div>
             </div>
-            <div class="warning-box" id="mobileHomeWarning">
-                <span class="why-icon-wrap">⚠️</span>
-                <div>
-                    <div class="why-title">We don't service mobile homes. Would you still like to continue?</div>
-                    <button type="button" class="warning-continue-btn" onclick="continueFromWarning('mobileHomeWarning')">Yes, continue</button>
+            <div class="mobile-home-message" id="mobileHomeMessage" style="display: none;">
+                <div class="why-we-ask-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/>
+                    </svg>
                 </div>
-            </div>
-            <div class="step-nav-row">
-                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
+                <div class="mobile-home-content">
+                    <div class="why-we-ask-text">We're only able to install showers in mobile homes if they have permanent plumbing fixtures. Would you still like to continue?</div>
+                    <button type="button" class="mobile-home-continue-btn" onclick="continueMobileHome()">Continue</button>
+                </div>
             </div>
         </div>
 
-        <!-- STEP 3: Existing or new build (PDF Q3) -->
+        <!-- STEP 3: Project Type -->
         <div class="form-step" id="step3">
-            <div class="question">Is this an existing shower or tub?</div>
+            <div class="step-header">What type of project is this?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'existingOrNew', 'existing')">Existing</div>
-                <div class="option" onclick="selectOptionWithWarning(this, 'existingOrNew', 'newbuild', 'newBuildWarning')">New build</div>
-            </div>
-            <div class="warning-box" id="newBuildWarning">
-                <span class="why-icon-wrap">⚠️</span>
-                <div>
-                    <div class="why-title">Unfortunately, we don't service new builds. Would you still like to continue?</div>
-                    <button type="button" class="warning-continue-btn" onclick="continueFromWarning('newBuildWarning')">Yes, continue</button>
-                </div>
-            </div>
-            <div class="step-nav-row">
-                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'shower_replacement')">Shower replacement</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'tub_replacement')">Tub replacement</div>
             </div>
         </div>
 
-        <!-- STEP 4: Project Type (PDF Q4) -->
+        <!-- STEP 4: Main Goal -->
         <div class="form-step" id="step4">
-            <div class="question">What type of project is this?</div>
+            <div class="step-header">My goal is to...</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'tub_to_shower')">Tub-to-Shower Conversion (Range from $10,000 - $22,000+)</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'shower_to_tub')">Shower-to-Tub conversion (Range from $9,000 - $20,000+)</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'shower_replacement')">Shower Replacement (Range from $10,000 - $22,000+)</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'tub_replacement')">Tub Replacement (Range from $9,000 - $20,000+)</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'accessibility_safety')">Improve accessibility/safety</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'look_function')">Improve look/function</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'home_value')">Increase home value</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'repair_damage')">Repair damage</div>
             </div>
-            <div class="step-nav-row">
-                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
-            </div>
-        </div>
-
-        <!-- STEP 5: I want to (PDF Q5) -->
-        <div class="form-step" id="step5">
-            <div class="question">"I want to…"</div>
-            <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'goal', 'accessibility')">Improve accessibility/safety</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'goal', 'look_function')">Improve look/function</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'goal', 'repair')">Repair damage</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'goal', 'value')">Increase home value</div>
-            </div>
-            <div class="step-nav-row">
-                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
-            </div>
-        </div>
-
-        <!-- STEP 6: Materials (PDF Q6) -->
-        <div class="form-step" id="step6">
-            <div class="question">Do you have any material preferences?</div>
-            <div class="options">
-                <div class="option" onclick="selectOptionWithWarning(event, this, 'material', 'tile', 'tileWarning')">Tile</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'material', 'acrylic')">Acrylic</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'material', 'not_sure')">Not sure</div>
-            </div>
-            <div class="warning-box" id="tileWarning">
-                <span class="why-icon-wrap">⚠️</span>
-                <div>
-                    <div class="why-title">We don't install tile. Would you still like to continue?</div>
-                    <button type="button" class="warning-continue-btn" onclick="continueFromWarning('tileWarning')">Yes, continue</button>
+            <div class="repair-damage-message" id="repairDamageMessage" style="display: none;">
+                <div class="homeowner-no-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                    </svg>
+                </div>
+                <div class="repair-damage-content">
+                    <div class="homeowner-no-text">We don't offer small repairs. We specialize exclusively in full replacements and conversions.</div>
                 </div>
             </div>
-            <div class="step-nav-row">
-                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
+        </div>
+
+        <!-- STEP 5: Material Preferences -->
+        <div class="form-step" id="step5">
+            <div class="step-header">Do you have any material preferences?</div>
+            <div class="options">
+                <div class="option" onclick="selectOptionAndAdvance(this, 'materialPref', 'acrylic')">Acrylic</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'materialPref', 'composite_stone')">Composite stone</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'materialPref', 'tile')">Tile</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'materialPref', 'not_sure')">Not sure</div>
+            </div>
+            <div class="tile-message" id="tileMessage" style="display: none;">
+                <div class="homeowner-no-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                    </svg>
+                </div>
+                <div class="tile-message-content">
+                    <div class="homeowner-no-text">We do not install tile systems. Please select another material for your estimate.</div>
+                </div>
             </div>
         </div>
 
-        <!-- STEP 7: Timeline (PDF Q7) -->
-        <div class="form-step" id="step7">
-            <div class="question">How soon would you like this project to be completed?</div>
-            <div class="sub-heading">We only give an estimate for projects that can start soon so pricing is accurate.</div>
+        <!-- STEP 6: Timeline -->
+        <div class="form-step" id="step6">
+            <div class="step-header">How soon would you like this project to be completed?</div>
+            <div class="step-subheader">We only give estimates for projects that can start soon so pricing is accurate</div>
             <div class="options">
                 <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'asap')">ASAP</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', '1month')">Within a month</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', '3months')">Within 3 months</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', '6months')">Within 6 months</div>
-            </div>
-            <div class="step-nav-row">
-                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'within_month')">Within a month</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'within_3_months')">Within 3 months</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'timeline', 'within_6_months')">Within 6 months</div>
             </div>
         </div>
 
-        <!-- STEP 8: Have you gotten estimate (PDF Q8) -->
-        <div class="form-step" id="step8">
-            <div class="question">Have you already gotten an estimate?</div>
+        <!-- STEP 7: Has Estimate -->
+        <div class="form-step" id="step7">
+            <div class="step-header">Have you already received an estimate?</div>
             <div class="options">
                 <div class="option" onclick="selectOptionAndAdvance(this, 'hasEstimate', 'yes')">Yes</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'hasEstimate', 'no')">No</div>
             </div>
-            <div class="step-nav-row">
-                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
+        </div>
+
+        <!-- STEP 8: NAME -->
+        <div class="form-step" id="step8">
+            <div class="step-header">Who will we be speaking with?</div>
+            <div class="name-grid">
+                <div class="address-field">
+                    <label class="address-label" for="firstName">First Name</label>
+                    <input type="text" class="address-input" id="firstName" placeholder="First Name" required autocomplete="given-name" oninput="validateNameForm()">
+                </div>
+                <div class="address-field">
+                    <label class="address-label" for="lastName">Last Name</label>
+                    <input type="text" class="address-input" id="lastName" placeholder="Last Name" required autocomplete="family-name" oninput="validateNameForm()">
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="goToStep9()" id="nameNextBtn" disabled>Next</button>
             </div>
         </div>
 
         <!-- STEP 9: Address -->
         <div class="form-step" id="step9">
-            <div class="question">What is the location of this project?</div>
-            <div class="sub-heading">Please make sure your address is full and correct so we can confirm you are within our service area</div>
+            <div class="step-header">What is the location of this project?</div>
+            <div class="step-subheader">Please make sure your address is full and accurate so we can confirm you are within our service area</div>
             <div class="address-grid">
                 <div class="address-field">
                     <label class="address-label" for="street">Street Address</label>
@@ -1220,38 +1271,18 @@
                 </div>
             </div>
             <div class="nav-buttons">
-                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
                 <button class="nav-btn" onclick="goToStep10()" id="submitFormBtn" disabled>Next</button>
             </div>
         </div>
 
-        <!-- STEP 10: NAME -->
+        <!-- STEP 10: PHONE -->
         <div class="form-step" id="step10">
-            <div class="question">Who will we be speaking with?</div>
-            <div class="name-grid">
-                <div>
-                    <label for="firstName" style="margin-bottom: 10px; display: block; color: #2c3e50; text-align: center;">First Name</label>
-                    <input type="text" class="address-input" id="firstName" placeholder="First Name" required autocomplete="given-name" oninput="validateNameForm()">
-                </div>
-                <div>
-                    <label for="lastName" style="margin-bottom: 10px; display: block; color: #2c3e50; text-align: center;">Last Name</label>
-                    <input type="text" class="address-input" id="lastName" placeholder="Last Name" required autocomplete="family-name" oninput="validateNameForm()">
-                </div>
-            </div>
-            <div class="nav-buttons">
-                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
-                <button class="nav-btn" onclick="goToStep11()" id="nameNextBtn" disabled>Next</button>
-            </div>
-        </div>
-
-        <!-- STEP 11: PHONE -->
-        <div class="form-step" id="step11">
-            <div class="question">Where can we reach you?</div>
+            <div class="step-header">Where can we reach you to schedule your free in-home estimate?</div>
+            <div class="step-subheader">To give you an accurate estimate, a design specialist will measure your space and show you design options that fit your home and budget</div>
             <div class="row">
-                <div id="phoneWrap">
-                    <label for="phone">Phone</label>
-                    <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required autocomplete="tel" aria-describedby="phoneHelp">
-                    <small id="phoneHelp" class="phone-help">US number, 10 digits.</small>
+                <div id="phoneWrap" class="address-field">
+                    <label class="address-label" for="phone">Phone</label>
+                    <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(___) ___-____" required autocomplete="tel" class="address-input">
                     <input type="hidden" id="phone_digits" name="phone_digits" value="">
                 </div>
                 <div id="emailWrap" style="display:none">
@@ -1260,8 +1291,7 @@
                 </div>
             </div>
             <div class="nav-buttons">
-                <button type="button" class="nav-btn nav-btn-secondary" onclick="event.stopPropagation(); goBackStep();">Back</button>
-                <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Get Quote</button>
+                <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Schedule Estimate</button>
             </div>
             <div class="privacy-policy-text" id="privacyPolicyText">
                 <p>By clicking "NEXT STEP" and submitting this form, (i) I agree that <span id="partnerBusinessName">Peak Leads Group and it's marketing partners</span> may use automated technology to call or text my phone number (provided above) or email me regarding my request, and I may revoke this consent at any time, and (ii) I agree to the <a href="privacypolicy.html" target="_blank">Terms & Conditions and Privacy Policy</a>.</p>
@@ -1271,11 +1301,45 @@
 
         <!-- PHONE/TEXT CONTACT SCREEN -->
         <div class="form-step" id="contactStep">
-            <div style="text-align: center;">
-                <div style="font-size: 24px; color: black; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your free estimate!</div>
-                <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Or if you're ready to schedule now you can contact us by clicking one of the buttons below</div>
-                
-                <a id="callButtonLink" href="#" class="contact-button call-button" style="display: none;">
+            <div>
+                <div class="post-submit-intro">
+                    <div class="post-submit-header-block">
+                        <h2 class="post-submit-main-title">You're one step closer to your dream bathroom!</h2>
+                        <p class="post-submit-subtitle">Here's what happens now...</p>
+                    </div>
+                    <div class="post-submit-step">
+                        <div class="post-submit-step-header">
+                            <span class="post-submit-step-num">1</span>
+                            <h3 class="post-submit-step-title">Save our contact</h3>
+                        </div>
+                        <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate. Tap the button below, then press "Create Contact" (iPhone) or "Save" (Android) so you know it's us.</p>
+                        <div class="save-contact-btn-wrap">
+                            <button type="button" class="save-contact-btn" onclick="addContact()">
+                                <svg class="person-icon" fill="currentColor" viewBox="0 0 24 24" style="width:24px;height:24px;">
+                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                </svg>
+                                Save Contact
+                            </button>
+                        </div>
+                    </div>
+                    <div class="post-submit-step">
+                        <div class="post-submit-step-header">
+                            <span class="post-submit-step-num">2</span>
+                            <h3 class="post-submit-step-title">In-Home Estimate</h3>
+                        </div>
+                        <p class="post-submit-step-desc">A design specialist will help design your new shower and provide a straightforward, no-obligation estimate with no sales pressure.</p>
+                    </div>
+                    <div class="post-submit-step">
+                        <div class="post-submit-step-header">
+                            <span class="post-submit-step-num">3</span>
+                            <h3 class="post-submit-step-title">Approval & Installation</h3>
+                        </div>
+                        <p class="post-submit-step-desc">Once you're happy with the design and estimate, we handle the rest—from scheduling to professional installation.</p>
+                    </div>
+                    <div class="post-submit-cta-block" style="text-align: center;">
+                        <h3 class="post-submit-cta-title">Ready to get started now?</h3>
+                        <p class="post-submit-cta-subtitle" id="contactReadySubtitle">Can't wait to hear from us? Call or text us below to schedule your free estimate.</p>
+                        <a id="callButtonLink" href="#" class="contact-button call-button" style="display: none;">
                     <svg class="phone-icon" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
                     </svg>
@@ -1290,28 +1354,104 @@
                 </a>
                 
                 <div class="phone-number-display" id="phoneNumberDisplay"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- ADD CONTACT SCREEN (Contact submit type from Airtable) -->
         <div class="form-step" id="contactStepAddContact">
-            <div style="text-align: center;">
-                <div style="font-size: 24px; color: black; margin-bottom: 20px; font-weight: bold;">Don't Miss Our Call! Save This Number Now</div>
-                <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Tap the button below, then press "Create Contact" (iPhone) or "Save" (Android). We'll give you a call ASAP to schedule your free estimate!</div>
-                <button type="button" class="add-contact-button" id="addContactBtn" onclick="addContact()">
+            <div>
+                <div class="post-submit-intro">
+                    <div class="post-submit-header-block">
+                        <h2 class="post-submit-main-title">You're one step closer to your dream bathroom!</h2>
+                        <p class="post-submit-subtitle">Here's what happens now...</p>
+                    </div>
+                    <div class="post-submit-step">
+                        <div class="post-submit-step-header">
+                            <span class="post-submit-step-num">1</span>
+                            <h3 class="post-submit-step-title">Save our contact</h3>
+                        </div>
+                        <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate. Tap the button below, then press "Create Contact" (iPhone) or "Save" (Android) so you know it's us.</p>
+                        <div class="save-contact-btn-wrap">
+                            <button type="button" class="save-contact-btn" onclick="addContact()">
+                                <svg class="person-icon" fill="currentColor" viewBox="0 0 24 24" style="width:24px;height:24px;">
+                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                </svg>
+                                Save Contact
+                            </button>
+                        </div>
+                    </div>
+                    <div class="post-submit-step">
+                        <div class="post-submit-step-header">
+                            <span class="post-submit-step-num">2</span>
+                            <h3 class="post-submit-step-title">In-Home Estimate</h3>
+                        </div>
+                        <p class="post-submit-step-desc">A design specialist will help design your new shower and provide a straightforward, no-obligation estimate with no sales pressure.</p>
+                    </div>
+                    <div class="post-submit-step">
+                        <div class="post-submit-step-header">
+                            <span class="post-submit-step-num">3</span>
+                            <h3 class="post-submit-step-title">Approval & Installation</h3>
+                        </div>
+                        <p class="post-submit-step-desc">Once you're happy with the design and estimate, we handle the rest—from scheduling to professional installation.</p>
+                    </div>
+                    <div class="post-submit-cta-block" style="text-align: center;">
+                        <h3 class="post-submit-cta-title">Ready to get started now?</h3>
+                        <p class="post-submit-cta-subtitle" id="contactAddReadySubtitle">Can't wait to hear from us? Save our contact below so we can reach you.</p>
+                        <button type="button" class="add-contact-button" id="addContactBtn" onclick="addContact()">
                     <svg class="person-icon" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                     </svg>
                     Add Contact
                 </button>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- CALENDAR BOOKING SCREEN -->
         <div class="form-step" id="calendarStep">
-            <div class="calendar-step-header">We'll reach out soon to schedule your free in home estimate!</div>
-            <div style="font-size: 16px; color: #666; margin-bottom: 25px; text-align: center;">Ready to schedule your free in home estimate now? Choose a time below:</div>
-            
+            <div style="padding: 0 20px 20px;">
+            <div class="post-submit-intro">
+                <div class="post-submit-header-block">
+                    <h2 class="post-submit-main-title">You're one step closer to your dream bathroom!</h2>
+                    <p class="post-submit-subtitle">Here's what happens now...</p>
+                </div>
+                <div class="post-submit-step">
+                    <div class="post-submit-step-header">
+                        <span class="post-submit-step-num">1</span>
+                        <h3 class="post-submit-step-title">Save our contact</h3>
+                    </div>
+                    <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate. Tap the button below, then press "Create Contact" (iPhone) or "Save" (Android) so you know it's us.</p>
+                    <div class="save-contact-btn-wrap">
+                        <button type="button" class="save-contact-btn" onclick="addContact()">
+                            <svg class="person-icon" fill="currentColor" viewBox="0 0 24 24" style="width:24px;height:24px;">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                            </svg>
+                            Save Contact
+                        </button>
+                    </div>
+                </div>
+                <div class="post-submit-step">
+                    <div class="post-submit-step-header">
+                        <span class="post-submit-step-num">2</span>
+                        <h3 class="post-submit-step-title">In-Home Estimate</h3>
+                    </div>
+                    <p class="post-submit-step-desc">A design specialist will help design your new shower and provide a straightforward, no-obligation estimate with no sales pressure.</p>
+                </div>
+                <div class="post-submit-step">
+                    <div class="post-submit-step-header">
+                        <span class="post-submit-step-num">3</span>
+                        <h3 class="post-submit-step-title">Approval & Installation</h3>
+                    </div>
+                    <p class="post-submit-step-desc">Once you're happy with the design and estimate, we handle the rest—from scheduling to professional installation.</p>
+                </div>
+                <div class="post-submit-cta-block">
+                    <h3 class="post-submit-cta-title">Ready to get started now?</h3>
+                    <p class="post-submit-cta-subtitle" id="calendarReadySubtitle">Request a time for your free estimate then our team will reach out to confirm our availability.</p>
+                </div>
+            </div>
             <div class="calendar-header">
                 <div class="month-nav">
                     <button class="nav-button" id="prevMonth" onclick="changeCalendarMonth(-1)">
@@ -1340,23 +1480,59 @@
             
             <div class="calendar-grid" id="calendarGrid"></div>
             
-            <div id="timeSection" class="time-section" style="display: none;">
+                <div id="timeSection" class="time-section" style="display: none;">
                 <div class="selected-info" id="selectedDayInfo"></div>
                 <div class="time-grid" id="timeGrid"></div>
+            </div>
             </div>
         </div>
 
         <!-- CONFIRMATION/THANK YOU SCREEN -->
         <div class="form-step" id="confirmationStep">
-            <div style="text-align: center; padding: 40px 20px;">
-                <div id="confirmationIcon" style="margin-bottom: 30px;">
-                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;">
-                        <circle cx="12" cy="12" r="10" fill="#e8f5e9"/>
-                        <path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/>
-                    </svg>
+            <div style="padding: 40px 20px;">
+                <div class="post-submit-intro">
+                    <div class="post-submit-header-block">
+                        <h2 class="post-submit-main-title">You're one step closer to your dream bathroom!</h2>
+                        <p class="post-submit-subtitle">Here's what happens now...</p>
+                    </div>
+                    <div class="post-submit-step">
+                        <div class="post-submit-step-header">
+                            <span class="post-submit-step-num">1</span>
+                            <h3 class="post-submit-step-title">Save our contact</h3>
+                        </div>
+                        <p class="post-submit-step-desc">We'll call soon to schedule your in-home estimate. Tap the button below, then press "Create Contact" (iPhone) or "Save" (Android) so you know it's us.</p>
+                        <div class="save-contact-btn-wrap">
+                            <button type="button" class="save-contact-btn" onclick="addContact()">
+                                <svg class="person-icon" fill="currentColor" viewBox="0 0 24 24" style="width:24px;height:24px;">
+                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                </svg>
+                                Save Contact
+                            </button>
+                        </div>
+                    </div>
+                    <div class="post-submit-step">
+                        <div class="post-submit-step-header">
+                            <span class="post-submit-step-num">2</span>
+                            <h3 class="post-submit-step-title">In-Home Estimate</h3>
+                        </div>
+                        <p class="post-submit-step-desc">A design specialist will help design your new shower and provide a straightforward, no-obligation estimate with no sales pressure.</p>
+                    </div>
+                    <div class="post-submit-step">
+                        <div class="post-submit-step-header">
+                            <span class="post-submit-step-num">3</span>
+                            <h3 class="post-submit-step-title">Approval & Installation</h3>
+                        </div>
+                        <p class="post-submit-step-desc">Once you're happy with the design and estimate, we handle the rest—from scheduling to professional installation.</p>
+                    </div>
+                    <div class="post-submit-cta-block" id="confirmationCtaBlock">
+                        <h3 class="post-submit-cta-title">Ready to get started now?</h3>
+                        <p class="post-submit-cta-subtitle" id="confirmationReadySubtitle">Can't wait to hear from us? We'll give you a call soon to schedule your free estimate.</p>
+                    </div>
+                    <div class="post-submit-cta-block" id="confirmationAppointmentBlock" style="display: none; margin-top: 28px;">
+                        <div id="confirmationAppointmentIcon" style="margin-bottom: 20px;"></div>
+                        <p id="confirmationAppointmentMessage" style="font-size: 16px; color: #666; line-height: 1.6; font-weight: 500; margin: 0; text-align: center;"></p>
+                    </div>
                 </div>
-                <div id="confirmationTitle" style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
-                <div id="confirmationMessage" style="font-size: 18px; color: #666; line-height: 1.6;">We'll give you a call soon to schedule your free estimate.</div>
             </div>
         </div>
     </div>
@@ -1367,6 +1543,9 @@
             <div class="reviews-container" id="reviewsContainer">
                 <!-- Review blocks will be dynamically added here -->
             </div>
+            <div style="text-align: center; padding: 32px 0 0;">
+                <button class="get-quote-bottom-btn" onclick="scrollToForm()">Get Quote</button>
+            </div>
         </div>
     </div>
 
@@ -1376,7 +1555,7 @@
             <!-- DUPLICATE CONTACT SCREEN -->
             <div class="form-step cta-block" id="contactStepBelow">
                 <div style="text-align: center;">
-                    <div style="font-size: 24px; color: black; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your free estimate!</div>
+                    <div style="font-size: 24px; color: #000; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your free estimate!</div>
                     <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Or if you're ready to schedule now you can contact us by clicking one of the buttons below</div>
                     
                     <a id="callButtonLinkBelow" href="#" class="contact-button call-button" style="display: none;">
@@ -1400,7 +1579,7 @@
             <!-- DUPLICATE ADD CONTACT SCREEN -->
             <div class="form-step cta-block" id="contactStepAddContactBelow">
                 <div style="text-align: center;">
-                    <div style="font-size: 24px; color: black; margin-bottom: 20px; font-weight: bold;">Don't Miss Our Call! Save This Number Now</div>
+                    <div style="font-size: 24px; color: #000; margin-bottom: 20px; font-weight: bold;">Don't Miss Our Call! Save This Number Now</div>
                     <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Tap the button below, then press "Create Contact" (iPhone) or "Save" (Android). We'll give you a call ASAP to schedule your free estimate!</div>
                     <button type="button" class="add-contact-button" id="addContactBtnBelow" onclick="addContact()">
                         <svg class="person-icon" fill="currentColor" viewBox="0 0 24 24">
@@ -1454,12 +1633,12 @@
             <div class="form-step cta-block" id="confirmationStepBelow">
                 <div style="text-align: center; padding: 40px 20px;">
                     <div id="confirmationIconBelow" style="margin-bottom: 30px;">
-                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;">
-                            <circle cx="12" cy="12" r="10" fill="#e8f5e9"/>
-                            <path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/>
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#2196f3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;">
+                            <circle cx="12" cy="12" r="10" fill="#e3f2fd"/>
+                            <path d="M9 12l2 2 4-4" stroke="#2196f3" stroke-width="3"/>
                         </svg>
                     </div>
-                    <div id="confirmationTitleBelow" style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
+                    <div id="confirmationTitleBelow" style="font-size: 28px; color: #000; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
                     <div id="confirmationMessageBelow" style="font-size: 18px; color: #666; line-height: 1.6;">We'll give you a call soon to schedule your free estimate.</div>
                 </div>
             </div>
@@ -1468,14 +1647,17 @@
 
     <script>
         // ============================================
+        // TESTING MODE - Disables Airtable writes and Meta Pixel
+        // ============================================
+        const TESTING_MODE = true; // Testing version - Airtable writes and Meta Pixel disabled
+        if (TESTING_MODE) console.log('[TESTING_MODE] Page loaded - Airtable and Meta Pixel disabled for testing');
+        
+        // ============================================
         // AIRTABLE CONFIGURATION
         // ============================================
         const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
         const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
         const AIRTABLE_BASE_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
-        
-        // TEST MODE: Set to true to skip Airtable writes (for testing)
-        const TEST_MODE = true;
         
         const TABLES = {
             CLIENTS: 'tblMl8Y97cMSbricC',
@@ -1484,9 +1666,6 @@
             B2C_ADS: 'tbl7ungQGMMLYwshw',
             URL_PARAMETERS: 'tbl5JDBRhTzuxzsc4',
         };
-        
-        // Lead Perfection API Configuration (via Make.com proxy)
-        const LP_MAKE_WEBHOOK_URL = 'https://hook.us2.make.com/dn7kjdagrc6goimlozfan1zpt2dp9lvs';
         
         // Calendar Configuration (defaults, will be overridden by client data)
         const CALENDAR_CONFIG = {
@@ -1516,7 +1695,7 @@
         let isSubmitting = false; // Flag to prevent duplicate submissions
         let currentSubmitScreenType = null; // Store the current submit screen type
         let appointmentTimeSelected = false; // True after user selects a time (so bottom shows confirmation, not calendar)
-        let lpAvailabilityData = []; // Lead Perfection API availability data
+        let lastAppointmentText = ''; // Formatted appointment date/time for confirmation message
         
         // Get campaign ID immediately from URL (before DOM is ready)
         const urlParams = new URLSearchParams(window.location.search);
@@ -1779,9 +1958,71 @@
 
         async function submitLeadToAirtable(leadData) {
             try {
-                if (TEST_MODE) {
-                    console.log('TEST MODE: Skipping Airtable lead submission');
-                    return { records: [] };
+                // Check for duplicate: existing lead with same linked client + same phone (only if we have a linked client)
+                let isDuplicate = false;
+                const hasLinkedClient = !!(matchedClientData && matchedClientData.id);
+                const hasPhone = !!leadData.phone;
+                console.log('[Duplicate Check] Starting check:', { hasLinkedClient, hasPhone, linkedClientId: matchedClientData?.id || null, phone: leadData.phone ? '(present)' : null });
+                
+                if (hasLinkedClient && hasPhone) {
+                    try {
+                        const phoneEscaped = String(leadData.phone).replace(/"/g, '\\"');
+                        const filterFormula = `{Phone}="${phoneEscaped}"`;
+                        const dupUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}?filterByFormula=${encodeURIComponent(filterFormula)}`;
+                        console.log('[Duplicate Check] Fetching existing leads with same phone. Filter:', filterFormula, '| URL:', dupUrl);
+                        
+                        const dupData = await fetchAirtableData(dupUrl);
+                        const recordCount = dupData.records?.length ?? 0;
+                        console.log('[Duplicate Check] Airtable returned', recordCount, 'record(s) with matching phone');
+                        
+                        if (recordCount > 0) {
+                            const clientId = matchedClientData.id;
+                            dupData.records.forEach((rec, i) => {
+                                const linked = rec.fields['Linked Client'];
+                                const linkedArr = Array.isArray(linked) ? linked : [];
+                                const matchesClient = linkedArr.includes(clientId);
+                                console.log(`[Duplicate Check] Record ${i + 1}/${recordCount}:`, { recordId: rec.id, linkedClients: linkedArr, matchesOurClient: matchesClient });
+                            });
+                            isDuplicate = dupData.records.some(rec => {
+                                const linked = rec.fields['Linked Client'];
+                                return Array.isArray(linked) && linked.includes(clientId);
+                            });
+                            console.log('[Duplicate Check] Result: isDuplicate =', isDuplicate, isDuplicate ? '→ Will submit WITHOUT linked client, with Error: DUPLICATE' : '→ No duplicate, will submit normally');
+                        } else {
+                            console.log('[Duplicate Check] No existing leads with this phone → not a duplicate');
+                        }
+                    } catch (dupErr) {
+                        console.warn('[Duplicate Check] FAILED - proceeding with normal submission:', dupErr);
+                    }
+                } else {
+                    console.log('[Duplicate Check] Skipped (no linked client or no phone)');
+                }
+                
+                if (TESTING_MODE) {
+                    console.log('[TESTING_MODE] Would write to Airtable B2C_LEADS:', JSON.stringify(leadData, null, 2));
+                    console.log('[TESTING_MODE] Duplicate check result:', isDuplicate, '| Would include Linked Client:', !isDuplicate && hasLinkedClient, '| Would include Error field:', isDuplicate ? 'DUPLICATE' : 'none');
+                    const wouldSubmitFields = {
+                        'Phone': leadData.phone,
+                        'Full Summary': leadData.fullSummary,
+                        'Full Summary HTML': leadData.fullSummaryHTML,
+                        'Full Name': leadData.fullName,
+                        'First Name': leadData.firstName,
+                        'Last Name': leadData.lastName,
+                        'Model': 'Lead',
+                        'Address': leadData.address,
+                        'City': leadData.city,
+                        'State': leadData.state,
+                        'Zip': leadData.zip,
+                        'Email': leadData.email || '',
+                        'Unique ID': leadData.uniqueId,
+                        ...(isDuplicate && { 'Error': 'DUPLICATE' })
+                    };
+                    if (!isDuplicate && hasLinkedClient) {
+                        wouldSubmitFields['Linked Client'] = [matchedClientData.id];
+                    }
+                    console.log('[TESTING_MODE] Full record that would be submitted:', { table: TABLES.B2C_LEADS, fields: wouldSubmitFields });
+                    console.log('[TESTING_MODE] === SUMMARY ===', isDuplicate ? 'DUPLICATE DETECTED: Would write WITHOUT linked client, WITH Error: DUPLICATE' : 'No duplicate: Would write normally with linked client');
+                    return { records: [{ id: 'test-record-id' }] };
                 }
                 // Only set Lead Price when we have a matched client by zip; leave blank if no match
                 let leadPrice = null;
@@ -1816,9 +2057,14 @@
                     record.fields['Price'] = leadPrice;
                 }
                 
-                // Add linked client ONLY if we found a match by zip code (no fallback to campaign client)
-                if (matchedClientData && matchedClientData.id) {
+                // Add linked client ONLY if we found a match by zip code (no fallback to campaign client) AND not a duplicate
+                if (matchedClientData && matchedClientData.id && !isDuplicate) {
                     record.fields['Linked Client'] = [matchedClientData.id];
+                }
+                
+                // If duplicate, add Error field and omit linked client (already omitted above)
+                if (isDuplicate) {
+                    record.fields['Error'] = 'DUPLICATE';
                 }
                 
                 // Always add Source Campaign if we have a campaign record ID
@@ -1866,7 +2112,7 @@
         }
 
         function initializeMetaPixel(pixelId) {
-            if (!pixelId || typeof fbq === 'undefined') return;
+            if (TESTING_MODE || !pixelId || typeof fbq === 'undefined') return;
             
             try {
                 fbq('init', pixelId);
@@ -1923,6 +2169,9 @@
                 
                 if (campaignClientData) {
                     clientData = campaignClientData;
+                    
+                    // Show reviews below form immediately when client data has reviews
+                    tryShowReviewsOnLoad();
                     
                     // Load logo immediately when we get the URL
                     const logoUrl = campaignClientData.fields['Logo Link'];
@@ -2035,8 +2284,6 @@
                 // Initial update
                 setTimeout(updateBackgroundHeight, 100);
                 
-                initStep1();
-                
                 // If client data is already loaded, ensure logo is displayed
                 if (clientData && clientData.fields && clientData.fields['Logo Link']) {
                     const logoImg = document.getElementById('logoImg');
@@ -2044,10 +2291,13 @@
                         loadLogo(clientData.fields['Logo Link']);
                     }
                 }
+                
+                // Show reviews below form when DOM is ready (if client data already loaded)
+                tryShowReviewsOnLoad();
             });
         } else {
             updateBackgroundHeight();
-            initStep1();
+            tryShowReviewsOnLoad();
             // If client data is already loaded, ensure logo is displayed
             if (clientData && clientData.fields && clientData.fields['Logo Link']) {
                 const logoImg = document.getElementById('logoImg');
@@ -2065,117 +2315,82 @@
             return 'event_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
 
-        function initStep1() {
-            const optOwn = document.getElementById('step1OptionOwn');
-            const optRent = document.getElementById('step1OptionRent');
-            const rentingWarning = document.getElementById('rentingWarning');
-            if (!optOwn || !optRent) return;
-            optOwn.onclick = function() {
-                optOwn.classList.add('selected');
-                optRent.classList.remove('selected');
-                formData.homeowner = 'own';
-                trackEngagementOnce();
-                rentingWarning.classList.remove('visible');
-                setTimeout(() => nextStep(), 200);
-            };
-            optRent.onclick = function() {
-                optRent.classList.add('selected');
-                optOwn.classList.remove('selected');
-                formData.homeowner = 'rent';
-                trackEngagementOnce();
-                rentingWarning.classList.add('visible');
-            };
-        }
-
-        function trackEngagementOnce() {
-            if (!hasTrackedEngagement && typeof fbq !== 'undefined' && clientData && clientData.fields['Meta Pixel']) {
-                fbq('track', 'ViewContent', { content_category: 'home_improvement', content_name: 'bathroom_remodel_quiz_start' });
-                hasTrackedEngagement = true;
-            }
-        }
-
-
-        function selectOption(element, field, value) {
+        function selectOptionAndAdvance(element, field, value) {
             const options = element.parentElement.querySelectorAll('.option');
             options.forEach(opt => opt.classList.remove('selected'));
             
             element.classList.add('selected');
             formData[field] = value;
             
-            trackEngagementOnce();
-            
-            const warningId = element.getAttribute('data-warning');
-            if (warningId) {
-                const warning = document.getElementById(warningId);
-                if (warning) warning.classList.add('visible');
-                return;
-            }
-            
-            setTimeout(() => nextStep(), 200);
-        }
-
-        function selectOptionAndAdvance(element, field, value) {
-            selectOption(element, field, value);
-        }
-
-        function selectOptionWithWarning(event, element, field, value, warningId) {
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            element.setAttribute('data-warning', warningId);
-            selectOption(element, field, value);
-            element.removeAttribute('data-warning');
-        }
-
-        function continueFromWarning(warningId) {
-            const warning = document.getElementById(warningId);
-            if (warning) {
-                warning.classList.remove('visible');
-            }
-            nextStep();
-        }
-
-        function goBackStep() {
-            if (currentStep <= 1) return;
-            hideAllWarnings();
-            const targetStep = currentStep - 1;
-            document.querySelectorAll('.form-step').forEach(el => el.classList.remove('active'));
-            currentStep = targetStep;
-            const targetEl = document.getElementById('step' + currentStep);
-            if (targetEl) targetEl.classList.add('active');
-            updateProgress();
-            showWarningsForCurrentStep();
-        }
-
-        function hideAllWarnings() {
-            ['rentingWarning', 'mobileHomeWarning', 'newBuildWarning', 'tileWarning'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.classList.remove('visible');
-            });
-        }
-
-        function showWarningsForCurrentStep() {
-            hideAllWarnings();
-            if (currentStep === 1) {
-                const rentWarn = document.getElementById('rentingWarning');
-                const optOwn = document.getElementById('step1OptionOwn');
-                const optRent = document.getElementById('step1OptionRent');
-                if (formData.homeowner === 'rent' && rentWarn) {
-                    rentWarn.classList.add('visible');
-                    if (optRent) optRent.classList.add('selected');
-                    if (optOwn) optOwn.classList.remove('selected');
-                } else if (formData.homeowner === 'own') {
-                    if (optOwn) optOwn.classList.add('selected');
-                    if (optRent) optRent.classList.remove('selected');
+            if (!hasTrackedEngagement) {
+                if (!TESTING_MODE && typeof fbq !== 'undefined' && clientData && clientData.fields['Meta Pixel']) {
+                    fbq('track', 'ViewContent', {
+                        content_category: 'home_improvement',
+                        content_name: 'bathroom_remodel_quiz_start'
+                    });
                 }
-            } else if (currentStep === 2 && formData.homeType === 'mobile') {
-                document.getElementById('mobileHomeWarning')?.classList.add('visible');
-            } else if (currentStep === 3 && formData.existingOrNew === 'newbuild') {
-                document.getElementById('newBuildWarning')?.classList.add('visible');
-            } else if (currentStep === 6 && formData.material === 'tile') {
-                document.getElementById('tileWarning')?.classList.add('visible');
+                if (TESTING_MODE) {
+                    console.log('[TESTING_MODE] Meta Pixel ViewContent would fire (quiz start)');
+                }
+                hasTrackedEngagement = true;
             }
+            
+            // Homeowner step: show red message when "No" selected, don't advance
+            if (field === 'homeowner') {
+                const whyWeAsk = document.getElementById('whyWeAsk');
+                const homeownerNoMsg = document.getElementById('homeownerNoMessage');
+                if (value === 'no') {
+                    if (whyWeAsk) whyWeAsk.style.display = 'none';
+                    if (homeownerNoMsg) homeownerNoMsg.style.display = 'flex';
+                    return;
+                } else {
+                    if (whyWeAsk) whyWeAsk.style.display = 'flex';
+                    if (homeownerNoMsg) homeownerNoMsg.style.display = 'none';
+                }
+            }
+            
+            // Home type step: show blue message when "Mobile home" selected, don't advance
+            if (field === 'homeType') {
+                const mobileHomeMsg = document.getElementById('mobileHomeMessage');
+                if (value === 'mobile_home') {
+                    if (mobileHomeMsg) mobileHomeMsg.style.display = 'flex';
+                    return;
+                } else {
+                    if (mobileHomeMsg) mobileHomeMsg.style.display = 'none';
+                }
+            }
+            
+            // Main goal step: show red message when "Repair damage" selected, don't advance
+            if (field === 'mainGoal') {
+                const repairDamageMsg = document.getElementById('repairDamageMessage');
+                if (value === 'repair_damage') {
+                    if (repairDamageMsg) repairDamageMsg.style.display = 'flex';
+                    return;
+                } else {
+                    if (repairDamageMsg) repairDamageMsg.style.display = 'none';
+                }
+            }
+            
+            // Material preferences step: show red message when "Tile" selected, don't advance
+            if (field === 'materialPref') {
+                const tileMsg = document.getElementById('tileMessage');
+                if (value === 'tile') {
+                    if (tileMsg) tileMsg.style.display = 'flex';
+                    return;
+                } else {
+                    if (tileMsg) tileMsg.style.display = 'none';
+                }
+            }
+            
+            setTimeout(() => {
+                nextStep();
+            }, 200);
+        }
+
+        function continueMobileHome() {
+            const mobileHomeMsg = document.getElementById('mobileHomeMessage');
+            if (mobileHomeMsg) mobileHomeMsg.style.display = 'none';
+            nextStep();
         }
 
         function validateAddressForm() {
@@ -2227,33 +2442,87 @@
             }
         }
 
-        const TOTAL_FORM_STEPS = 11;
-
         function updateProgress() {
             const progressFill = document.getElementById('progressFill');
-            const percentage = (currentStep / TOTAL_FORM_STEPS) * 100;
+            const percentage = (currentStep / 10) * 100;
             progressFill.style.width = percentage + '%';
         }
 
-        function nextStep() {
-            if (currentStep < TOTAL_FORM_STEPS) {
-                const prevStep = document.getElementById('step' + currentStep);
-                if (prevStep) prevStep.classList.remove('active');
-                currentStep++;
-                const nextStepEl = document.getElementById('step' + currentStep);
-                if (nextStepEl) nextStepEl.classList.add('active');
-                updateProgress();
+        function updateBackButtonVisibility() {
+            const backBtn = document.getElementById('backButton');
+            if (backBtn) {
+                backBtn.style.display = currentStep > 1 ? 'flex' : 'none';
             }
         }
 
-        function goToStep10() {
-            validateAddressForm();
-            if (formData.address) {
-                const prevStep = document.getElementById('step' + currentStep);
-                if (prevStep) prevStep.classList.remove('active');
-                currentStep = 10;
-                document.getElementById('step10').classList.add('active');
+        function scrollToForm() {
+            const formSection = document.getElementById('formSection');
+            if (formSection) formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                document.getElementById('step' + currentStep).classList.remove('active');
+                currentStep--;
+                document.getElementById('step' + currentStep).classList.add('active');
                 updateProgress();
+                updateBackButtonVisibility();
+                // Reset homeowner step message visibility when returning to step 1
+                if (currentStep === 1) {
+                    const whyWeAsk = document.getElementById('whyWeAsk');
+                    const homeownerNoMsg = document.getElementById('homeownerNoMessage');
+                    if (formData.homeowner === 'no') {
+                        if (whyWeAsk) whyWeAsk.style.display = 'none';
+                        if (homeownerNoMsg) homeownerNoMsg.style.display = 'flex';
+                    } else {
+                        if (whyWeAsk) whyWeAsk.style.display = 'flex';
+                        if (homeownerNoMsg) homeownerNoMsg.style.display = 'none';
+                    }
+                }
+                // Reset mobile home message visibility when returning to step 2
+                if (currentStep === 2) {
+                    const mobileHomeMsg = document.getElementById('mobileHomeMessage');
+                    if (formData.homeType === 'mobile_home' && mobileHomeMsg) {
+                        mobileHomeMsg.style.display = 'flex';
+                    } else if (mobileHomeMsg) {
+                        mobileHomeMsg.style.display = 'none';
+                    }
+                }
+                // Reset repair damage message visibility when returning to step 4
+                if (currentStep === 4) {
+                    const repairDamageMsg = document.getElementById('repairDamageMessage');
+                    if (formData.mainGoal === 'repair_damage' && repairDamageMsg) {
+                        repairDamageMsg.style.display = 'flex';
+                    } else if (repairDamageMsg) {
+                        repairDamageMsg.style.display = 'none';
+                    }
+                }
+                // Reset tile message visibility when returning to step 5
+                if (currentStep === 5) {
+                    const tileMsg = document.getElementById('tileMessage');
+                    if (formData.materialPref === 'tile' && tileMsg) {
+                        tileMsg.style.display = 'flex';
+                    } else if (tileMsg) {
+                        tileMsg.style.display = 'none';
+                    }
+                }
+            }
+        }
+
+        function nextStep() {
+            if (currentStep < 10) {
+                document.getElementById('step' + currentStep).classList.remove('active');
+                currentStep++;
+                document.getElementById('step' + currentStep).classList.add('active');
+                updateProgress();
+                updateBackButtonVisibility();
+            }
+        }
+
+        function goToStep9() {
+            validateNameForm();
+            if (formData.firstName && formData.lastName) {
+                nextStep();
             }
         }
 
@@ -2272,14 +2541,10 @@
             }
         }
 
-        function goToStep11() {
-            validateNameForm();
-            if (formData.firstName && formData.lastName) {
-                const prevStep = document.getElementById('step' + currentStep);
-                if (prevStep) prevStep.classList.remove('active');
-                currentStep = 11;
-                document.getElementById('step11').classList.add('active');
-                updateProgress();
+        function goToStep10() {
+            validateAddressForm();
+            if (formData.address) {
+                nextStep();
                 setupPhoneValidation();
             }
         }
@@ -2421,9 +2686,9 @@
                 phoneError.style.marginTop = '5px';
                 phoneError.style.display = 'none';
                 
-                const phoneHelp = document.getElementById('phoneHelp');
-                if (phoneHelp) {
-                    phoneHelp.parentNode.insertBefore(phoneError, phoneHelp.nextSibling);
+                const phoneDigitsInput = document.getElementById('phone_digits');
+                if (phoneDigitsInput) {
+                    phoneDigitsInput.parentNode.insertBefore(phoneError, phoneDigitsInput);
                 }
             }
 
@@ -2525,100 +2790,6 @@
             }
         }
 
-        // ============================================
-        // ============================================
-        // LEAD PERFECTION API FUNCTIONS
-        // ============================================
-        
-        async function fetchLeadPerfectionAvailability(zipCode) {
-            try {
-                if (!zipCode || !LP_MAKE_WEBHOOK_URL) {
-                    console.log('No zip code or webhook URL for Lead Perfection availability');
-                    return [];
-                }
-                
-                console.log('Fetching Lead Perfection availability for zip:', zipCode);
-                
-                const response = await fetch(LP_MAKE_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ zip: zipCode })
-                });
-                
-                if (!response.ok) {
-                    console.error('Lead Perfection API error:', response.status, response.statusText);
-                    return [];
-                }
-                
-                const data = await response.json();
-                console.log('Lead Perfection availability data:', data);
-                
-                return data || [];
-            } catch (error) {
-                console.error('Error fetching Lead Perfection availability:', error);
-                return [];
-            }
-        }
-        
-        function getLPAvailabilityForDate(date) {
-            if (!lpAvailabilityData || lpAvailabilityData.length === 0) return null;
-            if (!date) return null;
-            
-            // Ensure we have a proper Date object
-            const dateObj = new Date(date);
-            const dateStr = dateObj.toISOString().split('T')[0];
-            
-            for (const day of lpAvailabilityData) {
-                if (!day.SDate) continue;
-                const dayDate = new Date(day.SDate).toISOString().split('T')[0];
-                if (dayDate === dateStr) {
-                    return day;
-                }
-            }
-            return null;
-        }
-        
-        function getLPTimeSlotsForDay(dayData) {
-            if (!dayData) return [];
-            
-            const slots = [];
-            
-            // Extract available time slots from Lead Perfection data (T1-T6, TMS_Descr1-TMS_Descr6)
-            for (let i = 1; i <= 6; i++) {
-                const timeDesc = dayData[`TMS_Descr${i}`];
-                const available = dayData[`T${i}`];
-                
-                if (timeDesc && available > 0) {
-                    slots.push({
-                        time: timeDesc,
-                        available: available,
-                        slotIndex: i
-                    });
-                }
-            }
-            
-            return slots;
-        }
-        
-        function hasLPAvailabilityForDate(date) {
-            const dayData = getLPAvailabilityForDate(date);
-            if (!dayData) return false;
-            
-            const slots = getLPTimeSlotsForDay(dayData);
-            return slots.length > 0;
-        }
-        
-        // Helper function to check if client is "Home Pro MI"
-        function isHomeProMIClient() {
-            const activeClient = matchedClientData || campaignClientData;
-            if (activeClient && activeClient.fields && activeClient.fields['Name']) {
-                return activeClient.fields['Name'] === 'Home Pro MI';
-            }
-            return false;
-        }
-        
         // ============================================
         // CALENDAR FUNCTIONS
         // ============================================
@@ -2732,53 +2903,7 @@
             // Ensure we have a proper Date object
             const dateObj = new Date(date);
             
-            // If client is "Home Pro MI", use Lead Perfection API logic
-            if (isHomeProMIClient()) {
-                // Get Lead Perfection availability data for this date
-                const dayData = getLPAvailabilityForDate(dateObj);
-                if (!dayData) return [];
-                
-                const lpSlots = getLPTimeSlotsForDay(dayData);
-                if (lpSlots.length === 0) return [];
-                
-                const now = getCurrentDateInTimezone();
-                
-                // Convert LP slots to the format expected by the calendar, filtering by minimum hours in advance
-                const slots = [];
-                for (const lpSlot of lpSlots) {
-                    // Parse the time string from LP (e.g., "8am - 10am", "10am - 12pm", etc.)
-                    const timeDisplay = lpSlot.time;
-                    const startTimeMatch = timeDisplay.match(/^(\d+)(am|pm)/i);
-                    if (!startTimeMatch) continue;
-                    
-                    let hours = parseInt(startTimeMatch[1], 10);
-                    const ampm = startTimeMatch[2].toUpperCase();
-                    if (ampm === 'PM' && hours !== 12) hours += 12;
-                    else if (ampm === 'AM' && hours === 12) hours = 0;
-                    
-                    const slotTime = new Date(dateObj);
-                    slotTime.setHours(hours, 0, 0, 0);
-                    const hoursFromNow = (slotTime - now) / (1000 * 60 * 60);
-                    
-                    if (hoursFromNow < clientMinHoursInAdvance) continue;
-                    
-                    const displayHours12 = hours % 12 || 12;
-                    const ampmDisplay = hours >= 12 ? 'PM' : 'AM';
-                    const apptTimeFormat = `${displayHours12.toString().padStart(2, '0')}:00 ${ampmDisplay}`;
-                    slots.push({
-                        time: slotTime,
-                        display: timeDisplay,
-                        apptFormat: apptTimeFormat,
-                        isoString: dateObj.toISOString(),
-                        originalTime: timeDisplay,
-                        slotIndex: lpSlot.slotIndex
-                    });
-                }
-                
-                return slots;
-            }
-            
-            // Otherwise, use the standard client availability logic
+            // Use standard client availability logic
             if (!clientAvailability || clientAvailability.length === 0) {
                 console.log('[Calendar] getAvailableTimesForDate: no date or no clientAvailability', { date: date ? date.toISOString() : null, availabilityLength: clientAvailability ? clientAvailability.length : 0 });
                 return [];
@@ -2953,14 +3078,7 @@
                 date.setDate(startDate.getDate() + i);
                 
                 // Check if day is available
-                // If client is "Home Pro MI", use Lead Perfection API availability
-                // Otherwise, use standard client availability logic
-                let isAvailable;
-                if (isHomeProMIClient()) {
-                    isAvailable = hasLPAvailabilityForDate(date);
-                } else {
-                    isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date);
-                }
+                const isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date);
                 
                 const dayCell = document.createElement('div');
                 dayCell.className = 'calendar-day';
@@ -3074,43 +3192,23 @@
             const nextButton = document.getElementById('nextMonth');
             
             if (prevButton) {
-                if (isHomeProMIClient()) {
-                    // Get Sunday of current week
-                    const thisWeekStart = new Date(now);
-                    thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay());
-                    // Disable prev if we're at current week
-                    prevButton.disabled = currentWeekStart <= thisWeekStart;
+                if (currentWeekStart >= now) {
+                    prevButton.disabled = true;
                 } else {
-                    if (currentWeekStart >= now) {
-                        prevButton.disabled = true;
-                    } else {
-                        prevButton.disabled = false;
-                    }
+                    prevButton.disabled = false;
                 }
             }
             
             if (nextButton) {
-                if (isHomeProMIClient()) {
-                    // Disable next if we're past the last available date from LP data
-                    if (lpAvailabilityData && lpAvailabilityData.length > 0) {
-                        const lastAvailable = new Date(lpAvailabilityData[lpAvailabilityData.length - 1].SDate);
-                        const currentEnd = new Date(currentWeekStart);
-                        currentEnd.setDate(currentEnd.getDate() + 20);
-                        nextButton.disabled = currentEnd >= lastAvailable;
-                    } else {
-                        nextButton.disabled = true;
-                    }
+                const maxDate = new Date(now);
+                maxDate.setDate(now.getDate() + clientDaysOut);
+                const endDate = new Date(currentWeekStart);
+                endDate.setDate(endDate.getDate() + 20);
+                
+                if (endDate >= maxDate) {
+                    nextButton.disabled = true;
                 } else {
-                    const maxDate = new Date(now);
-                    maxDate.setDate(now.getDate() + clientDaysOut);
-                    const endDate = new Date(currentWeekStart);
-                    endDate.setDate(endDate.getDate() + 20);
-                    
-                    if (endDate >= maxDate) {
-                        nextButton.disabled = true;
-                    } else {
-                        nextButton.disabled = false;
-                    }
+                    nextButton.disabled = false;
                 }
             }
         }
@@ -3216,7 +3314,7 @@
             const appointmentText = formatAppointmentDate(selectedDate, timeForAppt);
             
             // Update the lead record in Airtable with the appointment and re-write summaries with appointment at top
-            if (leadRecordId && !TEST_MODE) {
+            if (leadRecordId && !TESTING_MODE) {
                 try {
                     const baseSummary = formData.fullSummary || '';
                     const baseSummaryHTML = formData.fullSummaryHTML || '';
@@ -3247,28 +3345,35 @@
                     console.error('Error updating appointment in Airtable:', error);
                 }
             } else {
-                console.warn('No lead record ID available to update with appointment');
+                if (TESTING_MODE) {
+                    console.log('[TESTING_MODE] Would update Airtable lead with appointment:', appointmentText);
+                } else {
+                    console.warn('No lead record ID available to update with appointment');
+                }
             }
             
             appointmentTimeSelected = true; // So showDuplicateCallToAction shows confirmation below, not calendar
+            lastAppointmentText = appointmentText; // Store for showDuplicateCallToAction
             
-            // Exclamation mark icon for appointment confirmation (replaces check mark)
-            const confirmationIcon = document.getElementById('confirmationIcon');
+            // Hide "Ready to get started now?" and subtext; show exclamation with appointment message
+            const confirmationCtaBlock = document.getElementById('confirmationCtaBlock');
+            const confirmationAppointmentBlock = document.getElementById('confirmationAppointmentBlock');
+            const confirmationAppointmentIcon = document.getElementById('confirmationAppointmentIcon');
+            const confirmationAppointmentMessage = document.getElementById('confirmationAppointmentMessage');
+            if (confirmationCtaBlock) confirmationCtaBlock.style.display = 'none';
+            if (confirmationAppointmentBlock) confirmationAppointmentBlock.style.display = 'block';
+            if (confirmationAppointmentIcon) confirmationAppointmentIcon.innerHTML = exclamationIconHtml;
+            if (confirmationAppointmentMessage) confirmationAppointmentMessage.innerHTML = "Your appointment is not officially booked until we speak with you over the phone. We'll give you a call as soon as possible to confirm your appointment on <strong>" + appointmentText + "</strong>.";
+            
             const confirmationIconBelow = document.getElementById('confirmationIconBelow');
-            if (confirmationIcon) confirmationIcon.innerHTML = exclamationIconHtml;
             if (confirmationIconBelow) confirmationIconBelow.innerHTML = exclamationIconHtml;
             
-            // Show confirmation screen with appointment-specific message
-            const confirmationTitle = document.getElementById('confirmationTitle');
-            const confirmationMessage = document.getElementById('confirmationMessage');
-            if (confirmationTitle) {
-                confirmationTitle.textContent = "IMPORTANT";
-            }
-            if (confirmationMessage) {
-                confirmationMessage.textContent = "Your appointment is not confirmed until we speak with you over the phone. We will call you as soon as possible to confirm your time!";
-            }
             document.getElementById('calendarStep').classList.remove('active');
             document.getElementById('confirmationStep').classList.add('active');
+            
+            // Scroll thank you screen into view so user sees it (they may have scrolled down to calendar)
+            const confirmationStep = document.getElementById('confirmationStep');
+            if (confirmationStep) confirmationStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
             
             // Show same confirmation screen in the bottom section so user can't select a second time
             const calendarStepBelow = document.getElementById('calendarStepBelow');
@@ -3279,10 +3384,10 @@
                 confirmationStepBelow.style.display = 'block';
                 const confirmationTitleBelow = document.getElementById('confirmationTitleBelow');
                 const confirmationMessageBelow = document.getElementById('confirmationMessageBelow');
-                if (confirmationTitleBelow) confirmationTitleBelow.textContent = "IMPORTANT";
-                if (confirmationMessageBelow) confirmationMessageBelow.textContent = "Your appointment is not confirmed until we speak with you over the phone. We will call you as soon as possible to confirm your time!";
+                if (confirmationTitleBelow) confirmationTitleBelow.textContent = "";
+                if (confirmationTitleBelow) confirmationTitleBelow.style.display = 'none';
+                if (confirmationMessageBelow) confirmationMessageBelow.innerHTML = "Your appointment is not officially booked until we speak with you over the phone. We'll give you a call as soon as possible to confirm your appointment on <strong>" + appointmentText + "</strong>.";
             }
-            if (ctaSection) ctaSection.classList.add('active');
             
             // Show reviews modal if reviews exist
             setTimeout(() => {
@@ -3291,43 +3396,14 @@
         }
         
         async function showCalendarScreen() {
-            const step11 = document.getElementById('step11');
+            const step10El = document.getElementById('step10');
             const calendarStep = document.getElementById('calendarStep');
-            const progressBar = document.getElementById('progressBarContainer');
-            const mainHeading = document.getElementById('mainHeading');
+            const progressArea = document.getElementById('progressArea');
             
             // Get client timezone, availability, and days
             const activeClient = matchedClientData || campaignClientData;
             
-            // If client is "Home Pro MI", fetch Lead Perfection availability
-            if (isHomeProMIClient()) {
-                // 48 hours in advance for Home Pro
-                clientMinHoursInAdvance = 48;
-                if (activeClient && activeClient.fields) {
-                    // Set timezone from client data
-                    if (activeClient.fields['Timezone']) {
-                        clientTimezone = activeClient.fields['Timezone'];
-                    }
-                    
-                    // Set days out from client data
-                    if (activeClient.fields['Days Out'] !== undefined && activeClient.fields['Days Out'] !== null) {
-                        const daysOutValue = Number(activeClient.fields['Days Out']);
-                        if (!isNaN(daysOutValue) && daysOutValue > 0) {
-                            clientDaysOut = daysOutValue;
-                        } else {
-                            clientDaysOut = 14;
-                        }
-                    } else {
-                        clientDaysOut = 14;
-                    }
-                }
-                
-                // Fetch Lead Perfection availability using the lead's zip code
-                const zipCode = formData.address?.zip || '';
-                if (zipCode) {
-                    lpAvailabilityData = await fetchLeadPerfectionAvailability(zipCode);
-                }
-            } else if (activeClient && activeClient.fields) {
+            if (activeClient && activeClient.fields) {
                 // Set timezone from client data
                 if (activeClient.fields['Timezone']) {
                     clientTimezone = activeClient.fields['Timezone'];
@@ -3388,14 +3464,13 @@
                 }
             }
             
-            if (step11) step11.classList.remove('active');
+            if (step10El) step10El.classList.remove('active');
             if (calendarStep) {
                 calendarStep.classList.add('active');
             } else {
                 console.error('Calendar step element not found!');
             }
-            if (progressBar) progressBar.style.display = 'none';
-            if (mainHeading) mainHeading.style.display = 'none';
+            if (progressArea) progressArea.style.display = 'none';
             
             initializeCalendar();
             
@@ -3469,11 +3544,10 @@
                 return;
             }
 
-            document.getElementById('step11').classList.remove('active');
+            document.getElementById('step10').classList.remove('active');
             document.getElementById('contactStep').classList.remove('active');
             document.getElementById('contactStepAddContact').classList.add('active');
-            document.getElementById('progressBarContainer').style.display = 'none';
-            document.getElementById('mainHeading').style.display = 'none';
+            document.getElementById('progressArea').style.display = 'none';
 
             setTimeout(() => {
                 showReviewsModal();
@@ -3481,6 +3555,17 @@
         }
 
         function showContactScreen(submitScreenType) {
+            // Set "Ready to get started now?" subtitle based on screen type
+            const contactReadySubtitle = document.getElementById('contactReadySubtitle');
+            if (contactReadySubtitle) {
+                const subtitles = {
+                    'Phone': "Can't wait to hear from us? Click the button below to call us now.",
+                    'Text': "Can't wait to hear from us? Text us below to schedule your free estimate.",
+                    'Phone/Text': "Can't wait to hear from us? Call or text us below to schedule your free estimate."
+                };
+                contactReadySubtitle.textContent = subtitles[submitScreenType] || subtitles['Phone/Text'];
+            }
+            
             // Get lead's name
             const firstName = document.getElementById('firstName')?.value.trim() || '';
             
@@ -3537,11 +3622,10 @@
             }
             
             // Show the contact screen
-            document.getElementById('step7').classList.remove('active');
+            document.getElementById('step10').classList.remove('active');
             document.getElementById('contactStepAddContact').classList.remove('active');
             document.getElementById('contactStep').classList.add('active');
-            document.getElementById('progressBarContainer').style.display = 'none';
-            document.getElementById('mainHeading').style.display = 'none';
+            document.getElementById('progressArea').style.display = 'none';
             
             // Show reviews modal if reviews exist
             setTimeout(() => {
@@ -3549,25 +3633,21 @@
             }, 500); // Small delay to let the contact screen appear first
         }
 
-        const checkMarkIconHtml = '<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#e8f5e9"/><path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/></svg>';
+        const checkMarkIconHtml = '<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#2196f3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#e3f2fd"/><path d="M9 12l2 2 4-4" stroke="#2196f3" stroke-width="3"/></svg>';
         const exclamationIconHtml = '<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#F9A825" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><circle cx="12" cy="12" r="10" fill="#FFF9C4" stroke="#F9A825"/><path d="M12 7 v6" stroke="#F9A825" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.5" fill="#F9A825"/></svg>';
         function showConfirmationScreen() {
-            // Show the confirmation/thank you screen
-            // Reset to default message and check mark icon for non-appointment bookings
-            const confirmationIcon = document.getElementById('confirmationIcon');
-            if (confirmationIcon) confirmationIcon.innerHTML = checkMarkIconHtml;
-            const confirmationTitle = document.getElementById('confirmationTitle');
-            const confirmationMessage = document.getElementById('confirmationMessage');
-            if (confirmationTitle) {
-                confirmationTitle.textContent = "Thank you!";
+            // Show the confirmation/thank you screen (default state: show "Ready to get started now?", hide appointment block)
+            const confirmationCtaBlock = document.getElementById('confirmationCtaBlock');
+            const confirmationAppointmentBlock = document.getElementById('confirmationAppointmentBlock');
+            if (confirmationCtaBlock) confirmationCtaBlock.style.display = '';
+            if (confirmationAppointmentBlock) confirmationAppointmentBlock.style.display = 'none';
+            const confirmationReadySubtitle = document.getElementById('confirmationReadySubtitle');
+            if (confirmationReadySubtitle) {
+                confirmationReadySubtitle.textContent = "Can't wait to hear from us? We'll give you a call soon to schedule your free estimate.";
             }
-            if (confirmationMessage) {
-                confirmationMessage.textContent = "We'll give you a call soon to schedule your free estimate.";
-            }
-            document.getElementById('step11').classList.remove('active');
+            document.getElementById('step10').classList.remove('active');
             document.getElementById('confirmationStep').classList.add('active');
-            document.getElementById('progressBarContainer').style.display = 'none';
-            document.getElementById('mainHeading').style.display = 'none';
+            document.getElementById('progressArea').style.display = 'none';
             
             // Show reviews modal if reviews exist
             setTimeout(() => {
@@ -3577,6 +3657,12 @@
 
         // Reviews Section Functions
         let reviews = [];
+
+        function tryShowReviewsOnLoad() {
+            if (campaignClientData && document.getElementById('reviewsSection')) {
+                showReviewsModal();
+            }
+        }
 
         function showReviewsModal() {
             // Get reviews from client data
@@ -3607,15 +3693,23 @@
                 }
             }
 
-            // Only show reviews section if there are reviews
-            if (reviews.length > 0) {
+            // Post-submit: hide reviews/pictures, don't show duplicate CTA below
+            if (currentSubmitScreenType) {
+                const reviewsSection = document.getElementById('reviewsSection');
+                if (reviewsSection) reviewsSection.classList.remove('active');
+                const ctaSection = document.getElementById('ctaSection');
+                if (ctaSection) ctaSection.classList.remove('active');
+                setTimeout(() => {
+                    if (typeof updateBackgroundHeight === 'function') {
+                        updateBackgroundHeight();
+                    }
+                }, 300);
+            } else if (reviews.length > 0) {
+                // Page load: show reviews below form
                 buildReviewBlocks();
                 document.getElementById('reviewsSection').classList.add('active');
-                
-                // Show duplicate call to action below reviews
-                showDuplicateCallToAction();
-                
-                // Update background height after reviews are displayed
+                const ctaSection = document.getElementById('ctaSection');
+                if (ctaSection) ctaSection.classList.remove('active');
                 setTimeout(() => {
                     if (typeof updateBackgroundHeight === 'function') {
                         updateBackgroundHeight();
@@ -3647,6 +3741,7 @@
                 }
                 
                 reviewBlock.innerHTML = `
+                    ${imageHtml}
                     <div class="review-text">${escapeHtml(review.text)}</div>
                     <div class="review-stars">
                         <span class="review-star">★</span>
@@ -3656,7 +3751,6 @@
                         <span class="review-star">★</span>
                     </div>
                     <div class="review-name">${escapeHtml(review.name)}</div>
-                    ${imageHtml}
                 `;
                 container.appendChild(reviewBlock);
             });
@@ -3692,8 +3786,8 @@
                     confirmationStepBelow.style.display = 'block';
                     const confirmationTitleBelow = document.getElementById('confirmationTitleBelow');
                     const confirmationMessageBelow = document.getElementById('confirmationMessageBelow');
-                    if (confirmationTitleBelow) confirmationTitleBelow.textContent = "IMPORTANT";
-                    if (confirmationMessageBelow) confirmationMessageBelow.textContent = "Your appointment is not confirmed until we speak with you over the phone. We will call you as soon as possible to confirm your time!";
+                    if (confirmationTitleBelow) confirmationTitleBelow.style.display = 'none';
+                    if (confirmationMessageBelow) confirmationMessageBelow.innerHTML = "Your appointment is not officially booked until we speak with you over the phone. We'll give you a call as soon as possible to confirm your appointment on <strong>" + lastAppointmentText + "</strong>.";
                 }
                 if (ctaSection) ctaSection.classList.add('active');
             } else if (currentSubmitScreenType === 'Phone' || currentSubmitScreenType === 'Text' || currentSubmitScreenType === 'Phone/Text') {
@@ -3713,7 +3807,14 @@
             } else {
                 // For 'None' option, show only the thank you/confirmation screen below
                 if (confirmationStepBelow) {
+                    const confirmationIconBelow = document.getElementById('confirmationIconBelow');
+                    const confirmationTitleBelow = document.getElementById('confirmationTitleBelow');
                     const confirmationMessageBelow = document.getElementById('confirmationMessageBelow');
+                    if (confirmationIconBelow) confirmationIconBelow.innerHTML = checkMarkIconHtml;
+                    if (confirmationTitleBelow) {
+                        confirmationTitleBelow.textContent = "Thank you!";
+                        confirmationTitleBelow.style.display = '';
+                    }
                     if (confirmationMessageBelow) {
                         confirmationMessageBelow.textContent = "We'll give you a call soon to schedule your free estimate.";
                     }
@@ -3818,14 +3919,7 @@
                 date.setDate(startDate.getDate() + i);
                 
                 // Check if day is available
-                // If client is "Home Pro MI", use Lead Perfection API availability
-                // Otherwise, use standard client availability logic
-                let isAvailable;
-                if (isHomeProMIClient()) {
-                    isAvailable = hasLPAvailabilityForDate(date);
-                } else {
-                    isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date);
-                }
+                const isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date);
                 
                 const dayCell = document.createElement('div');
                 dayCell.className = 'calendar-day';
@@ -3887,43 +3981,23 @@
             const nextButton = document.getElementById('nextMonthBelow');
             
             if (prevButton) {
-                if (isHomeProMIClient()) {
-                    // Get Sunday of current week
-                    const thisWeekStart = new Date(now);
-                    thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay());
-                    // Disable prev if we're at current week
-                    prevButton.disabled = currentWeekStart <= thisWeekStart;
+                if (currentWeekStart >= now) {
+                    prevButton.disabled = true;
                 } else {
-                    if (currentWeekStart >= now) {
-                        prevButton.disabled = true;
-                    } else {
-                        prevButton.disabled = false;
-                    }
+                    prevButton.disabled = false;
                 }
             }
             
             if (nextButton) {
-                if (isHomeProMIClient()) {
-                    // Disable next if we're past the last available date from LP data
-                    if (lpAvailabilityData && lpAvailabilityData.length > 0) {
-                        const lastAvailable = new Date(lpAvailabilityData[lpAvailabilityData.length - 1].SDate);
-                        const currentEnd = new Date(currentWeekStart);
-                        currentEnd.setDate(currentEnd.getDate() + 20);
-                        nextButton.disabled = currentEnd >= lastAvailable;
-                    } else {
-                        nextButton.disabled = true;
-                    }
+                const maxDate = new Date(now);
+                maxDate.setDate(now.getDate() + clientDaysOut);
+                const endDate = new Date(currentWeekStart);
+                endDate.setDate(endDate.getDate() + 20);
+                
+                if (endDate >= maxDate) {
+                    nextButton.disabled = true;
                 } else {
-                    const maxDate = new Date(now);
-                    maxDate.setDate(now.getDate() + clientDaysOut);
-                    const endDate = new Date(currentWeekStart);
-                    endDate.setDate(endDate.getDate() + 20);
-                    
-                    if (endDate >= maxDate) {
-                        nextButton.disabled = true;
-                    } else {
-                        nextButton.disabled = false;
-                    }
+                    nextButton.disabled = false;
                 }
             }
         }
@@ -3954,56 +4028,53 @@
             return digits;
         }
 
-        function getLastUpdatedDisplay(value) {
+        function getHomeownerDisplay(value) {
+            const options = { 'yes': 'Yes', 'no': 'No' };
+            return options[value] || value;
+        }
+        function getHomeTypeDisplay(value) {
             const options = {
-                'less_than_10': 'Less than 10 years ago',
-                'more_than_10': 'More than 10 years ago'
+                'single_family': 'Single family home',
+                'town_home': 'Town home',
+                'apartment': 'Apartment',
+                'vacation_home': 'Vacation home',
+                'mobile_home': 'Mobile home'
             };
             return options[value] || value;
         }
-
-        function getHomeTypeDisplay(value) {
-            const options = { 'single': 'Single family home', 'town': 'Town home', 'mobile': 'Mobile home' };
-            return options[value] || value || '—';
-        }
-
-        function getExistingOrNewDisplay(value) {
-            const options = { 'existing': 'Existing', 'newbuild': 'New build' };
-            return options[value] || value || '—';
-        }
-
-        function getMaterialDisplay(value) {
-            const options = { 'tile': 'Tile', 'acrylic': 'Acrylic', 'not_sure': 'Not sure' };
-            return options[value] || value || '—';
-        }
-
-        function getTimelineDisplay(value) {
-            const options = { 'asap': 'ASAP', '1month': 'Within a month', '3months': 'Within 3 months', '6months': 'Within 6 months' };
-            return options[value] || value || '—';
-        }
-
         function getProjectTypeDisplay(value) {
             const options = {
-                'tub_to_shower': 'Tub-to-Shower Conversion',
-                'shower_to_tub': 'Shower-to-Tub conversion',
-                'shower_replacement': 'Shower Replacement',
-                'tub_replacement': 'Tub Replacement',
-                'full_remodel': 'Full remodel'
+                'tub_to_shower': 'Tub to shower conversion',
+                'shower_to_tub': 'Shower to tub conversion',
+                'shower_replacement': 'Shower replacement',
+                'tub_replacement': 'Tub replacement'
             };
             return options[value] || value;
         }
-
         function getMainGoalDisplay(value) {
             const options = {
-                'accessibility': 'Improve accessibility/safety',
+                'accessibility_safety': 'Improve accessibility/safety',
                 'look_function': 'Improve look/function',
-                'repair': 'Repair damage',
-                'value': 'Increase home value',
-                'function_accessibility': 'Improving function/accessibility',
-                'prevent_damage': 'Fixing/preventing home damage',
-                'update_look': 'Updating the look',
-                'home_value': 'Increasing home value'
+                'repair_damage': 'Repair damage',
+                'home_value': 'Increase home value'
             };
+            return options[value] || value;
+        }
+        function getMaterialPrefDisplay(value) {
+            const options = { 'acrylic': 'Acrylic', 'composite_stone': 'Composite stone', 'tile': 'Tile', 'not_sure': 'Not sure' };
+            return options[value] || value;
+        }
+        function getTimelineDisplay(value) {
+            const options = {
+                'asap': 'ASAP',
+                'within_month': 'Within a month',
+                'within_3_months': 'Within 3 months',
+                'within_6_months': 'Within 6 months'
+            };
+            return options[value] || value;
+        }
+        function getHasEstimateDisplay(value) {
+            const options = { 'yes': 'Yes', 'no': 'No' };
             return options[value] || value;
         }
 
@@ -4024,6 +4095,10 @@
             try {
                 eventId = generateEventId();
                 
+                if (TESTING_MODE) {
+                    console.log('[TESTING_MODE] submitFinalForm - formData at submit:', JSON.stringify(formData, null, 2));
+                }
+                
                 const emailInput = document.getElementById('email');
                 const emailValue = emailInput ? emailInput.value.trim() : '';
                 
@@ -4032,28 +4107,6 @@
                     phone: document.getElementById('phone_digits').value,
                     email: emailValue
                 };
-            
-            // Track Facebook event if we have client data and pixel
-            if (typeof fbq !== 'undefined' && clientData && clientData.fields['Meta Pixel']) {
-                const leadEventData = {
-                    content_category: 'home_improvement',
-                    content_name: 'bathroom_remodel_quote',
-                    value: 1.00,
-                    currency: 'USD',
-                    homeowner_status: finalData.homeowner,
-                    project_type: finalData.projectType,
-                    main_goal: finalData.goal || finalData.mainGoal,
-                    home_type: finalData.homeType,
-                    existing_or_new: finalData.existingOrNew,
-                    material: finalData.material,
-                    timeline: finalData.timeline,
-                    has_estimate: finalData.hasEstimate
-                };
-                
-                fbq('track', 'Lead', leadEventData, {
-                    eventID: eventId
-                });
-            }
             
             // Find client by zip code
             try {
@@ -4067,6 +4120,30 @@
                 updatePartnerNameInPrivacyPolicy();
             } catch (error) {
                 console.error('Error finding client by zip code:', error);
+            }
+            
+            // Track Meta Pixel Lead event - only when matching zip code is found
+            if (!TESTING_MODE && typeof fbq !== 'undefined' && matchedClientData && matchedClientData.fields && matchedClientData.fields['Meta Pixel']) {
+                const leadEventData = {
+                    content_category: 'home_improvement',
+                    content_name: 'bathroom_remodel_quote',
+                    value: 1.00,
+                    currency: 'USD',
+                    homeowner_status: finalData.homeowner,
+                    home_type: finalData.homeType,
+                    project_type: finalData.projectType,
+                    main_goal: finalData.mainGoal,
+                    material_pref: finalData.materialPref,
+                    timeline: finalData.timeline,
+                    has_estimate: finalData.hasEstimate
+                };
+                
+                fbq('track', 'Lead', leadEventData, {
+                    eventID: eventId
+                });
+            }
+            if (TESTING_MODE) {
+                console.log('[TESTING_MODE] Meta Pixel Lead event would fire with:', { homeowner_status: finalData.homeowner, home_type: finalData.homeType, project_type: finalData.projectType, main_goal: finalData.mainGoal, material_pref: finalData.materialPref, timeline: finalData.timeline, has_estimate: finalData.hasEstimate });
             }
             
             // Find ad by adATID from URL
@@ -4086,14 +4163,13 @@
 
 Name: ${finalData.firstName} ${finalData.lastName}
 Phone: ${formatPhoneForDisplay(finalData.phone)}
-${emailLine}Homeowner: ${finalData.homeowner === 'own' ? 'Yes' : (finalData.homeowner === 'rent' ? 'Renting' : (finalData.homeowner === 'yes' ? 'Yes' : 'No'))}
+${emailLine}Homeowner: ${getHomeownerDisplay(finalData.homeowner)}
 Home Type: ${getHomeTypeDisplay(finalData.homeType)}
-Existing/New: ${getExistingOrNewDisplay(finalData.existingOrNew)}
 Project Type: ${getProjectTypeDisplay(finalData.projectType)}
-Goal: ${getMainGoalDisplay(finalData.goal || finalData.mainGoal)}
-Material: ${getMaterialDisplay(finalData.material)}
+Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}
+Material Preference: ${getMaterialPrefDisplay(finalData.materialPref)}
 Timeline: ${getTimelineDisplay(finalData.timeline)}
-Already received estimate? ${finalData.hasEstimate === 'yes' ? 'Yes' : (finalData.hasEstimate === 'no' ? 'No' : (finalData.hasEstimate || '—'))}
+Already received estimate? ${getHasEstimateDisplay(finalData.hasEstimate)}
 
 Address:
 ${finalData.address.street}
@@ -4115,16 +4191,16 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             
             // Build HTML version of full summary
             const emailLineHTML = finalData.email ? `Email: ${finalData.email}<BR>` : '';
-            const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR>${emailLineHTML}Homeowner: ${finalData.homeowner === 'own' ? 'Yes' : (finalData.homeowner === 'rent' ? 'Renting' : (finalData.homeowner === 'yes' ? 'Yes' : 'No'))}<BR>Home Type: ${getHomeTypeDisplay(finalData.homeType)}<BR>Existing/New: ${getExistingOrNewDisplay(finalData.existingOrNew)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Goal: ${getMainGoalDisplay(finalData.goal || finalData.mainGoal)}<BR>Material: ${getMaterialDisplay(finalData.material)}<BR>Timeline: ${getTimelineDisplay(finalData.timeline)}<BR>Already received estimate? ${finalData.hasEstimate === 'yes' ? 'Yes' : (finalData.hasEstimate === 'no' ? 'No' : (finalData.hasEstimate || '—'))}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true,
-                timeZone: 'America/New_York'
-            })} EST`;
+            const fullSummaryHTML = `Bathroom Remodel Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR>${emailLineHTML}Homeowner: ${getHomeownerDisplay(finalData.homeowner)}<BR>Home Type: ${getHomeTypeDisplay(finalData.homeType)}<BR>Project Type: ${getProjectTypeDisplay(finalData.projectType)}<BR>Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}<BR>Material Preference: ${getMaterialPrefDisplay(finalData.materialPref)}<BR>Timeline: ${getTimelineDisplay(finalData.timeline)}<BR>Already received estimate? ${getHasEstimateDisplay(finalData.hasEstimate)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'America/New_York'
+})} EST`;
             
             // Store form data for later use (e.g., appointment summary update)
             formData.phone = finalData.phone;
@@ -4170,7 +4246,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 isSubmitting = false;
                 if (phoneSubmitBtn) {
                     phoneSubmitBtn.disabled = false;
-                    phoneSubmitBtn.textContent = 'Get Quote';
+                    phoneSubmitBtn.textContent = 'Schedule Estimate';
                 }
                 return; // Exit early - don't show calendar/phone options
             }
@@ -4255,7 +4331,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 isSubmitting = false;
                 if (phoneSubmitBtn) {
                     phoneSubmitBtn.disabled = false;
-                    phoneSubmitBtn.textContent = 'Get Quote';
+                    phoneSubmitBtn.textContent = 'Schedule Estimate';
                 }
             }
         }
