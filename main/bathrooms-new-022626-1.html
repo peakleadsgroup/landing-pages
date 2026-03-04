@@ -1940,6 +1940,29 @@
 
         async function submitLeadToAirtable(leadData) {
             try {
+                // Check for duplicate: existing lead with same linked client + same phone (only if we have a linked client)
+                let isDuplicate = false;
+                const hasLinkedClient = !!(matchedClientData && matchedClientData.id);
+                const hasPhone = !!leadData.phone;
+                if (hasLinkedClient && hasPhone) {
+                    try {
+                        const phoneDigits = String(leadData.phone).replace(/\D/g, '');
+                        const filterFormula = `REGEX_REPLACE({Phone}, "[^0-9]", "") = "${phoneDigits}"`;
+                        const dupUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}?filterByFormula=${encodeURIComponent(filterFormula)}`;
+                        const dupData = await fetchAirtableData(dupUrl);
+                        if (dupData.records && dupData.records.length > 0) {
+                            const clientId = matchedClientData.id;
+                            isDuplicate = dupData.records.some(rec => {
+                                const linked = rec.fields['Linked Client'];
+                                return Array.isArray(linked) && linked.includes(clientId);
+                            });
+                            if (isDuplicate) console.log('[Duplicate] Found existing lead for same client + phone, submitting without linked client and Error: DUPLICATE');
+                        }
+                    } catch (dupErr) {
+                        console.warn('Duplicate check failed, proceeding with normal submission:', dupErr);
+                    }
+                }
+                
                 if (TESTING_MODE) {
                     console.log('[TESTING_MODE] Would write to Airtable B2C_LEADS:', JSON.stringify(leadData, null, 2));
                     console.log('[TESTING_MODE] Full record that would be submitted:', {
@@ -1995,9 +2018,14 @@
                     record.fields['Price'] = leadPrice;
                 }
                 
-                // Add linked client ONLY if we found a match by zip code (no fallback to campaign client)
-                if (matchedClientData && matchedClientData.id) {
+                // Add linked client ONLY if we found a match by zip code (no fallback to campaign client) AND not a duplicate
+                if (matchedClientData && matchedClientData.id && !isDuplicate) {
                     record.fields['Linked Client'] = [matchedClientData.id];
+                }
+                
+                // If duplicate, add Error field and omit linked client (already omitted above)
+                if (isDuplicate) {
+                    record.fields['Error'] = 'DUPLICATE';
                 }
                 
                 // Always add Source Campaign if we have a campaign record ID
