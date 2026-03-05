@@ -2053,8 +2053,8 @@
                     record.fields['Email'] = leadData.email.trim();
                 }
                 
-                // Add Lead Price if available
-                if (leadPrice !== null && leadPrice !== undefined) {
+                // Add Lead Price if available (not for duplicates)
+                if (leadPrice !== null && leadPrice !== undefined && !isDuplicate) {
                     record.fields['Price'] = leadPrice;
                 }
                 
