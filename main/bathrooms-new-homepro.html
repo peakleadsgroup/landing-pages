@@ -1631,7 +1631,7 @@
         // ============================================
         // TESTING MODE - Disables Airtable writes and Meta Pixel
         // ============================================
-        const TESTING_MODE = true; // Set to true to disable Airtable writes and Meta Pixel for testing
+        const TESTING_MODE = false; // Set to true to disable Airtable writes and Meta Pixel for testing
         if (TESTING_MODE) console.log('[TESTING_MODE] Page loaded - Airtable and Meta Pixel disabled for testing');
         
         // ============================================
@@ -2919,7 +2919,7 @@
         }
         
         function isWithinBookingWindow(date) {
-            const now = getCurrentDateInTimezone();
+            const now = new Date(); // Use actual current time for 48hr check
             const hoursFromNow = (date - now) / (1000 * 60 * 60);
             
             if (hoursFromNow < clientMinHoursInAdvance) return false;
