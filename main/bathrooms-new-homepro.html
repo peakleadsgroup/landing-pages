@@ -2956,26 +2956,40 @@
                 const lpSlots = getLPTimeSlotsForDay(dayData);
                 if (lpSlots.length === 0) return [];
                 
-                // Convert LP slots to the format expected by the calendar
-                const slots = lpSlots.map(lpSlot => {
+                const now = getCurrentDateInTimezone();
+                const minHours = clientMinHoursInAdvance || 48;
+                
+                // Convert LP slots to the format expected by the calendar, filtering out slots within 48 hours
+                const slots = [];
+                for (const lpSlot of lpSlots) {
                     const timeDisplay = lpSlot.time;
                     const startTimeMatch = timeDisplay.match(/^(\d+)(am|pm)/i);
-                    let apptTimeFormat = timeDisplay;
-                    if (startTimeMatch) {
-                        const hour = parseInt(startTimeMatch[1]);
-                        const ampm = startTimeMatch[2].toUpperCase();
-                        apptTimeFormat = `${hour.toString().padStart(2, '0')}:00 ${ampm}`;
-                    }
+                    if (!startTimeMatch) continue;
                     
-                    return {
-                        time: new Date(date),
+                    let hours = parseInt(startTimeMatch[1], 10);
+                    const ampm = startTimeMatch[2].toUpperCase();
+                    if (ampm === 'PM' && hours !== 12) hours += 12;
+                    else if (ampm === 'AM' && hours === 12) hours = 0;
+                    
+                    const slotTime = new Date(dateObj);
+                    slotTime.setHours(hours, 0, 0, 0);
+                    const hoursFromNow = (slotTime - now) / (1000 * 60 * 60);
+                    
+                    if (hoursFromNow < minHours) continue; // Skip slots within 48 hours
+                    
+                    const displayHours12 = hours % 12 || 12;
+                    const apptAmpm = hours >= 12 ? 'PM' : 'AM';
+                    const apptTimeFormat = `${displayHours12.toString().padStart(2, '0')}:00 ${apptAmpm}`;
+                    
+                    slots.push({
+                        time: new Date(dateObj),
                         display: timeDisplay,
                         apptFormat: apptTimeFormat,
                         isoString: dateObj.toISOString(),
                         originalTime: timeDisplay,
                         slotIndex: lpSlot.slotIndex
-                    };
-                });
+                    });
+                }
                 
                 return slots;
             }
@@ -3154,9 +3168,9 @@
                 const date = new Date(startDate);
                 date.setDate(startDate.getDate() + i);
                 
-                // Check if day is available: use LP when available, else standard client logic
+                // Check if day is available: use LP when available (with 48hr min), else standard client logic
                 const isAvailable = (lpAvailabilityData && lpAvailabilityData.length > 0)
-                    ? hasLPAvailabilityForDate(date)
+                    ? (hasLPAvailabilityForDate(date) && isWithinBookingWindow(date))
                     : (isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date));
                 
                 const dayCell = document.createElement('div');
@@ -4006,9 +4020,9 @@
                 const date = new Date(startDate);
                 date.setDate(startDate.getDate() + i);
                 
-                // Check if day is available: use LP when available, else standard client logic
+                // Check if day is available: use LP when available (with 48hr min), else standard client logic
                 const isAvailable = (lpAvailabilityData && lpAvailabilityData.length > 0)
-                    ? hasLPAvailabilityForDate(date)
+                    ? (hasLPAvailabilityForDate(date) && isWithinBookingWindow(date))
                     : (isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date));
                 
                 const dayCell = document.createElement('div');
