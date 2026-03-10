@@ -39,8 +39,7 @@
 
         function VideoEditorsDashboard() {
             const [chartData, setChartData] = useState([]);
-            const [users, setUsers] = useState([]);
-            const [selectedUser, setSelectedUser] = useState('');
+            const selectedUser = 'Julian Astacio';
             const [loading, setLoading] = useState(false);
             const [error, setError] = useState(null);
             const [rawTimeRecords, setRawTimeRecords] = useState([]);
@@ -122,36 +121,6 @@
 
                     setRawTimeRecords(timeRecords);
                     setRawAdsRecords(adsRecords);
-
-                    const staffNames = [...new Set(Object.values(staffById).map(s => s.name))].filter(Boolean).sort();
-                    const timeUserIds = new Set();
-                    timeRecords.forEach(r => {
-                        const u = r.fields['User'] || r.fields['Editor'] || r.fields['Staff'] || r.fields['Assigned To'];
-                        if (u) {
-                            const arr = Array.isArray(u) ? u : [u];
-                            arr.forEach(v => {
-                                const id = typeof v === 'object' && v && v.id ? v.id : v;
-                                if (id) timeUserIds.add(id);
-                            });
-                        }
-                    });
-                    const fromTimeOnly = [...timeUserIds].map(uid => {
-                        if (uid.startsWith('rec')) return staffById[uid]?.name;
-                        const staffId = userToStaff[uid];
-                        return staffId ? staffById[staffId]?.name : collaborators[uid]?.name || collaborators[uid]?.email || uid;
-                    }).filter(Boolean);
-                    const fromAds = new Set(adsRecords.flatMap(r => {
-                        const ed = r.fields['Editor'];
-                        if (!ed) return [];
-                        const ids = Array.isArray(ed) ? ed : [ed];
-                        return ids.map(id => staffById[id]?.name).filter(Boolean);
-                    }));
-                    const allUsers = [...new Set([...staffNames, ...fromTimeOnly, ...fromAds])].sort();
-                    setUsers(allUsers);
-
-                    if (allUsers.length > 0 && !selectedUser) {
-                        setSelectedUser(allUsers[0]);
-                    }
 
                     processAndSetChartData(timeRecords, adsRecords, staffById, userToStaff, collaborators);
 
@@ -418,24 +387,11 @@
                                         </div>
                                     </div>
 
-                                    <div className="mb-6">
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Select Editor</label>
-                                        <select
-                                            value={selectedUser}
-                                            onChange={(e) => setSelectedUser(e.target.value)}
-                                            className="w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                        >
-                                            {users.map(u => (
-                                                <option key={u} value={u}>{u}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
                                     {filteredData.length > 0 && (
                                         <>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                                                 <div className="bg-blue-50 rounded-lg p-4">
-                                                    <p className="text-sm text-gray-600 mb-1">Total Hours (selected)</p>
+                                                    <p className="text-sm text-gray-600 mb-1">Total Hours</p>
                                                     <p className="text-2xl font-bold text-blue-600">
                                                         {filteredData.reduce((s, d) => s + d.hours, 0).toFixed(1)}
                                                     </p>
@@ -495,8 +451,8 @@
                                         </>
                                     )}
 
-                                    {filteredData.length === 0 && selectedUser && (
-                                        <p className="text-gray-600 py-8 text-center">No data for {selectedUser}.</p>
+                                    {filteredData.length === 0 && (
+                                        <p className="text-gray-600 py-8 text-center">No data for Julian Astacio.</p>
                                     )}
                                 </>
                             )}
