@@ -126,7 +126,7 @@
                     const staffNames = [...new Set(Object.values(staffById).map(s => s.name))].filter(Boolean).sort();
                     const timeUserIds = new Set();
                     timeRecords.forEach(r => {
-                        const u = r.fields['User'];
+                        const u = r.fields['User'] || r.fields['Editor'] || r.fields['Staff'] || r.fields['Assigned To'];
                         if (u) {
                             const arr = Array.isArray(u) ? u : [u];
                             arr.forEach(v => {
@@ -136,6 +136,7 @@
                         }
                     });
                     const fromTimeOnly = [...timeUserIds].map(uid => {
+                        if (uid.startsWith('rec')) return staffById[uid]?.name;
                         const staffId = userToStaff[uid];
                         return staffId ? staffById[staffId]?.name : collaborators[uid]?.name || collaborators[uid]?.email || uid;
                     }).filter(Boolean);
@@ -166,10 +167,14 @@
                 const hoursByStaffDate = {};
                 const videosByStaffDate = {};
 
+                const getHours = (fields) => parseFloat(fields['Hours'] || fields['Hours Worked'] || fields['Duration']) || 0;
+                const getStartDate = (fields) => formatDateOnly(fields['Start'] || fields['Start Date'] || fields['Date']);
+
                 timeRecords.forEach(record => {
-                    const userField = record.fields['User'];
-                    const startDate = formatDateOnly(record.fields['Start']);
-                    const hours = parseFloat(record.fields['Hours']) || 0;
+                    const fields = record.fields;
+                    const userField = fields['User'] || fields['Editor'] || fields['Staff'] || fields['Assigned To'];
+                    const startDate = getStartDate(fields);
+                    const hours = getHours(fields);
 
                     if (!startDate) return;
 
@@ -178,18 +183,33 @@
                     if (userField) {
                         const arr = Array.isArray(userField) ? userField : [userField];
                         const first = arr[0];
-                        const userId = typeof first === 'object' && first && first.id ? first.id : first;
-                        const userEmail = typeof first === 'object' && first && first.email ? (first.email || '').toLowerCase().trim() : null;
-                        if (userId) {
-                            const staffId = userToStaff[userId];
-                            if (staffId) {
-                                staffName = staffById[staffId]?.name;
-                            } else if (userEmail) {
-                                const staffByEmail = Object.values(staffById).find(s => s.email && s.email === userEmail);
-                                staffName = staffByEmail?.name;
-                            }
-                            if (!staffName) {
-                                staffName = collaborators[userId]?.name || collaborators[userId]?.email || userEmail || userId;
+                        const rawVal = typeof first === 'object' && first ? first : first;
+
+                        if (typeof rawVal === 'string' && rawVal.startsWith('rec')) {
+                            staffName = staffById[rawVal]?.name;
+                        } else {
+                            const userId = typeof first === 'object' && first && first.id ? first.id : first;
+                            const userEmail = typeof first === 'object' && first && first.email ? (first.email || '').toLowerCase().trim() : null;
+                            const userName = typeof first === 'object' && first && first.name ? (first.name || '').trim() : null;
+                            if (userId) {
+                                if (userId.startsWith('rec')) {
+                                    staffName = staffById[userId]?.name;
+                                } else {
+                                    const staffId = userToStaff[userId];
+                                    if (staffId) {
+                                        staffName = staffById[staffId]?.name;
+                                    } else if (userEmail) {
+                                        const staffByEmail = Object.values(staffById).find(s => s.email && s.email === userEmail);
+                                        staffName = staffByEmail?.name;
+                                    }
+                                    if (!staffName && userName) {
+                                        const staffByName = Object.values(staffById).find(s => s.name && s.name.toLowerCase() === userName.toLowerCase());
+                                        staffName = staffByName?.name;
+                                    }
+                                    if (!staffName) {
+                                        staffName = collaborators[userId]?.name || collaborators[userId]?.email || userEmail || userName || userId;
+                                    }
+                                }
                             }
                         }
                     }
