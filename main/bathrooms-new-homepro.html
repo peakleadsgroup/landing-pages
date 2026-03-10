@@ -2784,6 +2784,19 @@
                 const data = await response.json();
                 console.log('Lead Perfection availability data:', data);
                 
+                // Debug: log which days have bookable slots
+                if (data && Array.isArray(data)) {
+                    const daysWithSlots = data.filter(day => {
+                        for (let i = 1; i <= 6; i++) {
+                            const t = day[`T${i}`] ?? day[`X${i}`] ?? 0;
+                            const n = typeof t === 'string' ? parseInt(t, 10) || 0 : (Number(t) || 0);
+                            if (n > 0) return true;
+                        }
+                        return false;
+                    });
+                    console.log('[Calendar] LP days with availability:', daysWithSlots.length, 'of', data.length, daysWithSlots.map(d => (d.SDate || '').split('T')[0]));
+                }
+                
                 return data || [];
             } catch (error) {
                 console.error('Error fetching Lead Perfection availability:', error);
@@ -2794,11 +2807,12 @@
         function getLPAvailabilityForDate(date) {
             if (!lpAvailabilityData || lpAvailabilityData.length === 0) return null;
             
-            const dateStr = date.toISOString().split('T')[0];
+            // Use local date parts to avoid timezone conversion issues
+            const dateStr = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
             
             for (const day of lpAvailabilityData) {
-                const dayDate = new Date(day.SDate).toISOString().split('T')[0];
-                if (dayDate === dateStr) {
+                const dayStr = (day.SDate || '').split('T')[0];
+                if (dayStr === dateStr) {
                     return day;
                 }
             }
@@ -2810,15 +2824,16 @@
             
             const slots = [];
             
-            // Extract available time slots from Lead Perfection data (T1-T6, TMS_Descr1-TMS_Descr6)
+            // Extract available time slots from Lead Perfection data (T1-T6 or X1-X6, TMS_Descr1-TMS_Descr6)
             for (let i = 1; i <= 6; i++) {
                 const timeDesc = dayData[`TMS_Descr${i}`];
-                const available = dayData[`T${i}`];
+                const available = (dayData[`T${i}`] ?? dayData[`X${i}`] ?? 0);
+                const availableNum = typeof available === 'string' ? parseInt(available, 10) || 0 : (Number(available) || 0);
                 
-                if (timeDesc && available > 0) {
+                if (timeDesc && availableNum > 0) {
                     slots.push({
                         time: timeDesc,
-                        available: available,
+                        available: availableNum,
                         slotIndex: i
                     });
                 }
