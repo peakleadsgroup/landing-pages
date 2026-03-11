@@ -534,9 +534,35 @@
   let bottomCurrentStep = 0;
   const totalSteps = 10;
 
+  // Submit guard: prevent double submissions (fixes multiple Airtable writes)
+  let isSubmitting = false;
+
+  // ------------------ Debug logging ------------------
+  const LOG_PREFIX = '[homeservices]';
+  function log(level, msg, data) {
+    const ts = new Date().toISOString();
+    const args = [`${LOG_PREFIX} [${ts}] [${level}]`, msg];
+    if (data !== undefined) args.push(data);
+    if (level === 'ERROR') console.error.apply(console, args);
+    else if (level === 'WARN') console.warn.apply(console, args);
+    else console.log.apply(console, args);
+  }
+
+  function resetSubmitState(form, formId, reason) {
+    isSubmitting = false;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Get Leads!';
+    }
+    log('INFO', 'Submit state RESET (user can click again)', { formId, reason });
+  }
+
   // Initialize progress
   updateProgress();
   updateBottomProgress();
+
+  log('INFO', 'homeservices.html loaded - debug logging active', { url: window.location.href });
 
   // Generate unique Meta ID
   function generateUniqueMetaID() {
@@ -807,55 +833,84 @@
   // ------------------ Submit handlers ------------------
   document.getElementById('leadForm').addEventListener('submit', async function (e) {
     e.preventDefault();
-    await handleFormSubmission(this, formData);
+    log('INFO', 'Form submit triggered', { form: 'leadForm (top)' });
+    await handleFormSubmission(this, formData, 'leadForm');
   });
 
   document.getElementById('bottomLeadForm').addEventListener('submit', async function (e) {
     e.preventDefault();
-    await handleFormSubmission(this, bottomFormData);
+    log('INFO', 'Form submit triggered', { form: 'bottomLeadForm' });
+    await handleFormSubmission(this, bottomFormData, 'bottomLeadForm');
   });
 
   // ------------------ Submit w/ Airtable and redirect logic ------------------
-  async function handleFormSubmission(form, data) {
-    // Collect contact fields
-    const formElements = form.elements;
-    data.business_name = formElements.business_name.value;
-    
-    // Validate and normalize website if provided
-    const websiteInput = formElements.business_website.value.trim();
-    if (websiteInput) {
-      const validWebsite = validateWebsite(websiteInput);
-      if (!validWebsite) {
-        alert('Please enter a valid website (e.g., example.com or www.example.com)');
+  async function handleFormSubmission(form, data, formId) {
+    const submitStartTime = performance.now();
+    log('INFO', 'handleFormSubmission ENTRY', { formId, isSubmitting });
+
+    // GUARD: Prevent double submissions
+    if (isSubmitting) {
+      log('WARN', 'BLOCKED: Form already submitting, ignoring duplicate click', { formId });
+      return;
+    }
+    isSubmitting = true;
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn ? submitBtn.textContent : '';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+      log('INFO', 'Submit button disabled and text set to "Submitting..."', { formId });
+    }
+
+    try {
+      // Collect contact fields
+      const formElements = form.elements;
+      data.business_name = formElements.business_name.value;
+      log('INFO', 'Form data collected', { formId, business_name: data.business_name });
+
+      // Validate and normalize website if provided
+      const websiteInput = formElements.business_website.value.trim();
+      if (websiteInput) {
+        const validWebsite = validateWebsite(websiteInput);
+        if (!validWebsite) {
+          log('WARN', 'Validation FAILED: invalid website', { formId, websiteInput });
+          resetSubmitState(form, formId, 'invalid_website');
+          alert('Please enter a valid website (e.g., example.com or www.example.com)');
+          return;
+        }
+        data.business_website = validWebsite;
+      } else {
+        data.business_website = '';
+      }
+
+      data.contact_name = formElements.contact_name.value;
+
+      // Validate and normalize phone number
+      const phoneInput = formElements.phone.value.trim();
+      const validPhone = validatePhoneNumber(phoneInput);
+      if (!validPhone) {
+        log('WARN', 'Validation FAILED: invalid phone', { formId });
+        resetSubmitState(form, formId, 'invalid_phone');
+        alert('Please enter a valid 10-digit phone number (e.g., (555) 123-4567)');
         return;
       }
-      data.business_website = validWebsite;
-    } else {
-      data.business_website = '';
-    }
-    
-    data.contact_name = formElements.contact_name.value;
-    
-    // Validate and normalize phone number
-    const phoneInput = formElements.phone.value.trim();
-    const validPhone = validatePhoneNumber(phoneInput);
-    if (!validPhone) {
-      alert('Please enter a valid 10-digit phone number (e.g., (555) 123-4567)');
-      return;
-    }
-    data.phone = validPhone;
-    
-    data.email = formElements.email.value;
+      data.phone = validPhone;
 
-    // Guard: ensure a revenue tier is selected
-    if (!data.monthly_revenue) {
-      alert('Please select your estimated monthly revenue to continue.');
-      return;
-    }
+      data.email = formElements.email.value;
+
+      // Guard: ensure a revenue tier is selected
+      if (!data.monthly_revenue) {
+        log('WARN', 'Validation FAILED: no monthly_revenue selected', { formId });
+        resetSubmitState(form, formId, 'missing_revenue');
+        alert('Please select your estimated monthly revenue to continue.');
+        return;
+      }
 
     // Generate unique Meta ID
     const uniqueMetaID = generateUniqueMetaID();
     data.unique_meta_id = uniqueMetaID;
+    log('INFO', 'Unique Meta ID generated', { formId, uniqueMetaID });
 
     // Determine if revenue is over $100,000
     const revenueOver100k = data.monthly_revenue === '$100,000-$300,000' || 
@@ -863,21 +918,23 @@
                            data.monthly_revenue === 'More than $500,000';
 
     function showThankYouFor(formEl) {
+      log('INFO', 'showThankYouFor called', { formId: formEl.id });
       const formSteps = formEl.querySelectorAll('.form-step');
       formSteps.forEach(s => s.classList.remove('active'));
       if (formEl.id === 'leadForm') {
         document.getElementById('thankYouScreen').classList.add('active');
         currentStep = totalSteps - 1;
         updateProgress();
+        log('INFO', 'Thank you screen shown (top form)', { formId: 'leadForm' });
       } else {
         document.getElementById('bottomThankYouScreen').classList.add('active');
         bottomCurrentStep = totalSteps - 1;
         updateBottomProgress();
+        log('INFO', 'Thank you screen shown (bottom form)', { formId: 'bottomLeadForm' });
       }
       window.scrollTo({ top: window.pageYOffset });
     }
 
-    try {
       // Create full summary for Notes field
       const summaryParts = [];
       summaryParts.push("=== LEAD INFORMATION SUMMARY ===");
@@ -970,6 +1027,9 @@
       };
 
       // Submit to Airtable
+      const airtableFetchStart = performance.now();
+      log('INFO', 'Airtable fetch START', { formId, uniqueMetaID, msSinceSubmit: Math.round(airtableFetchStart - submitStartTime) });
+
       const airtableResponse = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}`, {
         method: 'POST',
         headers: {
@@ -979,27 +1039,51 @@
         body: JSON.stringify(airtableData)
       });
 
+      const airtableFetchDuration = Math.round(performance.now() - airtableFetchStart);
+      const totalDuration = Math.round(performance.now() - submitStartTime);
+
       if (!airtableResponse.ok) {
         const errorText = await airtableResponse.text();
+        log('ERROR', 'Airtable submission FAILED', {
+          formId,
+          status: airtableResponse.status,
+          statusText: airtableResponse.statusText,
+          fetchDurationMs: airtableFetchDuration,
+          totalDurationMs: totalDuration,
+          errorText: errorText.substring(0, 200)
+        });
         console.error('Airtable submission failed:', errorText);
         // Try to parse and show a more helpful error
         try {
           const errorJson = JSON.parse(errorText);
           if (errorJson.error && errorJson.error.message) {
-            console.error('Airtable error details:', errorJson.error.message);
+            log('ERROR', 'Airtable error details', { message: errorJson.error.message });
           }
         } catch (e) {
           // If parsing fails, just log the raw error
         }
+        resetSubmitState(form, formId, 'airtable_error');
+        alert('There was an error submitting your form. Please try again.');
+        return;
       }
 
+      log('INFO', 'Airtable fetch SUCCESS', {
+        formId,
+        uniqueMetaID,
+        fetchDurationMs: airtableFetchDuration,
+        totalDurationMs: totalDuration,
+        status: airtableResponse.status
+      });
+
       // Fire Facebook Pixel conversion event with unique Meta ID
+      log('INFO', 'Firing fbq Lead event', { uniqueMetaID });
       fbq('track', 'Lead', {
         eventID: uniqueMetaID
       });
 
       // Redirect logic - only redirect to cal.com if revenue is over $100,000
       if (revenueOver100k) {
+        log('INFO', 'Redirecting to cal.com (revenue over 100k)', { formId, totalDurationMs: totalDuration });
         const name = encodeURIComponent(data.contact_name || "");
         const email = encodeURIComponent(data.email || "");
         
@@ -1015,10 +1099,20 @@
         
         window.location.href = danUrl;
       } else {
+        log('INFO', 'Showing thank you screen (revenue under 100k)', { formId, totalDurationMs: totalDuration });
         showThankYouFor(form);
       }
+      log('INFO', 'handleFormSubmission COMPLETE (success)', { formId });
     } catch (err) {
+      const totalDuration = Math.round(performance.now() - submitStartTime);
+      log('ERROR', 'handleFormSubmission EXCEPTION', {
+        formId,
+        error: err.message,
+        stack: err.stack ? err.stack.substring(0, 300) : undefined,
+        totalDurationMs: totalDuration
+      });
       console.error('Error submitting form:', err);
+      resetSubmitState(form, formId, 'exception');
       alert('There was an error submitting your form. Please try again.');
     }
   }
