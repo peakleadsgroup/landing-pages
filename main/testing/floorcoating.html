@@ -997,22 +997,29 @@
                     console.log('[ZIP_DEBUG] NOTE: Zip was normalized from', JSON.stringify(zipRaw), 'to', JSON.stringify(zipToSearch));
                 }
 
-                // Fetch all clients
-                const clientsUrl = `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}`;
+                // Fetch all clients (with pagination - Airtable returns max 100 per request)
+                let allClientRecords = [];
+                let fetchUrl = `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}`;
                 console.log('[ZIP_DEBUG] Fetching clients from Airtable...');
-                const clientsData = await fetchAirtableData(clientsUrl);
+                while (fetchUrl) {
+                    const pageData = await fetchAirtableData(fetchUrl);
+                    if (pageData.records && pageData.records.length > 0) {
+                        allClientRecords = allClientRecords.concat(pageData.records);
+                    }
+                    fetchUrl = pageData.offset ? `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}?offset=${pageData.offset}` : null;
+                }
                 
-                if (!clientsData.records || clientsData.records.length === 0) {
+                if (allClientRecords.length === 0) {
                     console.log('[ZIP_DEBUG] No client records returned from Airtable');
                     return null;
                 }
                 
                 console.log(`[ZIP_DEBUG] Searching for zip code: "${zipToSearch}" (normalized from "${zipRaw}")`);
-                console.log(`[ZIP_DEBUG] Total clients in database: ${clientsData.records.length}`);
+                console.log(`[ZIP_DEBUG] Total clients in database: ${allClientRecords.length}`);
                 
                 // Search through each client's Expanded Area Raw Zips
                 let eligibleCount = 0;
-                for (const client of clientsData.records) {
+                for (const client of allClientRecords) {
                     const status = client.fields['Status'];
                     const niche = client.fields['Niche'];
                     const zipList = client.fields['Expanded Area Raw Zips'];
