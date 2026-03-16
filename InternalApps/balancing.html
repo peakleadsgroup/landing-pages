@@ -13,7 +13,7 @@
             min-height: 100vh;
             background: #f8f9fa;
             padding: 0;
-            padding-top: 100px;
+            padding-top: 48px;
         }
         .client-table-fixed-header {
             position: fixed;
@@ -28,22 +28,6 @@
         }
         .client-table-fixed-header .client-table { margin: 0; border: 0; border-bottom: none; }
         .client-table-fixed-header th { border-bottom: none; }
-        .load-clients-btn {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.5rem 1rem;
-            margin: 0.5rem 0;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: white;
-            background: #1a73e8;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-        .load-clients-btn:hover { background: #1557b0; }
-        .load-clients-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .panel {
             background: white;
             border-radius: 8px;
@@ -177,9 +161,6 @@
 </head>
 <body>
     <div class="client-table-fixed-header">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
-            <button type="button" class="load-clients-btn" id="load-clients-btn" title="Load all active and paused clients">Load Active Clients</button>
-        </div>
         <table class="client-table">
             <colgroup>
                 <col style="width: 3%"><col style="width: 8%"><col style="width: 14%"><col style="width: 12%"><col style="width: 10%"><col style="width: 16%"><col style="width: 14%"><col style="width: 14%"><col style="width: 9%">
@@ -282,11 +263,6 @@
         function loadClients() {
             var formula = 'OR({Status}="Active", {Status}="Paused")';
             console.log('[Balancing] loadClients', { formula: formula, tableName: TABLE_NAMES.CLIENTS });
-            var btn = document.getElementById('load-clients-btn');
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = 'Loading…';
-            }
             document.getElementById('client-list-loading').style.display = 'block';
             document.getElementById('client-list-empty').style.display = 'none';
             document.getElementById('client-tbody').innerHTML = '';
@@ -302,14 +278,11 @@
                 });
                 if (clientList.length === 0) {
                     document.getElementById('client-list-empty').style.display = 'block';
-                    if (btn) { btn.disabled = false; btn.textContent = 'Load Active Clients'; }
                     return;
                 }
                 renderClientTable(clientList);
-                expandAndLoadAllClients(btn);
             }).catch(function (e) {
                 document.getElementById('client-list-loading').style.display = 'none';
-                if (btn) { btn.disabled = false; btn.textContent = 'Load Active Clients'; }
                 document.getElementById('client-list-empty').style.display = 'block';
                 document.getElementById('client-list-empty').textContent = 'Failed to load clients: ' + (e && e.message) || 'Error';
             });
@@ -601,36 +574,13 @@
             if (t14) t14.innerHTML = q14.sort(function (a, b) { return (b.created || 0) - (a.created || 0); }).map(leadRow).join('');
         }
 
-        function expandAndLoadAllClients(btn) {
-            var promises = [];
-            clientList.forEach(function (c) {
-                var clientId = c.id;
-                var detailRow = document.getElementById('client-detail-' + clientId);
-                var expandBtn = detailRow && detailRow.previousElementSibling ? detailRow.previousElementSibling.querySelector('.client-expand-btn') : null;
-                var content = detailRow ? detailRow.querySelector('.client-detail-content') : null;
-                if (!detailRow || !content) return;
-                detailRow.style.display = 'table-row';
-                if (expandBtn) {
-                    expandBtn.classList.add('expanded');
-                    expandBtn.setAttribute('aria-expanded', 'true');
-                }
-                content.removeAttribute('data-loaded');
-                promises.push(loadClientDetail(clientId, content, expandBtn));
-            });
-            Promise.all(promises).then(function () {
-                if (btn) { btn.disabled = false; btn.textContent = 'Load Active Clients'; }
-            }).catch(function () {
-                if (btn) { btn.disabled = false; btn.textContent = 'Load Active Clients'; }
-            });
-        }
-
         function loadClientDetail(clientId, contentEl, btn) {
             var client = clientList.find(function (c) { return c.id === clientId; });
             var clientName = client ? client.name : '';
             contentEl.innerHTML = '<div class="panel-header" style="padding: 0 0 0.5rem 0; font-weight: 600; color: #202124;">Spend summary</div><div class="campaigns-placeholder"></div><div class="panel-header" style="padding: 1rem 0 0.5rem 0; font-weight: 600; color: #202124;">Leads by period (Qualified only)</div><div class="leads-placeholder"></div>';
             var campaignsPlaceholder = contentEl.querySelector('.campaigns-placeholder');
             var leadsPlaceholder = contentEl.querySelector('.leads-placeholder');
-            return loadCampaignsForClient(clientId, campaignsPlaceholder).then(function (spendTotals) {
+            loadCampaignsForClient(clientId, campaignsPlaceholder).then(function (spendTotals) {
                 return loadLeadsForClient(clientId, clientName, leadsPlaceholder, spendTotals);
             }).then(function () {
                 contentEl.setAttribute('data-loaded', 'true');
@@ -639,7 +589,6 @@
             });
         }
 
-        document.getElementById('load-clients-btn').addEventListener('click', loadClients);
         loadClients();
     </script>
 </body>
