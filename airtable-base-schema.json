@@ -1,0 +1,42 @@
+{
+  "baseId": "appmBb0lzqRK9dI8v",
+  "baseUrl": "https://api.airtable.com/v0/appmBb0lzqRK9dI8v",
+  "tables": {
+    "B2B Leads": {
+      "tableId": "tbldNpwtCN9y5Pkiy",
+      "description": "B2B lead submissions from contractor qualification forms",
+      "fields": {
+        "Source": { "type": "singleLineText", "description": "Lead source (e.g. 'Meta Ads', 'B2B Bathroom')" },
+        "Unique Meta ID": { "type": "singleLineText", "description": "Unique identifier for tracking (optional for non-Meta sources)" },
+        "Notes": { "type": "multilineText", "description": "Full lead summary / notes" },
+        "Location": { "type": "singleLineText", "description": "Zip code" },
+        "Estimated monthly revenue": { "type": "singleLineText", "description": "Revenue tier selection" },
+        "Phone Number": { "type": "phoneNumber", "description": "10-digit phone" },
+        "Business Name": { "type": "singleLineText", "description": "Company/business name" },
+        "Website": { "type": "url", "description": "Business website URL" },
+        "Contact Name": { "type": "singleLineText", "description": "Full name" },
+        "Contact Email": { "type": "email", "description": "Email address" },
+        "Interest Reason": { "type": "singleLineText", "description": "Why interested in working with us" },
+        "Niche(s)": { "type": "multipleSelects", "description": "Service niches (homeservices form)" },
+        "Other Services": { "type": "singleLineText", "description": "Other services (homeservices form)" }
+      }
+    }
+  },
+  "fieldMappings": {
+    "bathrooms.html": {
+      "contractor": "Notes (in summary)",
+      "interest": "Interest Reason",
+      "zipcode": "Location",
+      "revenue": "Estimated monthly revenue",
+      "business_name": "Business Name",
+      "business_website": "Website",
+      "contact_name": "Contact Name",
+      "phone": "Phone Number",
+      "email": "Contact Email"
+    }
+  },
+  "_meta": {
+    "lastUpdated": "2025-03-16",
+    "refreshNote": "To refresh schema: GET https://api.airtable.com/v0/meta/bases/{baseId}/tables with Bearer token"
+  }
+}

@@ -505,6 +505,30 @@
             if (this.value !== p.formatted) this.value = p.formatted;
         });
 
+        // Airtable config (see airtable-base-schema.json for field reference)
+        const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
+        const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
+        const B2B_LEADS_TABLE = 'B2B Leads';
+
+        const REVENUE_LABELS = {
+            less_50k: 'Less than $50,000',
+            '50k_100k': '$50,000-$100,000',
+            '100k_500k': '$100,000-$500,000',
+            '500k_1m': '$500,000-$1,000,000',
+            over_1m: 'More than $1,000,000'
+        };
+        const INTEREST_LABELS = {
+            growing_sales: 'Growing sales team',
+            other_sources: 'Other lead sources not producing',
+            expanding_markets: 'Expanding markets',
+            other: 'Other'
+        };
+
+        function formatPhoneForDisplay(digits) {
+            if (!digits || digits.length !== 10) return digits || '';
+            return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+        }
+
         async function submitForm() {
             const emailVal = document.getElementById('email').value.trim();
             const r = isValidEmail(emailVal);
@@ -519,25 +543,63 @@
             btn.disabled = true;
             btn.textContent = 'Submitting...';
 
-            const payload = {
-                contractor: formData.contractor,
-                interest: formData.interest,
-                zipcode: formData.zipcode,
-                monthly_revenue: formData.revenue || '',
-                business_name: formData.business_name,
-                business_website: formData.business_website,
-                contact_name: formData.contact_name,
-                phone: formData.phone,
-                email: formData.email,
-                campaign: 'B2B Bathroom Qualification'
+            const revenueLabel = REVENUE_LABELS[formData.revenue] || formData.revenue || '';
+            const interestLabel = INTEREST_LABELS[formData.interest] || formData.interest || '';
+
+            const summaryParts = [
+                '=== B2B BATHROOM QUALIFICATION ===',
+                '',
+                'CONTRACTOR:',
+                `Bathroom remodeling contractor? ${formData.contractor === 'yes' ? 'Yes' : 'No'}`,
+                '',
+                'INTEREST REASON:',
+                interestLabel,
+                '',
+                'LOCATION:',
+                `Zip Code: ${formData.zipcode || ''}`,
+                '',
+                'ESTIMATED MONTHLY REVENUE:',
+                revenueLabel,
+                '',
+                'BUSINESS:',
+                `Business Name: ${formData.business_name || ''}`,
+                `Website: ${formData.business_website || ''}`,
+                '',
+                'CONTACT:',
+                `Name: ${formData.contact_name || ''}`,
+                `Phone: ${formatPhoneForDisplay(formData.phone)}`,
+                `Email: ${formData.email || ''}`,
+                '',
+                `Submitted: ${new Date().toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York' })} EST`
+            ];
+            const notes = summaryParts.join('\n');
+
+            const airtableFields = {
+                'Source': 'B2B Bathroom',
+                'Notes': notes,
+                'Interest Reason': interestLabel
             };
+            if (formData.zipcode) airtableFields['Location'] = formData.zipcode;
+            if (revenueLabel) airtableFields['Estimated monthly revenue'] = revenueLabel;
+            if (formData.phone) airtableFields['Phone Number'] = formData.phone;
+            if (formData.business_name) airtableFields['Business Name'] = formData.business_name;
+            if (formData.business_website) airtableFields['Website'] = formData.business_website;
+            if (formData.contact_name) airtableFields['Contact Name'] = formData.contact_name;
+            if (formData.email) airtableFields['Contact Email'] = formData.email;
 
             try {
-                await fetch('https://hook.us2.make.com/547nag1innsonj48384hkem6tj7u051c', {
+                const res = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(B2B_LEADS_TABLE)}`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    headers: {
+                        'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ fields: airtableFields })
                 });
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(errText || `Airtable ${res.status}`);
+                }
                 showFinalScreen();
             } catch (err) {
                 console.error(err);
