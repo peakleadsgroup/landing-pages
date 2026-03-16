@@ -291,27 +291,16 @@
             text-align: center;
         }
 
+        .partners-carousel-wrap {
+            overflow: hidden;
+            padding: 10px 0;
+        }
+
         .partners-carousel {
             display: flex;
             gap: 30px;
-            overflow-x: auto;
             padding: 10px 0;
-            scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .partners-carousel::-webkit-scrollbar {
-            height: 6px;
-        }
-
-        .partners-carousel::-webkit-scrollbar-track {
-            background: #e9ecef;
-            border-radius: 3px;
-        }
-
-        .partners-carousel::-webkit-scrollbar-thumb {
-            background: #2196f3;
-            border-radius: 3px;
+            animation: partners-scroll 25s linear infinite;
         }
 
         .partners-carousel img {
@@ -320,7 +309,11 @@
             max-width: 140px;
             object-fit: contain;
             flex-shrink: 0;
-            scroll-snap-align: center;
+        }
+
+        @keyframes partners-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
         }
 
 
@@ -515,12 +508,19 @@
         <div class="partners-card content-card">
             <div class="partners-header">Our Partners</div>
             <div class="partners-subtext">Trusted by some of the top names in home improvement</div>
-            <div class="partners-carousel">
-                <img src="../Images/fivestarbathsolutionslogo.png" alt="Five Star Bath Solutions">
-                <img src="../Images/primebathslogo.webp" alt="Prime Baths">
-                <img src="../Images/newbathtodaylogo.webp" alt="New Bath Today">
-                <img src="../Images/homeprologo.webp" alt="HomePro">
-                <img src="../Images/homefixlogo.webp" alt="HomeFix">
+            <div class="partners-carousel-wrap">
+                <div class="partners-carousel">
+                    <img src="../images/fivestarbathsolutionslogo.png" alt="Five Star Bath Solutions">
+                    <img src="../images/primebathslogo.webp" alt="Prime Baths">
+                    <img src="../images/newbathtodaylogo.webp" alt="New Bath Today">
+                    <img src="../images/homeprologo.webp" alt="HomePro">
+                    <img src="../images/homefixlogo.webp" alt="HomeFix">
+                    <img src="../images/fivestarbathsolutionslogo.png" alt="Five Star Bath Solutions">
+                    <img src="../images/primebathslogo.webp" alt="Prime Baths">
+                    <img src="../images/newbathtodaylogo.webp" alt="New Bath Today">
+                    <img src="../images/homeprologo.webp" alt="HomePro">
+                    <img src="../images/homefixlogo.webp" alt="HomeFix">
+                </div>
             </div>
         </div>
 
