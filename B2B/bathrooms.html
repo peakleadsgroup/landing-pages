@@ -46,16 +46,15 @@
             object-fit: contain;
         }
 
-        .quiz-card {
-            background: #fff;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 40px 30px;
+        .content-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             text-align: center;
-        }
-
-        #quizCardBottom {
             margin-top: 30px;
+            max-width: 500px;
+            width: 100%;
         }
 
         .progress-area {
@@ -231,30 +230,29 @@
             margin-bottom: 0;
         }
 
-        .by-the-numbers-card {
-            background: #fff;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 40px 30px;
-            margin-top: 30px;
-            width: 100%;
-        }
 
         .by-the-numbers-header {
             font-size: 24px;
             font-weight: bold;
             color: #000;
-            margin-bottom: 30px;
+            margin-top: 30px;
+            margin-bottom: 20px;
             text-align: center;
         }
 
-        .stat-block {
-            margin-bottom: 30px;
+        .stat-card {
             text-align: center;
         }
 
-        .stat-block:last-child {
-            margin-bottom: 0;
+        .get-leads-cta {
+            text-align: center;
+            margin-top: 30px;
+            margin-bottom: 40px;
+        }
+
+        .get-leads-btn {
+            padding: 18px 48px;
+            font-size: 18px;
         }
 
         .stat-number {
@@ -277,14 +275,6 @@
             line-height: 1.5;
         }
 
-        .partners-card {
-            background: #fff;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 40px 30px;
-            margin-top: 30px;
-            width: 100%;
-        }
 
         .partners-header {
             font-size: 24px;
@@ -333,14 +323,6 @@
             scroll-snap-align: center;
         }
 
-        .video-embed-card {
-            background: #fff;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 30px;
-            margin-top: 30px;
-            width: 100%;
-        }
 
         .video-wrapper {
             position: relative;
@@ -368,14 +350,6 @@
             margin-top: 15px;
         }
 
-        .testimonial-card {
-            background: #fff;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 30px;
-            margin-top: 30px;
-            width: 100%;
-        }
 
         .testimonial-card blockquote {
             font-size: 1.05rem;
@@ -406,13 +380,12 @@
     </div>
 
     <div class="form-wrapper">
-        <div class="quiz-card">
-            <div class="progress-area" id="progressArea">
-                <button type="button" class="back-button" id="backButton" onclick="prevStep()" style="display: none;">← Back</button>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill" style="width: 10%"></div>
-                </div>
+        <div class="progress-area" id="progressArea">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 10%"></div>
             </div>
+            <button type="button" class="back-button" id="backButton" onclick="prevStep()" style="display: none;">← Back</button>
+        </div>
 
             <!-- Step 1: Contractor -->
             <div class="form-step active" id="step1">
@@ -521,28 +494,25 @@
                 <div class="step-header">IMPORTANT</div>
                 <div class="step-subheader">Not every business is the right fit. A team member will review your submission and reach out if it looks like a good match for our lead program</div>
             </div>
+
+        <div class="by-the-numbers-header">By the numbers</div>
+        <div class="stat-card content-card">
+            <div class="stat-number">70%</div>
+            <div class="stat-subheader">Average Connect Rate</div>
+            <div class="stat-body">Current partners are speaking with 70% of our leads on average</div>
+        </div>
+        <div class="stat-card content-card">
+            <div class="stat-number">50%</div>
+            <div class="stat-subheader">Appointments Booked</div>
+            <div class="stat-body">Of the leads that our partners are connecting with they are booking half of them on average</div>
+        </div>
+        <div class="stat-card content-card">
+            <div class="stat-number">?</div>
+            <div class="stat-subheader">Close Rate</div>
+            <div class="stat-body">Ask your sales team!</div>
         </div>
 
-        <div class="by-the-numbers-card">
-            <div class="by-the-numbers-header">By the numbers</div>
-            <div class="stat-block">
-                <div class="stat-number">70%</div>
-                <div class="stat-subheader">Average Connect Rate</div>
-                <div class="stat-body">Current partners are speaking with 70% of our leads on average</div>
-            </div>
-            <div class="stat-block">
-                <div class="stat-number">50%</div>
-                <div class="stat-subheader">Appointments Booked</div>
-                <div class="stat-body">Of the leads that our partners are connecting with they are booking half of them on average</div>
-            </div>
-            <div class="stat-block">
-                <div class="stat-number">?</div>
-                <div class="stat-subheader">Close Rate</div>
-                <div class="stat-body">Ask your sales team!</div>
-            </div>
-        </div>
-
-        <div class="partners-card">
+        <div class="partners-card content-card">
             <div class="partners-header">Our Partners</div>
             <div class="partners-subtext">Trusted by some of the top names in home improvement</div>
             <div class="partners-carousel">
@@ -554,14 +524,14 @@
             </div>
         </div>
 
-        <div class="video-embed-card">
+        <div class="video-embed-card content-card">
             <div class="video-wrapper">
                 <iframe src="https://www.youtube.com/embed/kuV3DZNhLyM" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </div>
             <div class="video-result">Fortress closed $318,000 in 4 months</div>
         </div>
 
-        <div class="testimonial-card">
+        <div class="testimonial-card content-card">
             <blockquote>
                 "We've been working with Peak Leads Group for about six months now, and the experience has been excellent from day one. Their team is extremely thoughtful, responsive, and genuinely invested in our success — it never feels like we're just another account.<br><br>
                 Since partnering with PLG, we've been able to significantly scale our business and confidently expand our service territory into Tennessee. Their lead quality and strategic approach have played a major role in our growth and have helped us take the next step as a company.<br><br>
@@ -570,118 +540,15 @@
             <p class="quote-author">Justin Michael, <span>Managing Partner, Bedrock Bath Pros</span></p>
         </div>
 
-        <div class="video-embed-card">
+        <div class="video-embed-card content-card">
             <div class="video-wrapper">
                 <iframe src="https://www.youtube.com/embed/RYAMf40CCFo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </div>
             <div class="video-result">$261,000 in 6 months for a 5% cost of marketing</div>
         </div>
 
-        <div class="quiz-card" id="quizCardBottom">
-            <div class="progress-area" id="progressAreaBottom">
-                <button type="button" class="back-button" id="backButtonBottom" onclick="prevStep()" style="display: none;">← Back</button>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFillBottom" style="width: 10%"></div>
-                </div>
-            </div>
-
-            <div class="form-step active" id="step1Bottom">
-                <div class="step-header">Ready to transform your business?</div>
-                <div class="step-subheader">Are you a bathroom remodeling contractor?</div>
-                <div class="options">
-                    <div class="option" data-value="yes" onclick="selectOption(this, 'contractor', 'yes')">Yes</div>
-                    <div class="option" data-value="no" onclick="selectOption(this, 'contractor', 'no')">No</div>
-                </div>
-            </div>
-
-            <div class="form-step" id="step2Bottom">
-                <div class="step-header">Why are you interested in working with us?</div>
-                <div class="options">
-                    <div class="option" data-value="growing_sales" onclick="selectOption(this, 'interest', 'growing_sales')">Growing sales team</div>
-                    <div class="option" data-value="other_sources" onclick="selectOption(this, 'interest', 'other_sources')">Other lead sources not producing</div>
-                    <div class="option" data-value="expanding_markets" onclick="selectOption(this, 'interest', 'expanding_markets')">Expanding markets</div>
-                    <div class="option" data-value="other" onclick="selectOption(this, 'interest', 'other')">Other</div>
-                </div>
-            </div>
-
-            <div class="form-step" id="step3Bottom">
-                <div class="step-header">What is your business' main zip code?</div>
-                <div class="input-wrap">
-                    <input type="text" id="zipcodeBottom" class="text-input" placeholder="12345" maxlength="5" inputmode="numeric" autocomplete="postal-code">
-                    <div class="field-error" id="zipcodeBottomError"></div>
-                </div>
-                <button type="button" class="nav-btn" onclick="validateAndNext('zipcode')">Next</button>
-            </div>
-
-            <div class="form-step" id="step4Bottom">
-                <div class="step-header">What is your estimated monthly revenue?</div>
-                <div class="options">
-                    <div class="option" data-value="less_50k" onclick="selectOption(this, 'revenue', 'less_50k')">Less than $50,000</div>
-                    <div class="option" data-value="50k_100k" onclick="selectOption(this, 'revenue', '50k_100k')">$50,000-$100,000</div>
-                    <div class="option" data-value="100k_500k" onclick="selectOption(this, 'revenue', '100k_500k')">$100,000-$500,000</div>
-                    <div class="option" data-value="500k_1m" onclick="selectOption(this, 'revenue', '500k_1m')">$500,000-$1,000,000</div>
-                    <div class="option" data-value="over_1m" onclick="selectOption(this, 'revenue', 'over_1m')">More than $1,000,000</div>
-                </div>
-            </div>
-
-            <div class="form-step" id="step5Bottom">
-                <div class="step-header">Business name</div>
-                <div class="input-wrap">
-                    <input type="text" id="businessNameBottom" class="text-input" placeholder="Your business name" autocomplete="organization">
-                    <div class="field-error" id="businessNameBottomError"></div>
-                </div>
-                <button type="button" class="nav-btn" onclick="validateAndNext('businessName')">Next</button>
-            </div>
-
-            <div class="form-step" id="step6Bottom">
-                <div class="step-header">Business website</div>
-                <div class="input-wrap">
-                    <input type="text" id="businessWebsiteBottom" class="text-input" placeholder="example.com" autocomplete="url">
-                    <div class="field-error" id="businessWebsiteBottomError"></div>
-                </div>
-                <button type="button" class="nav-btn" onclick="validateAndNext('businessWebsite')">Next</button>
-            </div>
-
-            <div class="form-step" id="step7Bottom">
-                <div class="step-header">Your name</div>
-                <div class="name-grid">
-                    <div class="input-wrap">
-                        <label class="input-label" for="firstNameBottom">First</label>
-                        <input type="text" id="firstNameBottom" class="text-input" placeholder="First name" autocomplete="given-name">
-                        <div class="field-error" id="firstNameBottomError"></div>
-                    </div>
-                    <div class="input-wrap">
-                        <label class="input-label" for="lastNameBottom">Last</label>
-                        <input type="text" id="lastNameBottom" class="text-input" placeholder="Last name" autocomplete="family-name">
-                        <div class="field-error" id="lastNameBottomError"></div>
-                    </div>
-                </div>
-                <button type="button" class="nav-btn" onclick="validateAndNext('name')">Next</button>
-            </div>
-
-            <div class="form-step" id="step8Bottom">
-                <div class="step-header">Your phone</div>
-                <div class="input-wrap">
-                    <input type="tel" id="phoneBottom" class="text-input" placeholder="(555) 123-4567" inputmode="tel" autocomplete="tel">
-                    <small style="color:#666;font-size:12px;display:block;margin-top:5px;">US number, 10 digits.</small>
-                    <div class="field-error" id="phoneBottomError"></div>
-                </div>
-                <button type="button" class="nav-btn" onclick="validateAndNext('phone')">Next</button>
-            </div>
-
-            <div class="form-step" id="step9Bottom">
-                <div class="step-header">Your email</div>
-                <div class="input-wrap">
-                    <input type="email" id="emailBottom" class="text-input" placeholder="you@example.com" autocomplete="email">
-                    <div class="field-error" id="emailBottomError"></div>
-                </div>
-                <button type="button" class="nav-btn" id="submitBtnBottom" onclick="submitForm()">Get Qualified Leads!</button>
-            </div>
-
-            <div class="form-step important-screen" id="stepFinalBottom">
-                <div class="step-header">IMPORTANT</div>
-                <div class="step-subheader">Not every business is the right fit. A team member will review your submission and reach out if it looks like a good match for our lead program</div>
-            </div>
+        <div class="get-leads-cta">
+            <button type="button" class="nav-btn get-leads-btn" onclick="document.querySelector('.form-wrapper').scrollIntoView({ behavior: 'smooth', block: 'start' })">Get Leads</button>
         </div>
     </div>
 
@@ -693,52 +560,22 @@
         function updateProgress() {
             const pct = Math.min(100, (currentStep / TOTAL_STEPS) * 100);
             const pf = document.getElementById('progressFill');
-            const pfBottom = document.getElementById('progressFillBottom');
             if (pf) pf.style.width = pct + '%';
-            if (pfBottom) pfBottom.style.width = pct + '%';
             const back = document.getElementById('backButton');
-            const backBottom = document.getElementById('backButtonBottom');
-            const show = currentStep > 1;
-            if (back) back.style.display = show ? 'flex' : 'none';
-            if (backBottom) backBottom.style.display = show ? 'flex' : 'none';
+            if (back) back.style.display = currentStep > 1 ? 'flex' : 'none';
         }
 
         function showStep(stepNum) {
             document.querySelectorAll('.form-step').forEach(el => el.classList.remove('active'));
             const stepEl = document.getElementById('step' + stepNum);
-            const stepElBottom = document.getElementById('step' + stepNum + 'Bottom');
             if (stepEl) stepEl.classList.add('active');
-            if (stepElBottom) stepElBottom.classList.add('active');
             currentStep = stepNum;
-            syncFormToBottom();
             updateProgress();
-        }
-
-        function syncFormToBottom() {
-            if (formData.zipcode) { const z = document.getElementById('zipcodeBottom'); if (z) z.value = formData.zipcode; }
-            if (formData.business_name) { const b = document.getElementById('businessNameBottom'); if (b) b.value = formData.business_name; }
-            if (formData.business_website) { const w = document.getElementById('businessWebsiteBottom'); if (w) w.value = formData.business_website; }
-            if (formData.contact_name) {
-                const parts = formData.contact_name.split(' ');
-                const f = document.getElementById('firstNameBottom'); if (f) f.value = parts[0] || '';
-                const l = document.getElementById('lastNameBottom'); if (l) l.value = parts.slice(1).join(' ') || '';
-            }
-            if (formData.phone) {
-                const p = document.getElementById('phoneBottom');
-                if (p) p.value = formData.phone.length === 10 ? `(${formData.phone.slice(0,3)}) ${formData.phone.slice(3,6)}-${formData.phone.slice(6)}` : formData.phone;
-            }
-            if (formData.email) { const e = document.getElementById('emailBottom'); if (e) e.value = formData.email; }
         }
 
         function selectOption(el, field, value) {
             el.parentElement.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
             el.classList.add('selected');
-            const stepNum = currentStep;
-            const otherStep = el.closest('#quizCardBottom') ? document.getElementById('step' + stepNum) : document.getElementById('step' + stepNum + 'Bottom');
-            if (otherStep) {
-                const otherOpt = otherStep.querySelector('.option[data-value="' + value + '"]');
-                if (otherOpt) { otherStep.querySelectorAll('.option').forEach(o => o.classList.remove('selected')); otherOpt.classList.add('selected'); }
-            }
             formData[field] = value;
             setTimeout(() => nextStep(), 300);
         }
@@ -807,68 +644,48 @@
             return { valid: true };
         }
 
-        function getInputVal(id) {
-            const el = document.getElementById(id);
-            const elB = document.getElementById(id + 'Bottom');
-            return (el?.value || elB?.value || '').trim();
-        }
-
-        function setInputVal(id, val) {
-            const el = document.getElementById(id);
-            const elB = document.getElementById(id + 'Bottom');
-            if (el) el.value = val;
-            if (elB) elB.value = val;
-        }
-
         function showError(fieldId, msg) {
-            [fieldId, fieldId + 'Bottom'].forEach(id => {
-                const el = document.getElementById(id);
-                const errEl = document.getElementById(id + 'Error');
-                if (el) el.classList.add('error');
-                if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
-            });
+            const el = document.getElementById(fieldId);
+            const errEl = document.getElementById(fieldId + 'Error');
+            if (el) el.classList.add('error');
+            if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
         }
 
         function clearError(fieldId) {
-            [fieldId, fieldId + 'Bottom'].forEach(id => {
-                const el = document.getElementById(id);
-                const errEl = document.getElementById(id + 'Error');
-                if (el) el.classList.remove('error');
-                if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
-            });
+            const el = document.getElementById(fieldId);
+            const errEl = document.getElementById(fieldId + 'Error');
+            if (el) el.classList.remove('error');
+            if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
         }
 
         function validateAndNext(field) {
             if (field === 'zipcode') {
-                const zipEl = document.getElementById('zipcode');
-                const zipBottom = document.getElementById('zipcodeBottom');
-                const raw = (zipEl?.value || zipBottom?.value || '').replace(/\D/g, '').slice(0, 5);
-                setInputVal('zipcode', raw);
-                if (raw.length !== 5) { showError('zipcode', 'Please enter a valid 5-digit zip code.'); return; }
+                document.getElementById('zipcode').value = document.getElementById('zipcode').value.replace(/\D/g, '').slice(0, 5);
+                const r = validateZipcode();
+                if (!r.valid) { showError('zipcode', r.error); return; }
                 clearError('zipcode');
-                formData.zipcode = raw;
+                formData.zipcode = document.getElementById('zipcode').value;
             } else if (field === 'businessName') {
-                const val = getInputVal('businessName');
+                const val = document.getElementById('businessName').value.trim();
                 if (!val) { showError('businessName', 'Please enter your business name.'); return; }
                 clearError('businessName');
                 formData.business_name = val;
             } else if (field === 'businessWebsite') {
-                const val = getInputVal('businessWebsite');
-                if (!val) { showError('businessWebsite', 'Please enter your business website.'); return; }
-                if (!/\.([a-zA-Z]{2,})(\/|$)/.test(val)) { showError('businessWebsite', 'Please enter a valid website (e.g., example.com).'); return; }
+                const r = validateWebsite();
+                if (!r.valid) { showError('businessWebsite', r.error); return; }
                 clearError('businessWebsite');
-                formData.business_website = val;
+                formData.business_website = document.getElementById('businessWebsite').value.trim();
             } else if (field === 'name') {
-                const first = getInputVal('firstName');
-                const last = getInputVal('lastName');
+                const first = document.getElementById('firstName').value.trim();
+                const last = document.getElementById('lastName').value.trim();
                 if (!first) { showError('firstName', 'Please enter your first name.'); return; }
                 if (!last) { showError('lastName', 'Please enter your last name.'); return; }
                 clearError('firstName'); clearError('lastName');
                 formData.contact_name = first + ' ' + last;
             } else if (field === 'phone') {
-                const phoneEl = document.getElementById('phone') || document.getElementById('phoneBottom');
-                const p = formatPhone(phoneEl?.value || '');
-                setInputVal('phone', p.formatted);
+                const phoneInput = document.getElementById('phone');
+                const p = formatPhone(phoneInput.value);
+                phoneInput.value = p.formatted;
                 const r = isValidPhoneNumber(p.digits);
                 if (!r.valid) { showError('phone', r.error); return; }
                 clearError('phone');
@@ -877,21 +694,15 @@
             nextStep();
         }
 
-        // Zip input: numbers only (both forms)
-        ['zipcode', 'zipcodeBottom'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.addEventListener('input', function() {
-                this.value = this.value.replace(/\D/g, '').slice(0, 5);
-            });
+        // Zip input: numbers only
+        document.getElementById('zipcode').addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '').slice(0, 5);
         });
 
-        // Phone formatting (both forms)
-        ['phone', 'phoneBottom'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.addEventListener('input', function() {
-                const p = formatPhone(this.value);
-                if (this.value !== p.formatted) this.value = p.formatted;
-            });
+        // Phone formatting
+        document.getElementById('phone').addEventListener('input', function() {
+            const p = formatPhone(this.value);
+            if (this.value !== p.formatted) this.value = p.formatted;
         });
 
         // Airtable config (see airtable-base-schema.json for field reference)
@@ -919,7 +730,7 @@
         }
 
         async function submitForm() {
-            const emailVal = getInputVal('email');
+            const emailVal = document.getElementById('email').value.trim();
             const r = isValidEmail(emailVal);
             if (!r.valid) {
                 showError('email', r.error);
@@ -929,9 +740,7 @@
             formData.email = emailVal;
 
             const btn = document.getElementById('submitBtn');
-            const btnBottom = document.getElementById('submitBtnBottom');
             if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
-            if (btnBottom) { btnBottom.disabled = true; btnBottom.textContent = 'Submitting...'; }
 
             const revenueLabel = REVENUE_LABELS[formData.revenue] || formData.revenue || '';
             const interestLabel = INTEREST_LABELS[formData.interest] || formData.interest || '';
@@ -995,16 +804,13 @@
                 console.error(err);
                 alert('There was an error submitting your form. Please try again.');
                 if (btn) { btn.disabled = false; btn.textContent = 'Get Qualified Leads!'; }
-                if (btnBottom) { btnBottom.disabled = false; btnBottom.textContent = 'Get Qualified Leads!'; }
             }
         }
 
         function showFinalScreen() {
             document.querySelectorAll('.form-step').forEach(el => el.classList.remove('active'));
             document.getElementById('stepFinal')?.classList.add('active');
-            document.getElementById('stepFinalBottom')?.classList.add('active');
             document.getElementById('progressArea').style.display = 'none';
-            document.getElementById('progressAreaBottom').style.display = 'none';
         }
     </script>
 </body>
