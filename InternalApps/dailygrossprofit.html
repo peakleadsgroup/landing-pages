@@ -49,12 +49,12 @@
                         <div class="p-4 bg-green-50 rounded-lg border border-green-200">
                             <p class="text-sm text-gray-600 mb-1">Gross Revenue</p>
                             <p id="gross-revenue-value" class="text-3xl font-bold text-green-700">—</p>
-                            <p class="text-xs text-gray-500 mt-1">Sum from B2C Leads (today)</p>
+                            <p class="text-xs text-gray-500 mt-1">Sum from B2C Leads (today EST)</p>
                         </div>
                         <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
                             <p class="text-sm text-gray-600 mb-1">Facebook Spend</p>
                             <p id="spend-value" class="text-3xl font-bold text-blue-700">—</p>
-                            <p class="text-xs text-gray-500 mt-1">Total spend across account (today)</p>
+                            <p class="text-xs text-gray-500 mt-1">Total spend across account (today EST)</p>
                         </div>
                         <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
                             <p class="text-sm text-gray-600 mb-1">Gross Profit</p>
@@ -115,8 +115,26 @@
             return isNaN(num) ? null : num;
         }
 
+        function getESTDateRange() {
+            const now = new Date();
+            const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' });
+            const parts = formatter.formatToParts(now);
+            const year = parseInt(parts.find(p => p.type === 'year').value);
+            const month = parseInt(parts.find(p => p.type === 'month').value);
+            const day = parseInt(parts.find(p => p.type === 'day').value);
+            const noonUTC = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+            const etHour = parseInt(noonUTC.toLocaleString('en-US', { timeZone: 'America/New_York', hour: 'numeric', hour12: false }));
+            const offsetHours = String(12 - etHour).padStart(2, '0');
+            const startUTC = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${offsetHours}:00:00.000Z`;
+            const nextDay = new Date(Date.UTC(year, month - 1, day + 1));
+            const ny = nextDay.getUTCFullYear(), nm = nextDay.getUTCMonth() + 1, nd = nextDay.getUTCDate();
+            const endUTC = `${ny}-${String(nm).padStart(2, '0')}-${String(nd).padStart(2, '0')}T${offsetHours}:00:00.000Z`;
+            return { startUTC, endUTC };
+        }
+
         async function fetchB2CLeadsGrossRevenue() {
-            const formula = 'DATESTR({Created}) = DATESTR(TODAY())';
+            const { startUTC, endUTC } = getESTDateRange();
+            const formula = 'AND(IS_AFTER({Created}, "' + startUTC + '"), IS_BEFORE({Created}, "' + endUTC + '"))';
             let allRecords = [];
             let offset = null;
 
@@ -174,7 +192,7 @@
                 grossRevenueValue.textContent = formatCurrency(grossRevenue);
                 spendValue.textContent = formatCurrency(facebookSpend);
                 grossProfitValue.textContent = formatCurrency(grossProfit);
-                resultDate.textContent = 'As of ' + new Date().toLocaleDateString(undefined, { dateStyle: 'medium' });
+                resultDate.textContent = 'As of ' + new Date().toLocaleDateString('en-US', { dateStyle: 'medium', timeZone: 'America/New_York' }) + ' (EST/EDT)';
                 resultArea.classList.remove('hidden');
             } catch (err) {
                 errorMessage.textContent = err.message || 'Unknown error';
