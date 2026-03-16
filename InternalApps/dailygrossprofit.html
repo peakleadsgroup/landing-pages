@@ -61,6 +61,11 @@
                             <p id="gross-profit-value" class="text-3xl font-bold text-purple-700">—</p>
                             <p class="text-xs text-gray-500 mt-1">Gross Revenue − Facebook Spend</p>
                         </div>
+                        <div class="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                            <p class="text-sm text-gray-600 mb-1">Margin %</p>
+                            <p id="margin-value" class="text-3xl font-bold text-amber-700">—</p>
+                            <p class="text-xs text-gray-500 mt-1">Gross Profit ÷ Gross Revenue</p>
+                        </div>
                         <p id="result-date" class="text-xs text-gray-500"></p>
                     </div>
 
@@ -88,6 +93,7 @@
         const grossRevenueValue = document.getElementById('gross-revenue-value');
         const spendValue = document.getElementById('spend-value');
         const grossProfitValue = document.getElementById('gross-profit-value');
+        const marginValue = document.getElementById('margin-value');
         const resultDate = document.getElementById('result-date');
         const errorArea = document.getElementById('error-area');
         const errorMessage = document.getElementById('error-message');
@@ -189,9 +195,12 @@
 
                 const grossProfit = grossRevenue - facebookSpend;
 
+                const marginPct = grossRevenue > 0 ? (grossProfit / grossRevenue) * 100 : 0;
+
                 grossRevenueValue.textContent = formatCurrency(grossRevenue);
                 spendValue.textContent = formatCurrency(facebookSpend);
                 grossProfitValue.textContent = formatCurrency(grossProfit);
+                marginValue.textContent = marginPct.toFixed(1) + '%';
                 resultDate.textContent = 'As of ' + new Date().toLocaleDateString('en-US', { dateStyle: 'medium', timeZone: 'America/New_York' }) + ' (EST/EDT)';
                 resultArea.classList.remove('hidden');
             } catch (err) {
