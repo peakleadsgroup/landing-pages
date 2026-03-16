@@ -33,7 +33,7 @@
                     <img src="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" alt="Logo" class="h-10 w-auto">
                     <h1 class="text-2xl font-bold text-gray-800">Daily Gross Profit</h1>
                 </div>
-                <p class="text-gray-600 mb-6">Total spend across the account for today.</p>
+                <p class="text-gray-600 mb-6">Gross revenue, Facebook spend, and gross profit for today.</p>
 
                 <div class="space-y-4">
                     <button
@@ -45,10 +45,23 @@
                         <span id="btn-spinner" class="spinner hidden"></span>
                     </button>
 
-                    <div id="result-area" class="hidden mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <p class="text-sm text-gray-600 mb-1">Today's Total Spend</p>
-                        <p id="spend-value" class="text-3xl font-bold text-gray-900">—</p>
-                        <p id="result-date" class="text-xs text-gray-500 mt-2"></p>
+                    <div id="result-area" class="hidden mt-6 space-y-4">
+                        <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+                            <p class="text-sm text-gray-600 mb-1">Gross Revenue</p>
+                            <p id="gross-revenue-value" class="text-3xl font-bold text-green-700">—</p>
+                            <p class="text-xs text-gray-500 mt-1">Sum from B2C Leads (today)</p>
+                        </div>
+                        <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <p class="text-sm text-gray-600 mb-1">Facebook Spend</p>
+                            <p id="spend-value" class="text-3xl font-bold text-blue-700">—</p>
+                            <p class="text-xs text-gray-500 mt-1">Total spend across account (today)</p>
+                        </div>
+                        <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                            <p class="text-sm text-gray-600 mb-1">Gross Profit</p>
+                            <p id="gross-profit-value" class="text-3xl font-bold text-purple-700">—</p>
+                            <p class="text-xs text-gray-500 mt-1">Gross Revenue − Facebook Spend</p>
+                        </div>
+                        <p id="result-date" class="text-xs text-gray-500"></p>
                     </div>
 
                     <div id="error-area" class="hidden mt-6 p-4 bg-red-50 rounded-lg border border-red-200">
@@ -62,12 +75,19 @@
 
     <script>
         const WEBHOOK_URL = 'https://hook.us2.make.com/o6fd582de7ovwb1wpo6abj4t39w7wbe1';
+        const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
+        const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
+        const AIRTABLE_BASE_URL = 'https://api.airtable.com/v0/' + AIRTABLE_BASE_ID;
+        const B2C_LEADS_TABLE = 'B2C Leads';
+        const GROSS_REVENUE_FIELD = 'Gross Revenue';
 
         const btn = document.getElementById('load-data-btn');
         const btnText = document.getElementById('btn-text');
         const btnSpinner = document.getElementById('btn-spinner');
         const resultArea = document.getElementById('result-area');
+        const grossRevenueValue = document.getElementById('gross-revenue-value');
         const spendValue = document.getElementById('spend-value');
+        const grossProfitValue = document.getElementById('gross-profit-value');
         const resultDate = document.getElementById('result-date');
         const errorArea = document.getElementById('error-area');
         const errorMessage = document.getElementById('error-message');
@@ -78,19 +98,70 @@
             btnSpinner.classList.toggle('hidden', !loading);
         }
 
+        function formatCurrency(n) {
+            return '$' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
         function parseSpendFromResponse(text) {
             if (text == null || text === '') return null;
             const trimmed = String(text).trim();
-            // Try JSON first: { "spend": 123.45 } or { "totalSpend": 123.45 } etc.
             try {
                 const parsed = JSON.parse(trimmed);
                 if (typeof parsed === 'number') return parsed;
                 const spend = parsed.spend ?? parsed.totalSpend ?? parsed.Spend ?? parsed.TotalSpend ?? parsed.amount ?? parsed.value;
                 if (spend != null) return Number(spend);
             } catch (_) {}
-            // Plain number
             const num = parseFloat(trimmed.replace(/[$,]/g, ''));
             return isNaN(num) ? null : num;
+        }
+
+        function getTodayDateString() {
+            const d = new Date();
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+
+        async function fetchB2CLeadsGrossRevenue() {
+            const today = getTodayDateString();
+            const formula = 'DATESTR({Created}) = "' + today + '"';
+            let allRecords = [];
+            let offset = null;
+
+            do {
+                let url = AIRTABLE_BASE_URL + '/' + encodeURIComponent(B2C_LEADS_TABLE) + '?filterByFormula=' + encodeURIComponent(formula);
+                if (offset) url += '&offset=' + offset;
+
+                const res = await fetch(url, {
+                    headers: { 'Authorization': 'Bearer ' + AIRTABLE_API_KEY }
+                });
+                if (!res.ok) throw new Error('Airtable B2C Leads: ' + res.status);
+
+                const data = await res.json();
+                allRecords = allRecords.concat(data.records || []);
+                offset = data.offset;
+            } while (offset);
+
+            let sum = 0;
+            for (const rec of allRecords) {
+                const val = rec.fields?.[GROSS_REVENUE_FIELD];
+                if (val != null && val !== '') {
+                    const n = typeof val === 'number' ? val : parseFloat(String(val).replace(/[$,]/g, ''));
+                    if (!isNaN(n)) sum += n;
+                }
+            }
+            return sum;
+        }
+
+        async function fetchFacebookSpend() {
+            const res = await fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            });
+            const text = await res.text();
+            const spend = parseSpendFromResponse(text);
+            if (spend != null) return spend;
+            if (!res.ok) throw new Error('Webhook failed: ' + res.status + ' ' + res.statusText);
+            throw new Error('Could not parse spend from response');
         }
 
         async function loadData() {
@@ -99,24 +170,18 @@
             errorArea.classList.add('hidden');
 
             try {
-                const res = await fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({})
-                });
+                const [grossRevenue, facebookSpend] = await Promise.all([
+                    fetchB2CLeadsGrossRevenue(),
+                    fetchFacebookSpend()
+                ]);
 
-                const text = await res.text();
-                const spend = parseSpendFromResponse(text);
+                const grossProfit = grossRevenue - facebookSpend;
 
-                if (spend != null) {
-                    spendValue.textContent = '$' + Number(spend).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    resultDate.textContent = 'As of ' + new Date().toLocaleDateString(undefined, { dateStyle: 'medium' });
-                    resultArea.classList.remove('hidden');
-                } else if (!res.ok) {
-                    throw new Error('Request failed: ' + res.status + ' ' + res.statusText);
-                } else {
-                    throw new Error('Could not parse spend from response: ' + (text || '(empty)').substring(0, 100));
-                }
+                grossRevenueValue.textContent = formatCurrency(grossRevenue);
+                spendValue.textContent = formatCurrency(facebookSpend);
+                grossProfitValue.textContent = formatCurrency(grossProfit);
+                resultDate.textContent = 'As of ' + new Date().toLocaleDateString(undefined, { dateStyle: 'medium' });
+                resultArea.classList.remove('hidden');
             } catch (err) {
                 errorMessage.textContent = err.message || 'Unknown error';
                 errorArea.classList.remove('hidden');
