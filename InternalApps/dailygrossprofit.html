@@ -115,14 +115,8 @@
             return isNaN(num) ? null : num;
         }
 
-        function getTodayDateString() {
-            const d = new Date();
-            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-        }
-
         async function fetchB2CLeadsGrossRevenue() {
-            const today = getTodayDateString();
-            const formula = 'DATESTR({Created}) = "' + today + '"';
+            const formula = 'DATESTR({Created}) = DATESTR(TODAY())';
             let allRecords = [];
             let offset = null;
 
