@@ -28,6 +28,22 @@
         }
         .client-table-fixed-header .client-table { margin: 0; border: 0; border-bottom: none; }
         .client-table-fixed-header th { border-bottom: none; }
+        .load-clients-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            margin: 0.5rem 0;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: white;
+            background: #1a73e8;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .load-clients-btn:hover { background: #1557b0; }
+        .load-clients-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .panel {
             background: white;
             border-radius: 8px;
@@ -161,6 +177,9 @@
 </head>
 <body>
     <div class="client-table-fixed-header">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+            <button type="button" class="load-clients-btn" id="load-clients-btn" title="Load all active and paused clients">Load Active Clients</button>
+        </div>
         <table class="client-table">
             <colgroup>
                 <col style="width: 3%"><col style="width: 8%"><col style="width: 14%"><col style="width: 12%"><col style="width: 10%"><col style="width: 16%"><col style="width: 14%"><col style="width: 14%"><col style="width: 9%">
@@ -263,11 +282,14 @@
         function loadClients() {
             var formula = 'OR({Status}="Active", {Status}="Paused")';
             console.log('[Balancing] loadClients', { formula: formula, tableName: TABLE_NAMES.CLIENTS });
+            var btn = document.getElementById('load-clients-btn');
+            if (btn) btn.disabled = true;
             document.getElementById('client-list-loading').style.display = 'block';
             document.getElementById('client-list-empty').style.display = 'none';
             document.getElementById('client-tbody').innerHTML = '';
             return fetchAllRecords(TABLE_NAMES.CLIENTS, formula).then(function (records) {
                 document.getElementById('client-list-loading').style.display = 'none';
+                if (btn) btn.disabled = false;
                 console.log('[Balancing] Clients loaded', { count: records.length });
                 clientList = records.map(function (r) {
                     var f = r.fields || {};
@@ -283,6 +305,7 @@
                 renderClientTable(clientList);
             }).catch(function (e) {
                 document.getElementById('client-list-loading').style.display = 'none';
+                if (btn) btn.disabled = false;
                 document.getElementById('client-list-empty').style.display = 'block';
                 document.getElementById('client-list-empty').textContent = 'Failed to load clients: ' + (e && e.message) || 'Error';
             });
@@ -589,6 +612,7 @@
             });
         }
 
+        document.getElementById('load-clients-btn').addEventListener('click', loadClients);
         loadClients();
     </script>
 </body>
