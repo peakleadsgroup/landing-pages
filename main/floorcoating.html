@@ -644,6 +644,8 @@
                 <div class="option" onclick="selectOptionAndAdvance(this, 'floorType', 'garage')">Garage</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'floorType', 'basement')">Basement</div>
                 <div class="option" onclick="selectOptionAndAdvance(this, 'floorType', 'patio')">Patio</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'floorType', 'pool_deck')">Pool Deck</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'floorType', 'driveway')">Driveway</div>
             </div>
         </div>
 
@@ -2378,7 +2380,9 @@
             const options = {
                 'garage': 'Garage',
                 'basement': 'Basement',
-                'patio': 'Patio'
+                'patio': 'Patio',
+                'pool_deck': 'Pool Deck',
+                'driveway': 'Driveway'
             };
             return options[value] || value;
         }
