@@ -799,7 +799,13 @@
                     const errText = await res.text();
                     throw new Error(errText || `Airtable ${res.status}`);
                 }
-                showFinalScreen();
+                // Revenue over $100k: redirect to discovery session calendar
+                const revenueOver100k = ['100k_500k', '500k_1m', 'over_1m'].includes(formData.revenue);
+                if (revenueOver100k) {
+                    window.location.href = 'https://cal.com/daniel-wellish-plg/30min';
+                } else {
+                    showFinalScreen();
+                }
             } catch (err) {
                 console.error(err);
                 alert('There was an error submitting your form. Please try again.');
