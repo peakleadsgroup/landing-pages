@@ -644,9 +644,15 @@
                 position: absolute;
             }
 
+            body {
+                min-height: -webkit-fill-available;
+                justify-content: center;
+            }
+
             .form-container {
                 padding: 25px;
-                margin: 10px;
+                margin: auto 10px;
+                flex-shrink: 0;
             }
 
             .reviews-content {
