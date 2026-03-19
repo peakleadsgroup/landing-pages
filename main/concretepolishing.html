@@ -640,18 +640,25 @@
         }
 
         @media (max-width: 600px) {
+            html, body {
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
             body::before {
                 position: absolute;
             }
 
             body {
                 min-height: -webkit-fill-available;
-                justify-content: center;
+                justify-content: flex-start;
+                padding-top: 20px;
+                padding-bottom: 40px;
             }
 
             .form-container {
                 padding: 25px;
-                margin: auto 10px;
+                margin: 0 10px 40px;
                 flex-shrink: 0;
             }
 
