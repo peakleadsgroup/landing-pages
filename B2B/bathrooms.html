@@ -6,6 +6,24 @@
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
     <title>Bathroom Remodeling Leads - Peak Leads Marketing Group</title>
+
+    <!-- Meta Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '2426482271099913');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=2426482271099913&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Meta Pixel Code -->
     
     <style>
         * {
@@ -799,6 +817,9 @@
                     const errText = await res.text();
                     throw new Error(errText || `Airtable ${res.status}`);
                 }
+                // Track Lead conversion
+                if (typeof fbq === 'function') fbq('track', 'Lead');
+
                 // Revenue over $100k: redirect to discovery session calendar
                 const revenueOver100k = ['100k_500k', '500k_1m', 'over_1m'].includes(formData.revenue);
                 if (revenueOver100k) {
