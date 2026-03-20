@@ -1,0 +1,4 @@
+# Video Editor - Automated clip assembly with captions
+ffmpeg-python>=0.2.0
+stable-ts>=2.0.0
+numpy>=1.24.0
