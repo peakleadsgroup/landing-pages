@@ -108,6 +108,12 @@
             return digits.length >= 10 ? digits.slice(-10) : digits;
         }
 
+        function parseDate(d) {
+            if (!d) return 0;
+            const t = new Date(d).getTime();
+            return isNaN(t) ? 0 : t;
+        }
+
         function groupByPhone(recordings) {
             const groups = new Map();
             for (const r of recordings) {
@@ -117,7 +123,7 @@
             }
             // Sort each group by date (newest first)
             for (const arr of groups.values()) {
-                arr.sort((a, b) => (b.date_created || '').localeCompare(a.date_created || ''));
+                arr.sort((a, b) => parseDate(b.date_created) - parseDate(a.date_created));
             }
             return groups;
         }
@@ -166,9 +172,9 @@
                 } else {
                     const groups = groupByPhone(recordings);
                     const sortedGroups = [...groups.entries()].sort((a, b) => {
-                        const aLatest = a[1][0]?.date_created || '';
-                        const bLatest = b[1][0]?.date_created || '';
-                        return bLatest.localeCompare(aLatest);
+                        const aLatest = parseDate(a[1][0]?.date_created);
+                        const bLatest = parseDate(b[1][0]?.date_created);
+                        return bLatest - aLatest; // newest first
                     });
 
                     recordingsList.innerHTML = sortedGroups.map(([key, recs]) => {

@@ -90,7 +90,11 @@ export async function onRequest(context) {
       }
     } while (listUrl);
 
-    recordings.sort((a, b) => (b.date_created || "").localeCompare(a.date_created || ""));
+    recordings.sort((a, b) => {
+      const ta = new Date(a.date_created || 0).getTime();
+      const tb = new Date(b.date_created || 0).getTime();
+      return tb - ta; // newest first
+    });
 
     return new Response(JSON.stringify({ recordings }), {
       headers: { "Content-Type": "application/json" },
