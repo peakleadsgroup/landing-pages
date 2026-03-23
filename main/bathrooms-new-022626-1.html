@@ -896,6 +896,18 @@
             margin-bottom: 20px;
         }
 
+        /* Welcome Renovation — GreenSky financing disclosure (small print below reviews) */
+        .welcome-renovation-financing-disclosure {
+            display: none;
+            font-size: 10px;
+            line-height: 1.45;
+            color: #666;
+            text-align: left;
+            margin-top: 16px;
+            padding: 0 8px 8px;
+            max-width: 100%;
+        }
+
         @media (max-width: 768px) {
             .review-block {
                 padding: 30px 20px;
@@ -1525,6 +1537,9 @@
             <div class="reviews-container" id="reviewsContainer">
                 <!-- Review blocks will be dynamically added here -->
             </div>
+            <p class="welcome-renovation-financing-disclosure" id="welcomeRenovationFinancingDisclosure" aria-hidden="true">
+                Plan 3128. Subject to credit approval. Rates range from 15.85% - 21.19% APR (interest rates range from 17.99% - 24.99%). Only well-qualified applicants will receive an APR of 15.85%; some applicants may not qualify. Loan amount and rate will vary based on your income and creditworthiness. 12 month promotional period ("Promo Period") during which interest is billed but will be waived if the amount financed is paid in full before Promo Period expires. Monthly payments are not required during the Promo Period. Any unpaid balance and amounts owed after Promo Period will be paid over 84 monthly payments. For example, assuming the full credit limit is used on loan approval date and no payments are made during Promo Period, for every $1,000 financed at a fixed interest rate of 24.99%, 12 monthly payments of $0 followed by 84 monthly payments of $28.29. This example is an estimate only. Actual payment amounts based on amount and timing of purchases. Call 866-936-0602 for financing costs and terms. Loans for the GreenSky® consumer loan program are offered and made by federally insured, federal or state chartered financial institutions providing credit without regard to age, race, color, religion, national origin, gender, disability, or familial status. A list of financial institutions currently providing loans through the GreenSky® Program is available at www.greensky.com/bank-partners. GreenSky Servicing, LLC services the loans on behalf of your lender, NMLS #1416362. www.nmlsconsumeraccess.org. GreenSky® is a registered trademark of GreenSky, LLC and is licensed to banks and other financial institutions for their use in connection with that consumer loan program. GreenSky Servicing, LLC is a financial technology company that manages the GreenSky® consumer loan program by providing origination and servicing support to banks and other financial institutions that make or hold program loans. GreenSky, LLC and GreenSky Servicing, LLC are not lenders. All credit decisions and loan terms are determined by program lenders.
+            </p>
             <div style="text-align: center; padding: 32px 0 0;">
                 <button class="get-quote-bottom-btn" onclick="scrollToForm()">Get Quote</button>
             </div>
@@ -2198,6 +2213,29 @@
             } else {
                 partnerNameElement.textContent = "Peak Leads Group and it's marketing partners";
             }
+
+            updateWelcomeRenovationFinancingDisclosure();
+        }
+
+        function getActivePartnerClientRecord() {
+            if (matchedClientData && matchedClientData.fields) return matchedClientData;
+            if (campaignClientData && campaignClientData.fields) return campaignClientData;
+            if (clientData && clientData.fields) return clientData;
+            return null;
+        }
+
+        function isWelcomeRenovationClient() {
+            const active = getActivePartnerClientRecord();
+            const name = active && active.fields && active.fields['Name'];
+            return String(name || '').trim() === 'Welcome Renovation';
+        }
+
+        function updateWelcomeRenovationFinancingDisclosure() {
+            const el = document.getElementById('welcomeRenovationFinancingDisclosure');
+            if (!el) return;
+            const show = isWelcomeRenovationClient();
+            el.style.display = show ? 'block' : 'none';
+            el.setAttribute('aria-hidden', show ? 'false' : 'true');
         }
         
         // Also ensure logo loads when DOM is ready (backup)
@@ -3671,6 +3709,19 @@
                 document.getElementById('reviewsSection').classList.add('active');
                 const ctaSection = document.getElementById('ctaSection');
                 if (ctaSection) ctaSection.classList.remove('active');
+                updateWelcomeRenovationFinancingDisclosure();
+                setTimeout(() => {
+                    if (typeof updateBackgroundHeight === 'function') {
+                        updateBackgroundHeight();
+                    }
+                }, 300);
+            } else if (isWelcomeRenovationClient()) {
+                // Welcome Renovation: show bottom section for financing disclosure even if no review fields
+                buildReviewBlocks();
+                document.getElementById('reviewsSection').classList.add('active');
+                const ctaSection = document.getElementById('ctaSection');
+                if (ctaSection) ctaSection.classList.remove('active');
+                updateWelcomeRenovationFinancingDisclosure();
                 setTimeout(() => {
                     if (typeof updateBackgroundHeight === 'function') {
                         updateBackgroundHeight();
@@ -3682,6 +3733,7 @@
                 if (ctaSection) {
                     ctaSection.classList.remove('active');
                 }
+                updateWelcomeRenovationFinancingDisclosure();
             }
         }
 
