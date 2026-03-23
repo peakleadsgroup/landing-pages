@@ -727,6 +727,37 @@
         const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
         const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
         const B2B_LEADS_TABLE = 'B2B Leads';
+        const B2B_ADS_TABLE = 'B2B Ads';
+        /** Primary field on B2B Ads used to match Meta {{ad.name}} (change if your primary column differs). */
+        const B2B_AD_PRIMARY_FIELD = 'Name';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const adATIDFromUrl = urlParams.get('adATID');
+
+        function escapeAirtableFormulaString(s) {
+            return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        }
+
+        /**
+         * Resolves adATID from the URL: Airtable record IDs (rec…) are used directly;
+         * otherwise matches B2B Ads by primary field (e.g. Meta ?adATID={{ad.name}}).
+         */
+        async function resolveB2BAdRecordId(adParam) {
+            if (!adParam || !String(adParam).trim()) return null;
+            const trimmed = String(adParam).trim();
+            if (trimmed.startsWith('rec')) return trimmed;
+            const formula = `{${B2B_AD_PRIMARY_FIELD}}='${escapeAirtableFormulaString(trimmed)}'`;
+            const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(B2B_ADS_TABLE)}?maxRecords=1&filterByFormula=${encodeURIComponent(formula)}`;
+            try {
+                const res = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` } });
+                if (!res.ok) return null;
+                const data = await res.json();
+                if (data.records && data.records.length > 0) return data.records[0].id;
+            } catch (e) {
+                console.warn('B2B Ads lookup failed', e);
+            }
+            return null;
+        }
 
         const REVENUE_LABELS = {
             less_50k: 'Less than $50,000',
@@ -756,6 +787,11 @@
             }
             clearError('email');
             formData.email = emailVal;
+
+            let b2bAdRecordId = null;
+            if (adATIDFromUrl) {
+                b2bAdRecordId = await resolveB2BAdRecordId(adATIDFromUrl);
+            }
 
             const btn = document.getElementById('submitBtn');
             if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
@@ -789,6 +825,9 @@
                 '',
                 `Submitted: ${new Date().toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York' })} EST`
             ];
+            if (adATIDFromUrl && !b2bAdRecordId) {
+                summaryParts.push('', 'AD REF (URL, not linked):', adATIDFromUrl);
+            }
             const notes = summaryParts.join('\n');
 
             const airtableFields = {
@@ -803,6 +842,7 @@
             if (formData.business_website) airtableFields['Website'] = formData.business_website;
             if (formData.contact_name) airtableFields['Contact Name'] = formData.contact_name;
             if (formData.email) airtableFields['Contact Email'] = formData.email;
+            if (b2bAdRecordId) airtableFields['B2B Ads'] = [b2bAdRecordId];
 
             try {
                 const res = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(B2B_LEADS_TABLE)}`, {
