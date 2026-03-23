@@ -4048,32 +4048,28 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             const normalizedType = submitScreenType.toLowerCase();
             
             if (normalizedType === 'redirect') {
-                // Redirect to URL from Redirect URL field
-                const redirectUrl = activeClient && activeClient.fields['Redirect URL'] ? activeClient.fields['Redirect URL'] : null;
-                if (redirectUrl) {
-                    const clientId = activeClient ? activeClient.id : null;
-                    
-                    // Use leadData if available, otherwise fall back to formData
-                    const dataForParams = leadData || formData;
-                    const fullName = dataForParams.fullName || (dataForParams.firstName && dataForParams.lastName ? `${dataForParams.firstName} ${dataForParams.lastName}`.trim() : '');
-                    const phone = dataForParams.phone || '';
-                    
-                    // Use the dynamic URL parameters system
-                    const logData = {
-                        campaignID: metaCampaignID || initialCampaignID,
-                        clientAirtableID: clientId,
-                        leadAirtableID: leadRecordId
-                    };
-                    
-                    const urlParameters = await fetchUrlParametersForClient(clientId, logData);
-                    const finalRedirectUrl = await buildRedirectUrlWithParameters(redirectUrl, urlParameters, dataForParams, logData);
-                    
-                    window.location.href = finalRedirectUrl;
-                } else {
-                    // If no redirect URL, show confirmation screen
-                    console.warn('Redirect option selected but no Redirect URL found');
-                    showConfirmationScreen();
-                }
+                // Redirect bathroom leads to Cal.com with URL-encoded lead details.
+                const dataForParams = leadData || formData;
+                const fullName = dataForParams.fullName ||
+                    (dataForParams.firstName && dataForParams.lastName
+                        ? `${dataForParams.firstName} ${dataForParams.lastName}`.trim()
+                        : '');
+                const email = dataForParams.email || '';
+                const addressObj = dataForParams.address || {};
+                const location = typeof dataForParams.address === 'string'
+                    ? dataForParams.address
+                    : [addressObj.street, addressObj.city, addressObj.state, addressObj.zip]
+                        .filter(Boolean)
+                        .join(', ');
+                const notes = dataForParams.fullSummary || '';
+
+                const calUrl = new URL('https://cal.com/michel-dresch-qa8lwg/free-in-home-bathroom-estimate');
+                if (fullName) calUrl.searchParams.set('name', fullName);
+                if (email) calUrl.searchParams.set('email', email);
+                if (location) calUrl.searchParams.set('location', location);
+                if (notes) calUrl.searchParams.set('notes', notes);
+
+                window.location.href = calUrl.toString();
             } else if (normalizedType === 'calendar') {
                 currentSubmitScreenType = 'calendar';
                 showCalendarScreen();
