@@ -47,7 +47,7 @@ export async function onRequest(context) {
 
     const input = {
       searchStringsArray: [searchTerm],
-      locationQuery: zip,
+      locationQuery: `${zip}, USA`,
       maxCrawledPlacesPerSearch: 120,
     };
 
