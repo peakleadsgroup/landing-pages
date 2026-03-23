@@ -4028,68 +4028,9 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 return;
             }
             
-            // Determine which submit screen to show
-            // Use matched client first, but fall back to campaign client if matched client doesn't have Submit Screen
-            let activeClient = matchedClientData || campaignClientData;
-            let submitScreenType = 'None'; // Default
-            
-            // Try to get Submit Screen from matched client first
-            if (matchedClientData && matchedClientData.fields && matchedClientData.fields['Submit Screen']) {
-                activeClient = matchedClientData;
-                submitScreenType = String(matchedClientData.fields['Submit Screen']).trim();
-            } 
-            // Fall back to campaign client if matched client doesn't have Submit Screen
-            else if (campaignClientData && campaignClientData.fields && campaignClientData.fields['Submit Screen']) {
-                activeClient = campaignClientData;
-                submitScreenType = String(campaignClientData.fields['Submit Screen']).trim();
-            }
-            
-            // Show appropriate screen based on submit screen type (case-insensitive comparison)
-            const normalizedType = submitScreenType.toLowerCase();
-            
-            if (normalizedType === 'redirect') {
-                // Redirect bathroom leads to Cal.com with URL-encoded lead details.
-                const dataForParams = leadData || formData;
-                const fullName = dataForParams.fullName ||
-                    (dataForParams.firstName && dataForParams.lastName
-                        ? `${dataForParams.firstName} ${dataForParams.lastName}`.trim()
-                        : '');
-                const email = dataForParams.email || '';
-                const addressObj = dataForParams.address || {};
-                const location = typeof dataForParams.address === 'string'
-                    ? dataForParams.address
-                    : [addressObj.street, addressObj.city, addressObj.state, addressObj.zip]
-                        .filter(Boolean)
-                        .join(', ');
-                const notes = dataForParams.fullSummary || '';
-
-                const calUrl = new URL('https://cal.com/michel-dresch-qa8lwg/free-in-home-bathroom-estimate');
-                if (fullName) calUrl.searchParams.set('name', fullName);
-                if (email) calUrl.searchParams.set('email', email);
-                if (location) calUrl.searchParams.set('location', location);
-                if (notes) calUrl.searchParams.set('notes', notes);
-
-                window.location.href = calUrl.toString();
-            } else if (normalizedType === 'calendar') {
-                currentSubmitScreenType = 'calendar';
-                showCalendarScreen();
-            } else if (normalizedType === 'phone') {
-                currentSubmitScreenType = 'Phone';
-                showContactScreen('Phone');
-            } else if (normalizedType === 'text') {
-                currentSubmitScreenType = 'Text';
-                showContactScreen('Text');
-            } else if (normalizedType === 'phone/text') {
-                currentSubmitScreenType = 'Phone/Text';
-                showContactScreen('Phone/Text');
-            } else if (normalizedType === 'contact') {
-                currentSubmitScreenType = 'Contact';
-                showContactAddContactScreen();
-            } else {
-                // None or default
-                currentSubmitScreenType = null;
-                showConfirmationScreen();
-            }
+            // bathrooms-dream should always proceed to the calendar, regardless of client Submit Screen.
+            currentSubmitScreenType = 'calendar';
+            showCalendarScreen();
             } catch (error) {
                 // Catch any unexpected errors that weren't caught by the Airtable submission catch
                 console.error('Unexpected error in submitFinalForm:', error);
