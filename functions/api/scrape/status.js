@@ -25,7 +25,15 @@ export async function onRequest(context) {
 
   const url = new URL(context.request.url);
   const runId = url.searchParams.get("runId");
-  const niche = url.searchParams.get("niche") || "Bathrooms";
+  const nicheParam = url.searchParams.get("niche") || "Bathrooms";
+  // Map UI niche values to exact Airtable select option names
+  const nicheToAirtable = {
+    Bathrooms: "Bathroom Remodeling",
+    Windows: "Windows",
+    "Floor Coating": "Floor Coating",
+    Roofing: "Roofing",
+  };
+  const niche = nicheToAirtable[nicheParam] || nicheParam;
   if (!runId) {
     return new Response(JSON.stringify({ error: "runId required", status: "failed" }), {
       status: 400,
