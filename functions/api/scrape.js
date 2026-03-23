@@ -3,7 +3,7 @@
  * Body: { zip: "28201", niche: "Bathrooms" }
  * Returns: { runId } - poll GET /api/scrape/status?runId=X for completion
  *
- * Requires env: APIFY_API_TOKEN, AIRTABLE_BASE_ID, AIRTABLE_API_KEY, AIRTABLE_SCRAPED_BUSINESSES_TABLE_ID
+ * Requires env: APIFY_API_TOKEN, AIRTABLE_BASE_ID, AIRTABLE_API_KEY
  */
 export async function onRequest(context) {
   if (context.request.method !== "POST") {
@@ -16,13 +16,11 @@ export async function onRequest(context) {
   const token = context.env.APIFY_API_TOKEN;
   const airtableBaseId = context.env.AIRTABLE_BASE_ID;
   const airtableApiKey = context.env.AIRTABLE_API_KEY;
-  const scrapedTableId = context.env.AIRTABLE_SCRAPED_BUSINESSES_TABLE_ID;
 
-  if (!token || !airtableBaseId || !airtableApiKey || !scrapedTableId) {
+  if (!token || !airtableBaseId || !airtableApiKey) {
     return new Response(
       JSON.stringify({
-        error:
-          "Missing config: APIFY_API_TOKEN, AIRTABLE_BASE_ID, AIRTABLE_API_KEY, AIRTABLE_SCRAPED_BUSINESSES_TABLE_ID",
+        error: "Missing config: APIFY_API_TOKEN, AIRTABLE_BASE_ID, AIRTABLE_API_KEY",
       }),
       { status: 503, headers: { "Content-Type": "application/json" } }
     );

@@ -12,9 +12,9 @@ export async function onRequest(context) {
 
   const airtableBaseId = context.env.AIRTABLE_BASE_ID;
   const airtableApiKey = context.env.AIRTABLE_API_KEY;
-  const scrapedTableId = context.env.AIRTABLE_SCRAPED_BUSINESSES_TABLE_ID;
+  const scrapedTableId = "tblUUP3DFDn0RmEj0";
 
-  if (!airtableBaseId || !airtableApiKey || !scrapedTableId) {
+  if (!airtableBaseId || !airtableApiKey) {
     return new Response(
       JSON.stringify({ error: "Missing configuration", zips: [] }),
       { status: 503, headers: { "Content-Type": "application/json" } }
