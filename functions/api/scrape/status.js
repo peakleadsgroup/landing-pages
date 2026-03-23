@@ -53,10 +53,13 @@ export async function onRequest(context) {
     }
 
     if (status !== "SUCCEEDED") {
+      const msg =
+        runData.data?.statusMessage ||
+        (runData.data?.status ? `${runData.data.status} (check Apify console for details)` : "Run did not succeed");
       return new Response(
         JSON.stringify({
           status: "failed",
-          error: runData.data?.status || "Run did not succeed",
+          error: msg,
         }),
         { headers: { "Content-Type": "application/json" } }
       );
