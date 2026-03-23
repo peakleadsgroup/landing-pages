@@ -46,8 +46,8 @@ export async function onRequest(context) {
     const searchTerm = searchMap[niche] || niche || "bathroom remodeling";
 
     const input = {
-      searchStrings: [searchTerm],
-      location: zip,
+      searchStringsArray: [searchTerm],
+      locationQuery: zip,
       maxCrawledPlacesPerSearch: 120,
     };
 
