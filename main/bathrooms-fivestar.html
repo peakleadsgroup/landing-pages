@@ -3257,7 +3257,7 @@
         }
         
         async function showCalendarScreen() {
-            const step10El = document.getElementById('step10');
+            const phoneStepEl = document.getElementById('step7') || document.getElementById('step10');
             const calendarStep = document.getElementById('calendarStep');
             const progressArea = document.getElementById('progressArea');
             
@@ -3325,7 +3325,7 @@
                 }
             }
             
-            if (step10El) step10El.classList.remove('active');
+            if (phoneStepEl) phoneStepEl.classList.remove('active');
             if (calendarStep) {
                 calendarStep.classList.add('active');
             } else {
@@ -3405,10 +3405,14 @@
                 return;
             }
 
-            document.getElementById('step10').classList.remove('active');
-            document.getElementById('contactStep').classList.remove('active');
-            document.getElementById('contactStepAddContact').classList.add('active');
-            document.getElementById('progressArea').style.display = 'none';
+            const phoneStepEl = document.getElementById('step7') || document.getElementById('step10');
+            if (phoneStepEl) phoneStepEl.classList.remove('active');
+            const contactStep = document.getElementById('contactStep');
+            if (contactStep) contactStep.classList.remove('active');
+            const contactStepAddContact = document.getElementById('contactStepAddContact');
+            if (contactStepAddContact) contactStepAddContact.classList.add('active');
+            const progressArea = document.getElementById('progressArea');
+            if (progressArea) progressArea.style.display = 'none';
 
             setTimeout(() => {
                 showReviewsModal();
@@ -3483,10 +3487,14 @@
             }
             
             // Show the contact screen
-            document.getElementById('step10').classList.remove('active');
-            document.getElementById('contactStepAddContact').classList.remove('active');
-            document.getElementById('contactStep').classList.add('active');
-            document.getElementById('progressArea').style.display = 'none';
+            const phoneStepEl = document.getElementById('step7') || document.getElementById('step10');
+            if (phoneStepEl) phoneStepEl.classList.remove('active');
+            const contactStepAddContact = document.getElementById('contactStepAddContact');
+            if (contactStepAddContact) contactStepAddContact.classList.remove('active');
+            const contactStep = document.getElementById('contactStep');
+            if (contactStep) contactStep.classList.add('active');
+            const progressArea = document.getElementById('progressArea');
+            if (progressArea) progressArea.style.display = 'none';
             
             // Show reviews modal if reviews exist
             setTimeout(() => {
@@ -3506,9 +3514,12 @@
             if (confirmationReadySubtitle) {
                 confirmationReadySubtitle.textContent = "Can't wait to hear from us? We'll give you a call soon to schedule your free estimate.";
             }
-            document.getElementById('step10').classList.remove('active');
-            document.getElementById('confirmationStep').classList.add('active');
-            document.getElementById('progressArea').style.display = 'none';
+            const phoneStepEl = document.getElementById('step7') || document.getElementById('step10');
+            if (phoneStepEl) phoneStepEl.classList.remove('active');
+            const confirmationStep = document.getElementById('confirmationStep');
+            if (confirmationStep) confirmationStep.classList.add('active');
+            const progressArea = document.getElementById('progressArea');
+            if (progressArea) progressArea.style.display = 'none';
             
             // Show reviews modal if reviews exist
             setTimeout(() => {
