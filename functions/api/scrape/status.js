@@ -1,7 +1,8 @@
 /**
- * GET /api/scrape/status?runId=xxx - Check Apify run status, fetch results when done, save to Airtable
+ * GET /api/scrape/status?runId=xxx&niche=Y&launchCalls=1
+ * Check Apify run status, fetch results when done, save to Airtable, optionally launch Slybroadcast campaign
  *
- * Returns: { status: "running"|"completed"|"failed", saved?: number, error?: string }
+ * Returns: { status: "running"|"completed"|"failed", saved?: number, error?: string, slybroadcast?: { sessionId, count } }
  */
 export async function onRequest(context) {
   if (context.request.method !== "GET") {
@@ -15,6 +16,11 @@ export async function onRequest(context) {
   const airtableBaseId = context.env.AIRTABLE_BASE_ID;
   const airtableApiKey = context.env.AIRTABLE_API_KEY;
   const scrapedTableId = "tblUUP3DFDn0RmEj0";
+  const slyUid = context.env.SLYBROADCAST_UID;
+  const slyPassword = context.env.SLYBROADCAST_PASSWORD;
+  const slyCallerId = context.env.SLYBROADCAST_CALLER_ID;
+  const slyRecordAudio = context.env.SLYBROADCAST_RECORD_AUDIO || "DrewGenericTwilioNumber";
+  const slyStatusSent = context.env.SLYBROADCAST_STATUS_SENT || "Sent";
 
   if (!token || !airtableBaseId || !airtableApiKey) {
     return new Response(
@@ -26,6 +32,7 @@ export async function onRequest(context) {
   const url = new URL(context.request.url);
   const runId = url.searchParams.get("runId");
   const nicheParam = url.searchParams.get("niche") || "Bathrooms";
+  const launchCalls = url.searchParams.get("launchCalls") === "1";
   // Map UI niche values to exact Airtable select option names
   const nicheToAirtable = {
     Bathrooms: "Bathroom Remodeling",
@@ -151,6 +158,7 @@ export async function onRequest(context) {
     }
 
     let saved = 0;
+    const createdRecordIds = [];
     const batchSize = 10;
 
     for (let i = 0; i < records.length; i += batchSize) {
@@ -164,13 +172,88 @@ export async function onRequest(context) {
         const errText = await createRes.text();
         throw new Error(`Airtable: ${createRes.status} - ${errText}`);
       }
+      const createData = await createRes.json();
+      for (const rec of createData.records || []) {
+        if (rec.id) createdRecordIds.push(rec.id);
+      }
       saved += batch.length;
     }
 
-    return new Response(
-      JSON.stringify({ status: "completed", saved }),
-      { headers: { "Content-Type": "application/json" } }
-    );
+    let slybroadcastResult = null;
+    if (
+      launchCalls &&
+      saved > 0 &&
+      slyUid &&
+      slyPassword &&
+      slyCallerId &&
+      (slyRecordAudio || (context.env.SLYBROADCAST_AUDIO_URL && context.env.SLYBROADCAST_AUDIO_TYPE))
+    ) {
+      const phones = records
+        .map((r) => {
+          const p = r.fields?.Phone || "";
+          const digits = String(p).replace(/\D/g, "");
+          return digits.length >= 10 ? digits.slice(-10) : "";
+        })
+        .filter(Boolean);
+      const phoneList = [...new Set(phones)].join(",");
+
+      if (phoneList) {
+        const form = new URLSearchParams();
+        form.set("c_uid", slyUid);
+        form.set("c_password", slyPassword);
+        form.set("c_callerID", slyCallerId.replace(/\D/g, "").slice(-10));
+        form.set("c_phone", phoneList);
+        form.set("c_date", "now");
+        form.set("mobile_only", "1");
+        if (slyRecordAudio) {
+          form.set("c_record_audio", slyRecordAudio);
+        } else {
+          form.set("c_url", context.env.SLYBROADCAST_AUDIO_URL);
+          form.set("c_audio", context.env.SLYBROADCAST_AUDIO_TYPE || "mp3");
+        }
+
+        try {
+          const slyRes = await fetch("https://www.mobile-sphere.com/gateway/vmb.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: form.toString(),
+          });
+          const slyText = await slyRes.text();
+          const lines = slyText.trim().split("\n");
+          const sessionId = lines.find((l) => /^\d+$/.test(l.trim()));
+          if (sessionId) {
+            const count = phoneList.split(",").filter(Boolean).length;
+            slybroadcastResult = { sessionId: sessionId.trim(), count };
+
+            // Update Slybot Status in Airtable for records we just created and sent
+            const patchBatch = 5;
+            for (let j = 0; j < createdRecordIds.length; j += patchBatch) {
+              const ids = createdRecordIds.slice(j, j + patchBatch);
+              await Promise.all(
+                ids.map((recId) =>
+                  fetch(`${airtableUrl}/${recId}`, {
+                    method: "PATCH",
+                    headers,
+                    body: JSON.stringify({ fields: { "Slybot Status": slyStatusSent } }),
+                  })
+                )
+              );
+            }
+          } else {
+            slybroadcastResult = { error: slyText.slice(0, 200) };
+          }
+        } catch (slyErr) {
+          slybroadcastResult = { error: slyErr.message || "Slybroadcast request failed" };
+        }
+      }
+    }
+
+    const response = { status: "completed", saved };
+    if (slybroadcastResult) response.slybroadcast = slybroadcastResult;
+
+    return new Response(JSON.stringify(response), {
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (err) {
     return new Response(
       JSON.stringify({

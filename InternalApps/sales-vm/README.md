@@ -15,6 +15,13 @@ The app runs on **Cloudflare Pages + Functions**. After pushing to GitHub:
      - `AIRTABLE_BASE_ID` – Airtable base ID (e.g. `appmBb0lzqRK9dI8v`)
      - `AIRTABLE_API_KEY` – Airtable API key or personal access token
      - `APIFY_API_TOKEN` – Apify API token for Google Maps scraping
+     - **Slybroadcast** (optional, for "Scrape & Call"):
+       - `SLYBROADCAST_UID` – Your Slybroadcast email
+       - `SLYBROADCAST_PASSWORD` – Your Slybroadcast password
+       - `SLYBROADCAST_CALLER_ID` – Caller ID number (e.g. `6173999980`)
+       - `SLYBROADCAST_RECORD_AUDIO` – Name of audio file in your Slybroadcast account (default: `DrewGenericTwilioNumber`)
+       - *OR* `SLYBROADCAST_AUDIO_URL` + `SLYBROADCAST_AUDIO_TYPE` – URL to hosted audio (wav/mp3/m4a)
+       - `SLYBROADCAST_STATUS_SENT` – Airtable "Slybot Status" value when calls launch (default: `Sent`)
 
 2. **Redeploy** so the new `functions/` directory and `InternalApps/sales-vm.html` are picked up.
 

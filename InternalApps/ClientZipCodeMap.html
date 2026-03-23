@@ -510,7 +510,7 @@
     <div id="scrape-bar" class="hidden">
         <span class="zip-display">Selected Zip: <span id="selected-zip-display">—</span></span>
         <span class="scrape-status" id="scrape-status"></span>
-        <button type="button" class="scrape-btn" id="scrape-btn" onclick="startScrape()">Scrape</button>
+        <button type="button" class="scrape-btn" id="scrape-btn" onclick="startScrape()">Scrape & Call</button>
     </div>
     
     <!-- Leaflet JS -->
@@ -740,7 +740,7 @@
             const btn = document.getElementById('scrape-btn');
             const statusEl = document.getElementById('scrape-status');
             btn.disabled = true;
-            statusEl.textContent = 'Starting scrape...';
+            statusEl.textContent = 'Starting scrape & call...';
             try {
                 const res = await fetch('/api/scrape', {
                     method: 'POST',
@@ -750,7 +750,7 @@
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Scrape failed');
                 if (data.runId) {
-                    statusEl.textContent = 'Scraping in progress... (this may take a few minutes)';
+                    statusEl.textContent = 'Scraping in progress... calls will launch when done.';
                     pollScrapeStatus(data.runId);
                 } else if (data.saved !== undefined) {
                     statusEl.textContent = `Saved ${data.saved} businesses to Airtable.`;
@@ -770,10 +770,16 @@
                 await new Promise(r => setTimeout(r, 5000));
                 try {
                     const niche = document.getElementById('niche-filter').value;
-                    const res = await fetch('/api/scrape/status?runId=' + encodeURIComponent(runId) + '&niche=' + encodeURIComponent(niche));
+                    const res = await fetch('/api/scrape/status?runId=' + encodeURIComponent(runId) + '&niche=' + encodeURIComponent(niche) + '&launchCalls=1');
                     const data = await res.json();
                     if (data.status === 'completed') {
-                        statusEl.textContent = `Saved ${data.saved || 0} businesses to Airtable.`;
+                        let msg = `Saved ${data.saved || 0} businesses to Airtable.`;
+                        if (data.slybroadcast?.sessionId) {
+                            msg += ` Launched ${data.slybroadcast.count} Slybroadcast calls (session ${data.slybroadcast.sessionId}).`;
+                        } else if (data.slybroadcast?.error) {
+                            msg += ` Slybroadcast error: ${data.slybroadcast.error}`;
+                        }
+                        statusEl.textContent = msg;
                         btn.disabled = false;
                         scrapedZipsLoaded = false;
                         loadScrapedZips();
