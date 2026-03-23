@@ -309,9 +309,12 @@
             left: 10px;
             z-index: 1000;
             background: white;
-            padding: 0.5rem;
+            padding: 0.5rem 0.75rem;
             border-radius: 4px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
         
         #selection-controls button {
@@ -410,6 +413,24 @@
             pointer-events: none;
             z-index: 2000;
         }
+        
+        #scrape-bar {
+            flex-shrink: 0;
+            background: white;
+            border-top: 1px solid #dadce0;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+        }
+        #scrape-bar.hidden { display: none; }
+        #scrape-bar .zip-display { font-weight: 600; color: #202124; }
+        #scrape-bar .scrape-btn { padding: 0.5rem 1.25rem; background: #1a73e8; color: white; border: none; border-radius: 4px; font-weight: 500; cursor: pointer; }
+        #scrape-bar .scrape-btn:hover { background: #1557b0; }
+        #scrape-bar .scrape-btn:disabled { background: #9aa0a6; cursor: not-allowed; }
+        #scrape-bar .scrape-status { font-size: 0.875rem; color: #5f6368; }
     </style>
 </head>
 <body>
@@ -437,6 +458,10 @@
         
         <div id="selection-controls">
             <button id="selection-toggle" onclick="toggleSelectionMode()">Select Area</button>
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; cursor: pointer; margin-left: 0.5rem;">
+                <input type="checkbox" id="scraped-zips-toggle" checked onchange="toggleScrapedZips(this.checked)">
+                Scraped Zips
+            </label>
         </div>
         
         <div id="sidebar">
@@ -482,6 +507,12 @@
         </div>
     </div>
     
+    <div id="scrape-bar" class="hidden">
+        <span class="zip-display">Selected Zip: <span id="selected-zip-display">—</span></span>
+        <span class="scrape-status" id="scrape-status"></span>
+        <button type="button" class="scrape-btn" id="scrape-btn" onclick="startScrape()">Scrape</button>
+    </div>
+    
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -506,6 +537,9 @@
         let selectionRectangle = null;
         let selectionStart = null;
         let selectionBox = null;
+        let selectedZip = null; // Zip selected by map click for scraping
+        let scrapedZipsLayer = null; // LayerGroup for scraped zip markers
+        let scrapedZipsLoaded = false;
         
         // Color palette for clients
         const clientColors = [
@@ -528,6 +562,34 @@
             
             // Initialize selection mode handlers
             setupSelectionMode();
+            
+            // Map click to select zip for scraping (only when not in selection mode)
+            map.on('click', function(e) {
+                if (selectionMode) return;
+                if (!zipCompleteData || Object.keys(zipCompleteData).length === 0) return;
+                const zip = findNearestZip(e.latlng.lat, e.latlng.lng);
+                if (zip) {
+                    selectedZip = zip;
+                    document.getElementById('selected-zip-display').textContent = zip;
+                    document.getElementById('scrape-bar').classList.remove('hidden');
+                    document.getElementById('scrape-status').textContent = '';
+                }
+            });
+        }
+        
+        // Find nearest zip code to given coordinates
+        function findNearestZip(lat, lng) {
+            let nearest = null;
+            let minDist = Infinity;
+            for (const [zip, data] of Object.entries(zipCompleteData)) {
+                if (!data || data.lat == null || data.lng == null) continue;
+                const dist = Math.pow(data.lat - lat, 2) + Math.pow(data.lng - lng, 2);
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearest = zip;
+                }
+            }
+            return nearest;
         }
         
         // Setup selection mode for drawing rectangles
@@ -667,6 +729,127 @@
             document.getElementById('zip-code-modal').classList.remove('show');
         }
         
+        // Start scrape for selected zip
+        async function startScrape() {
+            if (!selectedZip) return;
+            const niche = document.getElementById('niche-filter').value;
+            if (!niche) {
+                document.getElementById('scrape-status').textContent = 'Please select a niche first.';
+                return;
+            }
+            const btn = document.getElementById('scrape-btn');
+            const statusEl = document.getElementById('scrape-status');
+            btn.disabled = true;
+            statusEl.textContent = 'Starting scrape...';
+            try {
+                const res = await fetch('/api/scrape', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ zip: selectedZip, niche: niche })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Scrape failed');
+                if (data.runId) {
+                    statusEl.textContent = 'Scraping in progress... (this may take a few minutes)';
+                    pollScrapeStatus(data.runId);
+                } else if (data.saved !== undefined) {
+                    statusEl.textContent = `Saved ${data.saved} businesses to Airtable.`;
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                statusEl.textContent = 'Error: ' + err.message;
+                btn.disabled = false;
+            }
+        }
+        
+        async function pollScrapeStatus(runId) {
+            const btn = document.getElementById('scrape-btn');
+            const statusEl = document.getElementById('scrape-status');
+            const maxAttempts = 60; // 5 minutes at 5s interval
+            for (let i = 0; i < maxAttempts; i++) {
+                await new Promise(r => setTimeout(r, 5000));
+                try {
+                    const niche = document.getElementById('niche-filter').value;
+                    const res = await fetch('/api/scrape/status?runId=' + encodeURIComponent(runId) + '&niche=' + encodeURIComponent(niche));
+                    const data = await res.json();
+                    if (data.status === 'completed') {
+                        statusEl.textContent = `Saved ${data.saved || 0} businesses to Airtable.`;
+                        btn.disabled = false;
+                        scrapedZipsLoaded = false;
+                        loadScrapedZips();
+                        return;
+                    }
+                    if (data.status === 'failed') {
+                        statusEl.textContent = 'Scrape failed: ' + (data.error || 'Unknown error');
+                        btn.disabled = false;
+                        return;
+                    }
+                    statusEl.textContent = `Scraping... (${i + 1} min)`;
+                } catch (err) {
+                    statusEl.textContent = 'Error checking status: ' + err.message;
+                    btn.disabled = false;
+                    return;
+                }
+            }
+            statusEl.textContent = 'Scrape taking longer than expected. Check Apify console.';
+            btn.disabled = false;
+        }
+        
+        // Load and display scraped zip codes (from Scraped Businesses table)
+        async function loadScrapedZips() {
+            if (scrapedZipsLoaded) return;
+            scrapedZipsLoaded = true;
+            try {
+                const res = await fetch('/api/scraped-zips');
+                const data = await res.json();
+                const zips = data.zips || [];
+                if (zips.length === 0) return;
+
+                if (scrapedZipsLayer) {
+                    map.removeLayer(scrapedZipsLayer);
+                }
+                scrapedZipsLayer = L.layerGroup();
+
+                const scrapedColor = '#9E9E9E'; // Gray - already scraped
+                for (const zip of zips) {
+                    const zipData = zipCompleteData[zip];
+                    if (!zipData || !zipData.lat || !zipData.lng) continue;
+
+                    const marker = L.marker([zipData.lat, zipData.lng], {
+                        icon: L.divIcon({
+                            className: 'scraped-zip-marker',
+                            html: `<div style="
+                                background-color: ${scrapedColor};
+                                width: 10px;
+                                height: 10px;
+                                border-radius: 50%;
+                                border: 1px solid white;
+                                box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+                            "></div>`,
+                            iconSize: [10, 10],
+                            iconAnchor: [5, 5]
+                        })
+                    });
+                    marker.bindPopup(`<strong>Zip:</strong> ${zip}<br><em>Already scraped</em>`);
+                    scrapedZipsLayer.addLayer(marker);
+                }
+                if (document.getElementById('scraped-zips-toggle').checked) {
+                    scrapedZipsLayer.addTo(map);
+                }
+            } catch (err) {
+                console.warn('Could not load scraped zips:', err);
+            }
+        }
+
+        function toggleScrapedZips(show) {
+            if (!scrapedZipsLayer) return;
+            if (show) {
+                scrapedZipsLayer.addTo(map);
+            } else {
+                map.removeLayer(scrapedZipsLayer);
+            }
+        }
+
         // Close modal on escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
@@ -1010,9 +1193,10 @@
                 // Process each client
                 let processedCount = 0;
                 for (const record of records) {
-                    // Skip clients with "Churned" status
+                    // Include only Active, Paused, and Setup clients
                     const status = record.fields['Status'];
-                    if (status === 'Churned') {
+                    const includedStatuses = ['Active', 'Paused', 'Setup'];
+                    if (!includedStatuses.includes(status)) {
                         continue; // Skip this client
                     }
                     
@@ -1203,6 +1387,9 @@
                 
                 // Process clients and create markers (this handles stats, rendering, and hiding loading)
                 await processClients();
+                
+                // Load scraped zips (default toggle ON - shows where we've already scraped)
+                await loadScrapedZips();
                 
                 // Add event listener for niche filter
                 document.getElementById('niche-filter').addEventListener('change', function(e) {
