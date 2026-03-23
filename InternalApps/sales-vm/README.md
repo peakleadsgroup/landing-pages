@@ -12,6 +12,8 @@ The app runs on **Cloudflare Pages + Functions**. After pushing to GitHub:
      - `TWILIO_ACCOUNT_SID` – from [Twilio Console](https://console.twilio.com)
      - `TWILIO_AUTH_TOKEN` – from Twilio Console
      - `TWILIO_VOICEMAIL_NUMBER` (optional) – E.164 format, e.g. `+15551234567`, to show only recordings for calls TO this number
+     - `AIRTABLE_BASE_ID` – Airtable base ID (e.g. `appmBb0lzqRK9dI8v`) for the base containing the Sales VMs table
+     - `AIRTABLE_API_KEY` – Airtable API key or personal access token for notes tracking
 
 2. **Redeploy** so the new `functions/` directory and `InternalApps/sales-vm.html` are picked up.
 
@@ -38,6 +40,14 @@ For testing without deploying:
    python app.py
    ```
    Then open http://localhost:5050
+
+## Airtable setup (for notes)
+
+Create a table **"Sales VMs"** in your base with:
+- **Phone** – phone number (text)
+- **Notes** – long text
+
+Notes are stored per phone number so you can track callbacks, follow-ups, etc.
 
 ## Usage
 

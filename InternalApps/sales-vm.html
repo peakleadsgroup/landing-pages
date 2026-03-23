@@ -102,6 +102,40 @@
             return d.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
         }
 
+        function normalizePhoneKey(p) {
+            if (!p || typeof p !== 'string') return '__unknown__';
+            const digits = p.replace(/\D/g, '');
+            return digits.length >= 10 ? digits.slice(-10) : digits;
+        }
+
+        function groupByPhone(recordings) {
+            const groups = new Map();
+            for (const r of recordings) {
+                const key = normalizePhoneKey(r.from);
+                if (!groups.has(key)) groups.set(key, []);
+                groups.get(key).push(r);
+            }
+            // Sort each group by date (newest first)
+            for (const arr of groups.values()) {
+                arr.sort((a, b) => (b.date_created || '').localeCompare(a.date_created || ''));
+            }
+            return groups;
+        }
+
+        function renderRecording(r) {
+            return `
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-3 px-3 rounded-lg hover:bg-gray-50">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm text-gray-500">${formatDate(r.date_created)} · ${r.status === 'processing' ? 'Processing…' : formatDuration(r.duration)}</p>
+                        ${r.to ? `<p class="text-xs text-gray-400 mt-0.5">To: ${formatPhone(r.to)}</p>` : ''}
+                    </div>
+                    <div class="flex-shrink-0">
+                        ${r.status === 'processing' ? '<p class="text-sm text-amber-600">Audio available when processing completes</p>' : `<audio controls preload="metadata" class="w-full sm:w-64" src="/api/recordings/${r.sid}/audio"></audio>`}
+                    </div>
+                </div>
+            `;
+        }
+
         async function loadRecordings() {
             setLoading(true);
             errorArea.classList.add('hidden');
@@ -110,32 +144,106 @@
 
             const days = parseInt(daysSelect.value, 10);
             try {
-                const res = await fetch('/api/recordings?days=' + days);
-                const data = await res.json();
+                const [recordingsRes, notesRes] = await Promise.all([
+                    fetch('/api/recordings?days=' + days),
+                    fetch('/api/notes').catch(() => ({ ok: false }))
+                ]);
+                const data = await recordingsRes.json();
 
-                if (!res.ok) throw new Error(data.error || 'Failed to load recordings');
+                if (!recordingsRes.ok) throw new Error(data.error || 'Failed to load recordings');
 
                 const recordings = data.recordings || [];
-                recordingsSummary.textContent = recordings.length + ' voicemail(s)';
+                let notesByPhone = {};
+                if (notesRes.ok) {
+                    const notesData = await notesRes.json();
+                    notesByPhone = notesData.notesByPhone || {};
+                }
+
+                recordingsSummary.textContent = recordings.length + ' voicemail(s) from ' + new Set(recordings.map(r => normalizePhoneKey(r.from))).size + ' caller(s)';
 
                 if (recordings.length === 0) {
                     emptyState.classList.remove('hidden');
                 } else {
-                    recordingsList.innerHTML = recordings.map(r => `
-                        <li class="pt-4 first:pt-0">
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                                <div class="flex-1 min-w-0">
-                                    <p class="font-medium text-gray-900">${formatPhone(r.from)}</p>
-                                    <p class="text-sm text-gray-500">${formatDate(r.date_created)} · ${formatDuration(r.duration)}</p>
-                                    ${r.to ? `<p class="text-xs text-gray-400 mt-0.5">To: ${formatPhone(r.to)}</p>` : ''}
-                                </div>
-                                <div class="flex-shrink-0">
-                                    <audio controls preload="metadata" class="w-full sm:w-64" src="/api/recordings/${r.sid}/audio"></audio>
-                                </div>
+                    const groups = groupByPhone(recordings);
+                    const sortedGroups = [...groups.entries()].sort((a, b) => {
+                        const aLatest = a[1][0]?.date_created || '';
+                        const bLatest = b[1][0]?.date_created || '';
+                        return bLatest.localeCompare(aLatest);
+                    });
+
+                    recordingsList.innerHTML = sortedGroups.map(([key, recs]) => {
+                        const displayPhone = key === '__unknown__' ? 'Unknown' : formatPhone(recs[0]?.from);
+                        const rawPhone = recs[0]?.from || '';
+                        const count = recs.length;
+                        const isSingle = count === 1;
+                        const singleRec = isSingle ? recs[0] : null;
+                        const notes = (notesByPhone[key]?.notes || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        const notesSection = key !== '__unknown__' ? `
+                            <div class="mt-3 pt-3 border-t border-gray-100">
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Notes</label>
+                                <textarea data-phone="${rawPhone.replace(/"/g, '&quot;')}" class="notes-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-y min-h-[60px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Add notes about this caller...">${notes}</textarea>
+                                <button type="button" class="mt-2 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 save-notes-btn" data-phone="${rawPhone.replace(/"/g, '&quot;')}">Save Notes</button>
                             </div>
+                        ` : '';
+
+                        return `
+                        <li class="pt-4 first:pt-0 border-b border-gray-200 last:border-b-0">
+                            ${isSingle ? `
+                                <div>
+                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                        <div class="flex-1 min-w-0">
+                                            <p class="font-medium text-gray-900">${displayPhone}</p>
+                                            <p class="text-sm text-gray-500">${formatDate(singleRec.date_created)} · ${singleRec.status === 'processing' ? 'Processing…' : formatDuration(singleRec.duration)}</p>
+                                            ${singleRec.to ? `<p class="text-xs text-gray-400 mt-0.5">To: ${formatPhone(singleRec.to)}</p>` : ''}
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            ${singleRec.status === 'processing' ? '<p class="text-sm text-amber-600">Audio available when processing completes</p>' : `<audio controls preload="metadata" class="w-full sm:w-64" src="/api/recordings/${singleRec.sid}/audio"></audio>`}
+                                        </div>
+                                    </div>
+                                    ${notesSection}
+                                </div>
+                            ` : `
+                                <details class="group">
+                                    <summary class="flex items-center justify-between cursor-pointer list-none py-2 hover:bg-gray-50 -mx-2 px-2 rounded-lg">
+                                        <span class="font-medium text-gray-900">${displayPhone}</span>
+                                        <span class="text-sm text-gray-500">${count} voicemail${count > 1 ? 's' : ''}</span>
+                                        <svg class="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                    </summary>
+                                    <div class="mt-2 ml-2 space-y-1 border-l-2 border-gray-200 pl-4">
+                                        ${recs.map(r => renderRecording(r)).join('')}
+                                        ${notesSection}
+                                    </div>
+                                </details>
+                            `}
                         </li>
-                    `).join('');
+                        `;
+                    }).join('');
                     recordingsArea.classList.remove('hidden');
+
+                    recordingsList.querySelectorAll('.save-notes-btn').forEach(btn => {
+                        btn.addEventListener('click', async () => {
+                            const phone = btn.dataset.phone;
+                            const textarea = btn.closest('li')?.querySelector('textarea.notes-input');
+                            if (!textarea || !phone) return;
+                            btn.disabled = true;
+                            btn.textContent = 'Saving...';
+                            try {
+                                const res = await fetch('/api/notes', {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ phone, notes: textarea.value })
+                                });
+                                const data = await res.json();
+                                if (!res.ok) throw new Error(data.error || 'Failed to save');
+                                btn.textContent = 'Saved';
+                                setTimeout(() => { btn.textContent = 'Save Notes'; btn.disabled = false; }, 1500);
+                            } catch (err) {
+                                btn.textContent = 'Error';
+                                alert(err.message);
+                                btn.disabled = false;
+                            }
+                        });
+                    });
                 }
             } catch (err) {
                 errorMessage.textContent = err.message || 'Unknown error';
