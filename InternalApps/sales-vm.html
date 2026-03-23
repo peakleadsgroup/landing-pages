@@ -175,8 +175,6 @@
                         const displayPhone = key === '__unknown__' ? 'Unknown' : formatPhone(recs[0]?.from);
                         const rawPhone = recs[0]?.from || '';
                         const count = recs.length;
-                        const isSingle = count === 1;
-                        const singleRec = isSingle ? recs[0] : null;
                         const notes = (notesByPhone[key]?.notes || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                         const notesSection = key !== '__unknown__' ? `
                             <div class="mt-3 pt-3 border-t border-gray-100">
@@ -188,33 +186,17 @@
 
                         return `
                         <li class="pt-4 first:pt-0 border-b border-gray-200 last:border-b-0">
-                            ${isSingle ? `
-                                <div>
-                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                                        <div class="flex-1 min-w-0">
-                                            <p class="font-medium text-gray-900">${displayPhone}</p>
-                                            <p class="text-sm text-gray-500">${formatDate(singleRec.date_created)} · ${singleRec.status === 'processing' ? 'Processing…' : formatDuration(singleRec.duration)}</p>
-                                            ${singleRec.to ? `<p class="text-xs text-gray-400 mt-0.5">To: ${formatPhone(singleRec.to)}</p>` : ''}
-                                        </div>
-                                        <div class="flex-shrink-0">
-                                            ${singleRec.status === 'processing' ? '<p class="text-sm text-amber-600">Audio available when processing completes</p>' : `<audio controls preload="metadata" class="w-full sm:w-64" src="/api/recordings/${singleRec.sid}/audio"></audio>`}
-                                        </div>
-                                    </div>
+                            <details class="group">
+                                <summary class="flex items-center justify-between cursor-pointer list-none py-2 hover:bg-gray-50 -mx-2 px-2 rounded-lg">
+                                    <span class="font-medium text-gray-900">${displayPhone}</span>
+                                    <span class="text-sm text-gray-500">${count} voicemail${count !== 1 ? 's' : ''}</span>
+                                    <svg class="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                </summary>
+                                <div class="mt-2 ml-2 space-y-1 border-l-2 border-gray-200 pl-4">
+                                    ${recs.map(r => renderRecording(r)).join('')}
                                     ${notesSection}
                                 </div>
-                            ` : `
-                                <details class="group">
-                                    <summary class="flex items-center justify-between cursor-pointer list-none py-2 hover:bg-gray-50 -mx-2 px-2 rounded-lg">
-                                        <span class="font-medium text-gray-900">${displayPhone}</span>
-                                        <span class="text-sm text-gray-500">${count} voicemail${count > 1 ? 's' : ''}</span>
-                                        <svg class="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                                    </summary>
-                                    <div class="mt-2 ml-2 space-y-1 border-l-2 border-gray-200 pl-4">
-                                        ${recs.map(r => renderRecording(r)).join('')}
-                                        ${notesSection}
-                                    </div>
-                                </details>
-                            `}
+                            </details>
                         </li>
                         `;
                     }).join('');
