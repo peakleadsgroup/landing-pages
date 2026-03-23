@@ -220,8 +220,13 @@ export async function onRequest(context) {
           });
           const slyText = await slyRes.text();
           const lines = slyText.trim().split("\n");
-          const sessionId = lines.find((l) => /^\d+$/.test(l.trim()));
-          if (sessionId) {
+          // Slybroadcast may return "OK\n912345678\nNumber of Phone #s = 5000" or "OK session_id=83242792891 number of phone=63"
+          let sessionId = lines.find((l) => /^\d+$/.test(l.trim()))?.trim();
+          if (!sessionId) {
+            const match = slyText.match(/session_id[=:\s]*(\d+)/i);
+            if (match) sessionId = match[1];
+          }
+          if (sessionId && /OK/i.test(slyText)) {
             const count = phoneList.split(",").filter(Boolean).length;
             slybroadcastResult = { sessionId: sessionId.trim(), count };
 

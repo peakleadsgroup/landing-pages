@@ -573,6 +573,8 @@
                     document.getElementById('selected-zip-display').textContent = zip;
                     document.getElementById('scrape-bar').classList.remove('hidden');
                     document.getElementById('scrape-status').textContent = '';
+                    document.getElementById('scrape-status').style.color = '';
+                    document.getElementById('scrape-btn').disabled = false;
                 }
             });
         }
@@ -773,14 +775,11 @@
                     const res = await fetch('/api/scrape/status?runId=' + encodeURIComponent(runId) + '&niche=' + encodeURIComponent(niche) + '&launchCalls=1');
                     const data = await res.json();
                     if (data.status === 'completed') {
-                        let msg = `Saved ${data.saved || 0} businesses to Airtable.`;
-                        if (data.slybroadcast?.sessionId) {
-                            msg += ` Launched ${data.slybroadcast.count} Slybroadcast calls (session ${data.slybroadcast.sessionId}).`;
-                        } else if (data.slybroadcast?.error) {
-                            msg += ` Slybroadcast error: ${data.slybroadcast.error}`;
-                        }
-                        statusEl.textContent = msg;
-                        btn.disabled = false;
+                        statusEl.textContent = 'Scrape and call successful. Choose another zip to scrape again.';
+                        statusEl.style.color = '#1e8e3e';
+                        selectedZip = null;
+                        document.getElementById('selected-zip-display').textContent = '—';
+                        btn.disabled = true;
                         scrapedZipsLoaded = false;
                         loadScrapedZips();
                         return;
