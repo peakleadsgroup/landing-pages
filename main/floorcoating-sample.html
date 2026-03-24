@@ -810,33 +810,37 @@
             </div>
         </div>
 
-        <!-- STEP 2: Last Updated -->
+        <!-- STEP 2: Floor Type -->
         <div class="form-step" id="step2">
-            <div class="question">When was your bathroom last updated?</div>
+            <div class="question">What floor are you upgrading?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'lastUpdated', 'less_than_10')">Less than 10 years ago</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'lastUpdated', 'more_than_10')">More than 10 years ago</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'floorType', 'garage')">Garage</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'floorType', 'basement')">Basement</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'floorType', 'patio')">Patio</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'floorType', 'pool_deck')">Pool Deck</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'floorType', 'driveway')">Driveway</div>
             </div>
         </div>
 
-        <!-- STEP 3: Project Type -->
+        <!-- STEP 3: Completion Timeline -->
         <div class="form-step" id="step3">
-            <div class="question">Which best describes this project?</div>
+            <div class="question">When would you like your floor completed?</div>
+            <div class="sub-heading">We only schedule projects that can start soon so you can enjoy your upgraded space</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'full_remodel')">Full remodel</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'shower_replacement')">Shower replacement</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'tub_replacement')">Tub replacement</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'completionTimeline', 'asap')">ASAP</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'completionTimeline', 'within_2_weeks')">Within 2 weeks</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'completionTimeline', 'within_month')">Within a month</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'completionTimeline', 'within_2_months')">Within 2 months</div>
             </div>
         </div>
 
         <!-- STEP 4: Main Goal -->
         <div class="form-step" id="step4">
-            <div class="question">What do you want most in your remodel?</div>
+            <div class="question">What do you want most in your new floors?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'function_accessibility')">Accessibility</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'prevent_damage')">Repair damage</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'update_look')">Update look</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'home_value')">Increase value</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'upgraded_look')">Upgraded look</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'increase_value')">Increase value</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'make_tougher')">Make tougher</div>
             </div>
         </div>
 
