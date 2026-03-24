@@ -5,22 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
-    <title>Floor Coating Qualification</title>
-    
-    <!-- Meta Pixel Code - Will be dynamically set -->
-    <script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
-    // Meta Pixel will be initialized after client data is loaded
-    </script>
-    <noscript id="metaPixelNoscript"></noscript>
-    <!-- End Meta Pixel Code -->
+    <title>Bathroom Remodel Qualification - Sample</title>
     
     <style>
         * {
@@ -33,6 +18,7 @@
             font-family: 'Arial', sans-serif;
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 20px;
@@ -47,16 +33,28 @@
             right: 0;
             bottom: 0;
             width: 100vw;
-            height: 100vh;
-            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
-                        url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/garage-floor-coating-3-car-garage.webp') center/cover no-repeat;
-            background-size: cover;
-            background-position: center;
+            height: 100%;
+            min-height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)), 
+                        url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
+            background-size: 100% auto;
+            background-position: center top;
+            background-repeat: repeat-y;
             background-attachment: fixed;
             z-index: -1;
             transform: translateZ(0);
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
+        }
+
+        @media (max-width: 768px) {
+            body::before {
+                background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)), 
+                            url('https://github.com/peakleadsgroup/landing-pages/blob/main/Images/MobileBathroomBackground.jpg?raw=true');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+            }
         }
 
         .form-container {
@@ -249,27 +247,6 @@
             transform: none;
         }
 
-        .privacy-policy-text {
-            margin-top: 20px;
-            font-size: 10px;
-            color: #666;
-            line-height: 1.4;
-            text-align: center;
-        }
-
-        .privacy-policy-text p {
-            margin-bottom: 8px;
-        }
-
-        .privacy-policy-text a {
-            color: #2196f3;
-            text-decoration: underline;
-        }
-
-        .privacy-policy-text a:hover {
-            color: #1976d2;
-        }
-
         .name-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -291,6 +268,27 @@
             margin-top: 5px;
             display: block;
             text-align: left;
+        }
+
+        .privacy-policy-text {
+            margin-top: 20px;
+            font-size: 10px;
+            color: #666;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .privacy-policy-text p {
+            margin-bottom: 8px;
+        }
+
+        .privacy-policy-text a {
+            color: #2196f3;
+            text-decoration: underline;
+        }
+
+        .privacy-policy-text a:hover {
+            color: #1976d2;
         }
 
         .row {
@@ -364,7 +362,7 @@
         }
         
         .phone-number-display {
-            color: #4CAF50;
+            color: black;
             font-size: 24px;
             font-weight: 700;
             margin-top: 20px;
@@ -382,7 +380,7 @@
 
         .calendar-header {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             margin-bottom: 20px;
         }
@@ -573,7 +571,7 @@
             opacity: 0.5;
         }
 
-        /* Ending Screen Selection Styles (sample mode) */
+        /* Ending Screen Selection Styles */
         .ending-selection-screen {
             text-align: center;
         }
@@ -649,6 +647,11 @@
                 margin: 10px;
             }
 
+            .reviews-content {
+                margin: 10px;
+                padding: 0;
+            }
+
             .address-row {
                 grid-template-columns: 1fr;
             }
@@ -672,6 +675,110 @@
                 position: absolute;
             }
         }
+
+        /* Reviews Section Styles */
+        .reviews-section {
+            display: none;
+            margin-top: 20px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .reviews-section.active {
+            display: block;
+        }
+
+        .reviews-content {
+            max-width: 500px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .cta-block {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .reviews-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .review-block {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .review-text {
+            font-size: 18px;
+            color: #2c3e50;
+            line-height: 1.8;
+            margin-bottom: 25px;
+            font-style: italic;
+            padding: 0 40px;
+            position: relative;
+        }
+
+        .review-text::before,
+        .review-text::after {
+            display: none;
+        }
+
+        .review-stars {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .review-star {
+            color: #ffc107;
+            font-size: 24px;
+        }
+
+        .review-name {
+            font-size: 16px;
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .review-product-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 600px) {
+            .reviews-content {
+                margin: 10px;
+                padding: 0;
+            }
+
+            .review-block {
+                padding: 25px;
+                margin: 0;
+            }
+
+            .cta-block {
+                padding: 30px 20px;
+            }
+
+            .review-text {
+                font-size: 16px;
+                padding: 0 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -686,7 +793,7 @@
 
         <div id="mainHeading">
             <h1 class="main-heading">
-                Take our 30 second quiz to get a <span class="highlight">fast and free quote</span>
+                Take our 30 second quiz to book a <span class="highlight">fast and free quote</span>
             </h1>
         </div>
 
@@ -703,37 +810,33 @@
             </div>
         </div>
 
-        <!-- STEP 2: Floor Type -->
+        <!-- STEP 2: Last Updated -->
         <div class="form-step" id="step2">
-            <div class="question">What floor are you upgrading?</div>
+            <div class="question">When was your bathroom last updated?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'floorType', 'garage')">Garage</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'floorType', 'basement')">Basement</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'floorType', 'patio')">Patio</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'floorType', 'pool_deck')">Pool Deck</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'floorType', 'driveway')">Driveway</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'lastUpdated', 'less_than_10')">Less than 10 years ago</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'lastUpdated', 'more_than_10')">More than 10 years ago</div>
             </div>
         </div>
 
-        <!-- STEP 3: Completion Timeline -->
+        <!-- STEP 3: Project Type -->
         <div class="form-step" id="step3">
-            <div class="question">When would you like your floor completed?</div>
-            <div class="sub-heading">We only schedule projects that can start soon so you can enjoy your upgraded space</div>
+            <div class="question">Which best describes this project?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'completionTimeline', 'asap')">ASAP</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'completionTimeline', 'within_2_weeks')">Within 2 weeks</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'completionTimeline', 'within_month')">Within a month</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'completionTimeline', 'within_2_months')">Within 2 months</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'full_remodel')">Full remodel</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'shower_replacement')">Shower replacement</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'projectType', 'tub_replacement')">Tub replacement</div>
             </div>
         </div>
 
         <!-- STEP 4: Main Goal -->
         <div class="form-step" id="step4">
-            <div class="question">What do you want most in your new floors?</div>
+            <div class="question">What do you want most in your remodel?</div>
             <div class="options">
-                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'upgraded_look')">Upgraded look</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'increase_value')">Increase value</div>
-                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'make_tougher')">Make tougher</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'function_accessibility')">Accessibility</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'prevent_damage')">Repair damage</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'update_look')">Update look</div>
+                <div class="option" onclick="selectOptionAndAdvance(this, 'mainGoal', 'home_value')">Increase value</div>
             </div>
         </div>
 
@@ -803,7 +906,7 @@
                 </div>
             </div>
             <div class="nav-buttons">
-                <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Get My Quote</button>
+                <button class="nav-btn" onclick="submitFinalForm()" id="phoneSubmitBtn" disabled>Book Quote</button>
             </div>
             <div class="privacy-policy-text" id="privacyPolicyText">
                 <p>By clicking "NEXT STEP" and submitting this form, (i) I agree that <span id="partnerBusinessName">Peak Leads Group and it's marketing partners</span> may use automated technology to call or text my phone number (provided above) or email me regarding my request, and I may revoke this consent at any time, and (ii) I agree to the <a href="privacypolicy.html" target="_blank">Terms & Conditions and Privacy Policy</a>.</p>
@@ -811,7 +914,7 @@
             </div>
         </div>
 
-        <!-- ENDING SCREEN SELECTION (SAMPLE MODE) -->
+        <!-- ENDING SCREEN SELECTION -->
         <div class="form-step" id="endingSelectionStep">
             <div class="ending-selection-screen">
                 <div class="ending-selection-title">Post-Submit Options</div>
@@ -829,7 +932,7 @@
         <!-- PHONE/TEXT CONTACT SCREEN -->
         <div class="form-step" id="contactStep">
             <div style="text-align: center;">
-                <div style="font-size: 24px; color: #4CAF50; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your free estimate!</div>
+                <div style="font-size: 24px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your free estimate!</div>
                 <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Or if you're ready to schedule now you can contact us by clicking one of the buttons below</div>
                 
                 <a id="callButtonLink" href="#" class="contact-button call-button" style="display: none;">
@@ -846,8 +949,8 @@
                     Text
                 </a>
                 
-                <div class="phone-number-display" id="phoneNumberDisplay"></div>
-                <button class="back-button" onclick="showEndingSelection()" id="contactBackToEndings" style="display: none;">
+                <div class="phone-number-display" id="phoneNumberDisplay">(123) 456-7890</div>
+                <button class="back-button" onclick="showEndingSelection()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;">
                         <path d="M19 12H5M12 19l-7-7 7-7"/>
                     </svg>
@@ -859,7 +962,7 @@
         <!-- CALENDAR BOOKING SCREEN -->
         <div class="form-step" id="calendarStep">
             <div class="calendar-step-header">We'll reach out soon to schedule your free estimate!</div>
-            <div style="font-size: 16px; color: #666; margin-bottom: 25px; text-align: center;">Ready to schedule your free estimate now? Choose a time below:</div>
+            <div style="font-size: 16px; color: #666; margin-bottom: 25px; text-align: center;">Ready to schedule your free estimate now? Request a time below and we will reach out to confirm</div>
             
             <div class="calendar-header">
                 <div class="month-nav">
@@ -888,7 +991,7 @@
                 <div class="selected-info" id="selectedDayInfo"></div>
                 <div class="time-grid" id="timeGrid"></div>
             </div>
-            <button class="back-button" onclick="showEndingSelection()" id="calendarBackToEndings" style="display: none; margin-top: 30px;">
+            <button class="back-button" onclick="showEndingSelection()" style="margin-top: 20px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;">
                     <path d="M19 12H5M12 19l-7-7 7-7"/>
                 </svg>
@@ -907,12 +1010,103 @@
                 </div>
                 <div style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
                 <div id="confirmationMessage" style="font-size: 18px; color: #666; line-height: 1.6;">We'll give you a call soon to schedule your free estimate.</div>
-                <button class="back-button" onclick="showEndingSelection()" id="confirmationBackToEndings" style="display: none; margin-top: 30px;">
+                <button class="back-button" onclick="showEndingSelection()" style="margin-top: 30px;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;">
                         <path d="M19 12H5M12 19l-7-7 7-7"/>
                     </svg>
                     Try Another
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REVIEWS SECTION -->
+    <div class="reviews-section" id="reviewsSection">
+        <div class="reviews-content">
+            <div class="reviews-container" id="reviewsContainer">
+                <!-- Review blocks will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- DUPLICATE CALL TO ACTION SECTION -->
+    <div class="reviews-section" id="ctaSection">
+        <div class="reviews-content">
+            <!-- DUPLICATE CONTACT SCREEN -->
+            <div class="form-step cta-block" id="contactStepBelow">
+                <div style="text-align: center;">
+                    <div style="font-size: 24px; color: black; margin-bottom: 20px; font-weight: bold;">We'll call you soon to schedule your free estimate!</div>
+                    <div style="font-size: 16px; color: #666; line-height: 1.5; margin-bottom: 30px;">Or if you're ready to schedule now you can contact us by clicking one of the buttons below</div>
+                    
+                    <a id="callButtonLinkBelow" href="#" class="contact-button call-button" style="display: none;">
+                        <svg class="phone-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
+                        </svg>
+                        Call
+                    </a>
+                    
+                    <a id="textButtonLinkBelow" href="#" class="contact-button text-button" style="display: none;">
+                        <svg class="message-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 11H7V9h2v2zm4 0h-2V9h2v2zm4 0h-2V9h2v2z"/>
+                        </svg>
+                        Text
+                    </a>
+                    
+                    <div class="phone-number-display" id="phoneNumberDisplayBelow"></div>
+                </div>
+            </div>
+
+            <!-- DUPLICATE CALENDAR SCREEN -->
+            <div class="form-step cta-block" id="calendarStepBelow">
+                <div class="calendar-step-header">We'll reach out soon to schedule your free estimate!</div>
+                <div style="font-size: 16px; color: #666; margin-bottom: 25px; text-align: center;">Ready to schedule your free estimate now? Choose a time below:</div>
+                
+                <div class="calendar-header">
+                    <div class="month-nav">
+                        <button class="nav-button" id="prevMonthBelow" onclick="changeCalendarMonthBelow(-1)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M15 18l-6-6 6-6"/>
+                            </svg>
+                        </button>
+                        <div class="month-display" id="monthDisplayBelow"></div>
+                        <button class="nav-button" id="nextMonthBelow" onclick="changeCalendarMonthBelow(1)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="weekday-header">
+                    <div class="weekday-name">Sun</div>
+                    <div class="weekday-name">Mon</div>
+                    <div class="weekday-name">Tue</div>
+                    <div class="weekday-name">Wed</div>
+                    <div class="weekday-name">Thu</div>
+                    <div class="weekday-name">Fri</div>
+                    <div class="weekday-name">Sat</div>
+                </div>
+                
+                <div class="calendar-grid" id="calendarGridBelow"></div>
+                
+                <div id="timeSectionBelow" class="time-section" style="display: none;">
+                    <div class="selected-info" id="selectedDayInfoBelow"></div>
+                    <div class="time-grid" id="timeGridBelow"></div>
+                </div>
+            </div>
+
+            <!-- DUPLICATE CONFIRMATION/THANK YOU SCREEN -->
+            <div class="form-step cta-block" id="confirmationStepBelow">
+                <div style="text-align: center; padding: 40px 20px;">
+                    <div style="margin-bottom: 30px;">
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;">
+                            <circle cx="12" cy="12" r="10" fill="#e8f5e9"/>
+                            <path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/>
+                        </svg>
+                    </div>
+                    <div style="font-size: 28px; color: #2c3e50; margin-bottom: 20px; font-weight: bold;">Thank you!</div>
+                    <div id="confirmationMessageBelow" style="font-size: 18px; color: #666; line-height: 1.6;">We'll give you a call soon to schedule your free estimate.</div>
+                </div>
             </div>
         </div>
     </div>
@@ -924,16 +1118,10 @@
         const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
         const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
         const AIRTABLE_BASE_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
+        const B2B_TABLE_ID = 'tbldNpwtCN9y5Pkiy';
+        const DEFAULT_LOGO_URL = 'https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png';
         
-        const TABLES = {
-            CLIENTS: 'tblMl8Y97cMSbricC',
-            CAMPAIGNS: 'tbl6uhtOFzGzA7EMu',
-            B2C_LEADS: 'tblPt6Wc79hTBSmcD',
-            B2C_ADS: 'tbl7ungQGMMLYwshw',
-        };
-        const CONTACT_NOTIFICATION_WEBHOOK_URL = 'https://hook.us2.make.com/16nbe9d7b8igymuas81euw3o124khm7s';
-        
-        // Calendar Configuration (defaults, will be overridden by client data)
+        // Calendar Configuration
         const CALENDAR_CONFIG = {
             timezone: 'America/New_York',
             daysOut: 14,
@@ -944,39 +1132,20 @@
 
         let currentStep = 1;
         let formData = {};
-        let eventId = null;
-        let hasTrackedEngagement = false;
-        let clientData = null;
-        let campaignClientData = null;
-        let matchedClientData = null;
-        let adRecordId = null;
-        let campaignRecordId = null; // Track the campaign record ID for Source Campaign linking
-        let metaCampaignID = null; // Track the Meta campaign ID (from Campaign ID field)
-        let leadRecordId = null; // Track the lead record ID so we can update it with appointment
-        let clientTimezone = 'America/New_York'; // Default timezone
-        let clientAvailability = []; // Client's available times
-        let clientAvailableDays = [1, 2, 3, 4, 5]; // Default: Monday-Friday
-        let clientDaysOut = 14; // Default: 14 days out
-        let isSubmitting = false; // Flag to prevent duplicate submissions
-        const SAMPLE_MODE = ['1', 'true', 'yes'].includes((new URLSearchParams(window.location.search).get('sample') || '').toLowerCase());
+        let b2bData = null;
+        let clientTimezone = 'America/New_York';
+        let clientAvailability = ['10:00 AM', '2:00 PM', '6:00 PM'];
+        let clientAvailableDays = [1, 2, 3, 4, 5]; // Monday-Friday
+        let clientDaysOut = 14;
         
-        // Get campaign ID immediately from URL (before DOM is ready)
+        // Get b2bid from URL
         const urlParams = new URLSearchParams(window.location.search);
-        const initialCampaignID = urlParams.get('campaignID');
+        const b2bid = urlParams.get('b2bid');
 
         // ============================================
         // AIRTABLE API FUNCTIONS
         // ============================================
         
-        // Check if the current request is from a Facebook/Instagram crawler
-        function isFacebookCrawler() {
-            const userAgent = navigator.userAgent || '';
-            return userAgent.includes('facebookexternalhit') || 
-                   userAgent.includes('Facebot') || 
-                   userAgent.includes('facebookexternalhit/1.1');
-        }
-
-
         async function fetchAirtableData(url) {
             try {
                 const response = await fetch(url, {
@@ -999,328 +1168,35 @@
             }
         }
 
-        async function loadClientFromCampaign(campaignIDParam = null) {
-            try {
-                
-                // Use provided param or get from URL
-                const campaignID = campaignIDParam || initialCampaignID || new URLSearchParams(window.location.search).get('campaignID');
-                
-                if (!campaignID) {
-                    console.log('No campaignID found in URL');
-                    return null;
-                }
-
-                console.log('Looking for campaign with ID:', campaignID);
-
-                // First, try to fetch campaign by Campaign ID field
-                let campaign = null;
-                const campaignUrl = `${AIRTABLE_BASE_URL}/${TABLES.CAMPAIGNS}?filterByFormula={Campaign ID}="${campaignID}"`;
-                const campaignData = await fetchAirtableData(campaignUrl);
-                
-                if (campaignData.records && campaignData.records.length > 0) {
-                    campaign = campaignData.records[0];
-                    campaignRecordId = campaign.id; // Store campaign record ID for Source Campaign linking
-                    metaCampaignID = campaign.fields['Campaign ID'] || campaignID; // Store Meta campaign ID
-                    console.log('Found campaign by Campaign ID field:', campaign.id);
-                } else {
-                    // If not found by Campaign ID field, try fetching directly by record ID
-                    console.log('Campaign not found by Campaign ID field, trying direct record ID lookup');
-                    try {
-                        const directCampaignUrl = `${AIRTABLE_BASE_URL}/${TABLES.CAMPAIGNS}/${campaignID}`;
-                        const directCampaignData = await fetchAirtableData(directCampaignUrl);
-                        campaign = directCampaignData;
-                        campaignRecordId = campaign.id; // Store campaign record ID for Source Campaign linking
-                        metaCampaignID = campaign.fields['Campaign ID'] || null; // Store Meta campaign ID if available
-                        console.log('Found campaign by direct record ID:', campaign.id);
-                    } catch (directError) {
-                        console.error('Campaign not found by record ID either:', directError);
-                        return null;
-                    }
-                }
-                
-                // Get linked client record ID
-                if (!campaign.fields || !campaign.fields.Client || campaign.fields.Client.length === 0) {
-                    console.error('Campaign has no linked Client');
-                    return null;
-                }
-                
-                const clientRecordId = campaign.fields.Client[0];
-                console.log('Found linked client record ID:', clientRecordId);
-                
-                // Fetch client data
-                const clientUrl = `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}/${clientRecordId}`;
-                const clientData = await fetchAirtableData(clientUrl);
-                
-                console.log('Loaded client data:', clientData.id, clientData.fields);
-                
-                return clientData;
-            } catch (error) {
-                console.error('Error loading client from campaign:', error);
+        async function loadB2BData(b2bidParam) {
+            if (!b2bidParam) {
+                console.log('No b2bid found in URL');
                 return null;
             }
-        }
-
-        async function findClientByZipCode(zipCode) {
-            try {
-                // Fetch all clients (with pagination - Airtable returns max 100 per request)
-                let allClientRecords = [];
-                let fetchUrl = `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}`;
-                while (fetchUrl) {
-                    const pageData = await fetchAirtableData(fetchUrl);
-                    if (pageData.records && pageData.records.length > 0) {
-                        allClientRecords = allClientRecords.concat(pageData.records);
-                    }
-                    fetchUrl = pageData.offset ? `${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}?offset=${pageData.offset}` : null;
-                }
-                
-                if (allClientRecords.length === 0) {
-                    return null;
-                }
-                
-                console.log(`Searching for zip code: ${zipCode}`);
-                console.log(`Total clients in database: ${allClientRecords.length}`);
-                
-                // Search through each client's Expanded Area Raw Zips
-                for (const client of allClientRecords) {
-                    const status = client.fields['Status'];
-                    const niche = client.fields['Niche'];
-                    const zipList = client.fields['Expanded Area Raw Zips'];
-                    
-                    // Only consider clients with "Active" or "Paused" status
-                    if (status !== 'Active' && status !== 'Paused') {
-                        console.log(`Skipping client ${client.id}: Status="${status}" (needs Active or Paused)`);
-                        continue;
-                    }
-                    
-                    // Only consider clients with "Floor Coating" niche (case-insensitive)
-                    if (!niche || niche.toString().trim().toLowerCase() !== 'floor coating') {
-                        console.log(`Skipping client ${client.id}: Niche="${niche}" (needs "Floor Coating")`);
-                        continue;
-                    }
-                    
-                    if (!zipList) {
-                        console.log(`Skipping client ${client.id}: No Expanded Area Raw Zips field`);
-                        continue;
-                    }
-                    
-                    // Parse comma-separated zip codes (handle spaces)
-                    const zipCodes = zipList.split(',').map(z => z.trim());
-                    console.log(`Checking client ${client.id}: Zip codes=[${zipCodes.join(', ')}], Looking for="${zipCode}"`);
-                    
-                    if (zipCodes.includes(zipCode)) {
-                        console.log(`✓ MATCH FOUND! Client ${client.id} matches zip code ${zipCode}`);
-                        return client;
-                    } else {
-                        console.log(`✗ Client ${client.id} does not have zip code ${zipCode}`);
-                    }
-                }
-                
-                console.log(`No matching client found for zip code: ${zipCode}`);
-                
-                return null;
-            } catch (error) {
-                console.error('Error finding client by zip code:', error);
-                return null;
-            }
-        }
-
-        async function findAdByATID(adATID) {
-            try {
-                if (!adATID) return null;
-                
-                // If adATID looks like an Airtable record ID (starts with "rec"), try to fetch it directly
-                if (adATID.startsWith('rec')) {
-                    try {
-                        const directUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_ADS}/${adATID}`;
-                        const adData = await fetchAirtableData(directUrl);
-                        if (adData && adData.id) {
-                            console.log('Found ad by direct record ID:', adATID);
-                            return adData.id;
-                        }
-                    } catch (directError) {
-                        // If direct fetch fails, fall through to search by scriptATID
-                        console.log('Direct record ID lookup failed, trying scriptATID search:', directError.message);
-                    }
-                }
-                
-                // Fetch all ads and find by scriptATID
-                const adsUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_ADS}`;
-                const adsData = await fetchAirtableData(adsUrl);
-                
-                if (!adsData.records || adsData.records.length === 0) {
-                    console.log('No ads found in table');
-                    return null;
-                }
-                
-                // Find ad where scriptATID matches
-                for (const ad of adsData.records) {
-                    if (ad.fields.scriptATID === adATID) {
-                        console.log('Found ad by scriptATID:', adATID, '->', ad.id);
-                        return ad.id; // Return record ID
-                    }
-                }
-                
-                console.log('No ad found matching adATID:', adATID);
-                return null;
-            } catch (error) {
-                console.log('Ad lookup failed (non-critical):', error.message);
-                return null;
-            }
-        }
-
-        async function sendLeadWebhook(leadRecordId, metaCampaignID, linkedClientAirtableID, appointmentTime = null) {
-            try {
-                // Only send if there's a linked client
-                if (!linkedClientAirtableID) {
-                    console.log('No linked client, skipping webhook');
-                    return;
-                }
-                
-                const webhookData = {
-                    'Lead Airtable ID': leadRecordId,
-                    'Campaign ID': metaCampaignID,
-                    'Client Airtable ID': linkedClientAirtableID
-                };
-                
-                // Add appointment time if provided
-                if (appointmentTime) {
-                    webhookData['Appointment Time'] = appointmentTime;
-                }
-                
-                await fetch(CONTACT_NOTIFICATION_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(webhookData),
-                    mode: 'no-cors'
-                });
-                
-                console.log('Lead webhook sent successfully');
-            } catch (error) {
-                console.error('Error sending lead webhook:', error);
-            }
-        }
-        
-        async function submitLeadToAirtable(leadData) {
-            try {
-                if (SAMPLE_MODE) {
-                    console.log('SAMPLE_MODE enabled: skipping Airtable lead write');
-                    return { sampleMode: true };
-                }
-
-                // Determine which client to use for Lead Price (matched client first, then campaign client)
-                const clientForPrice = matchedClientData || campaignClientData;
-                let leadPrice = null;
-                
-                if (clientForPrice && clientForPrice.fields && clientForPrice.fields['Lead Price']) {
-                    leadPrice = clientForPrice.fields['Lead Price'];
-                }
-                
-                // Prepare the record
-                const record = {
-                    fields: {
-                        'Phone': leadData.phone,
-                        'Full Summary': leadData.fullSummary,
-                        'Full Summary HTML': leadData.fullSummaryHTML,
-                        'Full Name': leadData.fullName,
-                        'First Name': leadData.firstName,
-                        'Last Name': leadData.lastName,
-                        'Model': 'Lead',
-                        'Address': leadData.address,
-                        'City': leadData.city,
-                        'State': leadData.state,
-                        'Zip': leadData.zip
-                    }
-                };
-                
-                // Add email if provided
-                if (leadData.email && leadData.email.trim()) {
-                    record.fields['Email'] = leadData.email.trim();
-                }
-                
-                // Add Lead Price if available
-                if (leadPrice !== null && leadPrice !== undefined) {
-                    record.fields['Price'] = leadPrice;
-                }
-                
-                // Add linked client ONLY if we found a match by zip code (no fallback to campaign client)
-                if (matchedClientData && matchedClientData.id) {
-                    record.fields['Linked Client'] = [matchedClientData.id];
-                }
-                
-                // Always add Source Campaign if we have a campaign record ID
-                if (campaignRecordId) {
-                    record.fields['Source Campaign'] = [campaignRecordId];
-                }
-                
-                // Add linked ad if we found one
-                if (adRecordId) {
-                    record.fields['Ad'] = [adRecordId];
-                }
-                
-                console.log('Submitting lead to Airtable:', record);
-                
-                // Submit to Airtable
-                const response = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ records: [record] })
-                });
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Airtable submission failed: ${response.status} ${response.statusText} - ${errorText}`);
-                }
-                
-                const result = await response.json();
-                console.log('Lead submitted successfully:', result);
-                
-                // Store the lead record ID so we can update it with appointment later
-                if (result.records && result.records.length > 0) {
-                    leadRecordId = result.records[0].id;
-                    console.log('Lead record ID stored:', leadRecordId);
-                }
-                
-                return result;
-            } catch (error) {
-                console.error('Error submitting lead to Airtable:', error);
-                throw error;
-            }
-        }
-
-        function initializeMetaPixel(pixelId) {
-            if (!pixelId || typeof fbq === 'undefined') return;
             
             try {
-                fbq('init', pixelId);
-                fbq('track', 'PageView');
-                
-                // Update noscript tag
-                const noscript = document.getElementById('metaPixelNoscript');
-                if (noscript) {
-                    noscript.innerHTML = `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1" />`;
+                console.log('Loading B2B data for ID:', b2bidParam);
+                // Try to fetch directly by record ID
+                const directUrl = `${AIRTABLE_BASE_URL}/${B2B_TABLE_ID}/${b2bidParam}`;
+                try {
+                    const b2bData = await fetchAirtableData(directUrl);
+                    console.log('Found B2B record by direct ID:', b2bData.id);
+                    return b2bData;
+                } catch (directError) {
+                    console.log('Direct lookup failed, trying filter search');
+                    // If direct lookup fails, try filtering by ID field
+                    const filterUrl = `${AIRTABLE_BASE_URL}/${B2B_TABLE_ID}?filterByFormula={ID}="${b2bidParam}"`;
+                    const filterData = await fetchAirtableData(filterUrl);
+                    if (filterData.records && filterData.records.length > 0) {
+                        console.log('Found B2B record by filter:', filterData.records[0].id);
+                        return filterData.records[0];
+                    }
                 }
+                console.log('No B2B record found for ID:', b2bidParam);
+                return null;
             } catch (error) {
-                console.error('Meta Pixel initialization error:', error);
-            }
-        }
-
-        function preloadLogo(logoUrl) {
-            // Preload the image immediately for faster display
-            if (logoUrl) {
-                const link = document.createElement('link');
-                link.rel = 'preload';
-                link.as = 'image';
-                link.href = logoUrl;
-                document.head.appendChild(link);
-                
-                // Also preload using Image object
-                const img = new Image();
-                img.src = logoUrl;
+                console.error('Error loading B2B data:', error);
+                return null;
             }
         }
 
@@ -1328,12 +1204,9 @@
             const logoImg = document.getElementById('logoImg');
             console.log('Loading logo:', logoUrl);
             if (logoUrl && logoImg) {
-                // Preload first for faster display
-                preloadLogo(logoUrl);
-                
                 logoImg.src = logoUrl;
                 logoImg.style.display = 'block';
-                console.log('Logo image set, display:', logoImg.style.display);
+                console.log('Logo image set');
                 
                 // Handle logo load errors
                 logoImg.onerror = function() {
@@ -1350,108 +1223,44 @@
             }
         }
 
-        // Start loading client data immediately (don't wait for DOM)
-        // Initialize immediately - start fetching as soon as script runs
+        // Initialize page - load B2B data and logo
         (async function() {
             try {
-                console.log('Initializing page, loading client data...');
-                // Load client from campaign ID (use pre-fetched value if available)
-                campaignClientData = await loadClientFromCampaign(initialCampaignID);
+                console.log('Initializing page, loading B2B data...');
+                b2bData = await loadB2BData(b2bid);
                 
-                if (campaignClientData) {
-                    console.log('Client data loaded successfully');
-                    clientData = campaignClientData;
-                    
-                    // Load logo immediately when we get the URL
-                    const logoUrl = campaignClientData.fields['Logo Link'];
-                    console.log('Logo URL from client data:', logoUrl);
-                    if (logoUrl) {
-                        // Preload immediately, even before DOM is ready
-                        preloadLogo(logoUrl);
-                        
-                        // Load logo when DOM is ready
-                        if (document.readyState === 'loading') {
-                            document.addEventListener('DOMContentLoaded', () => {
-                                loadLogo(logoUrl);
-                            });
-                        } else {
-                            loadLogo(logoUrl);
-                        }
-                    } else {
-                        console.warn('No Logo Link found in client data');
-                    }
-                    
-                    // Initialize Meta Pixel
-                    const metaPixel = campaignClientData.fields['Meta Pixel'];
-                    if (metaPixel) {
-                        console.log('Initializing Meta Pixel:', metaPixel);
-                        initializeMetaPixel(metaPixel);
-                    } else {
-                        console.log('No Meta Pixel found in client data');
-                    }
-                    
-                    // Update partner name in privacy policy
-                    updatePartnerNameInPrivacyPolicy();
+                let logoUrl = DEFAULT_LOGO_URL;
+                if (b2bData && b2bData.fields && b2bData.fields['Logo']) {
+                    logoUrl = b2bData.fields['Logo'];
+                    console.log('Using logo from B2B record:', logoUrl);
                 } else {
-                    console.warn('No client data loaded from campaign');
-                    // Initialize default Meta Pixel (if needed)
-                    // For now, we'll just track PageView without pixel ID
-                    if (typeof fbq !== 'undefined') {
-                        fbq('track', 'PageView');
-                    }
-                    // Update partner name with default
-                    updatePartnerNameInPrivacyPolicy();
+                    console.log('Using default logo:', logoUrl);
+                }
+                
+                // Load logo when DOM is ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => {
+                        loadLogo(logoUrl);
+                    });
+                } else {
+                    loadLogo(logoUrl);
                 }
             } catch (error) {
                 console.error('Error initializing page:', error);
-                // Update partner name with default on error
-                updatePartnerNameInPrivacyPolicy();
+                // Load default logo on error
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => {
+                        loadLogo(DEFAULT_LOGO_URL);
+                    });
+                } else {
+                    loadLogo(DEFAULT_LOGO_URL);
+                }
             }
         })();
-        
-        // Function to update partner name in privacy policy
-        function updatePartnerNameInPrivacyPolicy() {
-            const partnerNameElement = document.getElementById('partnerBusinessName');
-            if (!partnerNameElement) return;
-            
-            // Try to get partner name from matched client first, then campaign client
-            let partnerName = null;
-            if (matchedClientData && matchedClientData.fields && matchedClientData.fields['Name']) {
-                partnerName = matchedClientData.fields['Name'];
-            } else if (campaignClientData && campaignClientData.fields && campaignClientData.fields['Name']) {
-                partnerName = campaignClientData.fields['Name'];
-            } else if (clientData && clientData.fields && clientData.fields['Name']) {
-                partnerName = clientData.fields['Name'];
-            }
-            
-            // Update the text if we found a partner name, otherwise use default
-            if (partnerName) {
-                partnerNameElement.textContent = partnerName;
-            } else {
-                partnerNameElement.textContent = "Peak Leads Group and it's marketing partners";
-            }
-        }
-        
-        // Also ensure logo loads when DOM is ready (backup)
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                // If client data is already loaded, ensure logo is displayed
-                if (clientData && clientData.fields && clientData.fields['Logo Link']) {
-                    const logoImg = document.getElementById('logoImg');
-                    if (logoImg && !logoImg.src) {
-                        loadLogo(clientData.fields['Logo Link']);
-                    }
-                }
-            });
-        }
 
         // ============================================
         // FORM FUNCTIONS
         // ============================================
-
-        function generateEventId() {
-            return 'event_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        }
 
         function selectOptionAndAdvance(element, field, value) {
             const options = element.parentElement.querySelectorAll('.option');
@@ -1459,16 +1268,6 @@
             
             element.classList.add('selected');
             formData[field] = value;
-            
-            if (!hasTrackedEngagement) {
-                if (typeof fbq !== 'undefined' && clientData && clientData.fields['Meta Pixel']) {
-                    fbq('track', 'ViewContent', {
-                        content_category: 'home_improvement',
-                        content_name: 'floor_coating_quiz_start'
-                    });
-                }
-                hasTrackedEngagement = true;
-            }
             
             setTimeout(() => {
                 nextStep();
@@ -1517,7 +1316,6 @@
             if (street && city && state && zip && startsWithNumber) {
                 formData.address = { street, city, state, zip };
             } else {
-                // Clear address data if validation fails to prevent stale data
                 if (formData.address) {
                     delete formData.address;
                 }
@@ -1579,12 +1377,10 @@
         }
 
         function isValidPhoneNumber(digits) {
-            // Check 1: Must be exactly 10 digits
             if (digits.length !== 10) {
                 return { valid: false, error: 'Phone number must be 10 digits.' };
             }
 
-            // Check 2: Cannot start with 1
             if (digits.charAt(0) === '1') {
                 return { valid: false, error: "Phone number shouldn't start with a 1." };
             }
@@ -1593,34 +1389,28 @@
             const exchange = digits.substring(3, 6);
             const lineNumber = digits.substring(6, 10);
 
-            // Check 3: Area code validation - repeating digits (000, 111, 222, etc)
             if (/^(\d)\1{2}$/.test(areaCode)) {
                 return { valid: false, error: 'Invalid area code.' };
             }
 
-            // Check 4: Area code validation - 555
             if (areaCode === '555') {
                 return { valid: false, error: 'Area code 555 is not valid.' };
             }
 
-            // Check 5: Area code validation - toll-free numbers
             const tollFreeAreaCodes = ['800', '888', '877', '866', '855', '844', '833'];
             if (tollFreeAreaCodes.includes(areaCode)) {
                 return { valid: false, error: 'Toll-free numbers are not accepted.' };
             }
 
-            // Check 6: Exchange code validation - special services
             const specialExchanges = ['911', '411', '611'];
             if (specialExchanges.includes(exchange)) {
                 return { valid: false, error: 'Invalid exchange code.' };
             }
 
-            // Check 7: Exchange code validation - cannot start with 0 or 1
             if (exchange.charAt(0) === '0' || exchange.charAt(0) === '1') {
                 return { valid: false, error: 'Invalid exchange code.' };
             }
 
-            // Check 8: Sequential digits (ascending)
             if (digits === '1234567890' || digits === '0123456789') {
                 return { valid: false, error: 'Sequential numbers are not valid.' };
             }
@@ -1630,7 +1420,6 @@
                 const digit3 = parseInt(digits.charAt(i + 2));
                 
                 if (digit2 === digit1 + 1 && digit3 === digit2 + 1) {
-                    // Allow one sequence of 3, but check if entire number is sequential
                     let sequentialCount = 3;
                     for (let j = i + 3; j < digits.length; j++) {
                         if (parseInt(digits.charAt(j)) === parseInt(digits.charAt(j - 1)) + 1) {
@@ -1645,27 +1434,22 @@
                 }
             }
 
-            // Check 9: All same digits (555-555-5555, etc)
             if (/^(\d)\1{9}$/.test(digits)) {
                 return { valid: false, error: 'All digits cannot be the same.' };
             }
 
-            // Check 10: Repeating patterns (123-123-1234, 456-456-4567)
             if (areaCode === exchange && areaCode === lineNumber.substring(0, 3)) {
                 return { valid: false, error: 'Repeating patterns are not valid.' };
             }
 
-            // Check 11: Known fake/test numbers (555-0100 through 555-0199)
             if (exchange === '555' && lineNumber.startsWith('01')) {
                 return { valid: false, error: 'Test numbers are not valid.' };
             }
 
-            // Check 12: Wildcard/placeholder detection - multiple zeros in a row
             if (digits.includes('000') || digits.includes('0000')) {
                 return { valid: false, error: 'Invalid phone number format.' };
             }
 
-            // Check 13: 999-9999 patterns
             if (lineNumber === '9999' || exchange === '999') {
                 return { valid: false, error: 'Invalid phone number format.' };
             }
@@ -1712,7 +1496,6 @@
                 }
             }
 
-            // Validate phone number with all checks
             const validation = isValidPhoneNumber(p1.digits);
             
             if (p1.digits.length > 0 && !validation.valid) {
@@ -1730,15 +1513,13 @@
 
             const shouldShowEmail = p1.digits.length === 10 && validation.valid;
             emailWrap.style.display = shouldShowEmail ? '' : 'none';
-            if (emailInput) emailInput.required = true; // Email is required
+            if (emailInput) emailInput.required = true;
 
-            // Validate email (required)
             let emailValid = true;
             if (emailInput) {
                 const emailValidation = isValidEmail(emailInput.value);
                 const emailTouched = emailInput.dataset.touched === 'true';
                 
-                // Create or update email error display
                 let emailError = document.getElementById('emailError');
                 if (!emailError && shouldShowEmail) {
                     emailError = document.createElement('div');
@@ -1753,7 +1534,6 @@
                 
                 if (!emailValidation.valid) {
                     emailInput.setCustomValidity(emailValidation.error);
-                    // Only show error if field has been touched
                     if (emailTouched) {
                         emailInput.classList.add('error');
                         if (emailError) {
@@ -1775,7 +1555,6 @@
             const phoneValid = p1.digits.length === 10 && validation.valid;
             const buttonShouldEnable = phoneValid && emailValid;
             
-            // Update formData and log when phone/email are valid
             if (phoneValid) {
                 formData.phone = p1.digits;
                 if (emailValid && emailInput) {
@@ -1798,7 +1577,6 @@
             }
             
             if (emailInput) {
-                // Mark email as touched when user interacts with it
                 emailInput.addEventListener('input', function() {
                     emailInput.dataset.touched = 'true';
                     validatePhones();
@@ -1823,7 +1601,6 @@
         }
         
         function parseTimeString(timeStr) {
-            // Parse time strings like "8:00 AM", "9:00 AM", "8:00 PM"
             const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
             if (!match) return null;
             
@@ -1859,19 +1636,6 @@
                    date.getFullYear() === today.getFullYear();
         }
         
-        function convertDayNameToNumber(dayName) {
-            const dayMap = {
-                'Sunday': 0,
-                'Monday': 1,
-                'Tuesday': 2,
-                'Wednesday': 3,
-                'Thursday': 4,
-                'Friday': 5,
-                'Saturday': 6
-            };
-            return dayMap[dayName] !== undefined ? dayMap[dayName] : null;
-        }
-        
         function isDayOfWeekAvailable(date) {
             return clientAvailableDays.includes(date.getDay());
         }
@@ -1889,19 +1653,12 @@
         }
         
         function isHoliday(date) {
-            const month = date.getMonth(); // 0-11 (Jan = 0, Dec = 11)
+            const month = date.getMonth();
             const day = date.getDate();
             
-            // Christmas Eve (December 24)
             if (month === 11 && day === 24) return true;
-            
-            // Christmas (December 25)
             if (month === 11 && day === 25) return true;
-            
-            // New Year's Eve (December 31)
             if (month === 11 && day === 31) return true;
-            
-            // New Year's Day (January 1)
             if (month === 0 && day === 1) return true;
             
             return false;
@@ -1913,11 +1670,6 @@
             const slots = [];
             const now = getCurrentDateInTimezone();
             
-            // Get already booked times for this date
-            const bookedTimes = await getBookedAppointments(date);
-            console.log('Booked times for date:', bookedTimes);
-            
-            // Use client's Availability field to generate time slots
             clientAvailability.forEach(timeStr => {
                 const timeParts = parseTimeString(timeStr);
                 if (!timeParts) return;
@@ -1927,44 +1679,25 @@
                 
                 const hoursFromNow = (slotTime - now) / (1000 * 60 * 60);
                 
-                // Only show times that meet minimum advance requirement
                 if (hoursFromNow >= CALENDAR_CONFIG.minHoursInAdvance) {
                     const hours = slotTime.getHours();
                     const minutes = slotTime.getMinutes();
                     const ampm = hours >= 12 ? 'PM' : 'AM';
                     const displayHours12 = hours % 12 || 12;
                     const displayMinutes = minutes.toString().padStart(2, '0');
-                    // Display format for calendar (can be single digit hour)
                     const displayTime = `${displayHours12}:${displayMinutes} ${ampm}`;
-                    // Format for Appt field (HH:mm with leading zero)
                     const apptTimeFormat = `${displayHours12.toString().padStart(2, '0')}:${displayMinutes} ${ampm}`;
                     
-                    // Check if this time is already booked
-                    // Normalize times for comparison (handle both "9:00 AM" and "09:00 AM" formats)
-                    const normalizeTime = (timeStr) => {
-                        // Remove leading zero from hour if present, e.g., "09:00 AM" -> "9:00 AM"
-                        return timeStr.trim().replace(/^0(\d):/, '$1:');
-                    };
-                    
-                    const normalizedDisplayTime = normalizeTime(displayTime);
-                    const isBooked = bookedTimes.some(booked => {
-                        const normalizedBooked = normalizeTime(booked);
-                        return normalizedBooked === normalizedDisplayTime;
+                    slots.push({
+                        time: slotTime,
+                        display: displayTime,
+                        apptFormat: apptTimeFormat,
+                        isoString: slotTime.toISOString(),
+                        originalTime: timeStr
                     });
-                    
-                    if (!isBooked) {
-                        slots.push({
-                            time: slotTime,
-                            display: displayTime,
-                            apptFormat: apptTimeFormat, // Store formatted time for Appt field
-                            isoString: slotTime.toISOString(),
-                            originalTime: timeStr
-                        });
-                    }
                 }
             });
             
-            // Sort slots by time
             slots.sort((a, b) => a.time - b.time);
             
             return slots;
@@ -1980,54 +1713,6 @@
                     timeZone: clientTimezone
                 })
             };
-        }
-        
-        function formatAppointmentDate(date, timeDisplay) {
-            // Format as MM/DD/YYYY at HH:mm AM/PM
-            const month = (date.getMonth() + 1).toString().padStart(2, '0');
-            const day = date.getDate().toString().padStart(2, '0');
-            const year = date.getFullYear();
-            
-            return `${month}/${day}/${year} at ${timeDisplay}`;
-        }
-        
-        async function getBookedAppointments(date) {
-            try {
-                // Format the date as MM/DD/YYYY to match appointment format
-                const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                const day = date.getDate().toString().padStart(2, '0');
-                const year = date.getFullYear();
-                const datePrefix = `${month}/${day}/${year} at `;
-                
-                // Fetch all leads with appointments on this date
-                // We'll filter by checking if Appt field starts with our date prefix
-                const leadsUrl = `${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}?filterByFormula=SEARCH("${datePrefix}", {Appt})`;
-                const leadsData = await fetchAirtableData(leadsUrl);
-                
-                if (!leadsData.records || leadsData.records.length === 0) {
-                    return [];
-                }
-                
-                // Extract the times that are already booked
-                const bookedTimes = [];
-                leadsData.records.forEach(lead => {
-                    const appt = lead.fields['Appt'];
-                    if (appt && appt.startsWith(datePrefix)) {
-                        // Extract the time part (everything after "at ")
-                        const timePart = appt.substring(datePrefix.length).trim();
-                        if (timePart) {
-                            bookedTimes.push(timePart);
-                        }
-                    }
-                });
-                
-                console.log('Booked times found:', bookedTimes);
-                return bookedTimes;
-            } catch (error) {
-                console.error('Error fetching booked appointments:', error);
-                // Return empty array on error so we don't block availability
-                return [];
-            }
         }
         
         function renderCalendar() {
@@ -2064,7 +1749,6 @@
                 const date = new Date(startDate);
                 date.setDate(startDate.getDate() + i);
                 
-                // Check if day is available (time slot availability checked when day is selected)
                 const isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date);
                 
                 const dayCell = document.createElement('div');
@@ -2161,10 +1845,20 @@
             selectedDate = date;
             selectedTime = null;
             
+            // Determine which calendar is active
+            const calendarStep = document.getElementById('calendarStep');
+            const calendarStepBelow = document.getElementById('calendarStepBelow');
+            const isBottomCalendar = calendarStepBelow && 
+                (calendarStepBelow.classList.contains('active') || 
+                 calendarStepBelow.style.display === 'block' ||
+                 window.getComputedStyle(calendarStepBelow).display !== 'none');
+            
+            // Remove selected class from all days in both calendars
             document.querySelectorAll('.calendar-day').forEach(day => {
                 day.classList.remove('selected');
             });
             
+            // Add selected class to the clicked day in both calendars
             document.querySelectorAll('.calendar-day').forEach(day => {
                 const dayDate = new Date(day.dataset.date);
                 if (dayDate.getDate() === date.getDate() &&
@@ -2174,17 +1868,33 @@
                 }
             });
             
-            document.getElementById('selectedDayInfo').innerHTML = `
-                <h3>Selected Date</h3>
-                <p>${fullDate}</p>
-            `;
+            // Update the appropriate selected day info
+            const selectedDayInfo = document.getElementById(isBottomCalendar ? 'selectedDayInfoBelow' : 'selectedDayInfo');
+            if (selectedDayInfo) {
+                selectedDayInfo.innerHTML = `
+                    <h3>Selected Date</h3>
+                    <p>${fullDate}</p>
+                `;
+            }
             
-            renderTimes();
-            document.getElementById('timeSection').style.display = 'block';
+            // Show time section for the appropriate calendar
+            const timeSection = document.getElementById(isBottomCalendar ? 'timeSectionBelow' : 'timeSection');
+            if (timeSection) {
+                timeSection.style.display = 'block';
+            }
+            
+            // Render times for the appropriate calendar
+            renderTimes(isBottomCalendar);
         }
         
-        async function renderTimes() {
-            const timeGrid = document.getElementById('timeGrid');
+        async function renderTimes(isBottomCalendar = false) {
+            const timeGridId = isBottomCalendar ? 'timeGridBelow' : 'timeGrid';
+            const timeGrid = document.getElementById(timeGridId);
+            
+            if (!timeGrid) {
+                return;
+            }
+            
             timeGrid.innerHTML = '<div style="text-align: center; padding: 20px;">Loading available times...</div>';
             
             const slots = await getAvailableTimesForDate(selectedDate);
@@ -2213,81 +1923,8 @@
             });
         }
         
-        async function selectCalendarTime(slot) {
+        function selectCalendarTime(slot) {
             selectedTime = slot;
-            
-            // Format appointment as MM/DD/YYYY at HH:mm AM/PM
-            // Use apptFormat if available (has leading zero), otherwise use display
-            const timeForAppt = slot.apptFormat || slot.display;
-            const appointmentText = formatAppointmentDate(selectedDate, timeForAppt);
-            
-            // Update the lead record in Airtable with the appointment
-            if (leadRecordId) {
-                try {
-                    const updateResponse = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}/${leadRecordId}`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            fields: {
-                                'Appt': appointmentText
-                            }
-                        })
-                    });
-                    
-                    if (!updateResponse.ok) {
-                        const errorText = await updateResponse.text();
-                        const error = new Error(`Failed to update appointment: ${errorText}`);
-                        throw error;
-                    }
-                    console.log('Appointment saved to Airtable:', appointmentText);
-                    
-                    // Send appointment notifications to contacts
-                    const clientToNotify = matchedClientData || campaignClientData;
-                    console.log('Appointment booking - clientToNotify:', clientToNotify);
-                    if (clientToNotify && clientToNotify.id) {
-                        console.log('Sending appointment notifications for client:', clientToNotify.id);
-                        // Get lead data for notification
-                        const leadFullName = formData.fullName || `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || 'Unknown';
-                        
-                        // Use stored summary HTML if available, otherwise build it
-                        let fullSummaryHTML = formData.fullSummaryHTML;
-                        if (!fullSummaryHTML) {
-                            const emailLineHTML = formData.email ? `Email: ${formData.email}<BR>` : '';
-                            fullSummaryHTML = `Floor Coating Lead Information:<BR><BR>Name: ${leadFullName}<BR>Phone: ${formatPhoneForDisplay(formData.phone || '')}<BR>${emailLineHTML}Homeowner: ${formData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Floor Type: ${getFloorTypeDisplay(formData.floorType)}<BR>Completion Timeline: ${getCompletionTimelineDisplay(formData.completionTimeline)}<BR>Main Goal: ${getMainGoalDisplay(formData.mainGoal)}<BR><BR>Address:<BR>${formData.address?.street || ''}<BR>${formData.address?.city || ''}, ${formData.address?.state || ''} ${formData.address?.zip || ''}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
-                                weekday: 'long', 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric',
-                                hour: 'numeric',
-                                minute: '2-digit',
-                                hour12: true,
-                                timeZone: 'America/New_York'
-                            })} EST`;
-                        }
-                        
-                        // Send webhook if client is linked
-                        if (matchedClientData && matchedClientData.id && leadRecordId) {
-                            await sendLeadWebhook(
-                                leadRecordId,
-                                metaCampaignID,
-                                matchedClientData.id,
-                                appointmentText
-                            );
-                        }
-                        
-                        console.log('Appointment notifications sent');
-                    } else {
-                        console.log('No client found for appointment notifications');
-                    }
-                } catch (error) {
-                    console.error('Error updating appointment in Airtable:', error);
-                }
-            } else {
-                console.warn('No lead record ID available to update with appointment');
-            }
             
             // Show confirmation screen with appointment-specific message
             const confirmationMessage = document.getElementById('confirmationMessage');
@@ -2297,72 +1934,13 @@
             document.getElementById('calendarStep').classList.remove('active');
             document.getElementById('confirmationStep').classList.add('active');
         }
-        
+
         function showCalendarScreen() {
             console.log('showCalendarScreen called');
             const step7 = document.getElementById('step7');
             const calendarStep = document.getElementById('calendarStep');
             const progressBar = document.getElementById('progressBarContainer');
             const mainHeading = document.getElementById('mainHeading');
-            
-            // Get client timezone, availability, and days
-            const activeClient = matchedClientData || campaignClientData;
-            if (activeClient && activeClient.fields) {
-                // Set timezone from client data
-                if (activeClient.fields['Timezone']) {
-                    clientTimezone = activeClient.fields['Timezone'];
-                    console.log('Using client timezone:', clientTimezone);
-                }
-                
-                // Set availability from client data
-                if (activeClient.fields['Availability']) {
-                    clientAvailability = Array.isArray(activeClient.fields['Availability']) 
-                        ? activeClient.fields['Availability'] 
-                        : [activeClient.fields['Availability']];
-                    console.log('Using client availability:', clientAvailability);
-                } else {
-                    console.warn('No Availability field found in client data');
-                    clientAvailability = [];
-                }
-                
-                // Set available days from client data
-                if (activeClient.fields['Days']) {
-                    const daysArray = Array.isArray(activeClient.fields['Days']) 
-                        ? activeClient.fields['Days'] 
-                        : [activeClient.fields['Days']];
-                    
-                    // Convert day names to day numbers
-                    clientAvailableDays = daysArray
-                        .map(dayName => convertDayNameToNumber(dayName))
-                        .filter(dayNum => dayNum !== null);
-                    
-                    console.log('Using client available days:', daysArray, '->', clientAvailableDays);
-                    
-                    // If no valid days found, use default
-                    if (clientAvailableDays.length === 0) {
-                        console.warn('No valid days found, using default (Monday-Friday)');
-                        clientAvailableDays = [1, 2, 3, 4, 5];
-                    }
-                } else {
-                    console.warn('No Days field found in client data, using default (Monday-Friday)');
-                    clientAvailableDays = [1, 2, 3, 4, 5];
-                }
-                
-                // Set days out from client data
-                if (activeClient.fields['Days Out'] !== undefined && activeClient.fields['Days Out'] !== null) {
-                    const daysOutValue = Number(activeClient.fields['Days Out']);
-                    if (!isNaN(daysOutValue) && daysOutValue > 0) {
-                        clientDaysOut = daysOutValue;
-                        console.log('Using client days out:', clientDaysOut);
-                    } else {
-                        console.warn('Invalid Days Out value, using default (14)');
-                        clientDaysOut = 14;
-                    }
-                } else {
-                    console.warn('No Days Out field found in client data, using default (14)');
-                    clientDaysOut = 14;
-                }
-            }
             
             if (step7) step7.classList.remove('active');
             if (calendarStep) {
@@ -2373,15 +1951,460 @@
             }
             if (progressBar) progressBar.style.display = 'none';
             if (mainHeading) mainHeading.style.display = 'none';
-            const backBtn = document.getElementById('calendarBackToEndings');
-            if (backBtn) backBtn.style.display = SAMPLE_MODE ? 'inline-flex' : 'none';
             
             initializeCalendar();
+            
+            // Show reviews modal if reviews exist
+            setTimeout(() => {
+                showReviewsModal();
+            }, 500); // Small delay to let the calendar screen appear first
+        }
+
+        // ============================================
+        // ENDING SCREEN FUNCTIONS
+        // ============================================
+
+        function showEndingSelection() {
+            // Hide all ending screens
+            document.getElementById('contactStep').classList.remove('active');
+            document.getElementById('calendarStep').classList.remove('active');
+            document.getElementById('confirmationStep').classList.remove('active');
+            
+            // Show ending selection screen
+            document.getElementById('step7').classList.remove('active');
+            document.getElementById('endingSelectionStep').classList.add('active');
+            document.getElementById('progressBarContainer').style.display = 'none';
+            document.getElementById('mainHeading').style.display = 'none';
+        }
+
+        function showEndingScreen(type) {
+            // Hide ending selection
+            document.getElementById('endingSelectionStep').classList.remove('active');
+            
+            // Show appropriate screen based on type
+            if (type === 'calendar') {
+                showCalendarScreen();
+            } else if (type === 'phone' || type === 'text' || type === 'phone/text') {
+                showContactScreen(type);
+            } else if (type === 'confirmation') {
+                showConfirmationScreen();
+            }
+        }
+
+        function showContactScreen(submitScreenType) {
+            const firstName = document.getElementById('firstName')?.value.trim() || '';
+            
+            const phoneForDisplay = '(123) 456-7890';
+            const textForDisplay = '(123) 456-7890';
+            
+            // Normalize the submit screen type to handle case variations
+            const normalizedType = submitScreenType ? submitScreenType.toLowerCase() : '';
+            
+            // Build the SMS body with lead's name
+            const smsBody = encodeURIComponent(
+                `Hey, this is ${firstName}! I just saw your video on social media and would like to schedule an appointment to get my free, no obligation quote. Please send me some days/times that you're available!`
+            );
+            
+            // Update the contact buttons and phone display
+            const callButton = document.getElementById('callButtonLink');
+            const textButton = document.getElementById('textButtonLink');
+            const phoneDisplay = document.getElementById('phoneNumberDisplay');
+            
+            // Show/hide buttons based on submit screen type (case-insensitive)
+            if (normalizedType === 'phone' || normalizedType === 'phone/text') {
+                if (callButton) {
+                    callButton.href = `tel:1234567890`;
+                    callButton.style.display = 'inline-flex';
+                }
+            } else {
+                if (callButton) callButton.style.display = 'none';
+            }
+            
+            if (normalizedType === 'text' || normalizedType === 'phone/text') {
+                if (textButton) {
+                    textButton.href = `sms:1234567890?&body=${smsBody}`;
+                    textButton.style.display = 'inline-flex';
+                }
+            } else {
+                if (textButton) textButton.style.display = 'none';
+            }
+            
+            // Display phone number
+            if (phoneDisplay) {
+                if (normalizedType === 'phone' && phoneForDisplay) {
+                    phoneDisplay.textContent = phoneForDisplay;
+                } else if (normalizedType === 'text' && textForDisplay) {
+                    phoneDisplay.textContent = textForDisplay;
+                } else if (normalizedType === 'phone/text' && phoneForDisplay) {
+                    phoneDisplay.textContent = phoneForDisplay;
+                } else {
+                    phoneDisplay.textContent = '';
+                }
+            }
+            
+            // Show the contact screen
+            document.getElementById('step7').classList.remove('active');
+            document.getElementById('contactStep').classList.add('active');
+            document.getElementById('progressBarContainer').style.display = 'none';
+            document.getElementById('mainHeading').style.display = 'none';
+            
+            // Show reviews modal if reviews exist
+            setTimeout(() => {
+                showReviewsModal();
+            }, 500); // Small delay to let the contact screen appear first
+        }
+
+        function showConfirmationScreen() {
+            const confirmationMessage = document.getElementById('confirmationMessage');
+            if (confirmationMessage) {
+                confirmationMessage.textContent = "We'll give you a call soon to schedule your free estimate.";
+            }
+            document.getElementById('step7').classList.remove('active');
+            document.getElementById('confirmationStep').classList.add('active');
+            document.getElementById('progressBarContainer').style.display = 'none';
+            document.getElementById('mainHeading').style.display = 'none';
+            
+            // Show reviews modal if reviews exist
+            setTimeout(() => {
+                showReviewsModal();
+            }, 500); // Small delay to let the confirmation screen appear first
+        }
+
+        // Reviews Section Functions
+        let reviews = [];
+
+        function showReviewsModal() {
+            // Hardcoded reviews for sample page
+            reviews = [
+                {
+                    text: 'REVIEW 1',
+                    name: 'NAME 1',
+                    productUrl: 'https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/images/Bedrock%20Bath%20Pros%20-%20IN1769364234598.png'
+                },
+                {
+                    text: 'REVIEW 2',
+                    name: 'NAME 2',
+                    productUrl: 'https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/images/Bedrock%20Bath%20Pros%20-%20IN1769364250346.png'
+                },
+                {
+                    text: 'REVIEW 3',
+                    name: 'NAME 3',
+                    productUrl: 'https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/images/Bedrock%20Bath%20Pros%20-%20IN1769366608939.png'
+                }
+            ];
+
+            // Only show reviews section if there are reviews
+            if (reviews.length > 0) {
+                buildReviewBlocks();
+                document.getElementById('reviewsSection').classList.add('active');
+                showDuplicateCallToAction();
+                
+                // Update background height after reviews are displayed
+                setTimeout(() => {
+                    if (typeof updateBackgroundHeight === 'function') {
+                        updateBackgroundHeight();
+                    }
+                }, 300);
+            } else {
+                // Hide duplicate call to action section if no reviews
+                const ctaSection = document.getElementById('ctaSection');
+                if (ctaSection) {
+                    ctaSection.classList.remove('active');
+                }
+            }
+        }
+
+        function buildReviewBlocks() {
+            const container = document.getElementById('reviewsContainer');
+            
+            // Clear existing content
+            container.innerHTML = '';
+
+            // Build review blocks
+            reviews.forEach((review) => {
+                const reviewBlock = document.createElement('div');
+                reviewBlock.className = 'review-block';
+                
+                let imageHtml = '';
+                if (review.productUrl && review.productUrl.trim()) {
+                    imageHtml = `<img src="${escapeHtml(review.productUrl)}" alt="Product image" class="review-product-image" onerror="this.style.display='none'">`;
+                }
+                
+                reviewBlock.innerHTML = `
+                    <div class="review-text">${escapeHtml(review.text)}</div>
+                    <div class="review-stars">
+                        <span class="review-star">★</span>
+                        <span class="review-star">★</span>
+                        <span class="review-star">★</span>
+                        <span class="review-star">★</span>
+                        <span class="review-star">★</span>
+                    </div>
+                    <div class="review-name">${escapeHtml(review.name)}</div>
+                    ${imageHtml}
+                `;
+                container.appendChild(reviewBlock);
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showDuplicateCallToAction() {
+            const ctaSection = document.getElementById('ctaSection');
+            const contactStepBelow = document.getElementById('contactStepBelow');
+            const calendarStepBelow = document.getElementById('calendarStepBelow');
+            const confirmationStepBelow = document.getElementById('confirmationStepBelow');
+            
+            // Hide all initially
+            if (contactStepBelow) contactStepBelow.style.display = 'none';
+            if (calendarStepBelow) calendarStepBelow.style.display = 'none';
+            if (confirmationStepBelow) confirmationStepBelow.style.display = 'none';
+            
+            // Duplicate whatever is shown at the top - show only that screen below reviews
+            if (currentSubmitScreenType === 'calendar') {
+                // Show only calendar below (no thank you screen)
+                if (calendarStepBelow) {
+                    calendarStepBelow.style.display = 'block';
+                    ctaSection.classList.add('active');
+                    // Initialize calendar below (same as original)
+                    initializeCalendarBelow();
+                }
+            } else if (currentSubmitScreenType === 'Phone' || currentSubmitScreenType === 'Text' || currentSubmitScreenType === 'Phone/Text') {
+                // Show only phone/text screen below (no thank you screen)
+                if (contactStepBelow) {
+                    contactStepBelow.style.display = 'block';
+                    ctaSection.classList.add('active');
+                    // Set up contact buttons below
+                    setupContactButtonsBelow(currentSubmitScreenType);
+                }
+            } else {
+                // For 'None' option, show only the thank you/confirmation screen below
+                if (confirmationStepBelow) {
+                    const confirmationMessageBelow = document.getElementById('confirmationMessageBelow');
+                    if (confirmationMessageBelow) {
+                        confirmationMessageBelow.textContent = "We'll give you a call soon to schedule your free estimate.";
+                    }
+                    confirmationStepBelow.style.display = 'block';
+                    ctaSection.classList.add('active');
+                }
+            }
+        }
+
+        function setupContactButtonsBelow(submitScreenType) {
+            // Get lead's name
+            const firstName = document.getElementById('firstName')?.value.trim() || '';
+            
+            // Determine which client data to use
+            const activeClient = matchedClientData || campaignClientData;
+            if (!activeClient) return;
+            
+            const phoneField = activeClient.fields['Phone'];
+            const textField = activeClient.fields['Text'];
+            
+            // Format phone numbers
+            const phoneForDisplay = phoneField ? formatClientPhoneForDisplay(phoneField) : '';
+            const textForDisplay = textField ? formatClientPhoneForDisplay(textField) : '';
+            
+            // Build the SMS body
+            const smsBody = encodeURIComponent(
+                `Hey, this is ${firstName}! I just saw your video on social media and would like to schedule an appointment to get my free, no obligation quote. Please send me some days/times that you're available!`
+            );
+            
+            // Update the contact buttons below
+            const callButtonBelow = document.getElementById('callButtonLinkBelow');
+            const textButtonBelow = document.getElementById('textButtonLinkBelow');
+            const phoneDisplayBelow = document.getElementById('phoneNumberDisplayBelow');
+            
+            // Show/hide buttons based on submit screen type
+            if (submitScreenType === 'Phone' || submitScreenType === 'Phone/Text') {
+                if (callButtonBelow && phoneField) {
+                    callButtonBelow.href = `tel:${phoneField}`;
+                    callButtonBelow.style.display = 'inline-flex';
+                }
+            } else {
+                if (callButtonBelow) callButtonBelow.style.display = 'none';
+            }
+            
+            if (submitScreenType === 'Text' || submitScreenType === 'Phone/Text') {
+                if (textButtonBelow && textField) {
+                    textButtonBelow.href = `sms:${textField}?&body=${smsBody}`;
+                    textButtonBelow.style.display = 'inline-flex';
+                }
+            } else {
+                if (textButtonBelow) textButtonBelow.style.display = 'none';
+            }
+            
+            // Display phone number
+            if (phoneDisplayBelow) {
+                if (submitScreenType === 'Phone' && phoneForDisplay) {
+                    phoneDisplayBelow.textContent = phoneForDisplay;
+                } else if (submitScreenType === 'Text' && textForDisplay) {
+                    phoneDisplayBelow.textContent = textForDisplay;
+                } else if (submitScreenType === 'Phone/Text' && phoneForDisplay) {
+                    phoneDisplayBelow.textContent = phoneForDisplay;
+                } else {
+                    phoneDisplayBelow.textContent = '';
+                }
+            }
+        }
+
+        function changeCalendarMonthBelow(direction) {
+            currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
+            const firstAvailable = renderCalendarBelow();
+            
+            if (selectedDate) {
+                const now = getCurrentDateInTimezone();
+                now.setHours(0, 0, 0, 0);
+                const startDate = new Date(currentWeekStart);
+                const startDayOfWeek = startDate.getDay();
+                startDate.setDate(startDate.getDate() - startDayOfWeek);
+                const endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + 20);
+                
+                if (selectedDate < startDate || selectedDate > endDate) {
+                    if (firstAvailable.date && firstAvailable.formatted) {
+                        selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+                    }
+                } else {
+                    const formatted = formatDate(selectedDate);
+                    selectCalendarDay(selectedDate, formatted.fullDate);
+                }
+            } else if (firstAvailable.date && firstAvailable.formatted) {
+                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+            }
+        }
+
+        function renderCalendarBelow() {
+            const calendarGrid = document.getElementById('calendarGridBelow');
+            const monthDisplay = document.getElementById('monthDisplayBelow');
+            if (!calendarGrid || !monthDisplay) return { date: null, formatted: null };
+            
+            calendarGrid.innerHTML = '';
+            
+            const now = getCurrentDateInTimezone();
+            now.setHours(0, 0, 0, 0);
+            
+            const startDate = new Date(currentWeekStart);
+            const startDayOfWeek = startDate.getDay();
+            startDate.setDate(startDate.getDate() - startDayOfWeek);
+            
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 20);
+            
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            if (startDate.getMonth() === endDate.getMonth()) {
+                monthDisplay.textContent = `${months[startDate.getMonth()]} ${startDate.getFullYear()}`;
+            } else {
+                monthDisplay.textContent = `${months[startDate.getMonth()]} - ${months[endDate.getMonth()]} ${endDate.getFullYear()}`;
+            }
+            
+            let lastMonth = -1;
+            let firstAvailableDate = null;
+            let firstAvailableFormatted = null;
+            
+            for (let i = 0; i < 21; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+                
+                // Check if day is available (time slot availability checked when day is selected)
+                const isAvailable = isDayOfWeekAvailable(date) && isWithinBookingWindow(date) && !isHoliday(date);
+                
+                const dayCell = document.createElement('div');
+                dayCell.className = 'calendar-day';
+                dayCell.dataset.date = date.toISOString();
+                
+                if (isToday(date)) {
+                    dayCell.classList.add('today');
+                }
+                
+                if (!isAvailable) {
+                    dayCell.classList.add('disabled');
+                }
+                
+                if (isAvailable && !firstAvailableDate) {
+                    firstAvailableDate = new Date(date);
+                    firstAvailableFormatted = formatDate(date);
+                }
+                
+                if (selectedDate && 
+                    date.getDate() === selectedDate.getDate() &&
+                    date.getMonth() === selectedDate.getMonth() &&
+                    date.getFullYear() === selectedDate.getFullYear()) {
+                    dayCell.classList.add('selected');
+                }
+                
+                if (date.getMonth() !== lastMonth && date.getDate() === 1) {
+                    const monthLabel = document.createElement('div');
+                    monthLabel.className = 'month-label';
+                    monthLabel.textContent = monthsShort[date.getMonth()];
+                    dayCell.appendChild(monthLabel);
+                    lastMonth = date.getMonth();
+                }
+                
+                const dayNumber = document.createElement('div');
+                dayNumber.textContent = date.getDate();
+                dayCell.appendChild(dayNumber);
+                
+                if (isAvailable) {
+                    const formatted = formatDate(date);
+                    dayCell.onclick = () => selectCalendarDay(date, formatted.fullDate);
+                }
+                
+                calendarGrid.appendChild(dayCell);
+            }
+            
+            updateNavigationButtonsBelow();
+            
+            return { date: firstAvailableDate, formatted: firstAvailableFormatted };
         }
         
-        // ============================================
-        // END CALENDAR FUNCTIONS
-        // ============================================
+        function updateNavigationButtonsBelow() {
+            const now = getCurrentDateInTimezone();
+            now.setHours(0, 0, 0, 0);
+            
+            const prevButton = document.getElementById('prevMonthBelow');
+            const nextButton = document.getElementById('nextMonthBelow');
+            
+            if (prevButton) {
+                if (currentWeekStart >= now) {
+                    prevButton.disabled = true;
+                } else {
+                    prevButton.disabled = false;
+                }
+            }
+            
+            if (nextButton) {
+                const maxDate = new Date(now);
+                maxDate.setDate(now.getDate() + clientDaysOut);
+                const endDate = new Date(currentWeekStart);
+                endDate.setDate(endDate.getDate() + 20);
+                
+                if (endDate >= maxDate) {
+                    nextButton.disabled = true;
+                } else {
+                    nextButton.disabled = false;
+                }
+            }
+        }
+        
+        function initializeCalendarBelow() {
+            const now = getCurrentDateInTimezone();
+            now.setHours(0, 0, 0, 0);
+            currentWeekStart = new Date(now);
+            
+            const firstAvailable = renderCalendarBelow();
+            
+            if (firstAvailable.date && firstAvailable.formatted) {
+                selectCalendarDay(firstAvailable.date, firstAvailable.formatted.fullDate);
+            }
+        }
 
         function formatClientPhoneForDisplay(phoneNumber) {
             // Remove all non-digit characters
@@ -2400,160 +2423,7 @@
             return phoneNumber;
         }
 
-        function showEndingSelection() {
-            if (!SAMPLE_MODE) {
-                showConfirmationScreen();
-                return;
-            }
-
-            document.getElementById('contactStep').classList.remove('active');
-            document.getElementById('calendarStep').classList.remove('active');
-            document.getElementById('confirmationStep').classList.remove('active');
-            document.getElementById('step7').classList.remove('active');
-            document.getElementById('endingSelectionStep').classList.add('active');
-            document.getElementById('progressBarContainer').style.display = 'none';
-            document.getElementById('mainHeading').style.display = 'none';
-        }
-
-        function showEndingScreen(type) {
-            document.getElementById('endingSelectionStep').classList.remove('active');
-
-            if (type === 'calendar') {
-                showCalendarScreen();
-            } else if (type === 'phone' || type === 'text' || type === 'phone/text') {
-                const normalized = type === 'phone/text' ? 'Phone/Text' : (type === 'phone' ? 'Phone' : 'Text');
-                showContactScreen(normalized);
-            } else {
-                showConfirmationScreen();
-            }
-        }
-
-        function showContactScreen(submitScreenType) {
-            // Get lead's name
-            const firstName = document.getElementById('firstName')?.value.trim() || '';
-            
-            // Determine which client data to use (matched client or campaign client)
-            const activeClient = matchedClientData || campaignClientData;
-            if (!activeClient && !SAMPLE_MODE) {
-                showConfirmationScreen();
-                return;
-            }
-            
-            const phoneField = activeClient?.fields?.['Phone'] || '1234567890';
-            const textField = activeClient?.fields?.['Text'] || '1234567890';
-            
-            // Format phone numbers
-            const phoneForDisplay = phoneField ? formatClientPhoneForDisplay(phoneField) : '';
-            const textForDisplay = textField ? formatClientPhoneForDisplay(textField) : '';
-            
-            // Build the SMS body with lead's name
-            const smsBody = encodeURIComponent(
-                `Hey, this is ${firstName}! I just saw your video on social media and would like to schedule an appointment to get my free, no obligation quote. Please send me some days/times that you're available!`
-            );
-            
-            // Update the contact buttons and phone display
-            const callButton = document.getElementById('callButtonLink');
-            const textButton = document.getElementById('textButtonLink');
-            const phoneDisplay = document.getElementById('phoneNumberDisplay');
-            
-            // Show/hide buttons based on submit screen type
-            if (submitScreenType === 'Phone' || submitScreenType === 'Phone/Text') {
-                if (callButton && phoneField) {
-                    callButton.href = `tel:${phoneField}`;
-                    callButton.style.display = 'inline-flex';
-                }
-            }
-            
-            if (submitScreenType === 'Text' || submitScreenType === 'Phone/Text') {
-                if (textButton && textField) {
-                    textButton.href = `sms:${textField}?&body=${smsBody}`;
-                    textButton.style.display = 'inline-flex';
-                }
-            }
-            
-            // Display phone number
-            if (phoneDisplay) {
-                if (submitScreenType === 'Phone' && phoneForDisplay) {
-                    phoneDisplay.textContent = phoneForDisplay;
-                } else if (submitScreenType === 'Text' && textForDisplay) {
-                    phoneDisplay.textContent = textForDisplay;
-                } else if (submitScreenType === 'Phone/Text' && phoneForDisplay) {
-                    phoneDisplay.textContent = phoneForDisplay;
-                } else {
-                    phoneDisplay.textContent = '';
-                }
-            }
-            
-            // Show the contact screen
-            document.getElementById('step7').classList.remove('active');
-            document.getElementById('contactStep').classList.add('active');
-            document.getElementById('progressBarContainer').style.display = 'none';
-            document.getElementById('mainHeading').style.display = 'none';
-            const backBtn = document.getElementById('contactBackToEndings');
-            if (backBtn) backBtn.style.display = SAMPLE_MODE ? 'inline-flex' : 'none';
-        }
-
-        function showConfirmationScreen() {
-            // Show the confirmation/thank you screen
-            // Reset to default message for non-appointment bookings
-            const confirmationMessage = document.getElementById('confirmationMessage');
-            if (confirmationMessage) {
-                confirmationMessage.textContent = "We'll give you a call soon to schedule your free estimate.";
-            }
-            document.getElementById('step7').classList.remove('active');
-            document.getElementById('confirmationStep').classList.add('active');
-            document.getElementById('progressBarContainer').style.display = 'none';
-            document.getElementById('mainHeading').style.display = 'none';
-            const backBtn = document.getElementById('confirmationBackToEndings');
-            if (backBtn) backBtn.style.display = SAMPLE_MODE ? 'inline-flex' : 'none';
-        }
-
-        function formatPhoneForDisplay(digits) {
-            if (digits && digits.length === 10) {
-                return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
-            }
-            return digits;
-        }
-
-        function getFloorTypeDisplay(value) {
-            const options = {
-                'garage': 'Garage',
-                'basement': 'Basement',
-                'patio': 'Patio',
-                'pool_deck': 'Pool Deck',
-                'driveway': 'Driveway'
-            };
-            return options[value] || value;
-        }
-
-        function getCompletionTimelineDisplay(value) {
-            const options = {
-                'asap': 'ASAP',
-                'within_2_weeks': 'Within 2 weeks',
-                'within_month': 'Within a month',
-                'within_2_months': 'Within 2 months'
-            };
-            return options[value] || value;
-        }
-
-        function getMainGoalDisplay(value) {
-            const options = {
-                'upgraded_look': 'Upgraded look',
-                'increase_value': 'Increase value',
-                'make_tougher': 'Make tougher'
-            };
-            return options[value] || value;
-        }
-
         async function submitFinalForm() {
-            // Prevent duplicate submissions
-            if (isSubmitting) {
-                console.log('Submission already in progress, ignoring duplicate click');
-                return;
-            }
-            
-            // Set submission flag and disable button immediately
-            isSubmitting = true;
             const phoneSubmitBtn = document.getElementById('phoneSubmitBtn');
             if (phoneSubmitBtn) {
                 phoneSubmitBtn.disabled = true;
@@ -2561,8 +2431,6 @@
             }
             
             try {
-                eventId = generateEventId();
-                
                 const emailInput = document.getElementById('email');
                 const emailValue = emailInput ? emailInput.value.trim() : '';
                 
@@ -2571,227 +2439,22 @@
                     phone: document.getElementById('phone_digits').value,
                     email: emailValue
                 };
-            
-            // Track Facebook event if we have client data and pixel
-            if (typeof fbq !== 'undefined' && clientData && clientData.fields['Meta Pixel']) {
-                const leadEventData = {
-                    content_category: 'home_improvement',
-                    content_name: 'floor_coating_quote',
-                    value: 1.00,
-                    currency: 'USD',
-                    homeowner_status: finalData.homeowner,
-                    floor_type: finalData.floorType,
-                    completion_timeline: finalData.completionTimeline,
-                    main_goal: finalData.mainGoal
-                };
                 
-                fbq('track', 'Lead', leadEventData, {
-                    eventID: eventId
-                });
-            }
-            
-            // Find client by zip code
-            try {
-                // Safety check: ensure address data exists
-                if (!finalData.address || !finalData.address.zip) {
-                    throw new Error('Address data is missing or incomplete. Address object: ' + JSON.stringify(finalData.address));
-                }
+                // Simulate submission delay
+                await new Promise(resolve => setTimeout(resolve, 500));
                 
-                matchedClientData = await findClientByZipCode(finalData.address.zip);
-                // Update partner name in privacy policy if client was matched
-                updatePartnerNameInPrivacyPolicy();
+                console.log('Form submitted (sample - no data saved)');
+                
+                // Show ending selection screen
+                document.getElementById('step7').classList.remove('active');
+                showEndingSelection();
                 
             } catch (error) {
-                console.error('Error finding client by zip code:', error);
-            }
-            
-            // Find ad by adATID from URL
-            try {
-                const urlParams = new URLSearchParams(window.location.search);
-                const adATID = urlParams.get('adATID');
-                if (adATID) {
-                    adRecordId = await findAdByATID(adATID);
-                }
-            } catch (error) {
-                // Non-critical, just log
-                console.log('Ad lookup failed:', error.message);
-            }
-            
-            // Build full summary
-            const emailLine = finalData.email ? `Email: ${finalData.email}\n` : '';
-            const fullSummary = `Floor Coating Lead Information:
-
-Name: ${finalData.firstName} ${finalData.lastName}
-Phone: ${formatPhoneForDisplay(finalData.phone)}
-${emailLine}Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}
-Floor Type: ${getFloorTypeDisplay(finalData.floorType)}
-Completion Timeline: ${getCompletionTimelineDisplay(finalData.completionTimeline)}
-Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}
-
-Address:
-${finalData.address.street}
-${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}
-
-Lead generated on: ${new Date().toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-    timeZone: 'America/New_York'
-})} EST`.trim();
-
-            // Format full address
-            const formattedAddress = `${finalData.address.street}, ${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}`;
-            
-            // Build HTML version of full summary
-            const emailLineHTML = finalData.email ? `Email: ${finalData.email}<BR>` : '';
-            const fullSummaryHTML = `Floor Coating Lead Information:<BR><BR>Name: ${finalData.firstName} ${finalData.lastName}<BR>Phone: ${formatPhoneForDisplay(finalData.phone)}<BR>${emailLineHTML}Homeowner: ${finalData.homeowner === 'yes' ? 'Yes' : 'No'}<BR>Floor Type: ${getFloorTypeDisplay(finalData.floorType)}<BR>Completion Timeline: ${getCompletionTimelineDisplay(finalData.completionTimeline)}<BR>Main Goal: ${getMainGoalDisplay(finalData.mainGoal)}<BR><BR>Address:<BR>${finalData.address.street}<BR>${finalData.address.city}, ${finalData.address.state} ${finalData.address.zip}<BR><BR>Lead generated on: ${new Date().toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true,
-                timeZone: 'America/New_York'
-            })} EST`;
-            
-            // Store form data for later use (e.g., appointment notifications)
-            formData.phone = finalData.phone;
-            formData.email = finalData.email || '';
-            formData.fullName = `${finalData.firstName} ${finalData.lastName}`;
-            formData.fullSummaryHTML = fullSummaryHTML;
-
-                if (SAMPLE_MODE) {
-                    console.log('Form submitted (sample mode - no data saved)');
-                    showEndingSelection();
-                    isSubmitting = false;
-                    if (phoneSubmitBtn) {
-                        phoneSubmitBtn.disabled = false;
-                        phoneSubmitBtn.textContent = 'Get My Quote';
-                    }
-                    return;
-                }
-            
-            // Prepare lead data for Airtable
-            // Safety check: ensure address data exists
-            if (!finalData.address) {
-                throw new Error('Address data is missing. Cannot submit lead without address information.');
-            }
-            
-            const leadData = {
-                phone: finalData.phone,
-                email: finalData.email || '',
-                fullSummary: fullSummary,
-                fullSummaryHTML: fullSummaryHTML,
-                fullName: `${finalData.firstName} ${finalData.lastName}`,
-                firstName: finalData.firstName,
-                lastName: finalData.lastName,
-                address: formattedAddress,
-                city: finalData.address.city || '',
-                state: finalData.address.state || '',
-                zip: finalData.address.zip || ''
-            };
-            
-            // Submit to Airtable
-            let submissionSuccessful = false;
-            try {
-                await submitLeadToAirtable(leadData);
-                submissionSuccessful = true;
-                
-                // Send webhook if client is linked
-                if (matchedClientData && matchedClientData.id && leadRecordId) {
-                    await sendLeadWebhook(
-                        leadRecordId,
-                        metaCampaignID,
-                        matchedClientData.id
-                    );
-                }
-            } catch (error) {
-                // Error webhook already sent in submitLeadToAirtable
-                // Show generic confirmation screen instead of calendar/phone options
-                console.error('Lead submission failed, showing generic confirmation:', error);
+                console.error('Error in form submission:', error);
                 showConfirmationScreen();
-                // Reset submission flag and button on error
-                isSubmitting = false;
                 if (phoneSubmitBtn) {
                     phoneSubmitBtn.disabled = false;
-                    phoneSubmitBtn.textContent = 'Get My Quote';
-                }
-                return; // Exit early - don't show calendar/phone options
-            }
-            
-            // Only proceed to show submit screen if submission was successful
-            if (!submissionSuccessful) {
-                showConfirmationScreen();
-                return;
-            }
-            
-            // Determine which submit screen to show
-            // Use matched client first, but fall back to campaign client if matched client doesn't have Submit Screen
-            let activeClient = matchedClientData || campaignClientData;
-            let submitScreenType = 'None'; // Default
-            
-            console.log('Matched client:', matchedClientData);
-            console.log('Campaign client:', campaignClientData);
-            
-            // Try to get Submit Screen from matched client first
-            if (matchedClientData && matchedClientData.fields && matchedClientData.fields['Submit Screen']) {
-                activeClient = matchedClientData;
-                submitScreenType = String(matchedClientData.fields['Submit Screen']).trim();
-                console.log('Using Submit Screen from matched client:', submitScreenType);
-            } 
-            // Fall back to campaign client if matched client doesn't have Submit Screen
-            else if (campaignClientData && campaignClientData.fields && campaignClientData.fields['Submit Screen']) {
-                activeClient = campaignClientData;
-                submitScreenType = String(campaignClientData.fields['Submit Screen']).trim();
-                console.log('Using Submit Screen from campaign client:', submitScreenType);
-            }
-            
-            console.log('Active client:', activeClient);
-            console.log('Submit screen type determined:', submitScreenType);
-            
-            console.log('Submit screen type determined:', submitScreenType);
-            
-            // Show appropriate screen based on submit screen type (case-insensitive comparison)
-            const normalizedType = submitScreenType.toLowerCase();
-            if (normalizedType === 'redirect') {
-                // Redirect to URL from Redirect URL field
-                const redirectUrl = activeClient && activeClient.fields['Redirect URL'] ? activeClient.fields['Redirect URL'] : null;
-                if (redirectUrl) {
-                    window.location.href = redirectUrl;
-                } else {
-                    // If no redirect URL, show confirmation screen
-                    console.warn('Redirect option selected but no Redirect URL found');
-                    showConfirmationScreen();
-                }
-            } else if (normalizedType === 'calendar') {
-                console.log('Showing calendar screen');
-                showCalendarScreen();
-                const backBtn = document.getElementById('calendarBackToEndings');
-                if (backBtn) backBtn.style.display = SAMPLE_MODE ? 'inline-flex' : 'none';
-            } else if (normalizedType === 'phone') {
-                showContactScreen('Phone');
-            } else if (normalizedType === 'text') {
-                showContactScreen('Text');
-            } else if (normalizedType === 'phone/text') {
-                showContactScreen('Phone/Text');
-            } else {
-                // None or default
-                showConfirmationScreen();
-            }
-            } catch (error) {
-                // Catch any unexpected errors that weren't caught by the Airtable submission catch
-                console.error('Unexpected error in submitFinalForm:', error);
-                showConfirmationScreen();
-                // Reset submission flag and button on error
-                isSubmitting = false;
-                if (phoneSubmitBtn) {
-                    phoneSubmitBtn.disabled = false;
-                    phoneSubmitBtn.textContent = 'Book My Quote';
+                    phoneSubmitBtn.textContent = 'Book Quote';
                 }
             }
         }
