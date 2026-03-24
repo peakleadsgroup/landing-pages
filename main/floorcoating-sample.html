@@ -33,28 +33,16 @@
             right: 0;
             bottom: 0;
             width: 100vw;
-            height: 100%;
-            min-height: 100vh;
-            background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)), 
-                        url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
-            background-size: 100% auto;
-            background-position: center top;
-            background-repeat: repeat-y;
+            height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
+                        url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/refs/heads/main/Images/garage-floor-coating-3-car-garage.webp') center/cover no-repeat;
+            background-size: cover;
+            background-position: center;
             background-attachment: fixed;
             z-index: -1;
             transform: translateZ(0);
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-        }
-
-        @media (max-width: 768px) {
-            body::before {
-                background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)), 
-                            url('https://github.com/peakleadsgroup/landing-pages/blob/main/Images/MobileBathroomBackground.jpg?raw=true');
-                background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
-            }
         }
 
         .form-container {
