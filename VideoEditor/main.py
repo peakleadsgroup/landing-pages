@@ -79,6 +79,10 @@ def main():
         if not preview_voice_norm_path or not preview_bg_norm_path:
             return
 
+        if preview_mix_in_progress[0]:
+            preview_mix_pending[0] = True
+            return
+
         stop_preview()
         voice_mult = float(voice_volume_percent.get()) / 100.0
         music_mult = float(music_volume_percent.get()) / 100.0
@@ -88,6 +92,8 @@ def main():
         preview_job_id["id"] += 1
         local_job_id = preview_job_id["id"]
         mixed_audio = os.path.join(preview_tmp_dir.name, f"preview_mixed_{local_job_id}.m4a")
+
+        preview_mix_in_progress[0] = True
 
         def do_mix_and_play():
             try:
@@ -125,10 +131,20 @@ def main():
                         )
                         preview_process[0] = None
 
+                    # Update mixing state and, if needed, restart one more time.
+                    preview_mix_in_progress[0] = False
+                    if preview_mix_pending[0]:
+                        preview_mix_pending[0] = False
+                        root.after(0, launch_preview)
+
                 root.after(0, _start_ffplay)
             except Exception as e:
                 if local_job_id == preview_job_id["id"]:
                     root.after(0, lambda: log(f"Preview mix error: {e}"))
+                    preview_mix_in_progress[0] = False
+                    if preview_mix_pending[0]:
+                        preview_mix_pending[0] = False
+                        root.after(0, launch_preview)
 
         threading.Thread(target=do_mix_and_play, daemon=True).start()
 
