@@ -3,6 +3,8 @@ Core video editing logic: clip selection, concatenation, audio replacement, capt
 """
 import os
 import random
+import re
+import subprocess
 import tempfile
 from pathlib import Path
 
@@ -27,6 +29,102 @@ def get_audio_duration_seconds(audio_path: str) -> float:
         return 0.0
 
 
+def _null_device() -> str:
+    return "NUL" if os.name == "nt" else "/dev/null"
+
+
+def _detect_max_volume_db(audio_path: str) -> float | None:
+    """
+    Detect peak max_volume in dB using FFmpeg's volumedetect filter.
+    Returns None if detection fails.
+    """
+    # volumedetect writes results to stderr
+    cmd = [
+        "ffmpeg",
+        "-hide_banner",
+        "-nostdin",
+        "-i",
+        audio_path,
+        "-af",
+        "volumedetect",
+        "-f",
+        "null",
+        _null_device(),
+    ]
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+    except Exception:
+        return None
+
+    stderr = result.stderr or ""
+    m = re.search(r"max_volume:\s*([-\w\.]+)\s*dB", stderr)
+    if not m:
+        return None
+
+    raw = m.group(1).strip()
+    if raw.lower() in {"-inf", "inf", "nan"}:
+        return None
+    try:
+        return float(raw)
+    except ValueError:
+        return None
+
+
+def normalize_audio_peak_to_db(audio_path: str, output_path: str, target_db: float = 0.0) -> str:
+    """
+    Normalize audio so its detected peak max_volume matches target_db (dB).
+    Uses a simple gain adjustment based on volumedetect max_volume.
+    """
+    max_db = _detect_max_volume_db(audio_path)
+    if max_db is None:
+        return audio_path
+
+    gain_db = target_db - max_db
+    # Avoid unnecessary re-encoding if already close.
+    if abs(gain_db) < 0.05:
+        return audio_path
+
+    # volume filter supports dB suffix, e.g. volume=3.2dB
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-hide_banner",
+        "-nostdin",
+        "-i",
+        audio_path,
+        "-af",
+        f"volume={gain_db}dB",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "256k",
+        "-ar",
+        "44100",
+        "-vn",
+        output_path,
+    ]
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+    except Exception as e:
+        raise RuntimeError(f"FFmpeg normalization failed: {e}") from e
+
+    if result.returncode != 0:
+        stderr = result.stderr or ""
+        raise RuntimeError(f"FFmpeg normalization error: {stderr}") from None
+
+    return output_path
+
+
 def get_video_duration_seconds(video_path: str) -> float:
     """Get duration of video file in seconds using ffprobe."""
     try:
@@ -44,6 +142,25 @@ def get_video_duration_seconds(video_path: str) -> float:
         return duration
     except Exception:
         return 0.0
+
+
+def get_video_dimensions(video_path: str) -> tuple[int, int] | None:
+    """Return (width, height) for the primary video stream, or None."""
+    try:
+        probe = ffmpeg.probe(video_path)
+        stream = next(
+            (s for s in probe["streams"] if s.get("codec_type") == "video"),
+            None,
+        )
+        if not stream:
+            return None
+        w = stream.get("width")
+        h = stream.get("height")
+        if not w or not h:
+            return None
+        return int(w), int(h)
+    except Exception:
+        return None
 
 
 def get_video_clips_from_folder(folder_path: str) -> list[tuple[str, float]]:
@@ -182,12 +299,24 @@ def concatenate_with_ending_and_fade(
     main_inp = ffmpeg.input(main_output)
     end_inp = ffmpeg.input(ending_clip_path, t=ending_duration)
 
+    # xfade requires identical video dimensions. Some ending clips are a few pixels
+    # different (e.g. 1080x1916 vs 1080x1920), so scale the ending clip to match.
+    main_dims = get_video_dimensions(main_output)
+    main_v = main_inp.video
+    end_v = end_inp.video
+    if main_dims:
+        main_w, main_h = main_dims
+        end_v = ffmpeg.filter([end_v], "scale", main_w, main_h)
+    # Normalize pixel format so filters don't disagree.
+    main_v = ffmpeg.filter([main_v], "format", "yuv420p")
+    end_v = ffmpeg.filter([end_v], "format", "yuv420p")
+
     v_out = ffmpeg.filter(
-        [main_inp.video, end_inp.video],
+        [main_v, end_v],
         "xfade",
         transition="fade",
         duration=fade_duration,
-        offset=xfade_offset
+        offset=xfade_offset,
     )
     a_out = ffmpeg.filter(
         [main_inp.audio, end_inp.audio],
@@ -224,18 +353,25 @@ def mix_audio_with_background(
     background_audio_path: str,
     output_path: str,
     duration_seconds: float,
-    background_volume: float = 0.5
+    background_volume: float = 0.5,
+    main_volume: float = 1.0,
 ) -> None:
-    """Mix main audio with background music. Background loops if shorter, trimmed if longer. Background at specified volume (0-1)."""
+    """Mix main audio with background music.
+
+    - `background_volume`: multiplier applied to background audio (post-normalization)
+    - `main_volume`: multiplier applied to main/voiceover audio (post-normalization)
+    """
     main = ffmpeg.input(main_audio_path)
     # Loop background and trim to match main duration
     bg = ffmpeg.input(background_audio_path, stream_loop=-1, t=duration_seconds)
     bg_lowered = bg.audio.filter("volume", background_volume)
-    mixed = ffmpeg.filter([main.audio, bg_lowered], "amix", inputs=2, duration="first")
+    main_lowered = main.audio.filter("volume", main_volume)
+    # Use `longest` so background music keeps playing even if the voiceover ends early.
+    mixed = ffmpeg.filter([main_lowered, bg_lowered], "amix", inputs=2, duration="longest")
     try:
         (
             ffmpeg
-            .output(mixed, output_path, acodec="aac", ar=44100)
+            .output(mixed, output_path, acodec="aac", ar=44100, **{"b:a": "256k"})
             .overwrite_output()
             .run(capture_stdout=True, capture_stderr=True)
         )
@@ -244,20 +380,46 @@ def mix_audio_with_background(
         raise RuntimeError(f"FFmpeg error: {stderr}") from e
 
 
-def replace_audio_with_mp3(video_path: str, audio_path: str, output_path: str) -> None:
-    """Replace video's audio track with the MP3 file. Uses shortest to match lengths."""
+def replace_audio_with_mp3(
+    video_path: str,
+    audio_path: str,
+    output_path: str,
+    audio_volume: float = 1.0,
+) -> None:
+    """Replace video's audio track with `audio_path` (voiceover/mix).
+
+    If `audio_path` is already AAC, we try to copy it to avoid quality loss.
+    """
     video = ffmpeg.input(video_path)
     audio = ffmpeg.input(audio_path)
     try:
+        audio_probe = ffmpeg.probe(audio_path)
+        audio_stream = next(
+            (s for s in audio_probe.get("streams", []) if s.get("codec_type") == "audio"),
+            None,
+        )
+        codec = audio_stream.get("codec_name") if audio_stream else None
+        can_copy_audio = codec == "aac" and abs(audio_volume - 1.0) < 1e-6
+
+        audio_to_use = audio.audio
+        if not can_copy_audio:
+            # Apply volume in the audio filter chain so we preserve the requested level.
+            if abs(audio_volume - 1.0) >= 1e-6:
+                audio_to_use = audio.audio.filter("volume", audio_volume)
+
         (
             ffmpeg
             .output(
                 video.video,
-                audio.audio,
+                audio_to_use,
                 output_path,
                 vcodec="copy",
-                acodec="aac",
-                ar=44100,
+                acodec="copy" if can_copy_audio else "aac",
+                **(
+                    {"ar": 44100, "b:a": "256k"}
+                    if not can_copy_audio
+                    else {}
+                ),
                 shortest=None  # End when shortest stream ends
             )
             .overwrite_output()
@@ -540,9 +702,13 @@ def run_full_pipeline(
     caption_words: list[dict] | None = None,
     whisper_model: str = "base",
     background_music_folder: str | None = None,
-    background_volume: float = 0.5,
+    background_volume: float = 1.0,
     ending_clip_path: str | None = None,
-    progress_callback=None
+    progress_callback=None,
+    normalize_voiceover_peak_to_db0: bool = False,
+    normalize_background_music_peak_to_db: float | None = None,
+    keep_voiceover_through_ending: bool = True,
+    voice_volume: float = 1.0,
 ) -> str:
     """
     Full pipeline: select clips, concatenate, replace audio, optionally add captions.
@@ -573,56 +739,115 @@ def run_full_pipeline(
 
     FADE_DURATION = 2.0
     ending_duration = 0.0
+    fade_duration = FADE_DURATION
+    segments = None
 
     if ending_clip_path and os.path.isfile(ending_clip_path):
         ending_full_duration = get_video_duration_seconds(ending_clip_path)
         if ending_full_duration <= 0:
             ending_clip_path = None
         else:
-            ending_duration = min(ending_full_duration, audio_duration - FADE_DURATION)
-            if ending_duration <= 0:
-                ending_clip_path = None
-            else:
-                clips_target = audio_duration - ending_duration + FADE_DURATION
-                if clips_target <= 0 or total_clip_duration < clips_target:
+            if keep_voiceover_through_ending:
+                # Keep the voiceover running through the ending clip:
+                # output length stays matched to the voiceover duration.
+                ending_duration = min(ending_full_duration, audio_duration - FADE_DURATION)
+                if ending_duration <= 0:
                     ending_clip_path = None
                 else:
-                    log(f"Adding ending clip with {FADE_DURATION}s fade transition...")
-                    segments = select_clips_to_fill_duration(clips, clips_target, randomize=True)
+                    clips_target = audio_duration - ending_duration + FADE_DURATION
+                    if clips_target <= 0 or total_clip_duration < clips_target:
+                        ending_clip_path = None
+                    else:
+                        fade_duration = FADE_DURATION
+                        log(f"Adding ending clip with {fade_duration}s fade transition (voiceover kept)...")
+                        segments = select_clips_to_fill_duration(clips, clips_target, randomize=True)
+            else:
+                # Extend the ending clip *after* the voiceover ends:
+                # background music continues, voiceover stops.
+                fade_duration = min(FADE_DURATION, ending_full_duration)
+                if fade_duration <= 0 or audio_duration < fade_duration:
+                    ending_clip_path = None
+                else:
+                    ending_duration = ending_full_duration
+                    log(
+                        f"Adding ending clip after voiceover ends (fade={fade_duration}s, voiceover stops)..."
+                    )
+                    segments = select_clips_to_fill_duration(clips, audio_duration, randomize=True)
 
-    if not ending_clip_path:
+    if segments is None:
         log("Selecting and ordering clips...")
         segments = select_clips_to_fill_duration(clips, audio_duration, randomize=True)
 
     if not segments:
         raise ValueError("Could not select clips")
 
+    main_duration = sum(end - start for _, start, end in segments)
+    video_duration = main_duration
+    if ending_clip_path:
+        # xfade output length = main_duration + ending_duration - fade_duration
+        video_duration = main_duration + ending_duration - fade_duration
+
     with tempfile.TemporaryDirectory() as tmp:
+        voiceover_audio = mp3_path
+        if normalize_voiceover_peak_to_db0:
+            log("Normalizing voiceover peak to 0 dB...")
+            normalized_audio = os.path.join(tmp, "voiceover_normalized.m4a")
+            voiceover_audio = normalize_audio_peak_to_db(
+                mp3_path, normalized_audio, target_db=0.0
+            )
+            if voiceover_audio == mp3_path:
+                log("Voiceover normalization skipped (already near 0 dB or no reliable peak detected).")
+
         log("Concatenating clips...")
         if ending_clip_path:
             concat_video = concatenate_with_ending_and_fade(
-                segments, ending_clip_path, ending_duration, tmp, FADE_DURATION
+                segments, ending_clip_path, ending_duration, tmp, fade_duration
             )
         else:
             concat_video = concatenate_clips_with_ffmpeg(segments, tmp)
 
         video_with_audio = os.path.join(tmp, "with_audio.mp4")
-        audio_to_use = mp3_path
+        audio_to_use = voiceover_audio
+        replace_audio_volume = voice_volume
         if background_music_folder:
             bg_song = get_random_audio_from_folder(background_music_folder)
             if bg_song:
-                log(f"Mixing with background music ({int(background_volume*100)}% volume): {os.path.basename(bg_song)}")
+                bg_audio_for_mix = bg_song
+                background_volume_to_use = background_volume
+                if normalize_background_music_peak_to_db is not None:
+                    log(
+                        f"Normalizing background music peak to {normalize_background_music_peak_to_db} dB: {os.path.basename(bg_song)}"
+                    )
+                    normalized_bg = os.path.join(tmp, "bg_music_normalized.m4a")
+                    bg_audio_for_mix = normalize_audio_peak_to_db(
+                        bg_song,
+                        normalized_bg,
+                        target_db=normalize_background_music_peak_to_db,
+                    )
+
+                log(
+                    f"Mixing with background music (volume={background_volume_to_use}): {os.path.basename(bg_song)}"
+                )
                 mixed_audio = os.path.join(tmp, "mixed_audio.m4a")
                 mix_audio_with_background(
-                    mp3_path, bg_song, mixed_audio,
-                    duration_seconds=audio_duration,
-                    background_volume=background_volume
+                    voiceover_audio,
+                    bg_audio_for_mix,
+                    mixed_audio,
+                    duration_seconds=video_duration,
+                    background_volume=background_volume_to_use,
+                    main_volume=voice_volume,
                 )
                 audio_to_use = mixed_audio
+                replace_audio_volume = 1.0
             else:
                 log("No audio files in background folder - using MP3 only")
-        log("Replacing audio with your MP3...")
-        replace_audio_with_mp3(concat_video, audio_to_use, video_with_audio)
+        log("Replacing video audio with your voiceover...")
+        replace_audio_with_mp3(
+            concat_video,
+            audio_to_use,
+            video_with_audio,
+            audio_volume=replace_audio_volume,
+        )
 
         final_input = video_with_audio
 
@@ -630,7 +855,7 @@ def run_full_pipeline(
             words_for_ass = caption_words
             if srt_content is None:
                 log("Generating captions (this may take a few minutes)...")
-                words_for_ass = _transcribe_to_words(mp3_path, whisper_model)
+                words_for_ass = _transcribe_to_words(voiceover_audio, whisper_model)
                 srt_content = _words_to_srt(words_for_ass) if words_for_ass else ""
             if srt_content and srt_content.strip():
                 log("Burning captions into video (ASS highlight style)...")

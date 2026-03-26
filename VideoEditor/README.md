@@ -1,6 +1,8 @@
 # Automated Video Editor
 
-Desktop app that takes an MP3, randomly assembles video clips from a folder to match the audio length, and adds auto-generated captions.
+Desktop app that randomly assembles clips, appends a selected ending disclaimer clip, and overlays the result with your voiceover.
+
+Captions/Whisper are disabled in the current version of the GUI.
 
 ## Requirements
 
@@ -32,13 +34,19 @@ Desktop app that takes an MP3, randomly assembles video clips from a folder to m
 
 ## Usage
 
-1. **MP3 Audio** – Select your audio file (speech or music).
-2. **Video Clips Folder** – Folder containing MP4, MOV, AVI, MKV, WebM, or M4V files.
-3. **Output Video** – Where to save the final video.
-4. **Generate captions** – Check to auto-transcribe the MP3 and burn captions into the video (uses Whisper).
-5. **Whisper model** – `tiny` (fastest) to `large` (best quality, slowest). `base` is a good default.
+1. **Voiceover Audio** – Select your voiceover audio file (MP3/WAV/etc).
+2. **Financing?** – If checked, appends the finance disclaimer ending and keeps your voiceover audio through it. If unchecked, appends the standard ending and your voiceover stops while the background music continues.
+3. **End file name** – Enter the output filename (the app saves it as `<name>.mp4` in the export folder).
+4. **Background Music (fixed)** – Always mixes music from the fixed folder, and normalizes the track to `-13 dB` peak before mixing.
 
-Click **Create Video** and wait. Caption generation can take a few minutes depending on audio length and model size.
+Click **Create Video** and wait for the export to complete.
+
+## Volume Sliders
+
+- In the GUI you can set:
+  - **Voice volume (%)** (100% = voiceover peak at `0 dB`)
+  - **Music volume (%)** (100% = background music peak at `-13 dB`)
+- Sliders are applied as multipliers after the normalization step.
 
 ## No Logins Required
 
@@ -47,6 +55,8 @@ Click **Create Video** and wait. Caption generation can take a few minutes depen
 
 ## Tips
 
-- Total duration of all clips in the folder must be at least as long as your MP3.
-- For faster captions, use `tiny` or `base`. Use `medium` or `large` for better accuracy.
+- The app uses a fixed clips folder (the UI does not let you choose it).
+- Total duration of all clips in the fixed folder must be at least as long as your voiceover audio (with room for the ending fade transition).
 - Clips are randomly selected and ordered each time.
+- The GUI normalizes the voiceover to a peak of `0 dB` so quiet/loud recordings come out more consistent.
+- Background music folder is fixed to `C:\Users\dr3wh\OneDrive\Desktop\PeakLeadsGroup\Music`.
