@@ -216,21 +216,21 @@
         <div class="panel-body">
             <div class="file-row">
                 <div>
-                    <label for="fileA">Track A</label>
+                    <label for="fileA">Voiceover</label>
                 </div>
                 <div>
                     <input id="fileA" type="file" accept="audio/wav,audio/x-wav,video/mp4,audio/mp4,audio/mpeg,audio/mp3">
-                    <div class="hint" id="fileA-hint">Choose an audio file for waveform A.</div>
+                    <div class="hint" id="fileA-hint">Choose an audio file for Voiceover waveform.</div>
                 </div>
             </div>
 
             <div class="file-row">
                 <div>
-                    <label for="fileB">Track B</label>
+                    <label for="fileB">Music</label>
                 </div>
                 <div>
                     <input id="fileB" type="file" accept="audio/wav,audio/x-wav,video/mp4,audio/mp4,audio/mpeg,audio/mp3">
-                    <div class="hint" id="fileB-hint">Choose an audio file for waveform B.</div>
+                    <div class="hint" id="fileB-hint">Choose an audio file for Music waveform.</div>
                 </div>
             </div>
 
@@ -246,10 +246,10 @@
                     <div class="panel-body">
                         <div class="slider-row">
                             <div class="slider-top">
-                                <strong>Track A Volume</strong>
-                                <span id="volA-val">100%</span>
+                                <strong>Voiceover Volume</strong>
+                                <span id="volA-val">0 dB</span>
                             </div>
-                            <input id="volA" type="range" min="0" max="100" step="1" value="100" />
+                            <input id="volA" type="range" min="0" max="200" step="1" value="100" />
                         </div>
                     </div>
                 </div>
@@ -257,7 +257,7 @@
                     <div class="panel-body">
                         <div class="slider-row">
                             <div class="slider-top">
-                                <strong>Track B Volume</strong>
+                                <strong>Music Volume</strong>
                                 <span id="volB-val">100%</span>
                             </div>
                             <input id="volB" type="range" min="0" max="100" step="1" value="100" />
@@ -276,7 +276,7 @@
         <section class="panel">
             <div class="panel-body">
                 <div class="meta" style="margin-top:0;">
-                    <div class="pill">Waveform: Track A</div>
+                    <div class="pill">Waveform: Voiceover</div>
                     <div class="pill" id="durA">Duration: --:--</div>
                 </div>
                 <div class="wave-wrap" style="margin-top: 12px;">
@@ -290,7 +290,7 @@
         <section class="panel">
             <div class="panel-body">
                 <div class="meta" style="margin-top:0;">
-                    <div class="pill">Waveform: Track B</div>
+                    <div class="pill">Waveform: Music</div>
                     <div class="pill" id="durB">Duration: --:--</div>
                 </div>
                 <div class="wave-wrap" style="margin-top: 12px;">
@@ -333,7 +333,11 @@
         let masterGain = null;
         let gainNodes = [null, null];
 
-        let buffers = [null, null]; // [trackA, trackB]
+        // Per-track base gain (normalization). Slider values then scale this baseline.
+        // Track 0 (Voiceover) is normalized to 0 dBFS on upload.
+        let baseGains = [1, 1];
+
+        let buffers = [null, null]; // [track0 Voiceover, track1 Music]
         let peaks = [null, null];   // Float32Array per track (normalized peaks)
         let durations = [0, 0];     // seconds
 
@@ -376,10 +380,32 @@
             return Math.max(0, Math.min(1, p / 100));
         }
 
+        function voiceoverRatioToDb(ratio) {
+            if (!isFinite(ratio) || ratio <= 0) return "-inf dB";
+            const db = 20 * Math.log10(ratio);
+            if (Math.abs(db) < 1e-6) return "0 dB";
+            const sign = db >= 0 ? "+" : "";
+            return sign + db.toFixed(1) + " dB";
+        }
+
+        function updateVoiceoverUi() {
+            const ratio = Number(volA.value) / 100;
+            volAVal.textContent = voiceoverRatioToDb(ratio);
+        }
+
         function applyVolume(i) {
             if (!gainNodes[i]) return;
-            const pct = i === 0 ? Number(volA.value) : Number(volB.value);
-            const g = normalizeGainPercent(pct);
+
+            let g = 1;
+            if (i === 0) {
+                // Voiceover: slider is relative to the normalized 0 dBFS baseline.
+                const ratio = Number(volA.value) / 100; // 0..2
+                g = baseGains[0] * ratio;
+            } else {
+                // Music: slider behaves like a standard 0..100% volume control.
+                g = baseGains[1] * normalizeGainPercent(Number(volB.value));
+            }
+
             if (!audioCtx) {
                 gainNodes[i].gain.value = g;
                 return;
@@ -453,19 +479,56 @@
             return peaksOut;
         }
 
+        function computeMaxAbs(audioBuffer) {
+            const channels = audioBuffer.numberOfChannels;
+            const length = audioBuffer.length;
+
+            let maxAbs = 0;
+
+            // Performance guard: for extremely long tracks, sample every N frames.
+            // If length is <= 5M samples, stride becomes 1 (exact peak).
+            const maxChecksPerChannel = 5_000_000;
+            const stride = Math.max(1, Math.floor(length / maxChecksPerChannel));
+
+            for (let ch = 0; ch < channels; ch++) {
+                const data = audioBuffer.getChannelData(ch);
+                for (let s = 0; s < length; s += stride) {
+                    const v = Math.abs(data[s]);
+                    if (v > maxAbs) {
+                        maxAbs = v;
+                        if (maxAbs >= 0.999999) return maxAbs;
+                    }
+                }
+            }
+
+            return maxAbs;
+        }
+
         async function loadTrack(trackIndex, file) {
             ensureAudioGraph();
             if (audioCtx.state === "suspended") {
                 await audioCtx.resume();
             }
 
-            const label = trackIndex === 0 ? "A" : "B";
-            setStatus("Decoding Track " + label + "...");
+            const label = trackIndex === 0 ? "Voiceover" : "Music";
+            setStatus("Decoding " + label + "...");
 
             const arrayBuffer = await file.arrayBuffer();
             const decoded = await audioCtx.decodeAudioData(arrayBuffer.slice(0));
             buffers[trackIndex] = decoded;
             durations[trackIndex] = decoded.duration;
+
+            // Normalize Voiceover to 0 dBFS (peak absolute sample becomes ~1.0).
+            if (trackIndex === 0) {
+                const maxAbs = computeMaxAbs(decoded);
+                baseGains[0] = maxAbs > 0 ? (1 / maxAbs) : 1;
+                // Reset slider to the normalized baseline each time we upload voiceover.
+                volA.value = "100";
+                updateVoiceoverUi();
+                applyVolume(0);
+            } else {
+                baseGains[1] = 1;
+            }
 
             // Peaks: match the canvas pixel width for crisp bars.
             const canvas = trackIndex === 0 ? waveA : waveB;
@@ -649,10 +712,13 @@
                 await loadTrack(0, f);
             } catch (err) {
                 console.error(err);
-                setStatus("Failed to load Track A.");
+                setStatus("Failed to load Voiceover.");
                 buffers[0] = null;
                 peaks[0] = null;
                 infoA.textContent = "Failed to load.";
+                baseGains[0] = 1;
+                volA.value = "0";
+                updateVoiceoverUi();
                 drawTrack(0);
                 updatePlayButtons();
             }
@@ -667,10 +733,11 @@
                 await loadTrack(1, f);
             } catch (err) {
                 console.error(err);
-                setStatus("Failed to load Track B.");
+                setStatus("Failed to load Music.");
                 buffers[1] = null;
                 peaks[1] = null;
                 infoB.textContent = "Failed to load.";
+                baseGains[1] = 1;
                 drawTrack(1);
                 updatePlayButtons();
             }
@@ -683,7 +750,7 @@
 
         // Events: volume sliders
         volA.addEventListener("input", () => {
-            volAVal.textContent = volA.value + "%";
+            updateVoiceoverUi();
             applyVolume(0);
         });
         volB.addEventListener("input", () => {
@@ -697,7 +764,8 @@
         hidePlayheads();
         updatePlayButtons();
 
-        setStatus("Load Track A and Track B audio files.");
+        setStatus("Load Voiceover and Music audio files.");
+        updateVoiceoverUi();
     })();
 </script>
 </body>
