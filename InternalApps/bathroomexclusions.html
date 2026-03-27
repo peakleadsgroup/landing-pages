@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
+    <title>Bathroom exclusions</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f8f9fa;
+            color: #202124;
+            line-height: 1.5;
+            display: flex;
+            flex-direction: column;
+        }
+        #header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1.25rem;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+        #header-logo { height: 36px; width: auto; }
+        h1 { font-size: 1.35rem; font-weight: 500; color: #1a73e8; }
+        .meta {
+            font-size: 0.8125rem;
+            color: #5f6368;
+            padding: 0 1.25rem 0.5rem;
+            flex-shrink: 0;
+        }
+        .meta strong { color: #202124; }
+        #map-wrap {
+            flex: 1;
+            min-height: 380px;
+            position: relative;
+            border-bottom: 1px solid #dadce0;
+        }
+        #map { width: 100%; height: 100%; }
+        #layer-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            padding: 0.75rem 1rem;
+            font-size: 0.8125rem;
+            max-width: 280px;
+        }
+        #layer-panel h3 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #202124;
+        }
+        #layer-panel label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.35rem 0;
+            cursor: pointer;
+            color: #3c4043;
+        }
+        #layer-panel input { cursor: pointer; }
+        #layer-panel .hint {
+            font-size: 0.75rem;
+            color: #5f6368;
+            margin-top: 0.5rem;
+            line-height: 1.35;
+        }
+        #legend {
+            position: absolute;
+            bottom: 24px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+        }
+        #legend .row { display: flex; align-items: center; gap: 0.4rem; margin: 0.2rem 0; }
+        #legend .swatch { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+        #content {
+            flex: 0 1 auto;
+            overflow-y: auto;
+            padding: 1rem 1.25rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+        .section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dadce0;
+        }
+        .section-head h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #202124;
+        }
+        .section-head button {
+            font-size: 0.8125rem;
+            padding: 0.375rem 0.75rem;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            color: #1a73e8;
+        }
+        .section-head button:hover { background: #e8f0fe; border-color: #1a73e8; }
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 0.75rem 1rem;
+            border: none;
+            font-family: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', monospace;
+            font-size: 0.8125rem;
+            resize: vertical;
+            line-height: 1.45;
+        }
+        #exclude-zips { min-height: 180px; }
+        #loading {
+            padding: 2rem;
+            text-align: center;
+            color: #5f6368;
+        }
+        #error {
+            display: none;
+            padding: 1rem;
+            margin: 0 1.25rem 1rem;
+            background: #fce8e6;
+            color: #c5221f;
+            border-radius: 8px;
+        }
+        #error.show { display: block; }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <img id="header-logo" src="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" alt="">
+        <h1>Bathroom exclusions</h1>
+    </div>
+    <p class="meta">
+        Active clients, niche <strong>Bathrooms</strong>. Map: green states = INCLUDE; red = EXCLUDE STATES. Dots: target zips vs exclusion zips (toggle layers).
+    </p>
+    <div id="error"></div>
+    <div id="loading">Loading map data and clients…</div>
+    <div id="map-wrap" style="display:none;">
+        <div id="map"></div>
+        <div id="layer-panel">
+            <h3>Map layers</h3>
+            <label><input type="checkbox" id="toggle-states" checked> State shading (green / red)</label>
+            <label><input type="checkbox" id="toggle-target-zips" checked> Target zips (blue)</label>
+            <label><input type="checkbox" id="toggle-exclude-zips"> Exclusion zips (orange, clustered)</label>
+            <p class="hint" id="exclude-hint">Exclusion zips load when you enable this layer (may take a few seconds).</p>
+        </div>
+        <div id="legend">
+            <div class="row"><span class="swatch" style="background:rgba(34,139,34,0.45);border:1px solid #1b5e20;"></span> Include state</div>
+            <div class="row"><span class="swatch" style="background:rgba(211,47,47,0.45);border:1px solid #b71c1c;"></span> Exclude state</div>
+            <div class="row"><span class="swatch" style="background:#1a73e8;"></span> Target zip</div>
+            <div class="row"><span class="swatch" style="background:#e8710a;"></span> Exclusion zip</div>
+        </div>
+    </div>
+    <div id="main" style="display:none;" class="content">
+        <section>
+            <div class="section-head">
+                <h2>INCLUDE</h2>
+                <button type="button" onclick="copyBlock('include-out')">Copy</button>
+            </div>
+            <textarea id="include-out" readonly spellcheck="false"></textarea>
+        </section>
+        <section>
+            <div class="section-head">
+                <h2>EXCLUDE ZIPS</h2>
+                <button type="button" onclick="copyBlock('exclude-zips')">Copy</button>
+            </div>
+            <textarea id="exclude-zips" readonly spellcheck="false"></textarea>
+        </section>
+        <section>
+            <div class="section-head">
+                <h2>EXCLUDE STATES</h2>
+                <button type="button" onclick="copyBlock('exclude-states')">Copy</button>
+            </div>
+            <textarea id="exclude-states" readonly spellcheck="false"></textarea>
+        </section>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script>
+        const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
+        const AIRTABLE_TABLE_ID = 'tblMl8Y97cMSbricC';
+        const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
+
+        const US_GEOJSON_URL = 'https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json';
+
+        const US50 = new Set([
+            'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'
+        ]);
+
+        const FIPS_TO_ST = {
+            '01':'AL','02':'AK','04':'AZ','05':'AR','06':'CA','08':'CO','09':'CT','10':'DE',
+            '12':'FL','13':'GA','15':'HI','16':'ID','17':'IL','18':'IN','19':'IA','20':'KS',
+            '21':'KY','22':'LA','23':'ME','24':'MD','25':'MA','26':'MI','27':'MN','28':'MS',
+            '29':'MO','30':'MT','31':'NE','32':'NV','33':'NH','34':'NJ','35':'NM','36':'NY',
+            '37':'NC','38':'ND','39':'OH','40':'OK','41':'OR','42':'PA','44':'RI','45':'SC',
+            '46':'SD','47':'TN','48':'TX','49':'UT','50':'VT','51':'VA','53':'WA','54':'WV',
+            '55':'WI','56':'WY'
+        };
+
+        let map;
+        let stateLayer;
+        let targetZipLayer;
+        let excludeZipCluster = null;
+        let excludeZipsBuilt = false;
+        let pendingExcludeZipArr = null;
+        let pendingZipComplete = null;
+
+        function parseZipCodes(targetField) {
+            if (!targetField) return [];
+            return targetField
+                .split(',')
+                .map(zip => zip.trim())
+                .filter(zip => /^\d{5}(-\d{4})?$/.test(zip))
+                .map(zip => zip.substring(0, 5));
+        }
+
+        function hasBathroomsNiche(record) {
+            const nicheField = record.fields['Niche'];
+            if (Array.isArray(nicheField)) return nicheField.includes('Bathrooms');
+            return nicheField === 'Bathrooms';
+        }
+
+        async function fetchClients() {
+            let allRecords = [];
+            let offset = null;
+            do {
+                let url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}`;
+                if (offset) url += `?offset=${offset}`;
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Airtable ${response.status}: ${errorText}`);
+                }
+                const data = await response.json();
+                allRecords = allRecords.concat(data.records || []);
+                offset = data.offset;
+            } while (offset);
+            return allRecords;
+        }
+
+        function sortZipsNumeric(zips) {
+            return [...zips].sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+        }
+
+        function copyBlock(id) {
+            const el = document.getElementById(id);
+            el.select();
+            el.setSelectionRange(0, 999999999);
+            navigator.clipboard.writeText(el.value).catch(() => {});
+        }
+
+        function stateStyle(includeStates) {
+            return function(feature) {
+                const id = feature.id;
+                const abbr = FIPS_TO_ST[id];
+                if (!abbr || !US50.has(abbr)) {
+                    return { fillColor: '#e0e0e0', fillOpacity: 0.15, color: '#9e9e9e', weight: 0.5 };
+                }
+                const inc = includeStates.has(abbr);
+                return {
+                    fillColor: inc ? '#228B22' : '#d32f2f',
+                    fillOpacity: inc ? 0.42 : 0.38,
+                    color: inc ? '#1b5e20' : '#b71c1c',
+                    weight: 1
+                };
+            };
+        }
+
+        function buildTargetMarkers(zipState, zipComplete, targetSet, includeStates) {
+            const layer = L.layerGroup();
+            for (const z of targetSet) {
+                const st = zipState[z];
+                if (!st || !includeStates.has(st)) continue;
+                const d = zipComplete[z];
+                if (!d || d.lat == null || d.lng == null) continue;
+                const m = L.circleMarker([d.lat, d.lng], {
+                    radius: 5,
+                    fillColor: '#1a73e8',
+                    color: '#0d47a1',
+                    weight: 1,
+                    fillOpacity: 0.85
+                });
+                m.bindPopup(`<strong>Target zip</strong><br>${z}`);
+                layer.addLayer(m);
+            }
+            return layer;
+        }
+
+        function buildExcludeCluster(zipComplete, excludeZips) {
+            const cluster = L.markerClusterGroup({
+                chunkedLoading: true,
+                chunkInterval: 80,
+                maxClusterRadius: 55
+            });
+            for (const z of excludeZips) {
+                const d = zipComplete[z];
+                if (!d || d.lat == null || d.lng == null) continue;
+                const m = L.circleMarker([d.lat, d.lng], {
+                    radius: 4,
+                    fillColor: '#e8710a',
+                    color: '#bf360c',
+                    weight: 1,
+                    fillOpacity: 0.8
+                });
+                m.bindPopup(`<strong>Exclusion zip</strong><br>${z}`);
+                cluster.addLayer(m);
+            }
+            return cluster;
+        }
+
+        function setupMap(geojson, includeStates, zipState, zipComplete, targetSet, excludeZipArr) {
+            map = L.map('map', { preferCanvas: true }).setView([39.8, -98.5], 4);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+
+            stateLayer = L.geoJSON(geojson, {
+                style: stateStyle(includeStates),
+                onEachFeature: (feature, lyr) => {
+                    const id = feature.id;
+                    const abbr = FIPS_TO_ST[id];
+                    if (abbr && US50.has(abbr)) {
+                        const kind = includeStates.has(abbr) ? 'Include' : 'Exclude';
+                        lyr.bindPopup(`<strong>${abbr}</strong><br>${kind} state`);
+                    }
+                }
+            }).addTo(map);
+
+            targetZipLayer = buildTargetMarkers(zipState, zipComplete, targetSet, includeStates);
+            targetZipLayer.addTo(map);
+
+            pendingExcludeZipArr = excludeZipArr;
+            pendingZipComplete = zipComplete;
+
+            document.getElementById('toggle-states').addEventListener('change', function() {
+                if (this.checked) map.addLayer(stateLayer);
+                else map.removeLayer(stateLayer);
+            });
+            document.getElementById('toggle-target-zips').addEventListener('change', function() {
+                if (this.checked) map.addLayer(targetZipLayer);
+                else map.removeLayer(targetZipLayer);
+            });
+            document.getElementById('toggle-exclude-zips').addEventListener('change', function() {
+                const hint = document.getElementById('exclude-hint');
+                if (this.checked) {
+                    if (!excludeZipsBuilt) {
+                        hint.textContent = 'Building exclusion markers…';
+                        const zc = pendingZipComplete;
+                        const arr = pendingExcludeZipArr;
+                        setTimeout(() => {
+                            excludeZipCluster = buildExcludeCluster(zc, arr);
+                            excludeZipsBuilt = true;
+                            if (document.getElementById('toggle-exclude-zips').checked) {
+                                map.addLayer(excludeZipCluster);
+                            }
+                            hint.textContent = 'Exclusion zips loaded. Zoom in to expand clusters.';
+                        }, 50);
+                    } else if (excludeZipCluster) {
+                        map.addLayer(excludeZipCluster);
+                    }
+                } else {
+                    if (excludeZipCluster) map.removeLayer(excludeZipCluster);
+                }
+            });
+
+            const bounds = [];
+            targetZipLayer.eachLayer(lyr => {
+                if (lyr.getLatLng) bounds.push(lyr.getLatLng());
+            });
+            if (bounds.length > 0) {
+                map.fitBounds(L.latLngBounds(bounds), { padding: [24, 24], maxZoom: 9 });
+            } else if (stateLayer.getBounds && stateLayer.getBounds().isValid()) {
+                map.fitBounds(stateLayer.getBounds(), { padding: [20, 20] });
+            }
+        }
+
+        async function run() {
+            const loading = document.getElementById('loading');
+            const main = document.getElementById('main');
+            const mapWrap = document.getElementById('map-wrap');
+            const errBox = document.getElementById('error');
+
+            try {
+                const [zipComplete, zipState, records, geoRes] = await Promise.all([
+                    fetch('us_zip_complete.json').then(r => {
+                        if (!r.ok) throw new Error('Could not load us_zip_complete.json');
+                        return r.json();
+                    }),
+                    fetch('us_zip_state.json').then(r => {
+                        if (!r.ok) throw new Error('Could not load us_zip_state.json');
+                        return r.json();
+                    }),
+                    fetchClients(),
+                    fetch(US_GEOJSON_URL).then(r => {
+                        if (!r.ok) throw new Error('Could not load US states map data');
+                        return r.json();
+                    })
+                ]);
+                const targetSet = new Set();
+
+                for (const record of records) {
+                    if (record.fields['Status'] !== 'Active') continue;
+                    if (!hasBathroomsNiche(record)) continue;
+                    const targetField = record.fields['TARGET'] || '';
+                    for (const z of parseZipCodes(targetField)) {
+                        targetSet.add(z);
+                    }
+                }
+
+                const includeStates = new Set();
+                for (const z of targetSet) {
+                    const st = zipState[z];
+                    if (st && US50.has(st)) includeStates.add(st);
+                }
+
+                const excludeZips = new Set();
+                for (const z of Object.keys(zipComplete)) {
+                    const st = zipState[z];
+                    if (!st || !includeStates.has(st)) continue;
+                    if (targetSet.has(z)) continue;
+                    excludeZips.add(z);
+                }
+
+                const excludeStatesList = [];
+                for (const st of US50) {
+                    if (!includeStates.has(st)) excludeStatesList.push(st);
+                }
+                excludeStatesList.sort();
+
+                const includeList = [...includeStates].sort();
+                const excludeZipList = sortZipsNumeric(excludeZips);
+
+                document.getElementById('include-out').value = includeList.join(', ');
+                document.getElementById('exclude-zips').value = excludeZipList.join(', ');
+                document.getElementById('exclude-states').value = excludeStatesList.join(', ');
+
+                loading.style.display = 'none';
+                mapWrap.style.display = 'block';
+                main.style.display = 'block';
+
+                setupMap(geoRes, includeStates, zipState, zipComplete, targetSet, excludeZipList);
+            } catch (e) {
+                console.error(e);
+                loading.style.display = 'none';
+                errBox.textContent = e.message || String(e);
+                errBox.classList.add('show');
+            }
+        }
+
+        run();
+    </script>
+</body>
+</html>
