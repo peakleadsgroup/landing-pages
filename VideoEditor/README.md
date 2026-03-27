@@ -41,12 +41,6 @@ Captions/Whisper are disabled in the current version of the GUI.
 
 Click **Create Video** and wait for the export to complete.
 
-## Volume Sliders
-
-- In the GUI you can set:
-  - **Voice volume (%)** (100% = voiceover peak at `0 dB`)
-  - **Music volume (%)** (100% = background music peak at `-13 dB`)
-- Sliders are applied as multipliers after the normalization step.
 
 ## No Logins Required
 

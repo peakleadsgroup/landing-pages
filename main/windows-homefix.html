@@ -875,6 +875,7 @@
             CAMPAIGNS: 'tbl6uhtOFzGzA7EMu',
             B2C_LEADS: 'tblPt6Wc79hTBSmcD',
             B2C_ADS: 'tbl7ungQGMMLYwshw',
+            ADSET: 'tblee61crNCoSfurx',
             URL_PARAMETERS: 'tbl5JDBRhTzuxzsc4',
         };
         const CONTACT_NOTIFICATION_WEBHOOK_URL = 'https://hook.us2.make.com/16nbe9d7b8igymuas81euw3o124khm7s';
@@ -898,6 +899,7 @@
         let campaignClientData = null;
         let matchedClientData = null;
         let adRecordId = null;
+        let adsetRecordId = null;
         let campaignRecordId = null; // Track the campaign record ID for Source Campaign linking
         let metaCampaignID = null; // Track the Meta campaign ID (from Campaign ID field)
         let leadRecordId = null; // Track the lead record ID so we can update it with appointment
@@ -1274,6 +1276,11 @@
                 // Add linked ad if we found one
                 if (adRecordId) {
                     record.fields['Ad'] = [adRecordId];
+                }
+
+                // Add linked adset if we found one
+                if (adsetRecordId) {
+                    record.fields['Adset'] = [adsetRecordId];
                 }
                 
                 // Add Unique ID (used for Meta lead deduplication) if provided
@@ -2692,16 +2699,26 @@
                 console.error('Error finding client by zip code:', error);
             }
             
-            // Find ad by adATID from URL
+            // Find ad and adset from URL
             try {
                 const urlParams = new URLSearchParams(window.location.search);
                 const adATID = urlParams.get('adATID');
+                const adsetID = urlParams.get('adsetID');
+
                 if (adATID) {
                     adRecordId = await findAdByATID(adATID);
                 }
+
+                if (adsetID) {
+                    const adsetUrl = `${AIRTABLE_BASE_URL}/${TABLES.ADSET}?filterByFormula={Adset ID}="${adsetID}"`;
+                    const adsetData = await fetchAirtableData(adsetUrl);
+                    if (adsetData.records && adsetData.records.length > 0) {
+                        adsetRecordId = adsetData.records[0].id;
+                    }
+                }
             } catch (error) {
                 // Non-critical, just log
-                console.log('Ad lookup failed:', error.message);
+                console.log('Ad/adset lookup failed:', error.message);
             }
             
             // Build full summary

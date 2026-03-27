@@ -702,6 +702,7 @@ def run_full_pipeline(
     caption_words: list[dict] | None = None,
     whisper_model: str = "base",
     background_music_folder: str | None = None,
+    background_music_path: str | None = None,
     background_volume: float = 1.0,
     ending_clip_path: str | None = None,
     progress_callback=None,
@@ -737,7 +738,7 @@ def run_full_pipeline(
             "Add more or longer clips."
         )
 
-    FADE_DURATION = 2.0
+    FADE_DURATION = 1.0
     ending_duration = 0.0
     fade_duration = FADE_DURATION
     segments = None
@@ -809,38 +810,42 @@ def run_full_pipeline(
         video_with_audio = os.path.join(tmp, "with_audio.mp4")
         audio_to_use = voiceover_audio
         replace_audio_volume = voice_volume
-        if background_music_folder:
+        bg_song: str | None = None
+        if background_music_path:
+            bg_song = background_music_path
+        elif background_music_folder:
             bg_song = get_random_audio_from_folder(background_music_folder)
-            if bg_song:
-                bg_audio_for_mix = bg_song
-                background_volume_to_use = background_volume
-                if normalize_background_music_peak_to_db is not None:
-                    log(
-                        f"Normalizing background music peak to {normalize_background_music_peak_to_db} dB: {os.path.basename(bg_song)}"
-                    )
-                    normalized_bg = os.path.join(tmp, "bg_music_normalized.m4a")
-                    bg_audio_for_mix = normalize_audio_peak_to_db(
-                        bg_song,
-                        normalized_bg,
-                        target_db=normalize_background_music_peak_to_db,
-                    )
 
+        if bg_song:
+            bg_audio_for_mix = bg_song
+            background_volume_to_use = background_volume
+            if normalize_background_music_peak_to_db is not None:
                 log(
-                    f"Mixing with background music (volume={background_volume_to_use}): {os.path.basename(bg_song)}"
+                    f"Normalizing background music peak to {normalize_background_music_peak_to_db} dB: {os.path.basename(bg_song)}"
                 )
-                mixed_audio = os.path.join(tmp, "mixed_audio.m4a")
-                mix_audio_with_background(
-                    voiceover_audio,
-                    bg_audio_for_mix,
-                    mixed_audio,
-                    duration_seconds=video_duration,
-                    background_volume=background_volume_to_use,
-                    main_volume=voice_volume,
+                normalized_bg = os.path.join(tmp, "bg_music_normalized.m4a")
+                bg_audio_for_mix = normalize_audio_peak_to_db(
+                    bg_song,
+                    normalized_bg,
+                    target_db=normalize_background_music_peak_to_db,
                 )
-                audio_to_use = mixed_audio
-                replace_audio_volume = 1.0
-            else:
-                log("No audio files in background folder - using MP3 only")
+
+            log(
+                f"Mixing with background music (volume={background_volume_to_use}): {os.path.basename(bg_song)}"
+            )
+            mixed_audio = os.path.join(tmp, "mixed_audio.m4a")
+            mix_audio_with_background(
+                voiceover_audio,
+                bg_audio_for_mix,
+                mixed_audio,
+                duration_seconds=video_duration,
+                background_volume=background_volume_to_use,
+                main_volume=voice_volume,
+            )
+            audio_to_use = mixed_audio
+            replace_audio_volume = 1.0
+        else:
+            log("No background music provided - using voiceover only")
         log("Replacing video audio with your voiceover...")
         replace_audio_with_mp3(
             concat_video,
