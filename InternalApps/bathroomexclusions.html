@@ -313,6 +313,25 @@
             '55':'WI','56':'WY'
         };
 
+        const STATE_ABBR_TO_NAME = {
+            AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California', CO: 'Colorado',
+            CT: 'Connecticut', DE: 'Delaware', FL: 'Florida', GA: 'Georgia', HI: 'Hawaii', ID: 'Idaho',
+            IL: 'Illinois', IN: 'Indiana', IA: 'Iowa', KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana',
+            ME: 'Maine', MD: 'Maryland', MA: 'Massachusetts', MI: 'Michigan', MN: 'Minnesota',
+            MS: 'Mississippi', MO: 'Missouri', MT: 'Montana', NE: 'Nebraska', NV: 'Nevada',
+            NH: 'New Hampshire', NJ: 'New Jersey', NM: 'New Mexico', NY: 'New York',
+            NC: 'North Carolina', ND: 'North Dakota', OH: 'Ohio', OK: 'Oklahoma', OR: 'Oregon',
+            PA: 'Pennsylvania', RI: 'Rhode Island', SC: 'South Carolina', SD: 'South Dakota',
+            TN: 'Tennessee', TX: 'Texas', UT: 'Utah', VT: 'Vermont', VA: 'Virginia',
+            WA: 'Washington', WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming'
+        };
+
+        function formatStatesListForOutput(stateAbbrs) {
+            const names = [...stateAbbrs].map(abbr => STATE_ABBR_TO_NAME[abbr] || abbr);
+            names.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+            return names.map(name => `${name} U.S.`);
+        }
+
         let map;
         let stateLayer;
         let targetZipLayer;
@@ -567,20 +586,19 @@
             }
             excludeStatesList.sort();
 
-            const includeList = [...includeStates].sort();
             const excludeZipList = sortZipsNumeric(excludeZips);
 
-            return { targetSet, includeStates, excludeZipList, includeList, excludeStatesList };
+            return { targetSet, includeStates, excludeZipList, excludeStatesList };
         }
 
         function applyComputation() {
             const selectedIds = getSelectedClientIds();
-            const { targetSet, includeStates, excludeZipList, includeList, excludeStatesList } =
+            const { targetSet, includeStates, excludeZipList, excludeStatesList } =
                 computeFromSelection(zipCompleteGlobal, zipStateGlobal, selectedIds);
 
-            document.getElementById('include-out').value = includeList.join(', ');
+            document.getElementById('include-out').value = formatStatesListForOutput(includeStates).join(', ');
             document.getElementById('exclude-zips').value = excludeZipList.join(', ');
-            document.getElementById('exclude-states').value = excludeStatesList.join(', ');
+            document.getElementById('exclude-states').value = formatStatesListForOutput(excludeStatesList).join(', ');
 
             if (mapInitialized) {
                 refreshMapLayers(includeStates, zipStateGlobal, zipCompleteGlobal, targetSet, excludeZipList);
