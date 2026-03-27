@@ -1636,6 +1636,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
     timeZone: 'America/New_York'
 })} EST`;
 
+            const urlParams = new URLSearchParams(window.location.search);
             const webhookData = {
                 homeowner: finalData.homeowner,
                 floor_location: finalData.floorLocation,
@@ -1654,7 +1655,9 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
                 timestamp: new Date().toISOString(),
                 form_type: 'floor_coating_qualification',
                 clientATID: 'recBGmshJCpkj4Jsl',
-                adATID: new URLSearchParams(window.location.search).get('adATID'),
+                campaignID: urlParams.get('campaignID') || urlParams.get('utm_campaign'),
+                adATID: urlParams.get('adATID'),
+                adsetID: urlParams.get('adsetID'),
                 event_id: eventId
             };
             
