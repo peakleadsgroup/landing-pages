@@ -4014,7 +4014,8 @@
                 }
 
                 if (adsetID) {
-                    const adsetUrl = `${AIRTABLE_BASE_URL}/${TABLES.ADSET}?filterByFormula={Adset ID}="${adsetID}"`;
+                    const adsetFilterFormula = encodeURIComponent(`{Adset ID}="${adsetID}"`);
+                    const adsetUrl = `${AIRTABLE_BASE_URL}/${TABLES.ADSET}?filterByFormula=${adsetFilterFormula}`;
                     const adsetData = await fetchAirtableData(adsetUrl);
                     if (adsetData.records && adsetData.records.length > 0) {
                         adsetRecordId = adsetData.records[0].id;
