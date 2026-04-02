@@ -75,11 +75,8 @@
                         <span class="text-gray-900 font-semibold">Amount Due</span>
                         <span class="text-2xl font-bold text-gray-900 tabular-nums" id="valAmountDue">—</span>
                     </div>
-                    <div class="p-5 flex justify-between items-start gap-4">
-                        <div>
-                            <span class="text-gray-600 font-medium">CPL</span>
-                            <p class="text-xs text-gray-500 mt-1 max-w-[14rem]" id="cplLeadDetail">Qualified leads linked to Creative Concepts Contracting, Created on or after 3/26/26</p>
-                        </div>
+                    <div class="p-5 flex justify-between items-baseline gap-4">
+                        <span class="text-gray-600 font-medium">CPL</span>
                         <div class="text-right shrink-0">
                             <span class="text-xl font-semibold text-gray-900 tabular-nums block" id="valCpl">—</span>
                             <span class="text-sm text-gray-500 tabular-nums" id="valLeadCount"></span>
@@ -99,12 +96,10 @@
         const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
         const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
         const LEADS_TABLE_ID = 'tblPt6Wc79hTBSmcD';
-        const CLIENTS_TABLE_ID = 'tblMl8Y97cMSbricC';
-        const LINKED_CLIENT_NAME = 'Creative Concepts Contracting';
+        /** Creative Concepts Contracting — Clients table record ID (Linked Client on leads). */
+        const LINKED_CLIENT_RECORD_ID = 'recN5TuwlaK1BW6g';
         /** Created on or after this date (inclusive), US Eastern start of day. */
         const CPL_WINDOW_START_ET = { y: 2026, m: 3, d: 26 };
-
-        let cachedCccClientRecordId = null;
 
         function formatMoney(n) {
             return '$' + n.toLocaleString('en-US', {
@@ -192,29 +187,6 @@
             document.getElementById('errorTitle').textContent = 'Could not load spend';
         }
 
-        async function fetchCccClientRecordId() {
-            if (cachedCccClientRecordId) return cachedCccClientRecordId;
-            const escaped = LINKED_CLIENT_NAME.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-            const formula = `{Name}="${escaped}"`;
-            const url =
-                `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${CLIENTS_TABLE_ID}` +
-                `?filterByFormula=${encodeURIComponent(formula)}&maxRecords=1`;
-            const response = await fetch(url, {
-                headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` }
-            });
-            if (!response.ok) {
-                const t = await response.text();
-                throw new Error(`Clients lookup failed (${response.status}): ${(t || '').slice(0, 120)}`);
-            }
-            const data = await response.json();
-            const rec = (data.records || [])[0];
-            if (!rec) {
-                throw new Error(`No client named "${LINKED_CLIENT_NAME}" in Clients (primary field Name).`);
-            }
-            cachedCccClientRecordId = rec.id;
-            return cachedCccClientRecordId;
-        }
-
         function recordCreatedOnOrAfterCplStart(record) {
             const raw = record.fields['Created'];
             if (raw == null || raw === '') return false;
@@ -229,9 +201,8 @@
         }
 
         async function fetchQualifiedCccLeadCount() {
-            const clientId = await fetchCccClientRecordId();
             const formula =
-                `AND({Status}="Qualified", FIND("${clientId}", ARRAYJOIN({Linked Client})) > 0, IS_AFTER({Created}, "2026-03-24"))`;
+                `AND({Status}="Qualified", FIND("${LINKED_CLIENT_RECORD_ID}", ARRAYJOIN({Linked Client})) > 0, IS_AFTER({Created}, "2026-03-24"))`;
             let offset = null;
             const records = [];
             do {
