@@ -96,8 +96,11 @@
         const CONFIG = {
             BASE_ID: 'appmBb0lzqRK9dI8v',
             TABLE_ID: 'tblEze74vhj4hE9c9',
+            DRAWS_TABLE_ID: 'tblScVCqHc0gUiHwG',
             API_KEY: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589'
         };
+
+        const OWNER_NAMES = new Set(['Drew Williams', 'Daniel Wellish']);
 
         let chartInstance = null;
 
@@ -134,6 +137,57 @@
             return null;
         }
 
+        /** Normalize Airtable User field (text, select, collaborator, or arrays of those). */
+        function collectUserLabels(userField, out) {
+            if (userField == null || userField === '') return;
+            if (typeof userField === 'string') {
+                out.push(userField.trim());
+                return;
+            }
+            if (Array.isArray(userField)) {
+                userField.forEach(u => collectUserLabels(u, out));
+                return;
+            }
+            if (typeof userField === 'object' && userField.name != null) {
+                out.push(String(userField.name).trim());
+            }
+        }
+
+        function isOwnerUserField(userField) {
+            const labels = [];
+            collectUserLabels(userField, labels);
+            return labels.some(l => OWNER_NAMES.has(l));
+        }
+
+        function sumOwnerDraws(records) {
+            let sum = 0;
+            for (const record of records) {
+                if (!isOwnerUserField(record.fields['User'])) continue;
+                const amt = parseCurrency(record.fields['Amount']);
+                if (amt !== null && amt !== undefined) sum += Math.abs(amt);
+            }
+            return sum;
+        }
+
+        async function fetchAllTableRecords(tableId) {
+            let allRecords = [];
+            let offset = null;
+            do {
+                let url = `https://api.airtable.com/v0/${CONFIG.BASE_ID}/${tableId}`;
+                if (offset) url += `?offset=${offset}`;
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${CONFIG.API_KEY}` }
+                });
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
+                }
+                const data = await response.json();
+                allRecords = allRecords.concat(data.records || []);
+                offset = data.offset;
+            } while (offset);
+            return allRecords;
+        }
+
         /** Inclusive day index from Jan 1 (1 = Jan 1). */
         function getDaysIntoYear(d = new Date()) {
             const y = d.getFullYear();
@@ -158,9 +212,10 @@
             });
         }
 
-        function updateMetrics(latestRealizedCash) {
+        function updateMetrics(latestRealizedCash, ownerDrawsSum) {
             const daysIn = getDaysIntoYear();
             const daysLeft = getDaysLeftInYear();
+            const draws = typeof ownerDrawsSum === 'number' && !isNaN(ownerDrawsSum) ? ownerDrawsSum : 0;
 
             if (latestRealizedCash === null || latestRealizedCash === undefined) {
                 document.getElementById('netProfitPerDay').textContent = '—';
@@ -170,13 +225,15 @@
                 return;
             }
 
-            const perDayYtd = latestRealizedCash / daysIn;
+            const adjustedNet = latestRealizedCash + draws;
+
+            const perDayYtd = adjustedNet / daysIn;
             document.getElementById('netProfitPerDay').textContent = formatMoney(perDayYtd);
             document.getElementById('netProfitPerDayDetail').textContent =
-                `Based on latest realized cash ${formatMoney(latestRealizedCash)} ÷ ${daysIn} day${daysIn === 1 ? '' : 's'} into ${new Date().getFullYear()}.`;
+                `Latest realized cash ${formatMoney(latestRealizedCash)} + owner draws (Drew Williams & Daniel Wellish) ${formatMoney(draws)} = ${formatMoney(adjustedNet)}; ÷ ${daysIn} day${daysIn === 1 ? '' : 's'} into ${new Date().getFullYear()}.`;
 
-            const need1m = (1_000_000 - latestRealizedCash) / daysLeft;
-            const need2m = (2_000_000 - latestRealizedCash) / daysLeft;
+            const need1m = (1_000_000 - adjustedNet) / daysLeft;
+            const need2m = (2_000_000 - adjustedNet) / daysLeft;
 
             document.getElementById('profitPerDay1M').textContent = formatMoney(need1m);
             document.getElementById('profitPerDay2M').textContent = formatMoney(need2m);
@@ -188,25 +245,12 @@
             showState('loadingState');
 
             try {
-                let allRecords = [];
-                let offset = null;
+                const [allRecords, drawRecords] = await Promise.all([
+                    fetchAllTableRecords(CONFIG.TABLE_ID),
+                    fetchAllTableRecords(CONFIG.DRAWS_TABLE_ID)
+                ]);
 
-                do {
-                    let url = `https://api.airtable.com/v0/${CONFIG.BASE_ID}/${CONFIG.TABLE_ID}`;
-                    if (offset) url += `?offset=${offset}`;
-
-                    const response = await fetch(url, {
-                        headers: { 'Authorization': `Bearer ${CONFIG.API_KEY}` }
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
-                    }
-
-                    const data = await response.json();
-                    allRecords = allRecords.concat(data.records || []);
-                    offset = data.offset;
-                } while (offset);
+                const ownerDrawsSum = sumOwnerDraws(drawRecords);
 
                 if (allRecords.length === 0) {
                     showState('noDataState');
@@ -247,7 +291,7 @@
                 }
 
                 createChart(processedData);
-                updateMetrics(latestRealized);
+                updateMetrics(latestRealized, ownerDrawsSum);
                 showState('chartContainer');
             } catch (error) {
                 console.error('Error:', error);
