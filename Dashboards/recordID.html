@@ -214,7 +214,6 @@
             contactsLinkedField: 'Contacts',
             stripeCustomersTableName: 'Customers',
             chargesTableName: 'Charges',
-            apiKey: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589',
             linkedFieldName: 'Linked Client',
             clientNameField: 'Name',
             stripeCustomerLinkedField: 'Stripe Customer',
@@ -253,9 +252,7 @@
         }
 
         async function getContactEmailsForClient(clientRecordId) {
-            const clientResponse = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.clientsTableName)}/${clientRecordId}`, {
-                headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
-            });
+            const clientResponse = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.clientsTableName)}/${clientRecordId}`);
             if (!clientResponse.ok) throw new Error('Failed to fetch client');
             const clientData = await clientResponse.json();
             const contactIds = clientData.fields[CONFIG.contactsLinkedField];
@@ -264,9 +261,7 @@
             }
             const emails = [];
             for (const contactId of contactIds) {
-                const contactResponse = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.contactsTableName)}/${contactId}`, {
-                    headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
-                });
+                const contactResponse = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.contactsTableName)}/${contactId}`);
                 if (contactResponse.ok) {
                     const contactData = await contactResponse.json();
                     const email = contactData.fields['Email'];
@@ -318,9 +313,7 @@
 
         async function fetchClientName(recordId) {
             try {
-                const response = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.clientsTableName)}/${recordId}`, {
-                    headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
-                });
+                const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.clientsTableName)}/${recordId}`);
 
                 if (!response.ok) {
                     throw new Error(`Failed to fetch client: ${response.status}`);
@@ -395,18 +388,16 @@
                 do {
                     let url;
                     if (filterFormula) {
-                        url = `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}?filterByFormula=${encodeURIComponent(filterFormula)}`;
+                        url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}?filterByFormula=${encodeURIComponent(filterFormula)}`;
                     } else {
-                        url = `https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}`;
+                        url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}`;
                     }
 
                     if (offset) {
                         url += `&offset=${offset}`;
                     }
 
-                    const response = await fetch(url, {
-                        headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
-                    });
+                    const response = await fetch(url);
 
                     if (!response.ok) {
                         const errorText = await response.text();
@@ -1095,11 +1086,9 @@
             const reasoningValue = reasoningField.value;
 
             try {
-                const response = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${recordId}`, {
+                const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${recordId}`, {
                     method: 'PATCH',
-                    headers: {
-                        'Authorization': `Bearer ${CONFIG.apiKey}`,
-                        'Content-Type': 'application/json'
+                    headers: { 'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         fields: {
@@ -1173,11 +1162,9 @@
             if (fullSummaryHTMLUpdate !== null) fieldsToUpdate['Full Summary HTML'] = fullSummaryHTMLUpdate;
 
             try {
-                const response = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${recordId}`, {
+                const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${recordId}`, {
                     method: 'PATCH',
-                    headers: {
-                        'Authorization': `Bearer ${CONFIG.apiKey}`,
-                        'Content-Type': 'application/json'
+                    headers: { 'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ fields: fieldsToUpdate })
                 });
@@ -1235,11 +1222,9 @@
             }
 
             try {
-                const response = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${recordId}`, {
+                const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${recordId}`, {
                     method: 'PATCH',
-                    headers: {
-                        'Authorization': `Bearer ${CONFIG.apiKey}`,
-                        'Content-Type': 'application/json'
+                    headers: { 'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ fields: fieldsToUpdate })
                 });
@@ -1281,9 +1266,7 @@
             modal.classList.remove('hidden');
 
             try {
-                const clientResponse = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.clientsTableName)}/${currentClientRecordId}`, {
-                    headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
-                });
+                const clientResponse = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.clientsTableName)}/${currentClientRecordId}`);
 
                 if (!clientResponse.ok) {
                     throw new Error(`Failed to fetch client: ${clientResponse.status}`);
@@ -1298,9 +1281,7 @@
                 if (contactIds && Array.isArray(contactIds)) {
                     for (const cid of contactIds) {
                         try {
-                            const contactRes = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.contactsTableName)}/${cid}`, {
-                                headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
-                            });
+                            const contactRes = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.contactsTableName)}/${cid}`);
                             if (contactRes.ok) {
                                 const contactData = await contactRes.json();
                                 const notifs = contactData.fields['Notifications'];
@@ -1324,9 +1305,7 @@
 
                 const stripeCustomerRecordId = stripeCustomerLinks[0];
 
-                const stripeResponse = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.stripeCustomersTableName)}/${stripeCustomerRecordId}`, {
-                    headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
-                });
+                const stripeResponse = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.stripeCustomersTableName)}/${stripeCustomerRecordId}`);
 
                 if (!stripeResponse.ok) {
                     throw new Error(`Failed to fetch Stripe customer: ${stripeResponse.status}`);
@@ -1352,9 +1331,7 @@
                         const fetchChargeWithRetry = async (chargeId, retries = 3) => {
                             for (let attempt = 0; attempt < retries; attempt++) {
                                 try {
-                                    const response = await fetch(`https://api.airtable.com/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.chargesTableName)}/${chargeId}`, {
-                                        headers: { 'Authorization': `Bearer ${CONFIG.apiKey}` }
-                                    });
+                                    const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.chargesTableName)}/${chargeId}`);
 
                                     if (response.status === 429) {
                                         // Rate limited - wait with exponential backoff

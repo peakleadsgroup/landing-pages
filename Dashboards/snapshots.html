@@ -120,7 +120,6 @@
         const CONFIG = {
             BASE_ID: 'appmBb0lzqRK9dI8v',
             TABLE_ID: 'tblEze74vhj4hE9c9',
-            API_KEY: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589'
         };
 
         let chartInstance = null;
@@ -171,14 +170,12 @@
 
                 // Fetch all records with pagination
                 do {
-                    let url = `https://api.airtable.com/v0/${CONFIG.BASE_ID}/${CONFIG.TABLE_ID}`;
+                    let url = `/api/airtable/v0/${CONFIG.BASE_ID}/${CONFIG.TABLE_ID}`;
                     if (offset) {
                         url += `?offset=${offset}`;
                     }
 
-                    const response = await fetch(url, {
-                        headers: { 'Authorization': `Bearer ${CONFIG.API_KEY}` }
-                    });
+                    const response = await fetch(url);
 
                     if (!response.ok) {
                         throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);

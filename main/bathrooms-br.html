@@ -652,8 +652,7 @@
         const WRITE_TO_AIRTABLE = false; // Toggle to true when ready to write tracking data
         const WRITE_LEADS_TO_AIRTABLE = false; // Toggle to true when ready to write leads to Airtable
         const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
-        const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
-        const AIRTABLE_BASE_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
+        const AIRTABLE_BASE_URL = `/api/airtable/v0/${AIRTABLE_BASE_ID}`;
         const TABLES = {
             CLIENTS: 'tblMl8Y97cMSbricC',
             CAMPAIGNS: 'tbl6uhtOFzGzA7EMu',
@@ -673,15 +672,11 @@
             if (!campaignID) return null;
             try {
                 const campaignUrl = `${AIRTABLE_BASE_URL}/${TABLES.CAMPAIGNS}?filterByFormula={Campaign ID}="${campaignID}"`;
-                const res = await fetch(campaignUrl, {
-                    headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
-                });
+                const res = await fetch(campaignUrl);
                 const data = await res.json();
                 if (data.records && data.records.length > 0 && data.records[0].fields.Client) {
                     const clientId = data.records[0].fields.Client[0];
-                    const clientRes = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}/${clientId}`, {
-                        headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
-                    });
+                    const clientRes = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.CLIENTS}/${clientId}`);
                     clientData = await clientRes.json();
                     return clientData;
                 }
@@ -710,7 +705,7 @@
             };
             const res = await fetch(`${AIRTABLE_BASE_URL}/${TABLES.B2C_LEADS}`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}`, 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ records: [record] })
             });
             if (!res.ok) throw new Error(await res.text());
@@ -762,9 +757,7 @@
                 try {
                     await fetch(`${AIRTABLE_BASE_URL}/${TABLES.FUNNEL_TRACKING}`, {
                         method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-                            'Content-Type': 'application/json'
+                        headers: { 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({ records: [{ fields: payload }] })
                     });

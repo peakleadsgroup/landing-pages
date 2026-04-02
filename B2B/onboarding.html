@@ -501,8 +501,6 @@
     const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
     const AIRTABLE_TABLE_ID = 'tblMl8Y97cMSbricC';
     const AIRTABLE_CONTACTS_TABLE_ID = 'tblzbIWvSdazhesWf';
-    const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
-
     let clientRecordId = null;
     let clientRecord = null;
     let saveTimeout = null;
@@ -720,11 +718,9 @@
     async function fetchClientRecord(recordId) {
       try {
         const response = await fetch(
-          `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}/${recordId}`,
+          `/api/airtable/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}/${recordId}`,
           {
-            headers: {
-              'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-              'Content-Type': 'application/json'
+            headers: { 'Content-Type': 'application/json'
             }
           }
         );
@@ -746,12 +742,10 @@
     async function updateClientRecord(recordId, fields) {
       try {
         const response = await fetch(
-          `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}/${recordId}`,
+          `/api/airtable/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}/${recordId}`,
           {
             method: 'PATCH',
-            headers: {
-              'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-              'Content-Type': 'application/json'
+            headers: { 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
               fields: fields
@@ -1776,12 +1770,10 @@
     async function createContactInAirtable(contactData) {
       try {
         const response = await fetch(
-          `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_CONTACTS_TABLE_ID}`,
+          `/api/airtable/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_CONTACTS_TABLE_ID}`,
           {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-              'Content-Type': 'application/json'
+            headers: { 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
               fields: contactData
@@ -1806,12 +1798,10 @@
     async function updateContactInAirtable(recordId, contactData) {
       try {
         const response = await fetch(
-          `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_CONTACTS_TABLE_ID}/${recordId}`,
+          `/api/airtable/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_CONTACTS_TABLE_ID}/${recordId}`,
           {
             method: 'PATCH',
-            headers: {
-              'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-              'Content-Type': 'application/json'
+            headers: { 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
               fields: contactData
@@ -1836,12 +1826,10 @@
     async function deleteContactFromAirtable(recordId) {
       try {
         const response = await fetch(
-          `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_CONTACTS_TABLE_ID}/${recordId}`,
+          `/api/airtable/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_CONTACTS_TABLE_ID}/${recordId}`,
           {
             method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-              'Content-Type': 'application/json'
+            headers: { 'Content-Type': 'application/json'
             }
           }
         );

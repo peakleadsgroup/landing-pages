@@ -21,7 +21,6 @@
         // Airtable Configuration
         const AIRTABLE_CONFIG = {
             baseId: 'appmBb0lzqRK9dI8v',
-            apiKey: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589',
             leadsTable: 'B2C Leads',
             spendTable: 'Campaign Spend',
             clientsTable: 'Clients'
@@ -58,14 +57,12 @@
                 let offset = null;
 
                 do {
-                    let url = `https://api.airtable.com/v0/${AIRTABLE_CONFIG.baseId}/${encodeURIComponent(tableName)}`;
+                    let url = `/api/airtable/v0/${AIRTABLE_CONFIG.baseId}/${encodeURIComponent(tableName)}`;
                     if (offset) {
                         url += `?offset=${offset}`;
                     }
 
-                    const response = await fetch(url, {
-                        headers: { 'Authorization': `Bearer ${AIRTABLE_CONFIG.apiKey}` }
-                    });
+                    const response = await fetch(url);
 
                     if (!response.ok) {
                         throw new Error(`Failed to fetch ${tableName}: ${response.status}`);

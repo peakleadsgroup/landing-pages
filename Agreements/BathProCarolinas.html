@@ -850,8 +850,7 @@ DOCUMENT STATUS: FULLY EXECUTED
                 try {
                     const response = await fetch(webhookUrl, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
+                        headers: { 'Content-Type': 'application/json',
                         },
                         body: JSON.stringify(webhookData),
                         mode: 'no-cors'

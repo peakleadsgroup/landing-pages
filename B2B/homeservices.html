@@ -525,8 +525,6 @@
   // Airtable Configuration
   const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
   const AIRTABLE_TABLE_ID = 'tbldNpwtCN9y5Pkiy';
-  const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
-
   // ------------------ State ------------------
   const formData = { niches: [] };
   const bottomFormData = { niches: [] };
@@ -1030,11 +1028,9 @@
       const airtableFetchStart = performance.now();
       log('INFO', 'Airtable fetch START', { formId, uniqueMetaID, msSinceSubmit: Math.round(airtableFetchStart - submitStartTime) });
 
-      const airtableResponse = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}`, {
+      const airtableResponse = await fetch(`/api/airtable/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-          'Content-Type': 'application/json'
+        headers: { 'Content-Type': 'application/json'
         },
         body: JSON.stringify(airtableData)
       });

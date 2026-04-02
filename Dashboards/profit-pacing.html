@@ -253,7 +253,6 @@
             DRAWS_TABLE_ID: 'tblScVCqHc0gUiHwG',
             CLIENTS_TABLE_ID: 'tblMl8Y97cMSbricC',
             REVENUE_TABLE_ID: 'tblPt6Wc79hTBSmcD',
-            API_KEY: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589',
             /**
              * One webhook returning JSON, e.g. lastweek, thismonth, lastmonth and
              * lastweekcccunbranded / lastweekcccbranded, thismonthccc*, lastmonthccc* (see CCC_SPEND_KEYS_BY_PERIOD).
@@ -401,11 +400,9 @@
             let offset = null;
             let page = 0;
             do {
-                let url = `https://api.airtable.com/v0/${CONFIG.BASE_ID}/${tableId}`;
+                let url = `/api/airtable/v0/${CONFIG.BASE_ID}/${tableId}`;
                 if (offset) url += `?offset=${offset}`;
-                const response = await fetch(url, {
-                    headers: { 'Authorization': `Bearer ${CONFIG.API_KEY}` }
-                });
+                const response = await fetch(url);
                 if (!response.ok) {
                     logPP('error', 'Airtable fetch HTTP error', { tableId, status: response.status, statusText: response.statusText });
                     throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
@@ -431,11 +428,9 @@
             let offset = null;
             let page = 0;
             do {
-                let url = `https://api.airtable.com/v0/${CONFIG.BASE_ID}/${tableId}?filterByFormula=${encodeURIComponent(filterFormula)}`;
+                let url = `/api/airtable/v0/${CONFIG.BASE_ID}/${tableId}?filterByFormula=${encodeURIComponent(filterFormula)}`;
                 if (offset) url += `&offset=${offset}`;
-                const response = await fetch(url, {
-                    headers: { 'Authorization': `Bearer ${CONFIG.API_KEY}` }
-                });
+                const response = await fetch(url);
                 if (!response.ok) {
                     logPP('error', 'Airtable formula fetch HTTP error', { tableId, status: response.status });
                     throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);

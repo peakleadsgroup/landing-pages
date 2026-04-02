@@ -1116,8 +1116,7 @@
         // AIRTABLE CONFIGURATION
         // ============================================
         const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
-        const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
-        const AIRTABLE_BASE_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
+        const AIRTABLE_BASE_URL = `/api/airtable/v0/${AIRTABLE_BASE_ID}`;
         const B2B_TABLE_ID = 'tbldNpwtCN9y5Pkiy';
         const DEFAULT_LOGO_URL = 'https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png';
         
@@ -1149,9 +1148,7 @@
         async function fetchAirtableData(url) {
             try {
                 const response = await fetch(url, {
-                    headers: {
-                        'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-                        'Content-Type': 'application/json'
+                    headers: { 'Content-Type': 'application/json'
                     }
                 });
                 

@@ -1456,8 +1456,7 @@
             // Send webhook with appointment data
             fetch(CALENDAR_WEBHOOK_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+                headers: { 'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(appointmentData),
                 mode: 'no-cors'
@@ -1663,8 +1662,7 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
             
             fetch('https://hook.us2.make.com/g5h4leaf5ibs3dncj6n2lon5d9w3yi3g', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+                headers: { 'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(webhookData),
                 mode: 'no-cors'

@@ -94,7 +94,6 @@
         const AMOUNT_PAID = 0;
 
         const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
-        const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
         const LEADS_TABLE_ID = 'tblPt6Wc79hTBSmcD';
         /** Creative Concepts Contracting — Clients table record ID (Linked Client on leads). */
         const LINKED_CLIENT_RECORD_ID = 'recN5TuwlaK1BW6g';
@@ -225,33 +224,76 @@
             return dt >= start;
         }
 
+        /** Field names to inspect for linked client record IDs (API uses display names). */
+        const LINKED_CLIENT_FIELD_CANDIDATES = ['Linked Client', 'Client', 'Linked Clients'];
+
+        function collectRecIdsFromValue(v, seen, out) {
+            if (v == null) return;
+            if (typeof v === 'string' && v.startsWith('rec')) {
+                if (!seen.has(v)) {
+                    seen.add(v);
+                    out.push(v);
+                }
+                return;
+            }
+            if (Array.isArray(v)) {
+                for (const x of v) collectRecIdsFromValue(x, seen, out);
+                return;
+            }
+            if (typeof v === 'object' && typeof v.id === 'string') {
+                collectRecIdsFromValue(v.id, seen, out);
+            }
+        }
+
+        function getLinkedClientRecIdsFromRecord(record) {
+            const ids = [];
+            const seen = new Set();
+            for (const field of LINKED_CLIENT_FIELD_CANDIDATES) {
+                collectRecIdsFromValue(record.fields[field], seen, ids);
+            }
+            if (ids.length === 0) {
+                for (const key of Object.keys(record.fields)) {
+                    if (/client|link/i.test(key)) {
+                        collectRecIdsFromValue(record.fields[key], seen, ids);
+                    }
+                }
+            }
+            return ids;
+        }
+
         function leadRecordMatchesClient(record) {
-            const lc = record.fields['Linked Client'];
-            if (Array.isArray(lc)) return lc.includes(LINKED_CLIENT_RECORD_ID);
-            if (typeof lc === 'string') return lc === LINKED_CLIENT_RECORD_ID;
-            return false;
+            return getLinkedClientRecIdsFromRecord(record).includes(LINKED_CLIENT_RECORD_ID);
         }
 
         function statusIsQualified(record) {
             const s = record.fields['Status'];
             if (s == null) return false;
+            if (Array.isArray(s)) {
+                return s.some(x => String(x).trim().toLowerCase() === 'qualified');
+            }
             return String(s).trim().toLowerCase() === 'qualified';
         }
 
-        async function airtableListLeads(filterFormula, pageSize, label) {
+        /**
+         * @param {number} [maxPages] Stop after this many pages (safety for wide filters).
+         */
+        async function airtableListLeads(filterFormula, pageSize, label, maxPages) {
             let offset = null;
             const records = [];
             let page = 0;
+            const limit = maxPages == null ? Infinity : maxPages;
             do {
                 page += 1;
+                if (page > limit) {
+                    logCpl('warn', `Pagination cap reached (${label})`, { maxPages: limit, rowsFetched: records.length });
+                    break;
+                }
                 let url =
-                    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${LEADS_TABLE_ID}` +
+                    `/api/airtable/v0/${AIRTABLE_BASE_ID}/${LEADS_TABLE_ID}` +
                     `?filterByFormula=${encodeURIComponent(filterFormula)}&pageSize=${pageSize}`;
                 if (offset) url += `&offset=${encodeURIComponent(offset)}`;
-                logCpl('log', `Airtable request (${label}) page ${page}`, { urlTail: url.slice(-120) });
-                const response = await fetch(url, {
-                    headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` }
-                });
+                logCpl('log', `Airtable request (${label}) page ${page}`, { urlTail: decodeURIComponent(url.slice(Math.max(0, url.length - 200))) });
+                const response = await fetch(url);
                 if (!response.ok) {
                     const t = await response.text();
                     logCpl('error', `Airtable HTTP error (${label})`, { status: response.status, body: (t || '').slice(0, 500) });
@@ -266,18 +308,74 @@
             return records;
         }
 
+        /**
+         * Linked-record match in Airtable formulas (no direct equality — breaks some multi-link fields).
+         * Two ARRAYJOIN forms cover different bases.
+         */
+        function formulaClientMatchesLinkedField() {
+            const id = LINKED_CLIENT_RECORD_ID;
+            return (
+                `OR(` +
+                `FIND("${id}", ARRAYJOIN({Linked Client})) > 0, ` +
+                `FIND("${id}", ARRAYJOIN({Linked Client}, ",")) > 0` +
+                `)`
+            );
+        }
+
+        async function logClientFormulaProbes() {
+            const id = LINKED_CLIENT_RECORD_ID;
+            const probes = [
+                { label: 'probe equality only', formula: `{Linked Client}="${id}"` },
+                { label: 'probe FIND ARRAYJOIN default', formula: `FIND("${id}", ARRAYJOIN({Linked Client})) > 0` },
+                { label: 'probe FIND ARRAYJOIN comma', formula: `FIND("${id}", ARRAYJOIN({Linked Client}, ",")) > 0` }
+            ];
+            for (const p of probes) {
+                try {
+                    const rows = await airtableListLeads(p.formula, 5, p.label, 1);
+                    logCpl('log', `Probe "${p.label}" row count (max 5)`, { count: rows.length, ids: rows.map(r => r.id) });
+                } catch (e) {
+                    logCpl('error', `Probe "${p.label}" failed`, e.message || String(e));
+                }
+            }
+        }
+
+        async function logProbeRecentFieldNames() {
+            try {
+                const py = getCplWindowYear();
+                const probeStart = `${py}-03-01`;
+                const rows = await airtableListLeads(`IS_AFTER({Created}, "${probeStart}")`, 5, 'probe recent field keys', 1);
+                if (!rows.length) {
+                    logCpl('warn', `Probe recent: no rows Created after ${probeStart} — widen probe or check base/year`, { probeStart });
+                    return;
+                }
+                logCpl('warn', 'Probe recent: first record field keys (check link field name)', {
+                    recordId: rows[0].id,
+                    fieldKeys: Object.keys(rows[0].fields),
+                    samples: rows.map(r => ({
+                        id: r.id,
+                        Status: r.fields['Status'],
+                        Created: r.fields['Created'],
+                        linkedIds: getLinkedClientRecIdsFromRecord(r)
+                    }))
+                });
+            } catch (e) {
+                logCpl('error', 'Probe recent fields failed', e.message || String(e));
+            }
+        }
+
         /** When strict count is 0, fetch CCC+Qualified leads without date to log what Airtable returns. */
         async function logDiagnosticNoDateFilter() {
-            const formula = `AND({Status}="Qualified", FIND("${LINKED_CLIENT_RECORD_ID}", ARRAYJOIN({Linked Client})) > 0)`;
+            const clientOr = formulaClientMatchesLinkedField();
+            const formula = `AND({Status}="Qualified", ${clientOr})`;
             try {
                 const recs = await airtableListLeads(formula, 100, 'diagnostic no-date');
-                logCpl('warn', 'Diagnostic: Qualified + Linked Client (no Created filter)', {
+                logCpl('warn', 'Diagnostic: Qualified + client OR-clause (no Created filter)', {
                     count: recs.length,
                     sample: recs.slice(0, 15).map(r => ({
                         id: r.id,
                         Status: r.fields['Status'],
                         Created: r.fields['Created'],
-                        LinkedClient: r.fields['Linked Client']
+                        linkedIds: getLinkedClientRecIdsFromRecord(r)
                     }))
                 });
             } catch (e) {
@@ -285,31 +383,50 @@
             }
         }
 
+        function countQualifiedCccFromPool(pool, label) {
+            const matched = pool.filter(
+                r => leadRecordMatchesClient(r) && statusIsQualified(r) && recordCreatedOnOrAfterCplStart(r)
+            );
+            logCpl('log', `JS filter (${label})`, {
+                poolSize: pool.length,
+                matchedCount: matched.length,
+                statusHistogram: pool.slice(0, 80).reduce((acc, r) => {
+                    const k = r.fields['Status'] == null ? '(empty)' : String(r.fields['Status']);
+                    acc[k] = (acc[k] || 0) + 1;
+                    return acc;
+                }, {}),
+                clientIdHitsInPool: pool.filter(leadRecordMatchesClient).length
+            });
+            return matched.length;
+        }
+
         async function fetchQualifiedCccLeadCount() {
             const y = getCplWindowYear();
             const cutoff = getAirtableCreatedCutoffIsoDate();
             const startEt = getCplStartEastern();
+            const clientOr = formulaClientMatchesLinkedField();
             logCpl('log', 'Lead count config', {
                 LINKED_CLIENT_RECORD_ID,
                 cplWindowYear: y,
                 cplStartEasternISO: startEt.toISO(),
                 airtableIS_AFTER_Created: cutoff,
-                browserNow: new Date().toISOString()
+                browserNow: new Date().toISOString(),
+                linkedFieldCandidates: LINKED_CLIENT_FIELD_CANDIDATES
             });
 
-            const formula =
-                `AND({Status}="Qualified", FIND("${LINKED_CLIENT_RECORD_ID}", ARRAYJOIN({Linked Client})) > 0, IS_AFTER({Created}, "${cutoff}"))`;
-            logCpl('log', 'filterByFormula (strict)', formula);
+            const strictFormula =
+                `AND({Status}="Qualified", ${clientOr}, IS_AFTER({Created}, "${cutoff}"))`;
+            logCpl('log', 'filterByFormula (strict)', strictFormula);
 
-            const records = await airtableListLeads(formula, 100, 'strict');
+            const records = await airtableListLeads(strictFormula, 100, 'strict');
 
-            const postFilter = records.filter(r => recordCreatedOnOrAfterCplStart(r));
-            const dropped = records.length - postFilter.length;
+            let postFilter = records.filter(r => recordCreatedOnOrAfterCplStart(r));
+            postFilter = postFilter.filter(leadRecordMatchesClient).filter(statusIsQualified);
 
             logCpl('log', 'Strict query summary', {
                 recordsFromApi: records.length,
-                afterEasternDateFilter: postFilter.length,
-                droppedByPostFilter: dropped
+                afterEasternDateFilter: records.filter(recordCreatedOnOrAfterCplStart).length,
+                note: 'Final strict count uses JS client + qualified checks too'
             });
 
             const maxSamples = 12;
@@ -320,49 +437,63 @@
                 logCpl('log', `Sample row ${i + 1}/${Math.min(records.length, maxSamples)}`, {
                     id: r.id,
                     Status: r.fields['Status'],
-                    LinkedClient: r.fields['Linked Client'],
+                    linkedIdsFromRecord: getLinkedClientRecIdsFromRecord(r),
                     CreatedRaw: raw,
                     createdEastern: dt && dt.isValid ? dt.toISO() : null,
-                    matchesClientField: leadRecordMatchesClient(r),
+                    leadRecordMatchesClient: leadRecordMatchesClient(r),
                     statusQualified: statusIsQualified(r),
                     passesEasternCutoff: recordCreatedOnOrAfterCplStart(r)
                 });
             });
 
-            if (records.length === 0) {
-                logCpl('warn', 'Strict filter returned 0 rows — running diagnostic (no Created clause)');
-                await logDiagnosticNoDateFilter();
-            } else if (postFilter.length === 0 && records.length > 0) {
-                logCpl('warn', 'All rows dropped by Eastern date filter — check Created values vs cplStartEasternISO');
+            if (records.length > 0 && postFilter.length === 0) {
+                logCpl('warn', 'Strict API returned rows but none passed JS client/qualified/date — check linkedIdsFromRecord vs LINKED_CLIENT_RECORD_ID');
             }
 
             if (postFilter.length > 0) {
                 return postFilter.length;
             }
 
-            /** Status text in Airtable may not match formula {Status}="Qualified" (whitespace, option spelling). */
-            const fallbackFormula =
-                `AND(FIND("${LINKED_CLIENT_RECORD_ID}", ARRAYJOIN({Linked Client})) > 0, IS_AFTER({Created}, "${cutoff}"))`;
-            logCpl('warn', 'Strict count is 0 — fallback: Linked Client + Created only, Qualified checked in JS', {
-                fallbackFormula
-            });
-            const wide = await airtableListLeads(fallbackFormula, 100, 'fallback');
-            const fallbackCount = wide.filter(
-                r => statusIsQualified(r) && recordCreatedOnOrAfterCplStart(r)
-            ).length;
-            logCpl('log', 'Fallback summary', {
-                rowsFromApi: wide.length,
-                afterQualifiedAndEastern: fallbackCount,
-                statusHistogram: wide.slice(0, 50).reduce((acc, r) => {
-                    const k = r.fields['Status'] == null ? '(empty)' : String(r.fields['Status']);
-                    acc[k] = (acc[k] || 0) + 1;
-                    return acc;
-                }, {})
-            });
-            if (fallbackCount > 0) {
-                logCpl('warn', 'Using fallback lead count (strict formula matched no rows)', { fallbackCount });
+            if (records.length === 0) {
+                logCpl('warn', 'Strict filter returned 0 rows — diagnostic probes + no-date diagnostic');
+                await logClientFormulaProbes();
+                await logDiagnosticNoDateFilter();
             }
-            return fallbackCount;
+
+            /** Client match in Airtable is unreliable; pull Qualified + Created window and match client in JS. */
+            const poolFormula = `AND({Status}="Qualified", IS_AFTER({Created}, "${cutoff}"))`;
+            logCpl('warn', 'Trying pool: Qualified + Created (client match in JS)', { poolFormula });
+            const pool = await airtableListLeads(poolFormula, 100, 'qualified+created pool');
+            let count = countQualifiedCccFromPool(pool, 'qualified+created pool');
+            if (count > 0) {
+                logCpl('warn', 'Using JS client match on Qualified+Created pool', { count });
+                return count;
+            }
+
+            const fallbackFormula = `AND(${clientOr}, IS_AFTER({Created}, "${cutoff}"))`;
+            logCpl('warn', 'Trying fallback: Airtable client OR + Created; Qualified in JS', { fallbackFormula });
+            const wide = await airtableListLeads(fallbackFormula, 100, 'client+created');
+            count = wide.filter(r => statusIsQualified(r) && recordCreatedOnOrAfterCplStart(r)).length;
+            logCpl('log', 'Fallback client+created summary', {
+                rowsFromApi: wide.length,
+                afterQualifiedAndEastern: count
+            });
+            if (count > 0) {
+                logCpl('warn', 'Using fallback count (client formula + JS qualified + Eastern date)', { count });
+                return count;
+            }
+
+            logCpl('warn', 'Last resort: Created-only window (max 30 pages × 100), all filters in JS');
+            const dateOnly = await airtableListLeads(`IS_AFTER({Created}, "${cutoff}")`, 100, 'created-only', 30);
+            count = countQualifiedCccFromPool(dateOnly, 'created-only capped');
+            if (count > 0) {
+                logCpl('warn', 'Using created-only capped pool count', { count });
+                return count;
+            }
+
+            await logProbeRecentFieldNames();
+            logCpl('error', 'Still 0 leads: verify LINKED_CLIENT_RECORD_ID matches a value in the link field on real rows; compare probe logs above.');
+            return 0;
         }
 
         function applySpendToDom(unbranded, branded, total, agencyFee, amountDue) {

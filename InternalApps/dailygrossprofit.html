@@ -81,8 +81,7 @@
     <script>
         const WEBHOOK_URL = 'https://hook.us2.make.com/o6fd582de7ovwb1wpo6abj4t39w7wbe1';
         const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
-        const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
-        const AIRTABLE_BASE_URL = 'https://api.airtable.com/v0/' + AIRTABLE_BASE_ID;
+        const AIRTABLE_BASE_URL = '/api/airtable/v0/' + AIRTABLE_BASE_ID;
         const B2C_LEADS_TABLE = 'B2C Leads';
         const GROSS_REVENUE_FIELD = 'Gross Revenue';
 
@@ -148,9 +147,7 @@
                 let url = AIRTABLE_BASE_URL + '/' + encodeURIComponent(B2C_LEADS_TABLE) + '?filterByFormula=' + encodeURIComponent(formula);
                 if (offset) url += '&offset=' + offset;
 
-                const res = await fetch(url, {
-                    headers: { 'Authorization': 'Bearer ' + AIRTABLE_API_KEY }
-                });
+                const res = await fetch(url);
                 if (!res.ok) throw new Error('Airtable B2C Leads: ' + res.status);
 
                 const data = await res.json();
