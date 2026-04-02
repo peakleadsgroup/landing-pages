@@ -109,7 +109,7 @@
 
             <div id="marginsSection" class="bg-white rounded-lg shadow-sm p-6 mt-6">
                 <h2 class="text-xl font-semibold text-gray-900 mb-2">Gross Margins</h2>
-                <p class="text-sm text-gray-500 mb-6">Revenue sums <span class="font-medium">Gross Revenue</span> from B2C Leads where <span class="font-medium">Linked Client</span> is set, using each row’s <span class="font-medium">Created</span> timestamp in Eastern time for the period windows. Ad spend from Make.com. Refreshes on load and when you click Refresh.</p>
+                <p class="text-sm text-gray-500 mb-6">Revenue sums <span class="font-medium">Gross Revenue</span> from B2C Leads where <span class="font-medium">Status</span> is Qualified, <span class="font-medium">Linked Client</span> is set, and each row’s <span class="font-medium">Created</span> time (Eastern) falls in the period. Ad spend from Make.com. Refreshes on load and when you click Refresh.</p>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div id="gmColLastWeek" class="rounded-lg border border-gray-200 p-4 space-y-4">
                         <div>
@@ -260,8 +260,11 @@
         const GROSS_MARGIN_FIELDS = {
             CREATED: 'Created',
             GROSS_REVENUE: 'Gross Revenue',
-            LINKED_CLIENT: 'Linked Client'
+            LINKED_CLIENT: 'Linked Client',
+            STATUS: 'Status'
         };
+
+        const GROSS_MARGIN_STATUS_QUALIFIED = 'Qualified';
 
         const ET_ZONE = 'America/New_York';
 
@@ -411,6 +414,15 @@
             return true;
         }
 
+        function isQualifiedStatus(fields) {
+            const s = fields[GROSS_MARGIN_FIELDS.STATUS];
+            if (s == null || s === '') return false;
+            if (Array.isArray(s)) {
+                return s.some(v => String(v).trim() === GROSS_MARGIN_STATUS_QUALIFIED);
+            }
+            return String(s).trim() === GROSS_MARGIN_STATUS_QUALIFIED;
+        }
+
         function formatRangeLabelET(start, end) {
             const { DateTime } = luxon;
             const s = DateTime.isDateTime(start) ? start : DateTime.fromISO(String(start), { zone: ET_ZONE });
@@ -471,6 +483,7 @@
         function sumGrossRevenueLinkedInPeriod(records, startET, endET) {
             let sum = 0;
             for (const rec of records) {
+                if (!isQualifiedStatus(rec.fields)) continue;
                 if (!hasLinkedClient(rec.fields)) continue;
                 if (!recordCreatedBetweenET(rec, startET, endET)) continue;
                 const val = parseCurrency(rec.fields[GROSS_MARGIN_FIELDS.GROSS_REVENUE]);
@@ -564,7 +577,7 @@
 
         async function fetchRevenueRecordsForGrossMargins() {
             const minISO = luxon.DateTime.now().setZone(ET_ZONE).minus({ days: 500 }).toUTC().toISO();
-            const formula = `IS_AFTER({${GROSS_MARGIN_FIELDS.CREATED}}, "${minISO}")`;
+            const formula = `AND(IS_AFTER({${GROSS_MARGIN_FIELDS.CREATED}}, "${minISO}"), {${GROSS_MARGIN_FIELDS.STATUS}}='${GROSS_MARGIN_STATUS_QUALIFIED}')`;
             return fetchAllTableRecordsWithFormula(CONFIG.REVENUE_TABLE_ID, formula);
         }
 
@@ -608,7 +621,7 @@
                     const createdDetail = formatCreatedWindowDetail(p.start, p.end);
                     setGmMetricState(colId, 'revenue', 'ok', {
                         amount: formatMoney(revenue),
-                        detail: `${createdDetail} · Linked Client required`
+                        detail: `${createdDetail} · Status = Qualified · Linked Client required`
                     });
                 } else {
                     setGmMetricState(colId, 'revenue', 'error', { error: revenueError });
