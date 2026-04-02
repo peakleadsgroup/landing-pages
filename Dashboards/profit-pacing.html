@@ -7,6 +7,7 @@
     <title>Profit Pacing Dashboard</title>
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
     <style>
@@ -72,13 +73,29 @@
                         <p class="text-sm text-gray-600 mt-1" id="netProfitPerDayDetail"></p>
                     </div>
                     <div class="border-t border-gray-100 pt-6">
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Current Projection</h3>
+                        <p class="text-2xl font-bold text-gray-900" id="currentProjection">—</p>
+                        <p class="text-sm text-gray-600 mt-1" id="currentProjectionDetail"></p>
+                    </div>
+                    <div class="border-t border-gray-100 pt-6">
                         <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Profit/Day Needed to $1 Mil Net</h3>
                         <p class="text-2xl font-bold text-gray-900" id="profitPerDay1M">—</p>
+                        <p class="text-sm text-gray-600 mt-1" id="profitPerDay1MDetail"></p>
                     </div>
                     <div class="border-t border-gray-100 pt-6">
                         <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Profit/Day to $2 Mil Net</h3>
                         <p class="text-2xl font-bold text-gray-900" id="profitPerDay2M">—</p>
+                        <p class="text-sm text-gray-600 mt-1" id="profitPerDay2MDetail"></p>
                     </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm p-6 mt-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-1">Clients Closed/Week</h2>
+                    <p class="text-sm text-gray-500 mb-4">Weeks begin Monday 12:00 AM Eastern (America/New_York). Count uses each record’s <span class="font-medium">Created</span> timestamp.</p>
+                    <div id="clientsChartWrap" class="bg-gray-50 rounded-lg p-4" style="height: 420px;">
+                        <canvas id="clientsClosedWeekChart"></canvas>
+                    </div>
+                    <p id="clientsChartEmpty" class="text-sm text-gray-600 mt-4 hidden text-center">No client records with a Created date were found.</p>
                 </div>
             </div>
 
@@ -97,12 +114,16 @@
             BASE_ID: 'appmBb0lzqRK9dI8v',
             TABLE_ID: 'tblEze74vhj4hE9c9',
             DRAWS_TABLE_ID: 'tblScVCqHc0gUiHwG',
+            CLIENTS_TABLE_ID: 'tblMl8Y97cMSbricC',
             API_KEY: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589'
         };
+
+        const ET_ZONE = 'America/New_York';
 
         const OWNER_NAMES = new Set(['Drew Williams', 'Daniel Wellish']);
 
         let chartInstance = null;
+        let clientsChartInstance = null;
 
         function showState(state) {
             const states = ['loadingState', 'chartContainer', 'noDataState', 'errorMessage'];
@@ -220,8 +241,12 @@
             if (latestRealizedCash === null || latestRealizedCash === undefined) {
                 document.getElementById('netProfitPerDay').textContent = '—';
                 document.getElementById('netProfitPerDayDetail').textContent = 'No realized cash value on the latest snapshot.';
+                document.getElementById('currentProjection').textContent = '—';
+                document.getElementById('currentProjectionDetail').textContent = '';
                 document.getElementById('profitPerDay1M').textContent = '—';
                 document.getElementById('profitPerDay2M').textContent = '—';
+                document.getElementById('profitPerDay1MDetail').textContent = '';
+                document.getElementById('profitPerDay2MDetail').textContent = '';
                 return;
             }
 
@@ -232,11 +257,21 @@
             document.getElementById('netProfitPerDayDetail').textContent =
                 `Latest realized cash ${formatMoney(latestRealizedCash)} + owner draws (Drew Williams & Daniel Wellish) ${formatMoney(draws)} = ${formatMoney(adjustedNet)}; ÷ ${daysIn} day${daysIn === 1 ? '' : 's'} into ${new Date().getFullYear()}.`;
 
+            const runRateTail = perDayYtd * daysLeft;
+            const currentProjection = runRateTail + latestRealizedCash + draws;
+            document.getElementById('currentProjection').textContent = formatMoney(currentProjection);
+            document.getElementById('currentProjectionDetail').textContent =
+                `(net profit/day × days left) + realized cash + owner draws = (${formatMoney(perDayYtd)} × ${daysLeft}) + ${formatMoney(latestRealizedCash)} + ${formatMoney(draws)} = ${formatMoney(currentProjection)}.`;
+
             const need1m = (1_000_000 - adjustedNet) / daysLeft;
             const need2m = (2_000_000 - adjustedNet) / daysLeft;
 
             document.getElementById('profitPerDay1M').textContent = formatMoney(need1m);
             document.getElementById('profitPerDay2M').textContent = formatMoney(need2m);
+            document.getElementById('profitPerDay1MDetail').textContent =
+                `(1,000,000 − adjusted net) ÷ days left = (${formatMoney(1_000_000)} − ${formatMoney(adjustedNet)}) ÷ ${daysLeft} = ${formatMoney(need1m)}`;
+            document.getElementById('profitPerDay2MDetail').textContent =
+                `(2,000,000 − adjusted net) ÷ days left = (${formatMoney(2_000_000)} − ${formatMoney(adjustedNet)}) ÷ ${daysLeft} = ${formatMoney(need2m)}`;
         }
 
         async function fetchData() {
@@ -245,9 +280,10 @@
             showState('loadingState');
 
             try {
-                const [allRecords, drawRecords] = await Promise.all([
+                const [allRecords, drawRecords, clientRecords] = await Promise.all([
                     fetchAllTableRecords(CONFIG.TABLE_ID),
-                    fetchAllTableRecords(CONFIG.DRAWS_TABLE_ID)
+                    fetchAllTableRecords(CONFIG.DRAWS_TABLE_ID),
+                    fetchAllTableRecords(CONFIG.CLIENTS_TABLE_ID)
                 ]);
 
                 const ownerDrawsSum = sumOwnerDraws(drawRecords);
@@ -292,6 +328,7 @@
 
                 createChart(processedData);
                 updateMetrics(latestRealized, ownerDrawsSum);
+                createClientsClosedWeekChart(clientRecords);
                 showState('chartContainer');
             } catch (error) {
                 console.error('Error:', error);
@@ -437,6 +474,140 @@
                                     }
                                     return dateStr;
                                 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        /** Monday 00:00 Eastern for the week containing this instant (Mon–Sun weeks). */
+        function mondayStartEastern(jsDate) {
+            const { DateTime } = luxon;
+            const dt = DateTime.fromJSDate(jsDate, { zone: 'utc' }).setZone(ET_ZONE);
+            const dayStart = dt.startOf('day');
+            return dayStart.minus({ days: dayStart.weekday - 1 });
+        }
+
+        function formatWeekAxisLabel(monday) {
+            const sunday = monday.plus({ days: 6 });
+            if (monday.year === sunday.year) {
+                return `${monday.toFormat('MMM d')} – ${sunday.toFormat('MMM d, yyyy')}`;
+            }
+            return `${monday.toFormat('MMM d, yyyy')} – ${sunday.toFormat('MMM d, yyyy')}`;
+        }
+
+        /** Bucket client records by Eastern Monday-start week; fill gaps with zero. */
+        function aggregateClientsByWeek(records) {
+            const { DateTime } = luxon;
+            const counts = new Map();
+            for (const r of records) {
+                const raw = r.fields['Created'];
+                if (raw == null || raw === '') continue;
+                const js = new Date(raw);
+                if (isNaN(js.getTime())) continue;
+                const monday = mondayStartEastern(js);
+                const key = monday.toISODate();
+                counts.set(key, (counts.get(key) || 0) + 1);
+            }
+            if (counts.size === 0) {
+                return { labels: [], data: [] };
+            }
+            const sortedKeys = [...counts.keys()].sort();
+            let cursor = DateTime.fromISO(sortedKeys[0], { zone: ET_ZONE });
+            const end = DateTime.fromISO(sortedKeys[sortedKeys.length - 1], { zone: ET_ZONE });
+            const labels = [];
+            const data = [];
+            while (cursor <= end) {
+                const k = cursor.toISODate();
+                labels.push(formatWeekAxisLabel(cursor));
+                data.push(counts.get(k) || 0);
+                cursor = cursor.plus({ weeks: 1 });
+            }
+            return { labels, data };
+        }
+
+        function createClientsClosedWeekChart(records) {
+            const wrap = document.getElementById('clientsChartWrap');
+            const emptyEl = document.getElementById('clientsChartEmpty');
+            const ctx = document.getElementById('clientsClosedWeekChart').getContext('2d');
+
+            if (clientsChartInstance) {
+                clientsChartInstance.destroy();
+                clientsChartInstance = null;
+            }
+
+            const { labels, data } = aggregateClientsByWeek(records);
+
+            if (labels.length === 0) {
+                wrap.classList.add('hidden');
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            wrap.classList.remove('hidden');
+            emptyEl.classList.add('hidden');
+
+            clientsChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'New clients',
+                        data,
+                        backgroundColor: 'rgba(59, 130, 246, 0.65)',
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { font: { size: 12, weight: 'bold' } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    const n = ctx.parsed.y;
+                                    return (n === 1 ? '1 new client' : `${n} new clients`);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    if (Number.isInteger(value)) return value;
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'New clients (count)',
+                                font: { size: 12, weight: '600' }
+                            },
+                            grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                maxRotation: 55,
+                                minRotation: 55,
+                                autoSkip: true,
+                                maxTicksLimit: 24,
+                                font: { size: 10 }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Week (Mon – Sun, Eastern)',
+                                font: { size: 12, weight: '600' },
+                                padding: { top: 8 }
                             }
                         }
                     }
