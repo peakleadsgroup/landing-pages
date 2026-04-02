@@ -24,7 +24,6 @@
                         <img src="https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Logo" class="h-10 w-auto">
                         <div>
                             <h1 class="text-2xl font-bold text-gray-900">CCC Ad Spend</h1>
-                            <p class="text-gray-600 text-sm mt-1">Branded &amp; unbranded campaign spend</p>
                         </div>
                     </div>
                     <button type="button" onclick="loadSpend()" id="refreshBtn" class="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shrink-0">
@@ -45,7 +44,7 @@
                 <svg class="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                 </svg>
-                <p class="text-gray-600 text-sm">Calling Make.com for latest spend…</p>
+                <p class="text-gray-600 text-sm">Fetching up to date adspend...</p>
             </div>
 
             <div id="dataPanel" class="hidden space-y-4">
@@ -66,6 +65,14 @@
                         <span class="text-gray-600 font-medium">Agency Fee (25%)</span>
                         <span class="text-xl font-semibold text-indigo-700 tabular-nums" id="valAgencyFee">—</span>
                     </div>
+                    <div class="p-5 flex justify-between items-baseline gap-4">
+                        <span class="text-gray-600 font-medium">Amount Paid</span>
+                        <span class="text-xl font-semibold text-gray-900 tabular-nums" id="valAmountPaid">$0.00</span>
+                    </div>
+                    <div class="p-5 flex justify-between items-baseline gap-4 bg-gray-50">
+                        <span class="text-gray-900 font-semibold">Amount Due</span>
+                        <span class="text-2xl font-bold text-gray-900 tabular-nums" id="valAmountDue">—</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -74,6 +81,8 @@
     <script>
         const WEBHOOK_URL = 'https://hook.us2.make.com/ooadlf089ql95kwrgnu65boesj9ruk1w';
         const FETCH_TIMEOUT_MS = 6 * 60 * 1000;
+        /** Replace with a fetched value when wired to your source; total spend + agency fee − this = Amount Due. */
+        const AMOUNT_PAID = 0;
 
         function formatMoney(n) {
             return '$' + n.toLocaleString('en-US', {
@@ -191,11 +200,14 @@
 
                 const total = unbranded + branded;
                 const agencyFee = total * 0.25;
+                const amountDue = total + agencyFee - AMOUNT_PAID;
 
                 document.getElementById('valUnbranded').textContent = formatMoney(unbranded);
                 document.getElementById('valBranded').textContent = formatMoney(branded);
                 document.getElementById('valTotal').textContent = formatMoney(total);
                 document.getElementById('valAgencyFee').textContent = formatMoney(agencyFee);
+                document.getElementById('valAmountPaid').textContent = formatMoney(AMOUNT_PAID);
+                document.getElementById('valAmountDue').textContent = formatMoney(amountDue);
             } catch (e) {
                 const msg =
                     e && e.name === 'AbortError'
