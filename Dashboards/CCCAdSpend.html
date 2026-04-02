@@ -97,13 +97,18 @@
         const CONFIG = {
             baseId: 'appmBb0lzqRK9dI8v',
             leadsTableName: 'B2C Leads',
+            /** Same as profit-pacing / main landings — Airtable accepts table id or name; id avoids name mismatches. */
+            leadsTableId: 'tblPt6Wc79hTBSmcD',
             clientsTableName: 'Clients',
+            clientsTableId: 'tblMl8Y97cMSbricC',
             linkedFieldName: 'Linked Client',
             clientNameField: 'Name'
         };
 
-        /** Creative Concepts Contracting — Clients table record ID (Linked Client on leads). */
+        /** Creative Concepts Contracting — Clients row id (optional; CPL works via display name if this 404s). */
         const LINKED_CLIENT_RECORD_ID = 'recN5TuwlaK1BW6g';
+        /** Used when the Clients row cannot be loaded (wrong id, deleted, etc.); must match primary field text in ARRAYJOIN({Linked Client}). */
+        const CCC_CLIENT_DISPLAY_NAME_FALLBACK = 'Creative Concepts Contracting';
         /** March 26 (inclusive), Eastern. Year: null = current calendar year in the browser (fixes wrong-year filters). */
         const CPL_WINDOW_YEAR = null;
         const CPL_MONTH = 3;
@@ -243,26 +248,41 @@
             return false;
         }
 
-        /** Mirrors recordID.html fetchClientName — name is what ARRAYJOIN({Linked Client}) searches in formulas. */
-        async function fetchClientDisplayName(clientRecordId) {
-            const url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.clientsTableName)}/${clientRecordId}`;
-            logCpl('log', 'Fetching client row for display name', { url });
-            const response = await fetch(url);
-            if (!response.ok) {
-                const t = await response.text();
-                throw new Error(`Failed to fetch client: ${response.status} ${(t || '').slice(0, 120)}`);
+        /**
+         * Same as recordID.html fetchClientName. Tries table id first (matches /main pages), then table name.
+         * On 404, uses CCC_CLIENT_DISPLAY_NAME_FALLBACK so CPL still runs (update LINKED_CLIENT_RECORD_ID if fallback is wrong).
+         */
+        async function resolveClientDisplayName(clientRecordId) {
+            const urls = [
+                `/api/airtable/v0/${CONFIG.baseId}/${CONFIG.clientsTableId}/${clientRecordId}`,
+                `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.clientsTableName)}/${clientRecordId}`
+            ];
+            for (const url of urls) {
+                logCpl('log', 'Fetching client row for display name', { url });
+                const response = await fetch(url);
+                if (!response.ok) {
+                    logCpl('warn', 'Client row fetch failed', { url, status: response.status });
+                    continue;
+                }
+                const data = await response.json();
+                const clientName =
+                    data.fields[CONFIG.clientNameField]
+                    || data.fields['Name']
+                    || data.fields['Client']
+                    || data.fields['Company Name']
+                    || data.fields['Company'];
+                if (!clientName) {
+                    logCpl('warn', 'Client row has no name field', { fields: Object.keys(data.fields) });
+                    break;
+                }
+                const name = String(clientName).trim();
+                logCpl('log', 'Resolved client display name from Airtable', { name });
+                return name;
             }
-            const data = await response.json();
-            const clientName =
-                data.fields[CONFIG.clientNameField]
-                || data.fields['Name']
-                || data.fields['Client']
-                || data.fields['Company Name']
-                || data.fields['Company'];
-            if (!clientName) {
-                throw new Error(`Client name field not found. Available fields: ${Object.keys(data.fields).join(', ')}`);
-            }
-            return String(clientName).trim();
+            logCpl('warn', 'Using CCC_CLIENT_DISPLAY_NAME_FALLBACK — fix LINKED_CLIENT_RECORD_ID in CCCAdSpend.html if needed', {
+                fallback: CCC_CLIENT_DISPLAY_NAME_FALLBACK
+            });
+            return CCC_CLIENT_DISPLAY_NAME_FALLBACK;
         }
 
         /** Same as recordID.html filterFormula when useRecordId is false. */
@@ -295,7 +315,7 @@
                     break;
                 }
                 let url =
-                    `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.leadsTableName)}` +
+                    `/api/airtable/v0/${CONFIG.baseId}/${CONFIG.leadsTableId}` +
                     `?filterByFormula=${encodeURIComponent(filterFormula)}&pageSize=${pageSize}`;
                 if (offset) url += `&offset=${encodeURIComponent(offset)}`;
                 logCpl('log', `Airtable request (${label}) page ${page}`, { urlTail: decodeURIComponent(url.slice(Math.max(0, url.length - 200))) });
@@ -357,25 +377,8 @@
             }
         }
 
-        function countQualifiedCccFromPool(pool, label) {
-            const matched = pool.filter(
-                r => leadRecordMatchesClient(r) && statusIsQualified(r) && recordCreatedOnOrAfterCplStart(r)
-            );
-            logCpl('log', `JS filter (${label})`, {
-                poolSize: pool.length,
-                matchedCount: matched.length,
-                statusHistogram: pool.slice(0, 80).reduce((acc, r) => {
-                    const k = r.fields['Status'] == null ? '(empty)' : String(r.fields['Status']);
-                    acc[k] = (acc[k] || 0) + 1;
-                    return acc;
-                }, {}),
-                clientIdHitsInPool: pool.filter(leadRecordMatchesClient).length
-            });
-            return matched.length;
-        }
-
         async function fetchQualifiedCccLeadCount() {
-            const clientDisplayName = await fetchClientDisplayName(LINKED_CLIENT_RECORD_ID);
+            const clientDisplayName = await resolveClientDisplayName(LINKED_CLIENT_RECORD_ID);
             const clientFindFormula = buildFindLinkedClientFormula(clientDisplayName);
 
             const y = getCplWindowYear();
@@ -397,13 +400,15 @@
 
             const records = await airtableListLeads(strictFormula, 100, 'strict');
 
-            let postFilter = records.filter(r => recordCreatedOnOrAfterCplStart(r));
-            postFilter = postFilter.filter(leadRecordMatchesClient).filter(statusIsQualified);
+            /** Airtable already scoped leads with FIND(name, ARRAYJOIN(Linked Client)); do not require LINKED_CLIENT_RECORD_ID in JS. */
+            const postFilter = records.filter(
+                r => statusIsQualified(r) && recordCreatedOnOrAfterCplStart(r)
+            );
 
             logCpl('log', 'Strict query summary', {
                 recordsFromApi: records.length,
                 afterEasternDateFilter: records.filter(recordCreatedOnOrAfterCplStart).length,
-                note: 'JS verifies Linked Client includes rec id (recordID useRecordId pattern)'
+                note: 'Client filter from Airtable formula only (same as recordID.html)'
             });
 
             const maxSamples = 12;
@@ -424,7 +429,7 @@
             });
 
             if (records.length > 0 && postFilter.length === 0) {
-                logCpl('warn', 'Strict API returned rows but none passed JS — check Linked Client array includes LINKED_CLIENT_RECORD_ID');
+                logCpl('warn', 'Strict API returned rows but none passed Eastern date or Qualified (JS)');
             }
 
             if (postFilter.length > 0) {
@@ -436,17 +441,9 @@
                 await logDiagnosticNoDateFilter(clientFindFormula);
             }
 
-            const poolFormula = `AND({Status}="Qualified", IS_AFTER({Created}, "${cutoff}"))`;
-            logCpl('warn', 'Trying pool: Qualified + Created (client match in JS via Linked Client rec ids)', { poolFormula });
-            const pool = await airtableListLeads(poolFormula, 100, 'qualified+created pool');
-            let count = countQualifiedCccFromPool(pool, 'qualified+created pool');
-            if (count > 0) {
-                logCpl('warn', 'Using JS client match on Qualified+Created pool', { count });
-                return count;
-            }
-
             const fallbackFormula = `AND(${clientFindFormula}, IS_AFTER({Created}, "${cutoff}"))`;
             logCpl('warn', 'Trying fallback: FIND(name)+Created; Qualified in JS', { fallbackFormula });
+            let count = 0;
             const wide = await airtableListLeads(fallbackFormula, 100, 'client+created');
             count = wide.filter(r => statusIsQualified(r) && recordCreatedOnOrAfterCplStart(r)).length;
             logCpl('log', 'Fallback client+created summary', {
@@ -458,11 +455,11 @@
                 return count;
             }
 
-            logCpl('warn', 'Last resort: Created-only window (max 30 pages × 100), all filters in JS');
-            const dateOnly = await airtableListLeads(`IS_AFTER({Created}, "${cutoff}")`, 100, 'created-only', 30);
-            count = countQualifiedCccFromPool(dateOnly, 'created-only capped');
+            logCpl('warn', 'Last resort: same client+Created formula, up to 50 pages');
+            const extended = await airtableListLeads(fallbackFormula, 100, 'client+created extended', 50);
+            count = extended.filter(r => statusIsQualified(r) && recordCreatedOnOrAfterCplStart(r)).length;
             if (count > 0) {
-                logCpl('warn', 'Using created-only capped pool count', { count });
+                logCpl('warn', 'Using extended pagination count', { count });
                 return count;
             }
 
