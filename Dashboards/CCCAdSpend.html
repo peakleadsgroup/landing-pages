@@ -7,6 +7,7 @@
     <title>CCC Ad Spend</title>
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
     <style>
         @keyframes spin {
             from { transform: rotate(0deg); }
@@ -24,6 +25,7 @@
                         <img src="https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Logo" class="h-10 w-auto">
                         <div>
                             <h1 class="text-2xl font-bold text-gray-900">CCC Ad Spend</h1>
+                            <p class="text-gray-600 text-sm mt-1">Starts on 3/26</p>
                         </div>
                     </div>
                     <button type="button" onclick="loadSpend()" id="refreshBtn" class="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shrink-0">
@@ -36,7 +38,7 @@
             </div>
 
             <div id="errorMessage" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 hidden">
-                <h3 class="font-semibold text-red-900 mb-1">Could not load spend</h3>
+                <h3 class="font-semibold text-red-900 mb-1" id="errorTitle">Could not load spend</h3>
                 <p class="text-sm text-red-800" id="errorText"></p>
             </div>
 
@@ -73,6 +75,16 @@
                         <span class="text-gray-900 font-semibold">Amount Due</span>
                         <span class="text-2xl font-bold text-gray-900 tabular-nums" id="valAmountDue">—</span>
                     </div>
+                    <div class="p-5 flex justify-between items-start gap-4">
+                        <div>
+                            <span class="text-gray-600 font-medium">CPL</span>
+                            <p class="text-xs text-gray-500 mt-1 max-w-[14rem]" id="cplLeadDetail">Qualified leads linked to Creative Concepts Contracting, Created on or after 3/26/26</p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <span class="text-xl font-semibold text-gray-900 tabular-nums block" id="valCpl">—</span>
+                            <span class="text-sm text-gray-500 tabular-nums" id="valLeadCount"></span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -83,6 +95,16 @@
         const FETCH_TIMEOUT_MS = 6 * 60 * 1000;
         /** Replace with a fetched value when wired to your source; total spend + agency fee − this = Amount Due. */
         const AMOUNT_PAID = 0;
+
+        const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
+        const AIRTABLE_API_KEY = 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589';
+        const LEADS_TABLE_ID = 'tblPt6Wc79hTBSmcD';
+        const CLIENTS_TABLE_ID = 'tblMl8Y97cMSbricC';
+        const LINKED_CLIENT_NAME = 'Creative Concepts Contracting';
+        /** Created on or after this date (inclusive), US Eastern start of day. */
+        const CPL_WINDOW_START_ET = { y: 2026, m: 3, d: 26 };
+
+        let cachedCccClientRecordId = null;
 
         function formatMoney(n) {
             return '$' + n.toLocaleString('en-US', {
@@ -158,7 +180,8 @@
             if (icon) icon.classList.toggle('animate-spin', loading);
         }
 
-        function showError(msg) {
+        function showError(msg, partial) {
+            document.getElementById('errorTitle').textContent = partial ? 'Spend OK — lead data issue' : 'Could not load spend';
             document.getElementById('errorMessage').classList.remove('hidden');
             document.getElementById('errorText').textContent = msg;
         }
@@ -166,6 +189,119 @@
         function clearError() {
             document.getElementById('errorMessage').classList.add('hidden');
             document.getElementById('errorText').textContent = '';
+            document.getElementById('errorTitle').textContent = 'Could not load spend';
+        }
+
+        async function fetchCccClientRecordId() {
+            if (cachedCccClientRecordId) return cachedCccClientRecordId;
+            const escaped = LINKED_CLIENT_NAME.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+            const formula = `{Name}="${escaped}"`;
+            const url =
+                `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${CLIENTS_TABLE_ID}` +
+                `?filterByFormula=${encodeURIComponent(formula)}&maxRecords=1`;
+            const response = await fetch(url, {
+                headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` }
+            });
+            if (!response.ok) {
+                const t = await response.text();
+                throw new Error(`Clients lookup failed (${response.status}): ${(t || '').slice(0, 120)}`);
+            }
+            const data = await response.json();
+            const rec = (data.records || [])[0];
+            if (!rec) {
+                throw new Error(`No client named "${LINKED_CLIENT_NAME}" in Clients (primary field Name).`);
+            }
+            cachedCccClientRecordId = rec.id;
+            return cachedCccClientRecordId;
+        }
+
+        function recordCreatedOnOrAfterCplStart(record) {
+            const raw = record.fields['Created'];
+            if (raw == null || raw === '') return false;
+            const { DateTime } = luxon;
+            const dt = DateTime.fromISO(String(raw), { zone: 'utc' }).setZone('America/New_York');
+            if (!dt.isValid) return false;
+            const start = DateTime.fromObject(
+                { year: CPL_WINDOW_START_ET.y, month: CPL_WINDOW_START_ET.m, day: CPL_WINDOW_START_ET.d },
+                { zone: 'America/New_York' }
+            ).startOf('day');
+            return dt >= start;
+        }
+
+        async function fetchQualifiedCccLeadCount() {
+            const clientId = await fetchCccClientRecordId();
+            const formula =
+                `AND({Status}="Qualified", FIND("${clientId}", ARRAYJOIN({Linked Client})) > 0, IS_AFTER({Created}, "2026-03-24"))`;
+            let offset = null;
+            const records = [];
+            do {
+                let url =
+                    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${LEADS_TABLE_ID}` +
+                    `?filterByFormula=${encodeURIComponent(formula)}&pageSize=100`;
+                if (offset) url += `&offset=${encodeURIComponent(offset)}`;
+                const response = await fetch(url, {
+                    headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` }
+                });
+                if (!response.ok) {
+                    const t = await response.text();
+                    throw new Error(`Leads query failed (${response.status}): ${(t || '').slice(0, 120)}`);
+                }
+                const data = await response.json();
+                records.push(...(data.records || []));
+                offset = data.offset || null;
+            } while (offset);
+            return records.filter(recordCreatedOnOrAfterCplStart).length;
+        }
+
+        function applySpendToDom(unbranded, branded, total, agencyFee, amountDue) {
+            document.getElementById('valUnbranded').textContent = formatMoney(unbranded);
+            document.getElementById('valBranded').textContent = formatMoney(branded);
+            document.getElementById('valTotal').textContent = formatMoney(total);
+            document.getElementById('valAgencyFee').textContent = formatMoney(agencyFee);
+            document.getElementById('valAmountPaid').textContent = formatMoney(AMOUNT_PAID);
+            document.getElementById('valAmountDue').textContent = formatMoney(amountDue);
+        }
+
+        function applyCplToDom(leadCount, totalSpend) {
+            const cplEl = document.getElementById('valCpl');
+            const countEl = document.getElementById('valLeadCount');
+            if (leadCount === null) {
+                cplEl.textContent = '—';
+                countEl.textContent = '';
+                return;
+            }
+            countEl.textContent =
+                leadCount === 1 ? '1 qualified lead' : `${leadCount} qualified leads`;
+            if (leadCount === 0) {
+                cplEl.textContent = '—';
+                return;
+            }
+            cplEl.textContent = formatMoney(totalSpend / leadCount);
+        }
+
+        async function fetchSpendFromWebhook(signal) {
+            const response = await fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: { Accept: 'application/json' },
+                signal
+            });
+            const text = await response.text();
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status + ': ' + (text || '').slice(0, 120));
+            }
+            const parsed = unwrapPayload(parseWebhookJsonBody(text));
+            if (parsed == null || typeof parsed !== 'object') {
+                throw new Error('Webhook JSON was not an object.');
+            }
+            const unbranded = parseCurrency(parsed.unbranded);
+            const branded = parseCurrency(parsed.branded);
+            if (unbranded === null || branded === null) {
+                throw new Error('Expected numeric (or currency string) fields "unbranded" and "branded" in the JSON response.');
+            }
+            const total = unbranded + branded;
+            const agencyFee = total * 0.25;
+            const amountDue = total + agencyFee - AMOUNT_PAID;
+            return { unbranded, branded, total, agencyFee, amountDue };
         }
 
         async function loadSpend() {
@@ -175,39 +311,37 @@
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
+            let leadCount = null;
+
             try {
-                const response = await fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json'
-                    },
-                    signal: controller.signal
-                });
-                const text = await response.text();
-                if (!response.ok) {
-                    throw new Error('HTTP ' + response.status + ': ' + (text || '').slice(0, 120));
-                }
-                const parsed = unwrapPayload(parseWebhookJsonBody(text));
-                if (parsed == null || typeof parsed !== 'object') {
-                    throw new Error('Webhook JSON was not an object.');
-                }
+                const [spendResult, leadsResult] = await Promise.allSettled([
+                    fetchSpendFromWebhook(controller.signal),
+                    fetchQualifiedCccLeadCount()
+                ]);
 
-                const unbranded = parseCurrency(parsed.unbranded);
-                const branded = parseCurrency(parsed.branded);
-                if (unbranded === null || branded === null) {
-                    throw new Error('Expected numeric (or currency string) fields "unbranded" and "branded" in the JSON response.');
+                if (spendResult.status === 'rejected') {
+                    const e = spendResult.reason;
+                    const msg =
+                        e && e.name === 'AbortError'
+                            ? 'Request timed out. If Make takes longer, increase FETCH_TIMEOUT_MS in this page or shorten the scenario.'
+                            : (e && e.message) || String(e);
+                    showError(msg);
+                    document.getElementById('dataPanel').classList.add('hidden');
+                    return;
                 }
 
-                const total = unbranded + branded;
-                const agencyFee = total * 0.25;
-                const amountDue = total + agencyFee - AMOUNT_PAID;
+                const { unbranded, branded, total, agencyFee, amountDue } = spendResult.value;
+                applySpendToDom(unbranded, branded, total, agencyFee, amountDue);
+                document.getElementById('dataPanel').classList.remove('hidden');
 
-                document.getElementById('valUnbranded').textContent = formatMoney(unbranded);
-                document.getElementById('valBranded').textContent = formatMoney(branded);
-                document.getElementById('valTotal').textContent = formatMoney(total);
-                document.getElementById('valAgencyFee').textContent = formatMoney(agencyFee);
-                document.getElementById('valAmountPaid').textContent = formatMoney(AMOUNT_PAID);
-                document.getElementById('valAmountDue').textContent = formatMoney(amountDue);
+                if (leadsResult.status === 'fulfilled') {
+                    leadCount = leadsResult.value;
+                    applyCplToDom(leadCount, total);
+                } else {
+                    applyCplToDom(null, total);
+                    const why = (leadsResult.reason && leadsResult.reason.message) || String(leadsResult.reason);
+                    showError('Lead count failed: ' + why, true);
+                }
             } catch (e) {
                 const msg =
                     e && e.name === 'AbortError'

@@ -109,7 +109,7 @@
 
             <div id="marginsSection" class="bg-white rounded-lg shadow-sm p-6 mt-6">
                 <h2 class="text-xl font-semibold text-gray-900 mb-2">Gross Margins</h2>
-                <p class="text-sm text-gray-500 mb-6">Revenue sums <span class="font-medium">Gross Revenue</span> from B2C Leads (Qualified, linked, <span class="font-medium">Created</span> in Eastern), plus a <span class="font-medium">25% agency fee</span> on CCC client ad spend from Make (branded + unbranded keys per period; that spend is already in total ad spend—only the fee is added to revenue). Ad spend totals come from <code class="text-xs bg-gray-100 px-1 rounded">MARGINS_WEBHOOK_URL</code> (one JSON response; can take several minutes). Optional: fill all nine URLs in <code class="text-xs bg-gray-100 px-1 rounded">MAKE_SPEND_WEBHOOKS</code> for parallel calls instead. Refreshes on load and when you click Refresh.</p>
+                <p class="text-sm text-gray-500 mb-6">Revenue sums <span class="font-medium">Gross Revenue</span> from B2C Leads (Qualified, linked, <span class="font-medium">Created</span> in Eastern), plus a <span class="font-medium">25% agency fee</span> on CCC client ad spend from Make (branded + unbranded keys per period; that spend is already in total ad spend—only the fee is added to revenue). Ad spend: <code class="text-xs bg-gray-100 px-1 rounded">MAKE_PERIOD_WEBHOOKS</code> (three parallel webhooks, one JSON object each), or all nine URLs in <code class="text-xs bg-gray-100 px-1 rounded">MAKE_SPEND_WEBHOOKS</code>, or one combined <code class="text-xs bg-gray-100 px-1 rounded">MARGINS_WEBHOOK_URL</code>. Refreshes on load and when you click Refresh.</p>
                 <p id="grossMarginsWebhookStatus" class="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4 hidden" role="status"></p>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div id="gmColLastWeek" class="rounded-lg border border-gray-200 p-4 space-y-4">
@@ -259,12 +259,22 @@
              * lastweekcccunbranded / lastweekcccbranded, thismonthccc*, lastmonthccc* (see CCC_SPEND_KEYS_BY_PERIOD).
              * Scenarios often take several minutes; timeout must cover that.
              */
+            /** Used only when neither 9-hook nor 3-period mode is active (one slow JSON response). */
             MARGINS_WEBHOOK_URL: 'https://hook.us2.make.com/m7oeayy6b2gih3bf3vubn8lhd3pc04ga',
             /** Single-webhook mode: max wait for the full JSON response (20 min; covers ~3–5 min scenarios with headroom). */
             MAKE_WEBHOOK_MAX_WAIT_MS: 20 * 60 * 1000,
             /**
+             * Three parallel webhooks (one scenario per period). Each returns a small JSON fragment.
+             * Filled = use 3-way parallel merge (skips MARGINS_WEBHOOK_URL). Leave all '' to disable.
+             */
+            MAKE_PERIOD_WEBHOOKS: {
+                lastweek: 'https://hook.us2.make.com/or1olkada5o3ygm3uukdwtgga8c86h7s',
+                thismonth: 'https://hook.us2.make.com/cpykdycgq8w4ha9ie2yyctq6mtbn0714',
+                lastmonth: 'https://hook.us2.make.com/m7oeayy6b2gih3bf3vubn8lhd3pc04ga'
+            },
+            /**
              * Split mode: nine Custom Webhook URLs (only used when every URL below is non-empty).
-             * Leave all blank to use MARGINS_WEBHOOK_URL only.
+             * Takes priority over MAKE_PERIOD_WEBHOOKS. Leave all blank to use 3-period or single URL.
              */
             MAKE_SPEND_WEBHOOKS: {
                 lastWeekSpend: '',
@@ -666,9 +676,9 @@
         }
 
         /**
-         * Parse Make.com HTTP response body. The scenario UI often shows JSON in a module bundle,
-         * but the default Custom Webhook reply to the browser is plain text "Accepted" — that must
-         * be replaced with a "Webhook response" module (JSON body) for this dashboard to work.
+         * Parse Make.com HTTP response body. Plain "Accepted" means the HTTP round-trip finished
+         * without a JSON "Webhook response" — often because Make only waits ~1 minute for that
+         * module, so long scenarios finish later in the UI but the browser already got Accepted.
          */
         function parseMakeWebhookResponseBody(text) {
             const t = (text || '').replace(/^\uFEFF/, '').trim();
@@ -680,7 +690,9 @@
             const lower = t.toLowerCase();
             if (lower === 'accepted' || lower === 'ok' || lower === 'success') {
                 throw new Error(
-                    'Webhook replied with text "' + t + '" instead of JSON. In Make: add a "Webhook response" module (or open the Webhook trigger → Response) and return a JSON body with lastweek, thismonth, lastmonth, etc.'
+                    'Webhook replied with "' +
+                        t +
+                        '" instead of JSON. Make usually stops waiting for a "Webhook response" after about a minute — so if your scenario runs several minutes, the browser gets Accepted while Make is still running. Fix: (1) shorten the path before Webhook response, (2) split into faster parallel webhooks (fill MAKE_SPEND_WEBHOOKS in this page), or (3) async flow: scenario writes results (e.g. Data store/Airtable) and a second quick scenario or endpoint returns JSON.'
                 );
             }
             try {
@@ -726,6 +738,113 @@
             const h = CONFIG.MAKE_SPEND_WEBHOOKS;
             if (!h || typeof h !== 'object') return false;
             return SPEND_HOOK_DEFINITIONS.every(([urlKey]) => typeof h[urlKey] === 'string' && h[urlKey].trim().length > 0);
+        }
+
+        const PERIOD_WEBHOOK_ORDER = ['lastweek', 'thismonth', 'lastmonth'];
+
+        function useThreePeriodWebhooks() {
+            const p = CONFIG.MAKE_PERIOD_WEBHOOKS;
+            if (!p || typeof p !== 'object') return false;
+            return PERIOD_WEBHOOK_ORDER.every(
+                k => typeof p[k] === 'string' && p[k].trim().length > 0
+            );
+        }
+
+        async function fetchOnePeriodMarginWebhook(url, periodLabel, maxMs) {
+            const t0 = performance.now();
+            logPP('log', 'Make period webhook → request', {
+                periodLabel,
+                endpoint: scrubWebhookUrl(url),
+                timeoutMs: maxMs
+            });
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), maxMs);
+            try {
+                const response = await fetch(url.trim(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ trigger: true }),
+                    signal: controller.signal
+                });
+                const text = await response.text();
+                if (!response.ok) {
+                    logPP('error', 'Make period webhook ← HTTP error', {
+                        periodLabel,
+                        status: response.status,
+                        bodyPreview: (text || '').slice(0, 200),
+                        ms: Math.round(performance.now() - t0)
+                    });
+                    throw new Error(`HTTP ${response.status}: ${(text || '').slice(0, 120)}`);
+                }
+                const parsed = unwrapMarginsPayload(parseMakeWebhookResponseBody(text));
+                if (parsed == null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                    throw new Error('Webhook JSON was not an object');
+                }
+                logPP('log', 'Make period webhook ← OK', {
+                    periodLabel,
+                    topLevelKeys: Object.keys(parsed),
+                    ms: Math.round(performance.now() - t0),
+                    responseChars: text.length
+                });
+                return parsed;
+            } catch (e) {
+                if (e && e.name === 'AbortError') {
+                    const mins = Math.round(maxMs / 60000) || 1;
+                    logPP('warn', 'Make period webhook ← timeout', {
+                        periodLabel,
+                        ms: Math.round(performance.now() - t0),
+                        limitMin: mins
+                    });
+                    throw new Error(`Timed out after ${mins} min`);
+                }
+                logPP('error', 'Make period webhook ← failed', {
+                    periodLabel,
+                    error: e.message || String(e),
+                    ms: Math.round(performance.now() - t0)
+                });
+                throw e;
+            } finally {
+                clearTimeout(timeoutId);
+            }
+        }
+
+        async function fetchMarginsPeriodWebhooksParallel() {
+            const tAll = performance.now();
+            const urls = CONFIG.MAKE_PERIOD_WEBHOOKS;
+            const maxMs = CONFIG.MAKE_SPEND_WEBHOOK_FETCH_MS || 6 * 60 * 1000;
+            logPP('log', 'Make 3 period webhooks parallel start', { perHookTimeoutMs: maxMs });
+            const settled = await Promise.allSettled(
+                PERIOD_WEBHOOK_ORDER.map(periodKey =>
+                    fetchOnePeriodMarginWebhook(urls[periodKey], periodKey, maxMs)
+                )
+            );
+            const merged = {};
+            const failures = [];
+            settled.forEach((r, i) => {
+                const periodKey = PERIOD_WEBHOOK_ORDER[i];
+                if (r.status === 'fulfilled') {
+                    Object.assign(merged, r.value);
+                } else {
+                    failures.push(`${periodKey}: ${settledReasonMessage(r.reason)}`);
+                }
+            });
+            logPP('log', 'Make 3 period webhooks settled', {
+                mergedKeys: Object.keys(merged),
+                merged: merged,
+                failures,
+                totalMs: Math.round(performance.now() - tAll)
+            });
+            const mainOk = ['lastweek', 'thismonth', 'lastmonth'].some(
+                k => pickMarginNumber(merged, k) !== null
+            );
+            if (!mainOk) {
+                logPP('error', 'Make 3 period webhooks: no main ad spend after merge', { failures });
+                throw new Error(
+                    'No main ad spend values (lastweek / thismonth / lastmonth) after merging period webhooks. ' +
+                        failures.join(' · ')
+                );
+            }
+            return merged;
         }
 
         function extractSpendNumberFromWebhookParsed(parsed) {
@@ -897,13 +1016,19 @@
 
         async function fetchMarginsWebhookPayload() {
             const split = useSplitSpendWebhooks();
+            const three = useThreePeriodWebhooks();
             const h = CONFIG.MAKE_SPEND_WEBHOOKS || {};
             logPP('log', 'Make spend fetch mode', {
+                mode: split ? '9_hooks' : three ? '3_period_hooks' : 'single_url',
                 split,
-                filledHooks: split ? 9 : SPEND_HOOK_DEFINITIONS.filter(([k]) => h[k] && String(h[k]).trim()).length
+                threePeriod: three,
+                filledNineHooks: split ? 9 : SPEND_HOOK_DEFINITIONS.filter(([k]) => h[k] && String(h[k]).trim()).length
             });
             if (split) {
                 return fetchMarginsSpendHooksParallel();
+            }
+            if (three) {
+                return fetchMarginsPeriodWebhooksParallel();
             }
             return fetchMarginsWebhookPayloadSingle();
         }
@@ -928,14 +1053,18 @@
 
             const webhookStatusEl = document.getElementById('grossMarginsWebhookStatus');
             const splitHooks = useSplitSpendWebhooks();
-            logPP('log', 'Gross margins UI: spend hook split?', { splitHooks });
+            const threePeriodHooks = useThreePeriodWebhooks();
+            logPP('log', 'Gross margins UI: spend mode', { splitHooks, threePeriodHooks });
             if (webhookStatusEl) {
                 webhookStatusEl.classList.remove('hidden');
+                const perMin = Math.max(1, Math.round((CONFIG.MAKE_SPEND_WEBHOOK_FETCH_MS || 360000) / 60000));
                 if (splitHooks) {
                     const n = SPEND_HOOK_DEFINITIONS.length;
-                    const perMin = Math.max(1, Math.round((CONFIG.MAKE_SPEND_WEBHOOK_FETCH_MS || 360000) / 60000));
                     webhookStatusEl.textContent =
                         `Calling ${n} Make.com spend webhooks in parallel (with Airtable). Each call times out after about ${perMin} minute${perMin === 1 ? '' : 's'}.`;
+                } else if (threePeriodHooks) {
+                    webhookStatusEl.textContent =
+                        `Calling 3 Make.com spend webhooks in parallel (last week, this month, last month, with Airtable). Each call times out after about ${perMin} minute${perMin === 1 ? '' : 's'}.`;
                 } else {
                     const maxMin = Math.round((CONFIG.MAKE_WEBHOOK_MAX_WAIT_MS || 1200000) / 60000);
                     webhookStatusEl.textContent =
