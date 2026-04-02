@@ -91,7 +91,7 @@
 
                 <div class="bg-white rounded-lg shadow-sm p-6 mt-6">
                     <h2 class="text-xl font-semibold text-gray-900 mb-1">Clients Closed/Week</h2>
-                    <p class="text-sm text-gray-500 mb-4">Weeks begin Monday 12:00 AM Eastern (America/New_York). Count uses each record’s <span class="font-medium">Created</span> timestamp.</p>
+                    <p class="text-sm text-gray-500 mb-4">Weeks begin Monday 12:00 AM Eastern (America/New_York). Only <span id="clientsChartYearLabel" class="font-medium">the current calendar year</span> (Eastern). Count uses each record’s <span class="font-medium">Created</span> timestamp.</p>
                     <div id="clientsChartWrap" class="bg-gray-50 rounded-lg p-4" style="height: 420px;">
                         <canvas id="clientsClosedWeekChart"></canvas>
                     </div>
@@ -106,6 +106,49 @@
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">No Data Available</h3>
                 <p class="text-gray-600">No records found in the Airtable table.</p>
             </div>
+
+            <div id="marginsSection" class="bg-white rounded-lg shadow-sm p-6 mt-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Margins</h2>
+                <p class="text-sm text-gray-500 mb-6">Spend totals from Make.com (loaded on page open and when you click Refresh).</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">Last week</h3>
+                        <div id="marginsLastWeek" class="min-h-[2.5rem] flex items-center">
+                            <span class="margins-loading inline-flex items-center text-blue-600" aria-hidden="true">
+                                <svg class="w-7 h-7 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                            </span>
+                            <p class="margins-value hidden text-2xl font-bold text-gray-900"></p>
+                            <p class="margins-error hidden text-sm text-red-600"></p>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">This month</h3>
+                        <div id="marginsThisMonth" class="min-h-[2.5rem] flex items-center">
+                            <span class="margins-loading inline-flex items-center text-blue-600" aria-hidden="true">
+                                <svg class="w-7 h-7 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                            </span>
+                            <p class="margins-value hidden text-2xl font-bold text-gray-900"></p>
+                            <p class="margins-error hidden text-sm text-red-600"></p>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">Last month</h3>
+                        <div id="marginsLastMonth" class="min-h-[2.5rem] flex items-center">
+                            <span class="margins-loading inline-flex items-center text-blue-600" aria-hidden="true">
+                                <svg class="w-7 h-7 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                            </span>
+                            <p class="margins-value hidden text-2xl font-bold text-gray-900"></p>
+                            <p class="margins-error hidden text-sm text-red-600"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -115,7 +158,8 @@
             TABLE_ID: 'tblEze74vhj4hE9c9',
             DRAWS_TABLE_ID: 'tblScVCqHc0gUiHwG',
             CLIENTS_TABLE_ID: 'tblMl8Y97cMSbricC',
-            API_KEY: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589'
+            API_KEY: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589',
+            MARGINS_WEBHOOK_URL: 'https://hook.us2.make.com/m7oeayy6b2gih3bf3vubn8lhd3pc04ga'
         };
 
         const ET_ZONE = 'America/New_York';
@@ -233,6 +277,108 @@
             });
         }
 
+        const MARGINS_ROW_IDS = {
+            lastweek: 'marginsLastWeek',
+            thismonth: 'marginsThisMonth',
+            lastmonth: 'marginsLastMonth'
+        };
+
+        function setMarginsRowState(rowId, state, messageOrValue) {
+            const root = document.getElementById(rowId);
+            if (!root) return;
+            const loading = root.querySelector('.margins-loading');
+            const valueEl = root.querySelector('.margins-value');
+            const errEl = root.querySelector('.margins-error');
+            loading.classList.toggle('hidden', state !== 'loading');
+            valueEl.classList.toggle('hidden', state !== 'ok');
+            errEl.classList.toggle('hidden', state !== 'error');
+            if (state === 'ok') valueEl.textContent = messageOrValue;
+            if (state === 'error') errEl.textContent = messageOrValue || 'Could not load';
+        }
+
+        function setAllMarginsLoading() {
+            Object.values(MARGINS_ROW_IDS).forEach(id => setMarginsRowState(id, 'loading'));
+        }
+
+        /** Coerce Make.com / webhook JSON into a flat object with lastweek, thismonth, lastmonth. */
+        function unwrapMarginsPayload(raw) {
+            let data = raw;
+            if (Array.isArray(data) && data.length && typeof data[0] === 'object' && data[0] !== null) {
+                data = data[0];
+            }
+            if (data != null && typeof data === 'object' && data.body != null) {
+                const b = data.body;
+                if (typeof b === 'string') {
+                    try {
+                        data = JSON.parse(b);
+                    } catch {
+                        data = raw;
+                    }
+                } else if (typeof b === 'object') {
+                    data = b;
+                }
+            }
+            return data;
+        }
+
+        function pickMarginNumber(data, key) {
+            if (data == null || typeof data !== 'object') return null;
+            const variants = [key, key.toLowerCase(), key.toUpperCase()];
+            for (const k of variants) {
+                if (!(k in data)) continue;
+                const v = data[k];
+                if (v != null && typeof v === 'object' && 'spend' in v) {
+                    const n = parseCurrency(v.spend);
+                    if (n !== null) return n;
+                }
+                const n = parseCurrency(v);
+                if (n !== null) return n;
+            }
+            return null;
+        }
+
+        async function fetchMargins() {
+            setAllMarginsLoading();
+            try {
+                const response = await fetch(CONFIG.MARGINS_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ trigger: true })
+                });
+
+                const text = await response.text();
+                let raw;
+                try {
+                    raw = text ? JSON.parse(text) : {};
+                } catch {
+                    throw new Error('Webhook did not return JSON');
+                }
+
+                if (!response.ok) {
+                    throw new Error(`Webhook ${response.status}`);
+                }
+
+                const data = unwrapMarginsPayload(raw);
+                const map = [
+                    ['lastweek', MARGINS_ROW_IDS.lastweek],
+                    ['thismonth', MARGINS_ROW_IDS.thismonth],
+                    ['lastmonth', MARGINS_ROW_IDS.lastmonth]
+                ];
+                for (const [key, rowId] of map) {
+                    const num = pickMarginNumber(data, key);
+                    if (num === null) {
+                        setMarginsRowState(rowId, 'error', 'Missing value');
+                    } else {
+                        setMarginsRowState(rowId, 'ok', formatMoney(num));
+                    }
+                }
+            } catch (e) {
+                console.error('Margins webhook:', e);
+                Object.values(MARGINS_ROW_IDS).forEach(id =>
+                    setMarginsRowState(id, 'error', e.message || 'Request failed'));
+            }
+        }
+
         function updateMetrics(latestRealizedCash, ownerDrawsSum) {
             const daysIn = getDaysIntoYear();
             const daysLeft = getDaysLeftInYear();
@@ -278,6 +424,7 @@
             const refreshIcon = document.getElementById('refreshIcon');
             refreshIcon.classList.add('animate-spin');
             showState('loadingState');
+            fetchMargins();
 
             try {
                 const [allRecords, drawRecords, clientRecords] = await Promise.all([
@@ -500,12 +647,15 @@
         /** Bucket client records by Eastern Monday-start week; fill gaps with zero. */
         function aggregateClientsByWeek(records) {
             const { DateTime } = luxon;
+            const chartYear = DateTime.now().setZone(ET_ZONE).year;
             const counts = new Map();
             for (const r of records) {
                 const raw = r.fields['Created'];
                 if (raw == null || raw === '') continue;
                 const js = new Date(raw);
                 if (isNaN(js.getTime())) continue;
+                const createdET = DateTime.fromJSDate(js, { zone: 'utc' }).setZone(ET_ZONE);
+                if (createdET.year !== chartYear) continue;
                 const monday = mondayStartEastern(js);
                 const key = monday.toISODate();
                 counts.set(key, (counts.get(key) || 0) + 1);
@@ -538,6 +688,11 @@
             }
 
             const { labels, data } = aggregateClientsByWeek(records);
+
+            const yearLbl = document.getElementById('clientsChartYearLabel');
+            if (yearLbl) {
+                yearLbl.textContent = String(luxon.DateTime.now().setZone(ET_ZONE).year);
+            }
 
             if (labels.length === 0) {
                 wrap.classList.add('hidden');
