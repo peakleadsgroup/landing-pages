@@ -109,7 +109,7 @@
 
             <div id="marginsSection" class="bg-white rounded-lg shadow-sm p-6 mt-6">
                 <h2 class="text-xl font-semibold text-gray-900 mb-2">Gross Margins</h2>
-                <p class="text-sm text-gray-500 mb-6">Revenue sums <span class="font-medium">Gross Revenue</span> from B2C Leads (Qualified, linked, <span class="font-medium">Created</span> in Eastern), plus a <span class="font-medium">25% agency fee</span> on CCC client ad spend (branded + unbranded from Make.com; that spend is already in total ad spend—only the fee is added to revenue). Ad spend: either <span class="font-medium">nine parallel Make webhooks</span> (see <code class="text-xs bg-gray-100 px-1 rounded">MAKE_SPEND_WEBHOOKS</code> in the page script) or one combined JSON webhook. Refreshes on load and when you click Refresh.</p>
+                <p class="text-sm text-gray-500 mb-6">Revenue sums <span class="font-medium">Gross Revenue</span> from B2C Leads (Qualified, linked, <span class="font-medium">Created</span> in Eastern), plus a <span class="font-medium">25% agency fee</span> on CCC client ad spend from Make (branded + unbranded keys per period; that spend is already in total ad spend—only the fee is added to revenue). Ad spend totals come from <code class="text-xs bg-gray-100 px-1 rounded">MARGINS_WEBHOOK_URL</code> (one JSON response; can take several minutes). Optional: fill all nine URLs in <code class="text-xs bg-gray-100 px-1 rounded">MAKE_SPEND_WEBHOOKS</code> for parallel calls instead. Refreshes on load and when you click Refresh.</p>
                 <p id="grossMarginsWebhookStatus" class="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4 hidden" role="status"></p>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div id="gmColLastWeek" class="rounded-lg border border-gray-200 p-4 space-y-4">
@@ -254,14 +254,17 @@
             CLIENTS_TABLE_ID: 'tblMl8Y97cMSbricC',
             REVENUE_TABLE_ID: 'tblPt6Wc79hTBSmcD',
             API_KEY: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589',
-            /** Legacy: one webhook returning JSON with lastweek, thismonth, lastmonth, CCC*, … */
+            /**
+             * One webhook returning JSON, e.g. lastweek, thismonth, lastmonth and
+             * lastweekcccunbranded / lastweekcccbranded, thismonthccc*, lastmonthccc* (see CCC_SPEND_KEYS_BY_PERIOD).
+             * Scenarios often take several minutes; timeout must cover that.
+             */
             MARGINS_WEBHOOK_URL: 'https://hook.us2.make.com/m7oeayy6b2gih3bf3vubn8lhd3pc04ga',
-            /** Single-webhook mode: max wait for the full JSON response (ms). */
+            /** Single-webhook mode: max wait for the full JSON response (20 min; covers ~3–5 min scenarios with headroom). */
             MAKE_WEBHOOK_MAX_WAIT_MS: 20 * 60 * 1000,
             /**
-             * Split mode: nine Custom Webhook URLs (Router branches → Webhook response each).
-             * When every URL below is non-empty, the dashboard POSTs to all nine in parallel and merges values.
-             * Map to Make: lastWeek=[2], lastWeek CCC u/b=[7]/[8], thisMonth=[4], thisMonth CCC=[9]/[10], lastMonth=[5], lastMonth CCC=[11]/[12].
+             * Split mode: nine Custom Webhook URLs (only used when every URL below is non-empty).
+             * Leave all blank to use MARGINS_WEBHOOK_URL only.
              */
             MAKE_SPEND_WEBHOOKS: {
                 lastWeekSpend: '',
@@ -591,11 +594,30 @@
             return null;
         }
 
-        /** Make.com CCC branded + unbranded spend keys per period (summed, then ×0.25 as agency fee revenue). */
+        /**
+         * CCC branded + unbranded spend keys per period (summed, then ×0.25 as agency fee revenue).
+         * Primary: lowercase keys from one Make JSON body (lastweekcccunbranded, …).
+         * Legacy: CCClastweekunbranded-style keys still accepted.
+         */
         const CCC_SPEND_KEYS_BY_PERIOD = {
-            lastweek: ['CCClastweekunbranded', 'CCClastweekbranded'],
-            thismonth: ['CCCthismonthunbranded', 'CCCthismonthbranded'],
-            lastmonth: ['CCClastmonthunbranded', 'CCClastmonthbranded']
+            lastweek: [
+                'lastweekcccunbranded',
+                'lastweekcccbranded',
+                'CCClastweekunbranded',
+                'CCClastweekbranded'
+            ],
+            thismonth: [
+                'thismonthcccunbranded',
+                'thismonthcccbranded',
+                'CCCthismonthunbranded',
+                'CCCthismonthbranded'
+            ],
+            lastmonth: [
+                'lastmonthcccunbranded',
+                'lastmonthcccbranded',
+                'CCClastmonthunbranded',
+                'CCClastmonthbranded'
+            ]
         };
 
         const CCC_AGENCY_FEE_RATE = 0.25;
