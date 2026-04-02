@@ -1427,7 +1427,7 @@
 
                 // First, try to fetch campaign by Campaign ID field
                 let campaign = null;
-                const campaignUrl = `${AIRTABLE_BASE_URL}/${TABLES.CAMPAIGNS}?filterByFormula={Campaign ID}="${campaignID}"`;
+                const campaignUrl = `${AIRTABLE_BASE_URL}/${TABLES.CAMPAIGNS}?filterByFormula=${encodeURIComponent(`{Campaign ID}="${campaignID}"`)}`;
                 const campaignData = await fetchAirtableData(campaignUrl);
                 
                 if (campaignData.records && campaignData.records.length > 0) {

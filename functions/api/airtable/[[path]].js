@@ -17,7 +17,13 @@ export async function onRequest(context) {
   }
 
   const raw = context.params.path;
-  const path = raw != null ? String(raw).replace(/^\/+/, "") : "";
+  /** Pages catch-all [[path]] is an array of segments, not a slash-separated string. */
+  const path =
+    raw == null
+      ? ""
+      : Array.isArray(raw)
+        ? raw.filter(Boolean).join("/")
+        : String(raw).replace(/^\/+/, "");
   if (!path || !path.startsWith(ALLOWED_PREFIX)) {
     return new Response(JSON.stringify({ error: "Invalid path; expected /api/airtable/v0/…" }), {
       status: 400,
