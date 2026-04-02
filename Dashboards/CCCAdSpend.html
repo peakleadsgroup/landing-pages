@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>CCC Ad Spend</title>
+    <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin { animation: spin 1s linear infinite; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen p-6">
+        <div class="max-w-lg mx-auto">
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <img src="https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Logo" class="h-10 w-auto">
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-900">CCC Ad Spend</h1>
+                            <p class="text-gray-600 text-sm mt-1">Branded &amp; unbranded campaign spend</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="loadSpend()" id="refreshBtn" class="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shrink-0">
+                        <svg id="refreshIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div id="errorMessage" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 hidden">
+                <h3 class="font-semibold text-red-900 mb-1">Could not load spend</h3>
+                <p class="text-sm text-red-800" id="errorText"></p>
+            </div>
+
+            <div id="loadingState" class="bg-white rounded-lg shadow-sm p-10 text-center">
+                <svg class="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                <p class="text-gray-600 text-sm">Calling Make.com for latest spend…</p>
+            </div>
+
+            <div id="dataPanel" class="hidden space-y-4">
+                <div class="bg-white rounded-lg shadow-sm divide-y divide-gray-100">
+                    <div class="p-5 flex justify-between items-baseline gap-4">
+                        <span class="text-gray-600 font-medium">Unbranded</span>
+                        <span class="text-xl font-semibold text-gray-900 tabular-nums" id="valUnbranded">—</span>
+                    </div>
+                    <div class="p-5 flex justify-between items-baseline gap-4">
+                        <span class="text-gray-600 font-medium">Branded</span>
+                        <span class="text-xl font-semibold text-gray-900 tabular-nums" id="valBranded">—</span>
+                    </div>
+                    <div class="p-5 flex justify-between items-baseline gap-4 bg-gray-50">
+                        <span class="text-gray-900 font-semibold">Total Spend</span>
+                        <span class="text-2xl font-bold text-gray-900 tabular-nums" id="valTotal">—</span>
+                    </div>
+                    <div class="p-5 flex justify-between items-baseline gap-4">
+                        <span class="text-gray-600 font-medium">Agency Fee (25%)</span>
+                        <span class="text-xl font-semibold text-indigo-700 tabular-nums" id="valAgencyFee">—</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const WEBHOOK_URL = 'https://hook.us2.make.com/ooadlf089ql95kwrgnu65boesj9ruk1w';
+        const FETCH_TIMEOUT_MS = 6 * 60 * 1000;
+
+        function formatMoney(n) {
+            return '$' + n.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function parseCurrency(value) {
+            if (value === null || value === undefined) return null;
+            if (typeof value === 'number' && !Number.isNaN(value)) return value;
+            if (typeof value === 'string') {
+                const cleaned = value.replace(/[\$,]/g, '').trim();
+                const num = parseFloat(cleaned);
+                return Number.isNaN(num) ? null : num;
+            }
+            return null;
+        }
+
+        function parseWebhookJsonBody(text) {
+            const t = (text || '').replace(/^\uFEFF/, '').trim();
+            if (!t) {
+                throw new Error(
+                    'Webhook returned an empty body. In Make, add a Webhook response module and return JSON: {"unbranded":…,"branded":…}.'
+                );
+            }
+            const lower = t.toLowerCase();
+            if (lower === 'accepted' || lower === 'ok' || lower === 'success') {
+                throw new Error(
+                    'Webhook replied with "' + t + '" instead of JSON. Add a Webhook response in Make with body {"unbranded":"{{2.spend}}","branded":"{{4.spend}}"}.'
+                );
+            }
+            try {
+                return JSON.parse(t);
+            } catch {
+                const i = t.indexOf('{');
+                const j = t.lastIndexOf('}');
+                if (i >= 0 && j > i) {
+                    try {
+                        return JSON.parse(t.slice(i, j + 1));
+                    } catch { /* fall through */ }
+                }
+                throw new Error('Response was not valid JSON.');
+            }
+        }
+
+        function unwrapPayload(raw) {
+            let data = raw;
+            if (Array.isArray(data) && data.length && typeof data[0] === 'object' && data[0] !== null) {
+                data = data[0];
+            }
+            if (data != null && typeof data === 'object' && data.body != null) {
+                const b = data.body;
+                if (typeof b === 'string') {
+                    try {
+                        data = JSON.parse(b);
+                    } catch {
+                        data = raw;
+                    }
+                } else if (typeof b === 'object') {
+                    data = b;
+                }
+            }
+            return data;
+        }
+
+        function setLoading(loading) {
+            const btn = document.getElementById('refreshBtn');
+            const icon = document.getElementById('refreshIcon');
+            document.getElementById('loadingState').classList.toggle('hidden', !loading);
+            document.getElementById('dataPanel').classList.toggle('hidden', loading);
+            btn.disabled = loading;
+            if (icon) icon.classList.toggle('animate-spin', loading);
+        }
+
+        function showError(msg) {
+            document.getElementById('errorMessage').classList.remove('hidden');
+            document.getElementById('errorText').textContent = msg;
+        }
+
+        function clearError() {
+            document.getElementById('errorMessage').classList.add('hidden');
+            document.getElementById('errorText').textContent = '';
+        }
+
+        async function loadSpend() {
+            clearError();
+            setLoading(true);
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+            try {
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    signal: controller.signal
+                });
+                const text = await response.text();
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status + ': ' + (text || '').slice(0, 120));
+                }
+                const parsed = unwrapPayload(parseWebhookJsonBody(text));
+                if (parsed == null || typeof parsed !== 'object') {
+                    throw new Error('Webhook JSON was not an object.');
+                }
+
+                const unbranded = parseCurrency(parsed.unbranded);
+                const branded = parseCurrency(parsed.branded);
+                if (unbranded === null || branded === null) {
+                    throw new Error('Expected numeric (or currency string) fields "unbranded" and "branded" in the JSON response.');
+                }
+
+                const total = unbranded + branded;
+                const agencyFee = total * 0.25;
+
+                document.getElementById('valUnbranded').textContent = formatMoney(unbranded);
+                document.getElementById('valBranded').textContent = formatMoney(branded);
+                document.getElementById('valTotal').textContent = formatMoney(total);
+                document.getElementById('valAgencyFee').textContent = formatMoney(agencyFee);
+            } catch (e) {
+                const msg =
+                    e && e.name === 'AbortError'
+                        ? 'Request timed out. If Make takes longer, increase FETCH_TIMEOUT_MS in this page or shorten the scenario.'
+                        : (e && e.message) || String(e);
+                showError(msg);
+                document.getElementById('dataPanel').classList.add('hidden');
+            } finally {
+                clearTimeout(timeoutId);
+                setLoading(false);
+            }
+        }
+
+        loadSpend();
+    </script>
+</body>
+</html>
