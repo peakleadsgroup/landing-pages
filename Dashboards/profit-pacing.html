@@ -108,43 +108,136 @@
             </div>
 
             <div id="marginsSection" class="bg-white rounded-lg shadow-sm p-6 mt-6">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4">Margins</h2>
-                <p class="text-sm text-gray-500 mb-6">Spend totals from Make.com (loaded on page open and when you click Refresh).</p>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div>
-                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">Last week</h3>
-                        <div id="marginsLastWeek" class="min-h-[2.5rem] flex items-center">
-                            <span class="margins-loading inline-flex items-center text-blue-600" aria-hidden="true">
-                                <svg class="w-7 h-7 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                </svg>
-                            </span>
-                            <p class="margins-value hidden text-2xl font-bold text-gray-900"></p>
-                            <p class="margins-error hidden text-sm text-red-600"></p>
+                <h2 class="text-xl font-semibold text-gray-900 mb-2">Gross Margins</h2>
+                <p class="text-sm text-gray-500 mb-6">Revenue sums <span class="font-medium">Gross Revenue</span> from B2C Leads where <span class="font-medium">Linked Client</span> is set, using each row’s <span class="font-medium">Created</span> timestamp in Eastern time for the period windows. Ad spend from Make.com. Refreshes on load and when you click Refresh.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div id="gmColLastWeek" class="rounded-lg border border-gray-200 p-4 space-y-4">
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-800 uppercase tracking-wide">Last week</h3>
+                            <p class="text-xs text-gray-500 mt-1 gm-period-label">—</p>
+                        </div>
+                        <div class="gm-stack space-y-4">
+                            <div class="gm-metric" data-key="revenue">
+                                <p class="text-xs font-medium text-green-700 mb-1">Revenue</p>
+                                <div class="gm-metric-body min-h-[2.5rem] flex items-center">
+                                    <span class="gm-spinner text-green-600 inline-flex"><svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></span>
+                                    <div class="gm-ok hidden w-full space-y-0.5">
+                                        <p class="text-xl font-bold text-green-600 gm-amount"></p>
+                                        <p class="text-xs text-gray-500 gm-detail"></p>
+                                    </div>
+                                    <p class="gm-err hidden text-sm text-red-600"></p>
+                                </div>
+                            </div>
+                            <div class="gm-metric" data-key="adspend">
+                                <p class="text-xs font-medium text-red-700 mb-1">Ad spend</p>
+                                <div class="gm-metric-body min-h-[2.5rem] flex items-center">
+                                    <span class="gm-spinner text-red-600 inline-flex"><svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></span>
+                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-red-600 gm-amount"></p></div>
+                                    <p class="gm-err hidden text-sm text-red-600"></p>
+                                </div>
+                            </div>
+                            <div class="gm-metric" data-key="profit">
+                                <p class="text-xs font-medium text-blue-700 mb-1">Profit</p>
+                                <div class="gm-metric-body min-h-[2.5rem] flex items-center">
+                                    <span class="gm-spinner text-blue-600 inline-flex"><svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></span>
+                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-blue-600 gm-amount"></p><p class="text-xs text-gray-500 gm-detail">Revenue − ad spend</p></div>
+                                    <p class="gm-err hidden text-sm text-red-600"></p>
+                                </div>
+                            </div>
+                            <div class="gm-metric" data-key="margin">
+                                <p class="text-xs font-medium text-purple-700 mb-1">Margins</p>
+                                <div class="gm-metric-body min-h-[2.5rem] flex items-center">
+                                    <span class="gm-spinner text-purple-600 inline-flex"><svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></span>
+                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-purple-600 gm-amount"></p><p class="text-xs text-gray-500 gm-detail">Profit ÷ revenue</p></div>
+                                    <p class="gm-err hidden text-sm text-red-600"></p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div>
-                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">This month</h3>
-                        <div id="marginsThisMonth" class="min-h-[2.5rem] flex items-center">
-                            <span class="margins-loading inline-flex items-center text-blue-600" aria-hidden="true">
-                                <svg class="w-7 h-7 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                </svg>
-                            </span>
-                            <p class="margins-value hidden text-2xl font-bold text-gray-900"></p>
-                            <p class="margins-error hidden text-sm text-red-600"></p>
+                    <div id="gmColThisMonth" class="rounded-lg border border-gray-200 p-4 space-y-4">
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-800 uppercase tracking-wide">This month</h3>
+                            <p class="text-xs text-gray-500 mt-1 gm-period-label">—</p>
+                        </div>
+                        <div class="gm-stack space-y-4">
+                            <div class="gm-metric" data-key="revenue">
+                                <p class="text-xs font-medium text-green-700 mb-1">Revenue</p>
+                                <div class="gm-metric-body min-h-[2.5rem] flex items-center">
+                                    <span class="gm-spinner text-green-600 inline-flex"><svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></span>
+                                    <div class="gm-ok hidden w-full space-y-0.5">
+                                        <p class="text-xl font-bold text-green-600 gm-amount"></p>
+                                        <p class="text-xs text-gray-500 gm-detail"></p>
+                                    </div>
+                                    <p class="gm-err hidden text-sm text-red-600"></p>
+                                </div>
+                            </div>
+                            <div class="gm-metric" data-key="adspend">
+                                <p class="text-xs font-medium text-red-700 mb-1">Ad spend</p>
+                                <div class="gm-metric-body min-h-[2.5rem] flex items-center">
+                                    <span class="gm-spinner text-red-600 inline-flex"><svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></span>
+                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-red-600 gm-amount"></p></div>
+                                    <p class="gm-err hidden text-sm text-red-600"></p>
+                                </div>
+                            </div>
+                            <div class="gm-metric" data-key="profit">
+                                <p class="text-xs font-medium text-blue-700 mb-1">Profit</p>
+                                <div class="gm-metric-body min-h-[2.5rem] flex items-center">
+                                    <span class="gm-spinner text-blue-600 inline-flex"><svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></span>
+                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-blue-600 gm-amount"></p><p class="text-xs text-gray-500 gm-detail">Revenue − ad spend</p></div>
+                                    <p class="gm-err hidden text-sm text-red-600"></p>
+                                </div>
+                            </div>
+                            <div class="gm-metric" data-key="margin">
+                                <p class="text-xs font-medium text-purple-700 mb-1">Margins</p>
+                                <div class="gm-metric-body min-h-[2.5rem] flex items-center">
+                                    <span class="gm-spinner text-purple-600 inline-flex"><svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></span>
+                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-purple-600 gm-amount"></p><p class="text-xs text-gray-500 gm-detail">Profit ÷ revenue</p></div>
+                                    <p class="gm-err hidden text-sm text-red-600"></p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div>
-                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">Last month</h3>
-                        <div id="marginsLastMonth" class="min-h-[2.5rem] flex items-center">
-                            <span class="margins-loading inline-flex items-center text-blue-600" aria-hidden="true">
-                                <svg class="w-7 h-7 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                </svg>
-                            </span>
-                            <p class="margins-value hidden text-2xl font-bold text-gray-900"></p>
-                            <p class="margins-error hidden text-sm text-red-600"></p>
+                    <div id="gmColLastMonth" class="rounded-lg border border-gray-200 p-4 space-y-4">
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-800 uppercase tracking-wide">Last month</h3>
+                            <p class="text-xs text-gray-500 mt-1 gm-period-label">—</p>
+                        </div>
+                        <div class="gm-stack space-y-4">
+                            <div class="gm-metric" data-key="revenue">
+                                <p class="text-xs font-medium text-green-700 mb-1">Revenue</p>
+                                <div class="gm-metric-body min-h-[2.5rem] flex items-center">
+                                    <span class="gm-spinner text-green-600 inline-flex"><svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></span>
+                                    <div class="gm-ok hidden w-full space-y-0.5">
+                                        <p class="text-xl font-bold text-green-600 gm-amount"></p>
+                                        <p class="text-xs text-gray-500 gm-detail"></p>
+                                    </div>
+                                    <p class="gm-err hidden text-sm text-red-600"></p>
+                                </div>
+                            </div>
+                            <div class="gm-metric" data-key="adspend">
+                                <p class="text-xs font-medium text-red-700 mb-1">Ad spend</p>
+                                <div class="gm-metric-body min-h-[2.5rem] flex items-center">
+                                    <span class="gm-spinner text-red-600 inline-flex"><svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></span>
+                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-red-600 gm-amount"></p></div>
+                                    <p class="gm-err hidden text-sm text-red-600"></p>
+                                </div>
+                            </div>
+                            <div class="gm-metric" data-key="profit">
+                                <p class="text-xs font-medium text-blue-700 mb-1">Profit</p>
+                                <div class="gm-metric-body min-h-[2.5rem] flex items-center">
+                                    <span class="gm-spinner text-blue-600 inline-flex"><svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></span>
+                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-blue-600 gm-amount"></p><p class="text-xs text-gray-500 gm-detail">Revenue − ad spend</p></div>
+                                    <p class="gm-err hidden text-sm text-red-600"></p>
+                                </div>
+                            </div>
+                            <div class="gm-metric" data-key="margin">
+                                <p class="text-xs font-medium text-purple-700 mb-1">Margins</p>
+                                <div class="gm-metric-body min-h-[2.5rem] flex items-center">
+                                    <span class="gm-spinner text-purple-600 inline-flex"><svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></span>
+                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-purple-600 gm-amount"></p><p class="text-xs text-gray-500 gm-detail">Profit ÷ revenue</p></div>
+                                    <p class="gm-err hidden text-sm text-red-600"></p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -158,8 +251,16 @@
             TABLE_ID: 'tblEze74vhj4hE9c9',
             DRAWS_TABLE_ID: 'tblScVCqHc0gUiHwG',
             CLIENTS_TABLE_ID: 'tblMl8Y97cMSbricC',
+            REVENUE_TABLE_ID: 'tblPt6Wc79hTBSmcD',
             API_KEY: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589',
             MARGINS_WEBHOOK_URL: 'https://hook.us2.make.com/m7oeayy6b2gih3bf3vubn8lhd3pc04ga'
+        };
+
+        /** Leads table tblPt6Wc79hTBSmcD — use Created for lead timestamps (Airtable + in-range filter). */
+        const GROSS_MARGIN_FIELDS = {
+            CREATED: 'Created',
+            GROSS_REVENUE: 'Gross Revenue',
+            LINKED_CLIENT: 'Linked Client'
         };
 
         const ET_ZONE = 'America/New_York';
@@ -253,6 +354,25 @@
             return allRecords;
         }
 
+        async function fetchAllTableRecordsWithFormula(tableId, filterFormula) {
+            let allRecords = [];
+            let offset = null;
+            do {
+                let url = `https://api.airtable.com/v0/${CONFIG.BASE_ID}/${tableId}?filterByFormula=${encodeURIComponent(filterFormula)}`;
+                if (offset) url += `&offset=${offset}`;
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${CONFIG.API_KEY}` }
+                });
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
+                }
+                const data = await response.json();
+                allRecords = allRecords.concat(data.records || []);
+                offset = data.offset;
+            } while (offset);
+            return allRecords;
+        }
+
         /** Inclusive day index from Jan 1 (1 = Jan 1). */
         function getDaysIntoYear(d = new Date()) {
             const y = d.getFullYear();
@@ -277,27 +397,86 @@
             });
         }
 
-        const MARGINS_ROW_IDS = {
-            lastweek: 'marginsLastWeek',
-            thismonth: 'marginsThisMonth',
-            lastmonth: 'marginsLastMonth'
+        const GM_COLUMN_IDS = {
+            lastweek: 'gmColLastWeek',
+            thismonth: 'gmColThisMonth',
+            lastmonth: 'gmColLastMonth'
         };
 
-        function setMarginsRowState(rowId, state, messageOrValue) {
-            const root = document.getElementById(rowId);
-            if (!root) return;
-            const loading = root.querySelector('.margins-loading');
-            const valueEl = root.querySelector('.margins-value');
-            const errEl = root.querySelector('.margins-error');
-            loading.classList.toggle('hidden', state !== 'loading');
-            valueEl.classList.toggle('hidden', state !== 'ok');
-            errEl.classList.toggle('hidden', state !== 'error');
-            if (state === 'ok') valueEl.textContent = messageOrValue;
-            if (state === 'error') errEl.textContent = messageOrValue || 'Could not load';
+        function hasLinkedClient(fields) {
+            const lc = fields[GROSS_MARGIN_FIELDS.LINKED_CLIENT];
+            if (lc == null) return false;
+            if (Array.isArray(lc)) return lc.length > 0;
+            if (typeof lc === 'string') return lc.trim().length > 0;
+            return true;
         }
 
-        function setAllMarginsLoading() {
-            Object.values(MARGINS_ROW_IDS).forEach(id => setMarginsRowState(id, 'loading'));
+        function formatRangeLabelET(start, end) {
+            const { DateTime } = luxon;
+            const s = DateTime.isDateTime(start) ? start : DateTime.fromISO(String(start), { zone: ET_ZONE });
+            const e = DateTime.isDateTime(end) ? end : DateTime.fromISO(String(end), { zone: ET_ZONE });
+            if (s.year === e.year) {
+                return `${s.toFormat('MMM d')} – ${e.toFormat('MMM d, yyyy')} (ET)`;
+            }
+            return `${s.toFormat('MMM d, yyyy')} – ${e.toFormat('MMM d, yyyy')} (ET)`;
+        }
+
+        function formatCreatedWindowDetail(start, end) {
+            const { DateTime } = luxon;
+            const s = DateTime.isDateTime(start) ? start : DateTime.fromISO(String(start), { zone: ET_ZONE });
+            const e = DateTime.isDateTime(end) ? end : DateTime.fromISO(String(end), { zone: ET_ZONE });
+            return `Created: ${s.toFormat('MMM d, yyyy h:mm a')} – ${e.toFormat('MMM d, yyyy h:mm a')} ET`;
+        }
+
+        /** Last full Mon–Sun week (Eastern), month-to-date, and prior full calendar month. */
+        function getGrossMarginPeriodsET() {
+            const { DateTime } = luxon;
+            const now = DateTime.now().setZone(ET_ZONE);
+            const todayStart = now.startOf('day');
+            const thisMonday = todayStart.minus({ days: todayStart.weekday - 1 });
+            const lastWeekMonday = thisMonday.minus({ weeks: 1 });
+            const lastWeekSunday = lastWeekMonday.plus({ days: 6 }).endOf('day');
+            const lastweek = {
+                start: lastWeekMonday.startOf('day'),
+                end: lastWeekSunday,
+                label: formatRangeLabelET(lastWeekMonday.startOf('day'), lastWeekSunday)
+            };
+            const thisMonthStart = now.startOf('month').startOf('day');
+            const thisMonthEnd = now.endOf('day');
+            const thismonth = {
+                start: thisMonthStart,
+                end: thisMonthEnd,
+                label: formatRangeLabelET(thisMonthStart, thisMonthEnd)
+            };
+            const lastMonthRef = now.minus({ months: 1 });
+            const lastMonthStart = lastMonthRef.startOf('month').startOf('day');
+            const lastMonthEnd = lastMonthRef.endOf('month').endOf('day');
+            const lastmonth = {
+                start: lastMonthStart,
+                end: lastMonthEnd,
+                label: formatRangeLabelET(lastMonthStart, lastMonthEnd)
+            };
+            return { lastweek, thismonth, lastmonth };
+        }
+
+        function recordCreatedBetweenET(record, startET, endET) {
+            const raw = record.fields[GROSS_MARGIN_FIELDS.CREATED];
+            if (raw == null || raw === '') return false;
+            const js = new Date(raw);
+            if (isNaN(js.getTime())) return false;
+            const dt = luxon.DateTime.fromJSDate(js, { zone: 'utc' }).setZone(ET_ZONE);
+            return dt >= startET && dt <= endET;
+        }
+
+        function sumGrossRevenueLinkedInPeriod(records, startET, endET) {
+            let sum = 0;
+            for (const rec of records) {
+                if (!hasLinkedClient(rec.fields)) continue;
+                if (!recordCreatedBetweenET(rec, startET, endET)) continue;
+                const val = parseCurrency(rec.fields[GROSS_MARGIN_FIELDS.GROSS_REVENUE]);
+                if (val !== null && val !== undefined) sum += val;
+            }
+            return sum;
         }
 
         /** Coerce Make.com / webhook JSON into a flat object with lastweek, thismonth, lastmonth. */
@@ -337,45 +516,136 @@
             return null;
         }
 
-        async function fetchMargins() {
-            setAllMarginsLoading();
-            try {
-                const response = await fetch(CONFIG.MARGINS_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    body: JSON.stringify({ trigger: true })
+        function setGmMetricState(colId, metricKey, state, opts) {
+            const col = document.getElementById(colId);
+            if (!col) return;
+            const metric = col.querySelector(`.gm-metric[data-key="${metricKey}"]`);
+            if (!metric) return;
+            const body = metric.querySelector('.gm-metric-body');
+            const spin = body.querySelector('.gm-spinner');
+            const ok = body.querySelector('.gm-ok');
+            const err = body.querySelector('.gm-err');
+            const amount = ok ? ok.querySelector('.gm-amount') : null;
+            const detail = ok ? ok.querySelector('.gm-detail') : null;
+            spin.classList.toggle('hidden', state !== 'loading');
+            ok.classList.toggle('hidden', state !== 'ok');
+            err.classList.toggle('hidden', state !== 'error');
+            if (state === 'ok' && amount) amount.textContent = opts.amount || '—';
+            if (state === 'ok' && detail && opts.detail != null) detail.textContent = opts.detail;
+            if (state === 'error') err.textContent = opts.error || 'Error';
+        }
+
+        function setAllGrossMarginsLoading() {
+            Object.values(GM_COLUMN_IDS).forEach(colId => {
+                ['revenue', 'adspend', 'profit', 'margin'].forEach(k => {
+                    setGmMetricState(colId, k, 'loading', {});
                 });
+            });
+        }
 
-                const text = await response.text();
-                let raw;
-                try {
-                    raw = text ? JSON.parse(text) : {};
-                } catch {
-                    throw new Error('Webhook did not return JSON');
-                }
+        async function fetchMarginsWebhookPayload() {
+            const response = await fetch(CONFIG.MARGINS_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ trigger: true })
+            });
+            const text = await response.text();
+            let raw;
+            try {
+                raw = text ? JSON.parse(text) : {};
+            } catch {
+                throw new Error('Make.com webhook did not return JSON');
+            }
+            if (!response.ok) {
+                throw new Error(`Webhook ${response.status}`);
+            }
+            return unwrapMarginsPayload(raw);
+        }
 
-                if (!response.ok) {
-                    throw new Error(`Webhook ${response.status}`);
-                }
+        async function fetchRevenueRecordsForGrossMargins() {
+            const minISO = luxon.DateTime.now().setZone(ET_ZONE).minus({ days: 500 }).toUTC().toISO();
+            const formula = `IS_AFTER({${GROSS_MARGIN_FIELDS.CREATED}}, "${minISO}")`;
+            return fetchAllTableRecordsWithFormula(CONFIG.REVENUE_TABLE_ID, formula);
+        }
 
-                const data = unwrapMarginsPayload(raw);
-                const map = [
-                    ['lastweek', MARGINS_ROW_IDS.lastweek],
-                    ['thismonth', MARGINS_ROW_IDS.thismonth],
-                    ['lastmonth', MARGINS_ROW_IDS.lastmonth]
-                ];
-                for (const [key, rowId] of map) {
-                    const num = pickMarginNumber(data, key);
-                    if (num === null) {
-                        setMarginsRowState(rowId, 'error', 'Missing value');
-                    } else {
-                        setMarginsRowState(rowId, 'ok', formatMoney(num));
-                    }
-                }
+        async function fetchGrossMargins() {
+            setAllGrossMarginsLoading();
+            const periods = getGrossMarginPeriodsET();
+
+            let revenueRecords = [];
+            let revenueError = null;
+            let webhookData = null;
+            let webhookError = null;
+
+            try {
+                revenueRecords = await fetchRevenueRecordsForGrossMargins();
             } catch (e) {
-                console.error('Margins webhook:', e);
-                Object.values(MARGINS_ROW_IDS).forEach(id =>
-                    setMarginsRowState(id, 'error', e.message || 'Request failed'));
+                console.error('Gross margins Airtable:', e);
+                revenueError = e.message || 'Airtable failed';
+            }
+
+            try {
+                webhookData = await fetchMarginsWebhookPayload();
+            } catch (e) {
+                console.error('Gross margins webhook:', e);
+                webhookError = e.message || 'Webhook failed';
+            }
+
+            const keys = [
+                ['lastweek', GM_COLUMN_IDS.lastweek, 'lastweek'],
+                ['thismonth', GM_COLUMN_IDS.thismonth, 'thismonth'],
+                ['lastmonth', GM_COLUMN_IDS.lastmonth, 'lastmonth']
+            ];
+
+            for (const [, colId, periodKey] of keys) {
+                const p = periods[periodKey];
+                const periodLabelEl = document.querySelector(`#${colId} .gm-period-label`);
+                if (periodLabelEl) periodLabelEl.textContent = p.label;
+
+                let revenue = null;
+                if (!revenueError) {
+                    revenue = sumGrossRevenueLinkedInPeriod(revenueRecords, p.start, p.end);
+                    const createdDetail = formatCreatedWindowDetail(p.start, p.end);
+                    setGmMetricState(colId, 'revenue', 'ok', {
+                        amount: formatMoney(revenue),
+                        detail: `${createdDetail} · Linked Client required`
+                    });
+                } else {
+                    setGmMetricState(colId, 'revenue', 'error', { error: revenueError });
+                }
+
+                let adspend = null;
+                if (!webhookError && webhookData) {
+                    adspend = pickMarginNumber(webhookData, periodKey);
+                }
+                if (webhookError) {
+                    setGmMetricState(colId, 'adspend', 'error', { error: webhookError });
+                } else if (adspend === null) {
+                    setGmMetricState(colId, 'adspend', 'error', { error: 'Missing ad spend' });
+                } else {
+                    setGmMetricState(colId, 'adspend', 'ok', { amount: formatMoney(adspend) });
+                }
+
+                if (revenueError || webhookError || adspend === null) {
+                    let pe = 'Need revenue and ad spend';
+                    if (revenueError) pe = 'Revenue unavailable';
+                    else if (webhookError) pe = 'Ad spend unavailable';
+                    else if (adspend === null) pe = 'Ad spend missing';
+                    setGmMetricState(colId, 'profit', 'error', { error: pe });
+                    setGmMetricState(colId, 'margin', 'error', { error: '—' });
+                    continue;
+                }
+
+                const profit = revenue - adspend;
+                setGmMetricState(colId, 'profit', 'ok', { amount: formatMoney(profit) });
+
+                if (revenue > 0) {
+                    const pct = (profit / revenue) * 100;
+                    const pctStr = pct.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 }) + '%';
+                    setGmMetricState(colId, 'margin', 'ok', { amount: pctStr });
+                } else {
+                    setGmMetricState(colId, 'margin', 'ok', { amount: '—', detail: 'No revenue in range' });
+                }
             }
         }
 
@@ -424,7 +694,7 @@
             const refreshIcon = document.getElementById('refreshIcon');
             refreshIcon.classList.add('animate-spin');
             showState('loadingState');
-            fetchMargins();
+            fetchGrossMargins();
 
             try {
                 const [allRecords, drawRecords, clientRecords] = await Promise.all([
