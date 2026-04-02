@@ -109,7 +109,7 @@
 
             <div id="marginsSection" class="bg-white rounded-lg shadow-sm p-6 mt-6">
                 <h2 class="text-xl font-semibold text-gray-900 mb-2">Gross Margins</h2>
-                <p class="text-sm text-gray-500 mb-6">Revenue sums <span class="font-medium">Gross Revenue</span> from B2C Leads where <span class="font-medium">Status</span> is Qualified, <span class="font-medium">Linked Client</span> is set, and each row’s <span class="font-medium">Created</span> time (Eastern) falls in the period. Ad spend from Make.com. Refreshes on load and when you click Refresh.</p>
+                <p class="text-sm text-gray-500 mb-6">Revenue sums <span class="font-medium">Gross Revenue</span> from B2C Leads (Qualified, linked, <span class="font-medium">Created</span> in Eastern), plus a <span class="font-medium">25% agency fee</span> on CCC client ad spend (branded + unbranded from Make.com; that spend is already in total ad spend—only the fee is added to revenue). Ad spend from Make.com. Refreshes on load and when you click Refresh.</p>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div id="gmColLastWeek" class="rounded-lg border border-gray-200 p-4 space-y-4">
                         <div>
@@ -529,6 +529,31 @@
             return null;
         }
 
+        /** Make.com CCC branded + unbranded spend keys per period (summed, then ×0.25 as agency fee revenue). */
+        const CCC_SPEND_KEYS_BY_PERIOD = {
+            lastweek: ['CCClastweekunbranded', 'CCClastweekbranded'],
+            thismonth: ['CCCthismonthunbranded', 'CCCthismonthbranded'],
+            lastmonth: ['CCClastmonthunbranded', 'CCClastmonthbranded']
+        };
+
+        const CCC_AGENCY_FEE_RATE = 0.25;
+
+        function sumCccAdSpendForPeriod(webhookData, periodKey) {
+            if (webhookData == null || typeof webhookData !== 'object') return 0;
+            const keys = CCC_SPEND_KEYS_BY_PERIOD[periodKey];
+            if (!keys) return 0;
+            let sum = 0;
+            for (const k of keys) {
+                const n = pickMarginNumber(webhookData, k);
+                if (n !== null) sum += n;
+            }
+            return sum;
+        }
+
+        function cccAgencyFeeRevenueAddOn(webhookData, periodKey) {
+            return sumCccAdSpendForPeriod(webhookData, periodKey) * CCC_AGENCY_FEE_RATE;
+        }
+
         function setGmMetricState(colId, metricKey, state, opts) {
             const col = document.getElementById(colId);
             if (!col) return;
@@ -617,11 +642,24 @@
 
                 let revenue = null;
                 if (!revenueError) {
-                    revenue = sumGrossRevenueLinkedInPeriod(revenueRecords, p.start, p.end);
+                    const baseRevenue = sumGrossRevenueLinkedInPeriod(revenueRecords, p.start, p.end);
+                    const cccSpendSum = !webhookError && webhookData
+                        ? sumCccAdSpendForPeriod(webhookData, periodKey)
+                        : 0;
+                    const cccFeeAdd = !webhookError && webhookData
+                        ? cccAgencyFeeRevenueAddOn(webhookData, periodKey)
+                        : 0;
+                    revenue = baseRevenue + cccFeeAdd;
                     const createdDetail = formatCreatedWindowDetail(p.start, p.end);
+                    let revDetail = `${createdDetail} · Status = Qualified · Linked Client required`;
+                    if (!webhookError && webhookData) {
+                        revDetail += ` · Airtable ${formatMoney(baseRevenue)} + 25%×CCC spend (${formatMoney(cccSpendSum)}) = +${formatMoney(cccFeeAdd)}`;
+                    } else {
+                        revDetail += ' · CCC fee not added (ad spend / webhook unavailable)';
+                    }
                     setGmMetricState(colId, 'revenue', 'ok', {
                         amount: formatMoney(revenue),
-                        detail: `${createdDetail} · Status = Qualified · Linked Client required`
+                        detail: revDetail
                     });
                 } else {
                     setGmMetricState(colId, 'revenue', 'error', { error: revenueError });
