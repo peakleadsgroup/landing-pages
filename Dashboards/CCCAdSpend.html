@@ -98,8 +98,22 @@
         const LEADS_TABLE_ID = 'tblPt6Wc79hTBSmcD';
         /** Creative Concepts Contracting — Clients table record ID (Linked Client on leads). */
         const LINKED_CLIENT_RECORD_ID = 'recN5TuwlaK1BW6g';
-        /** Created on or after this date (inclusive), US Eastern start of day. */
-        const CPL_WINDOW_START_ET = { y: 2026, m: 3, d: 26 };
+        /** March 26 (inclusive), Eastern. Year: null = current calendar year in the browser (fixes wrong-year filters). */
+        const CPL_WINDOW_YEAR = null;
+        const CPL_MONTH = 3;
+        const CPL_DAY = 26;
+
+        const LOG_PREFIX = '[CCC CPL]';
+
+        function getCplWindowYear() {
+            return CPL_WINDOW_YEAR == null ? new Date().getFullYear() : CPL_WINDOW_YEAR;
+        }
+
+        function logCpl(level, message, data) {
+            const fn = console[level] || console.log;
+            if (data !== undefined) fn(LOG_PREFIX, message, data);
+            else fn(LOG_PREFIX, message);
+        }
 
         function formatMoney(n) {
             return '$' + n.toLocaleString('en-US', {
@@ -187,41 +201,168 @@
             document.getElementById('errorTitle').textContent = 'Could not load spend';
         }
 
+        function getCplStartEastern() {
+            const y = getCplWindowYear();
+            return luxon.DateTime.fromObject(
+                { year: y, month: CPL_MONTH, day: CPL_DAY },
+                { zone: 'America/New_York' }
+            ).startOf('day');
+        }
+
+        /** Loose lower bound for Airtable (2 days before 3/26 ET); precise cutoff is applied in JS. */
+        function getAirtableCreatedCutoffIsoDate() {
+            const start = getCplStartEastern();
+            return start.minus({ days: 2 }).toFormat('yyyy-MM-dd');
+        }
+
         function recordCreatedOnOrAfterCplStart(record) {
             const raw = record.fields['Created'];
             if (raw == null || raw === '') return false;
             const { DateTime } = luxon;
             const dt = DateTime.fromISO(String(raw), { zone: 'utc' }).setZone('America/New_York');
             if (!dt.isValid) return false;
-            const start = DateTime.fromObject(
-                { year: CPL_WINDOW_START_ET.y, month: CPL_WINDOW_START_ET.m, day: CPL_WINDOW_START_ET.d },
-                { zone: 'America/New_York' }
-            ).startOf('day');
+            const start = getCplStartEastern();
             return dt >= start;
         }
 
-        async function fetchQualifiedCccLeadCount() {
-            const formula =
-                `AND({Status}="Qualified", FIND("${LINKED_CLIENT_RECORD_ID}", ARRAYJOIN({Linked Client})) > 0, IS_AFTER({Created}, "2026-03-24"))`;
+        function leadRecordMatchesClient(record) {
+            const lc = record.fields['Linked Client'];
+            if (Array.isArray(lc)) return lc.includes(LINKED_CLIENT_RECORD_ID);
+            if (typeof lc === 'string') return lc === LINKED_CLIENT_RECORD_ID;
+            return false;
+        }
+
+        function statusIsQualified(record) {
+            const s = record.fields['Status'];
+            if (s == null) return false;
+            return String(s).trim().toLowerCase() === 'qualified';
+        }
+
+        async function airtableListLeads(filterFormula, pageSize, label) {
             let offset = null;
             const records = [];
+            let page = 0;
             do {
+                page += 1;
                 let url =
                     `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${LEADS_TABLE_ID}` +
-                    `?filterByFormula=${encodeURIComponent(formula)}&pageSize=100`;
+                    `?filterByFormula=${encodeURIComponent(filterFormula)}&pageSize=${pageSize}`;
                 if (offset) url += `&offset=${encodeURIComponent(offset)}`;
+                logCpl('log', `Airtable request (${label}) page ${page}`, { urlTail: url.slice(-120) });
                 const response = await fetch(url, {
                     headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` }
                 });
                 if (!response.ok) {
                     const t = await response.text();
+                    logCpl('error', `Airtable HTTP error (${label})`, { status: response.status, body: (t || '').slice(0, 500) });
                     throw new Error(`Leads query failed (${response.status}): ${(t || '').slice(0, 120)}`);
                 }
                 const data = await response.json();
-                records.push(...(data.records || []));
+                const batch = data.records || [];
+                records.push(...batch);
+                logCpl('log', `Airtable response (${label}) page ${page}`, { batchSize: batch.length, totalSoFar: records.length, hasMore: !!data.offset });
                 offset = data.offset || null;
             } while (offset);
-            return records.filter(recordCreatedOnOrAfterCplStart).length;
+            return records;
+        }
+
+        /** When strict count is 0, fetch CCC+Qualified leads without date to log what Airtable returns. */
+        async function logDiagnosticNoDateFilter() {
+            const formula = `AND({Status}="Qualified", FIND("${LINKED_CLIENT_RECORD_ID}", ARRAYJOIN({Linked Client})) > 0)`;
+            try {
+                const recs = await airtableListLeads(formula, 100, 'diagnostic no-date');
+                logCpl('warn', 'Diagnostic: Qualified + Linked Client (no Created filter)', {
+                    count: recs.length,
+                    sample: recs.slice(0, 15).map(r => ({
+                        id: r.id,
+                        Status: r.fields['Status'],
+                        Created: r.fields['Created'],
+                        LinkedClient: r.fields['Linked Client']
+                    }))
+                });
+            } catch (e) {
+                logCpl('error', 'Diagnostic fetch failed', e.message || String(e));
+            }
+        }
+
+        async function fetchQualifiedCccLeadCount() {
+            const y = getCplWindowYear();
+            const cutoff = getAirtableCreatedCutoffIsoDate();
+            const startEt = getCplStartEastern();
+            logCpl('log', 'Lead count config', {
+                LINKED_CLIENT_RECORD_ID,
+                cplWindowYear: y,
+                cplStartEasternISO: startEt.toISO(),
+                airtableIS_AFTER_Created: cutoff,
+                browserNow: new Date().toISOString()
+            });
+
+            const formula =
+                `AND({Status}="Qualified", FIND("${LINKED_CLIENT_RECORD_ID}", ARRAYJOIN({Linked Client})) > 0, IS_AFTER({Created}, "${cutoff}"))`;
+            logCpl('log', 'filterByFormula (strict)', formula);
+
+            const records = await airtableListLeads(formula, 100, 'strict');
+
+            const postFilter = records.filter(r => recordCreatedOnOrAfterCplStart(r));
+            const dropped = records.length - postFilter.length;
+
+            logCpl('log', 'Strict query summary', {
+                recordsFromApi: records.length,
+                afterEasternDateFilter: postFilter.length,
+                droppedByPostFilter: dropped
+            });
+
+            const maxSamples = 12;
+            records.slice(0, maxSamples).forEach((r, i) => {
+                const raw = r.fields['Created'];
+                const { DateTime } = luxon;
+                const dt = raw != null ? DateTime.fromISO(String(raw), { zone: 'utc' }).setZone('America/New_York') : null;
+                logCpl('log', `Sample row ${i + 1}/${Math.min(records.length, maxSamples)}`, {
+                    id: r.id,
+                    Status: r.fields['Status'],
+                    LinkedClient: r.fields['Linked Client'],
+                    CreatedRaw: raw,
+                    createdEastern: dt && dt.isValid ? dt.toISO() : null,
+                    matchesClientField: leadRecordMatchesClient(r),
+                    statusQualified: statusIsQualified(r),
+                    passesEasternCutoff: recordCreatedOnOrAfterCplStart(r)
+                });
+            });
+
+            if (records.length === 0) {
+                logCpl('warn', 'Strict filter returned 0 rows — running diagnostic (no Created clause)');
+                await logDiagnosticNoDateFilter();
+            } else if (postFilter.length === 0 && records.length > 0) {
+                logCpl('warn', 'All rows dropped by Eastern date filter — check Created values vs cplStartEasternISO');
+            }
+
+            if (postFilter.length > 0) {
+                return postFilter.length;
+            }
+
+            /** Status text in Airtable may not match formula {Status}="Qualified" (whitespace, option spelling). */
+            const fallbackFormula =
+                `AND(FIND("${LINKED_CLIENT_RECORD_ID}", ARRAYJOIN({Linked Client})) > 0, IS_AFTER({Created}, "${cutoff}"))`;
+            logCpl('warn', 'Strict count is 0 — fallback: Linked Client + Created only, Qualified checked in JS', {
+                fallbackFormula
+            });
+            const wide = await airtableListLeads(fallbackFormula, 100, 'fallback');
+            const fallbackCount = wide.filter(
+                r => statusIsQualified(r) && recordCreatedOnOrAfterCplStart(r)
+            ).length;
+            logCpl('log', 'Fallback summary', {
+                rowsFromApi: wide.length,
+                afterQualifiedAndEastern: fallbackCount,
+                statusHistogram: wide.slice(0, 50).reduce((acc, r) => {
+                    const k = r.fields['Status'] == null ? '(empty)' : String(r.fields['Status']);
+                    acc[k] = (acc[k] || 0) + 1;
+                    return acc;
+                }, {})
+            });
+            if (fallbackCount > 0) {
+                logCpl('warn', 'Using fallback lead count (strict formula matched no rows)', { fallbackCount });
+            }
+            return fallbackCount;
         }
 
         function applySpendToDom(unbranded, branded, total, agencyFee, amountDue) {
@@ -304,7 +445,7 @@
                 document.getElementById('dataPanel').classList.remove('hidden');
 
                 if (leadsResult.status === 'fulfilled') {
-                    leadCount = leadsResult.value;
+                    const leadCount = leadsResult.value;
                     applyCplToDom(leadCount, total);
                 } else {
                     applyCplToDom(null, total);
