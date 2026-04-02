@@ -329,7 +329,7 @@
         function formatStatesListForOutput(stateAbbrs) {
             const names = [...stateAbbrs].map(abbr => STATE_ABBR_TO_NAME[abbr] || abbr);
             names.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
-            return names.map(name => `${name} U.S.`);
+            return names;
         }
 
         let map;

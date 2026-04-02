@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Profit Pacing Dashboard</title>
+    <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <style>
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin { animation: spin 1s linear infinite; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen p-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <img src="https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Logo" class="h-10 w-auto">
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-900">Profit Pacing Dashboard</h1>
+                            <p class="text-gray-600 mt-1">Cash trends and year-to-date profit pace</p>
+                        </div>
+                    </div>
+                    <button onclick="fetchData()" id="refreshBtn" class="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <svg id="refreshIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div id="errorMessage" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 hidden">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <div>
+                        <h3 class="font-semibold text-red-900 mb-1">Error</h3>
+                        <p class="text-sm text-red-800" id="errorText"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="loadingState" class="bg-white rounded-lg shadow-sm p-12 text-center hidden">
+                <svg class="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                <p class="text-gray-600">Loading data from Airtable...</p>
+            </div>
+
+            <div id="chartContainer" class="hidden">
+                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Cash Metrics Over Time</h2>
+                    <div class="bg-gray-50 rounded-lg p-4" style="height: 500px;">
+                        <canvas id="cashChart"></canvas>
+                    </div>
+                </div>
+
+                <div id="metricsPanel" class="bg-white rounded-lg shadow-sm p-6 space-y-6">
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Net profit per day (YTD)</h3>
+                        <p class="text-2xl font-bold text-gray-900" id="netProfitPerDay">—</p>
+                        <p class="text-sm text-gray-600 mt-1" id="netProfitPerDayDetail"></p>
+                    </div>
+                    <div class="border-t border-gray-100 pt-6">
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Profit/Day Needed to $1 Mil Net</h3>
+                        <p class="text-2xl font-bold text-gray-900" id="profitPerDay1M">—</p>
+                    </div>
+                    <div class="border-t border-gray-100 pt-6">
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Profit/Day to $2 Mil Net</h3>
+                        <p class="text-2xl font-bold text-gray-900" id="profitPerDay2M">—</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="noDataState" class="bg-white rounded-lg shadow-sm p-12 text-center hidden">
+                <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">No Data Available</h3>
+                <p class="text-gray-600">No records found in the Airtable table.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            BASE_ID: 'appmBb0lzqRK9dI8v',
+            TABLE_ID: 'tblEze74vhj4hE9c9',
+            API_KEY: 'pato6OZtm7CrR83po.9400ea9366fb0dcec3f346273c8b427fb7804557897f19e99bcd8a886284b589'
+        };
+
+        let chartInstance = null;
+
+        function showState(state) {
+            const states = ['loadingState', 'chartContainer', 'noDataState', 'errorMessage'];
+            states.forEach(s => document.getElementById(s).classList.add('hidden'));
+            if (state) document.getElementById(state).classList.remove('hidden');
+        }
+
+        function showError(message) {
+            document.getElementById('errorText').textContent = message;
+            showState('errorMessage');
+        }
+
+        function formatDate(dateValue) {
+            if (!dateValue) return null;
+            try {
+                const date = new Date(dateValue);
+                if (isNaN(date.getTime())) return null;
+                return date.toISOString().split('T')[0];
+            } catch {
+                return null;
+            }
+        }
+
+        function parseCurrency(value) {
+            if (!value && value !== 0) return null;
+            if (typeof value === 'number') return value;
+            if (typeof value === 'string') {
+                const cleaned = value.replace(/[\$,]/g, '').trim();
+                const num = parseFloat(cleaned);
+                return isNaN(num) ? null : num;
+            }
+            return null;
+        }
+
+        /** Inclusive day index from Jan 1 (1 = Jan 1). */
+        function getDaysIntoYear(d = new Date()) {
+            const y = d.getFullYear();
+            const jan1 = new Date(y, 0, 1);
+            const today = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            return Math.floor((today - jan1) / 86400000) + 1;
+        }
+
+        /** Inclusive days from today through Dec 31 (at least 1). */
+        function getDaysLeftInYear(d = new Date()) {
+            const y = d.getFullYear();
+            const today = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            const dec31 = new Date(y, 11, 31);
+            const left = Math.floor((dec31 - today) / 86400000) + 1;
+            return Math.max(1, left);
+        }
+
+        function formatMoney(n) {
+            return '$' + n.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function updateMetrics(latestRealizedCash) {
+            const daysIn = getDaysIntoYear();
+            const daysLeft = getDaysLeftInYear();
+
+            if (latestRealizedCash === null || latestRealizedCash === undefined) {
+                document.getElementById('netProfitPerDay').textContent = '—';
+                document.getElementById('netProfitPerDayDetail').textContent = 'No realized cash value on the latest snapshot.';
+                document.getElementById('profitPerDay1M').textContent = '—';
+                document.getElementById('profitPerDay2M').textContent = '—';
+                return;
+            }
+
+            const perDayYtd = latestRealizedCash / daysIn;
+            document.getElementById('netProfitPerDay').textContent = formatMoney(perDayYtd);
+            document.getElementById('netProfitPerDayDetail').textContent =
+                `Based on latest realized cash ${formatMoney(latestRealizedCash)} ÷ ${daysIn} day${daysIn === 1 ? '' : 's'} into ${new Date().getFullYear()}.`;
+
+            const need1m = (1_000_000 - latestRealizedCash) / daysLeft;
+            const need2m = (2_000_000 - latestRealizedCash) / daysLeft;
+
+            document.getElementById('profitPerDay1M').textContent = formatMoney(need1m);
+            document.getElementById('profitPerDay2M').textContent = formatMoney(need2m);
+        }
+
+        async function fetchData() {
+            const refreshIcon = document.getElementById('refreshIcon');
+            refreshIcon.classList.add('animate-spin');
+            showState('loadingState');
+
+            try {
+                let allRecords = [];
+                let offset = null;
+
+                do {
+                    let url = `https://api.airtable.com/v0/${CONFIG.BASE_ID}/${CONFIG.TABLE_ID}`;
+                    if (offset) url += `?offset=${offset}`;
+
+                    const response = await fetch(url, {
+                        headers: { 'Authorization': `Bearer ${CONFIG.API_KEY}` }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    allRecords = allRecords.concat(data.records || []);
+                    offset = data.offset;
+                } while (offset);
+
+                if (allRecords.length === 0) {
+                    showState('noDataState');
+                    refreshIcon.classList.remove('animate-spin');
+                    return;
+                }
+
+                const processedData = [];
+                allRecords.forEach(record => {
+                    const created = formatDate(record.fields['Created']);
+                    if (!created) return;
+
+                    const tangibleCash = parseCurrency(record.fields['Tangible Cash']);
+                    const realizedCashReserve = parseCurrency(record.fields['Realized Cash + Reserve']);
+                    const realizedCash = parseCurrency(record.fields['Realized Cash']);
+
+                    processedData.push({
+                        date: created,
+                        tangibleCash,
+                        realizedCashReserve,
+                        realizedCash
+                    });
+                });
+
+                processedData.sort((a, b) => a.date.localeCompare(b.date));
+
+                const yearStr = String(new Date().getFullYear());
+                const yearRows = processedData.filter(d => d.date.startsWith(yearStr));
+                const realizedPool = yearRows.length ? yearRows : processedData;
+
+                let latestRealized = null;
+                for (let i = realizedPool.length - 1; i >= 0; i--) {
+                    const v = realizedPool[i].realizedCash;
+                    if (v !== null && v !== undefined) {
+                        latestRealized = v;
+                        break;
+                    }
+                }
+
+                createChart(processedData);
+                updateMetrics(latestRealized);
+                showState('chartContainer');
+            } catch (error) {
+                console.error('Error:', error);
+                showError(error.message);
+            } finally {
+                refreshIcon.classList.remove('animate-spin');
+            }
+        }
+
+        function createChart(data) {
+            const ctx = document.getElementById('cashChart').getContext('2d');
+
+            if (chartInstance) chartInstance.destroy();
+
+            const dates = data.map(d => d.date);
+            const tangibleCashData = data.map(d => d.tangibleCash);
+            const realizedCashReserveData = data.map(d => d.realizedCashReserve);
+
+            function getTuesdaysInRange(startDate, endDate) {
+                const tuesdays = [];
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                let current = new Date(start);
+                while (current.getDay() !== 2) {
+                    current.setDate(current.getDate() + 1);
+                }
+                while (current <= end) {
+                    tuesdays.push(new Date(current).toISOString().split('T')[0]);
+                    current.setDate(current.getDate() + 7);
+                }
+                return tuesdays;
+            }
+
+            const sortedDates = [...dates].sort();
+            const minDate = sortedDates[0];
+            const maxDate = sortedDates[sortedDates.length - 1];
+            const tuesdays = getTuesdaysInRange(minDate, maxDate);
+
+            const tuesdayAnnotations = tuesdays.map(tuesday => ({
+                type: 'line',
+                xMin: tuesday,
+                xMax: tuesday,
+                borderColor: 'rgba(156, 163, 175, 0.5)',
+                borderWidth: 1,
+                borderDash: [5, 5],
+                label: { display: false }
+            }));
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'Tangible Cash',
+                            data: tangibleCashData,
+                            borderColor: 'rgb(59, 130, 246)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: false,
+                            pointRadius: 3,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: 'Realized Cash + Reserve',
+                            data: realizedCashReserveData,
+                            borderColor: 'rgb(239, 68, 68)',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: false,
+                            pointRadius: 3,
+                            pointHoverRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15,
+                                font: { size: 12, weight: 'bold' }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.parsed.y;
+                                    if (value === null || value === undefined) {
+                                        return context.dataset.label + ': No data';
+                                    }
+                                    return context.dataset.label + ': $' + value.toLocaleString('en-US', {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    });
+                                }
+                            }
+                        },
+                        annotation: {
+                            annotations: tuesdayAnnotations
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString('en-US', {
+                                        minimumFractionDigits: 0,
+                                        maximumFractionDigits: 0
+                                    });
+                                }
+                            },
+                            grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                callback: function(value, index) {
+                                    const dateStr = this.getLabelForValue(value);
+                                    if (dateStr) {
+                                        const date = new Date(dateStr);
+                                        return date.toLocaleDateString('en-US', {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            year: 'numeric'
+                                        });
+                                    }
+                                    return dateStr;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        fetchData();
+    </script>
+</body>
+</html>
