@@ -347,7 +347,8 @@
             document.getElementById('valAmountDue').textContent = formatMoney(amountDue);
         }
 
-        function applyCplToDom(leadCount, totalSpend) {
+        /** CPL = (Total Spend + Agency Fee) ÷ leads — excludes Amount Paid so CPL stays stable as payments change. */
+        function applyCplToDom(leadCount, totalSpend, agencyFee) {
             const cplEl = document.getElementById('valCpl');
             const countEl = document.getElementById('valLeadCount');
             if (leadCount === null) {
@@ -355,13 +356,13 @@
                 countEl.textContent = '';
                 return;
             }
-            countEl.textContent =
-                leadCount === 1 ? '1 qualified lead' : `${leadCount} qualified leads`;
+            countEl.textContent = leadCount === 1 ? '1 lead' : `${leadCount} leads`;
             if (leadCount === 0) {
                 cplEl.textContent = '—';
                 return;
             }
-            cplEl.textContent = formatMoney(totalSpend / leadCount);
+            const cplBasis = totalSpend + agencyFee;
+            cplEl.textContent = formatMoney(cplBasis / leadCount);
         }
 
         async function fetchSpendFromWebhook(signal) {
@@ -425,7 +426,7 @@
                 if (leadsResult.status === 'rejected') {
                     console.warn(LOG_PREFIX, 'Lead count promise rejected (unexpected)', leadsResult.reason);
                 }
-                applyCplToDom(leadCount, total);
+                applyCplToDom(leadCount, total, agencyFee);
             } catch (e) {
                 const msg =
                     e && e.name === 'AbortError'
