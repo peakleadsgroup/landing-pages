@@ -204,19 +204,61 @@
             return price * qty;
         }
 
-        /** Sum of Charges "Number" (quantity billed per payment). Non-numeric / empty counts as 0. */
-        function parseChargeNumberForSum(val) {
-            if (val == null || val === '') return 0;
-            if (typeof val === 'number' && Number.isFinite(val) && val >= 0) return val;
-            const n = Number(String(val).trim().replace(/,/g, ''));
-            return Number.isFinite(n) && n >= 0 ? n : 0;
+        const CHARGE_QTY_FIELD_KEYS = ['Number', 'Quantity', 'Qty', 'Lead Count', 'Leads', '# Leads'];
+
+        /** Parse a quantity from Airtable (number, numeric string, select .name, etc.). */
+        function quantityValueToNumber(val) {
+            if (val == null || val === '') return null;
+            if (typeof val === 'number' && Number.isFinite(val)) return val >= 0 ? val : null;
+            if (typeof val === 'string') {
+                const t = val.trim();
+                if (t === '') return null;
+                const n = Number(t.replace(/,/g, ''));
+                return Number.isFinite(n) && n >= 0 ? n : null;
+            }
+            if (Array.isArray(val)) {
+                let acc = 0;
+                let ok = false;
+                for (const x of val) {
+                    const q = quantityValueToNumber(x);
+                    if (q != null) {
+                        acc += q;
+                        ok = true;
+                    }
+                }
+                return ok ? acc : null;
+            }
+            if (typeof val === 'object' && val !== null) {
+                if (val.name != null) return quantityValueToNumber(val.name);
+                if (typeof val.value === 'number' || typeof val.value === 'string') {
+                    return quantityValueToNumber(val.value);
+                }
+            }
+            return null;
+        }
+
+        /**
+         * Billed lead count for one charge row: first numeric qty among common fields, else same fallback as Price×Number (1 per row if non-numeric).
+         */
+        function billedQtyForChargeFields(fields) {
+            let raw = null;
+            for (const k of CHARGE_QTY_FIELD_KEYS) {
+                const v = fields[k];
+                if (v != null && v !== '') {
+                    raw = v;
+                    break;
+                }
+            }
+            const parsed = raw != null ? quantityValueToNumber(raw) : null;
+            if (parsed != null) return parsed;
+            return parseChargeNumber(raw);
         }
 
         function sumChargeNumbersForLeadsBilled(charges) {
             if (!charges || !charges.length) return 0;
             let sum = 0;
             for (const ch of charges) {
-                sum += parseChargeNumberForSum(ch.fields && ch.fields['Number']);
+                sum += billedQtyForChargeFields(ch.fields || {});
             }
             return Math.round(sum);
         }
@@ -253,13 +295,21 @@
         async function loadPaymentsForClient(clientRecord) {
             const stripeLinks = clientRecord.fields[STRIPE_CUSTOMER_FIELD];
             if (!stripeLinks || !stripeLinks.length) {
-                return { html: '<p class="text-sm text-slate-500">No Stripe customer linked to this client.</p>', charges: [] };
+                return {
+                    html: '<p class="text-sm text-slate-500">No Stripe customer linked to this client.</p>',
+                    charges: [],
+                    leadsBilledSum: 0
+                };
             }
 
             const stripeId = stripeLinks[0];
             const stripeRes = await fetch(AIRTABLE(encodeURIComponent(TABLES.CUSTOMERS)) + `/${stripeId}`);
             if (!stripeRes.ok) {
-                return { html: '<p class="text-sm text-red-600">Could not load billing customer record.</p>', charges: [] };
+                return {
+                    html: '<p class="text-sm text-red-600">Could not load billing customer record.</p>',
+                    charges: [],
+                    leadsBilledSum: 0
+                };
             }
             const stripeData = await stripeRes.json();
             const customerName = stripeData.fields['Name'] || 'Customer';
@@ -276,7 +326,8 @@
                             </div>
                             <p class="text-sm text-slate-500">No individual payment records linked.</p>
                         </div>`,
-                    charges: []
+                    charges: [],
+                    leadsBilledSum: 0
                 };
             }
 
@@ -296,7 +347,8 @@
             if (!validCharges.length) {
                 return {
                     html: '<p class="text-sm text-slate-500">Payment links exist but charge details could not be loaded.</p>',
-                    charges: []
+                    charges: [],
+                    leadsBilledSum: 0
                 };
             }
 
@@ -408,7 +460,8 @@
                         ${monthBlocks}
                     </div>
                 </div>`;
-            return { html: block, charges: validCharges };
+            const leadsBilledSum = sumChargeNumbersForLeadsBilled(validCharges);
+            return { html: block, charges: validCharges, leadsBilledSum };
         }
 
         function escapeHtml(s) {
@@ -631,12 +684,15 @@
                 ]);
 
                 const monthlyHtml = buildMonthlyRows(leads);
-                const leadsBilledSum = sumChargeNumbersForLeadsBilled(paymentsResult.charges);
+                const leadsBilledSum =
+                    paymentsResult.leadsBilledSum != null
+                        ? paymentsResult.leadsBilledSum
+                        : sumChargeNumbersForLeadsBilled(paymentsResult.charges || []);
                 const totalsHtml = buildTotalsSectionHtml(clientRecord, leads, leadsBilledSum);
                 const paymentsInner = `<p class="text-sm text-slate-600 mb-3">Based on the date that we actually charged the owner's card on file</p>${paymentsResult.html}`;
-                const paymentsFoldHtml = wrapSectionFold('Payments', paymentsInner);
+                const paymentsFoldHtml = wrapSectionFold('Credit card payments', paymentsInner);
                 const monthlyInner = `<p class="text-sm text-slate-600 mb-3">Based on when the leads were actually delivered</p>${monthlyHtml}`;
-                const monthlyFoldHtml = wrapSectionFold('Monthly lead spend', monthlyInner);
+                const monthlyFoldHtml = wrapSectionFold('Leads actually delivered', monthlyInner);
 
                 panel.innerHTML = `
                     <div class="space-y-8 pt-2">
