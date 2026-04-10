@@ -22,6 +22,24 @@
         .pay-details[open] > summary .pay-chevron {
             transform: rotate(90deg);
         }
+        .contact-details > summary {
+            list-style: none;
+        }
+        .contact-details > summary::-webkit-details-marker {
+            display: none;
+        }
+        .contact-details[open] > summary .contact-chevron {
+            transform: rotate(90deg);
+        }
+        .lead-month-details > summary {
+            list-style: none;
+        }
+        .lead-month-details > summary::-webkit-details-marker {
+            display: none;
+        }
+        .lead-month-details[open] > summary .lead-month-chevron {
+            transform: rotate(90deg);
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -172,6 +190,21 @@
             return `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         }
 
+        /** Charges: line amount = Price × Number. Uses Number only when it’s a positive quantity; otherwise 1 (e.g. invoice text). */
+        function parseChargeNumber(val) {
+            if (val == null || val === '') return 1;
+            if (typeof val === 'number' && Number.isFinite(val) && val > 0) return val;
+            const n = Number(String(val).trim().replace(/,/g, ''));
+            if (Number.isFinite(n) && n > 0) return n;
+            return 1;
+        }
+
+        function chargeLineTotal(fields) {
+            const price = parseMoney(fields['Price']);
+            const qty = parseChargeNumber(fields['Number']);
+            return price * qty;
+        }
+
         function formatContactFieldValue(v) {
             if (v == null) return '—';
             if (Array.isArray(v)) return v.length ? escapeHtml(v.map((x) => String(x)).join(', ')) : '—';
@@ -214,14 +247,7 @@
             }
             const stripeData = await stripeRes.json();
             const customerName = stripeData.fields['Name'] || 'Customer';
-            const amountCharged = stripeData.fields['Amount Charged'];
             const paymentLinks = stripeData.fields['Payments'] || [];
-
-            let totalFmt = formatCurrency(0);
-            if (amountCharged != null) {
-                const num = Number(amountCharged);
-                if (Number.isFinite(num)) totalFmt = formatCurrency(num);
-            }
 
             if (!paymentLinks.length) {
                 return {
@@ -230,7 +256,7 @@
                             <div class="rounded-lg bg-slate-50 p-4 border border-slate-100">
                                 <div class="text-xs text-slate-500 uppercase tracking-wide">Stripe customer</div>
                                 <div class="font-semibold text-slate-900">${escapeHtml(customerName)}</div>
-                                <div class="text-sm text-slate-600 mt-2">Total amount charged: <span class="font-medium text-slate-900">${totalFmt}</span> for <span class="font-medium text-slate-900">__LEAD_COUNT__</span> leads <span class="text-slate-500 font-normal">(sum number: __LEAD_COUNT__)</span></div>
+                                <div class="text-sm text-slate-600 mt-2">Total amount charged: <span class="font-medium text-slate-900">${formatCurrency(0)}</span></div>
                             </div>
                             <p class="text-sm text-slate-500">No individual payment records linked.</p>
                         </div>`,
@@ -298,14 +324,18 @@
                 </tr>`;
             }
 
+            let grandTotal = 0;
             const byMonth = new Map();
             for (const charge of validCharges) {
+                const line = chargeLineTotal(charge.fields);
+                grandTotal += line;
                 const key = monthKeyFromCreated(charge.fields['Created']) || '_unknown';
                 if (!byMonth.has(key)) byMonth.set(key, { charges: [], total: 0 });
                 const bucket = byMonth.get(key);
                 bucket.charges.push(charge);
-                bucket.total += parseMoney(charge.fields['Price']);
+                bucket.total += line;
             }
+            const totalFmt = formatCurrency(grandTotal);
 
             const monthKeys = [...byMonth.keys()].sort((a, b) => {
                 if (a === '_unknown') return 1;
@@ -356,7 +386,7 @@
                     <div class="rounded-lg bg-slate-50 p-4 border border-slate-100">
                         <div class="text-xs text-slate-500 uppercase tracking-wide">Stripe customer</div>
                         <div class="font-semibold text-slate-900">${escapeHtml(customerName)}</div>
-                        <div class="text-sm text-slate-600 mt-2">Total amount charged: <span class="font-medium text-slate-900">${totalFmt}</span> for <span class="font-medium text-slate-900">__LEAD_COUNT__</span> leads <span class="text-slate-500 font-normal">(sum number: __LEAD_COUNT__)</span></div>
+                        <div class="text-sm text-slate-600 mt-2">Total amount charged: <span class="font-medium text-slate-900">${totalFmt}</span></div>
                     </div>
                     <div class="space-y-2">
                         ${monthBlocks}
@@ -371,38 +401,88 @@
             return d.innerHTML;
         }
 
+        function leadDisplayName(fields) {
+            const full = fields['Full Name'];
+            if (full != null && String(full).trim() !== '') return String(full).trim();
+            const fn = String(fields['First Name'] || '').trim();
+            const ln = String(fields['Last Name'] || '').trim();
+            const combined = `${fn} ${ln}`.trim();
+            return combined || '—';
+        }
+
+        function sortLeadsByCreatedDesc(leadRecords) {
+            return [...leadRecords].sort((a, b) => {
+                const da = new Date((a.fields || {})['Created'] || 0);
+                const db = new Date((b.fields || {})['Created'] || 0);
+                return db - da;
+            });
+        }
+
         function buildMonthlyRows(leads) {
             const byMonth = new Map();
             for (const lead of leads) {
                 const key = monthKeyFromCreated(lead.fields['Created']);
                 if (!key) continue;
-                const p = parseMoney(lead.fields['Price']);
-                byMonth.set(key, (byMonth.get(key) || 0) + p);
+                if (!byMonth.has(key)) byMonth.set(key, { leads: [], total: 0 });
+                const bucket = byMonth.get(key);
+                bucket.leads.push(lead);
+                bucket.total += parseMoney(lead.fields['Price']);
             }
             const keys = [...byMonth.keys()].sort((a, b) => b.localeCompare(a));
             if (!keys.length) {
-                return '<p class="text-sm text-slate-500">No B2C leads with a created date and price for this client.</p>';
+                return '<p class="text-sm text-slate-500">No B2C leads with a created date for this client.</p>';
             }
-            const body = keys
+            const blocks = keys
                 .map((k) => {
-                    return `<tr class="border-t border-slate-200">
-                        <td class="px-3 py-2 text-sm font-medium text-slate-900">${escapeHtml(formatMonthLabel(k))}</td>
-                        <td class="px-3 py-2 text-sm">${formatCurrency(byMonth.get(k))}</td>
-                    </tr>`;
+                    const { leads: monthLeads, total } = byMonth.get(k);
+                    const label = formatMonthLabel(k);
+                    const sorted = sortLeadsByCreatedDesc(monthLeads);
+                    const count = sorted.length;
+                    const countLabel = count === 1 ? '1 lead' : `${count} leads`;
+                    const leadRows = sorted
+                        .map((rec) => {
+                            const f = rec.fields || {};
+                            const name = escapeHtml(leadDisplayName(f));
+                            const phone = escapeHtml(String(f['Phone'] || '—'));
+                            const email = escapeHtml(String(f['Email'] || '—'));
+                            const price = formatCurrency(parseMoney(f['Price']));
+                            return `<tr class="border-t border-slate-200">
+                                <td class="px-3 py-2 text-sm font-medium text-slate-900">${name}</td>
+                                <td class="px-3 py-2 text-sm text-slate-700">${phone}</td>
+                                <td class="px-3 py-2 text-sm text-slate-700">${email}</td>
+                                <td class="px-3 py-2 text-sm font-medium tabular-nums">${price}</td>
+                            </tr>`;
+                        })
+                        .join('');
+                    return `
+                        <details class="lead-month-details border border-slate-200 rounded-lg bg-white overflow-hidden">
+                            <summary class="px-4 py-3 cursor-pointer flex flex-wrap items-center justify-between gap-3 hover:bg-slate-50 text-left">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <svg class="w-4 h-4 text-slate-400 flex-shrink-0 lead-month-chevron transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    <span class="font-semibold text-slate-900">${escapeHtml(label)}</span>
+                                </div>
+                                <div class="flex items-center gap-3 flex-shrink-0">
+                                    <span class="text-xs text-slate-500">${escapeHtml(countLabel)}</span>
+                                    <span class="text-sm font-semibold text-slate-900 tabular-nums">${formatCurrency(total)}</span>
+                                </div>
+                            </summary>
+                            <div class="border-t border-slate-100 overflow-x-auto">
+                                <table class="w-full text-left">
+                                    <thead class="bg-slate-50 text-xs font-medium text-slate-500 uppercase">
+                                        <tr>
+                                            <th class="px-3 py-2">Name</th>
+                                            <th class="px-3 py-2">Phone</th>
+                                            <th class="px-3 py-2">Email</th>
+                                            <th class="px-3 py-2">Price</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white">${leadRows}</tbody>
+                                </table>
+                            </div>
+                        </details>`;
                 })
                 .join('');
-            return `
-                <div class="overflow-x-auto border border-slate-200 rounded-lg">
-                    <table class="w-full text-left">
-                        <thead class="bg-slate-50 text-xs font-medium text-slate-500 uppercase">
-                            <tr>
-                                <th class="px-3 py-2">Month</th>
-                                <th class="px-3 py-2">Total spent (lead price)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white">${body}</tbody>
-                    </table>
-                </div>`;
+            return `<div class="space-y-2">${blocks}</div>`;
         }
 
         function statusIsExactly(fields, value) {
@@ -470,22 +550,39 @@
                                 <div class="rounded-lg border border-slate-100 bg-slate-50/80 p-4">
                                     <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Leads Billed</p>
                                     <p class="text-3xl font-bold text-slate-900 tabular-nums">${leadsBilled}</p>
+                                    <p class="text-sm text-slate-600 mt-3 leading-relaxed">We bill on an upfront rolling basis 10 leads at a time. This number is the total number of leads we have billed for.</p>
                                 </div>
                                 <div class="rounded-lg border border-slate-100 bg-slate-50/80 p-4">
                                     <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Qualified Leads Delivered</p>
                                     <p class="text-3xl font-bold text-slate-900 tabular-nums">${qualifiedDelivered}</p>
+                                    <p class="text-sm text-slate-600 mt-3 leading-relaxed">Leads actually delivered</p>
                                 </div>
                                 <div class="rounded-lg border border-slate-100 bg-slate-50/80 p-4">
                                     <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Leads Owed</p>
                                     <p class="text-2xl sm:text-3xl font-bold text-slate-900 tabular-nums leading-tight">${leadsOwed}</p>
+                                    <p class="text-sm text-slate-600 mt-3 leading-relaxed">Number of leads we have billed for but not delivered yet</p>
                                 </div>
                             </div>
                         </section>`;
         }
 
+        function wrapContactsCollapsible(innerHtml) {
+            return `<details class="contact-details border border-slate-200 rounded-lg bg-white overflow-hidden shadow-sm">
+                <summary class="px-4 py-3 cursor-pointer flex items-center justify-between gap-3 hover:bg-slate-50 text-left">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-slate-400 flex-shrink-0 contact-chevron transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        <span class="text-sm font-semibold text-slate-900 uppercase tracking-wide">Contacts</span>
+                    </div>
+                </summary>
+                <div class="px-4 pb-4 pt-0 border-t border-slate-100 bg-slate-50/40">${innerHtml}</div>
+            </details>`;
+        }
+
         async function loadContactsHtml(contactIds) {
             if (!contactIds || !contactIds.length) {
-                return '<p class="text-sm text-slate-500">No contacts linked on this client.</p>';
+                return wrapContactsCollapsible(
+                    '<p class="text-sm text-slate-500">No contacts linked on this client.</p>'
+                );
             }
             const cards = [];
             for (const cid of contactIds) {
@@ -519,7 +616,8 @@
                     cards.push(`<p class="text-sm text-red-600">Could not load contact <code class="text-xs">${escapeHtml(cid)}</code>.</p>`);
                 }
             }
-            return `<div class="grid gap-3 sm:grid-cols-1">${cards.join('')}</div>`;
+            const inner = `<div class="grid gap-3 sm:grid-cols-1">${cards.join('')}</div>`;
+            return wrapContactsCollapsible(inner);
         }
 
         async function hydratePanel(clientId, clientRecord) {
@@ -538,23 +636,22 @@
                 ]);
 
                 const monthlyHtml = buildMonthlyRows(leads);
-                const leadCountStr = String(leads.length);
-                const paymentsHtml = paymentsResult.html.replace(/__LEAD_COUNT__/g, leadCountStr);
                 const totalsHtml = buildTotalsSectionHtml(clientRecord, leads);
 
                 panel.innerHTML = `
                     <div class="space-y-8 pt-2">
                         ${totalsHtml}
                         <section>
-                            <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wide mb-3">Contacts</h3>
                             ${contactsHtml}
                         </section>
                         <section>
-                            <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wide mb-3">Payments</h3>
-                            ${paymentsHtml}
+                            <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wide mb-1">Payments</h3>
+                            <p class="text-sm text-slate-600 mb-3">Based on the date that we actually charged the owner's card on file</p>
+                            ${paymentsResult.html}
                         </section>
                         <section>
-                            <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wide mb-3">Monthly lead spend</h3>
+                            <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wide mb-1">Monthly lead spend</h3>
+                            <p class="text-sm text-slate-600 mb-3">Based on when the leads were actually delivered</p>
                             ${monthlyHtml}
                         </section>
                     </div>`;
