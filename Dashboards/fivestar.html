@@ -22,13 +22,13 @@
         .pay-details[open] > summary .pay-chevron {
             transform: rotate(90deg);
         }
-        .contact-details > summary {
+        .section-fold > summary {
             list-style: none;
         }
-        .contact-details > summary::-webkit-details-marker {
+        .section-fold > summary::-webkit-details-marker {
             display: none;
         }
-        .contact-details[open] > summary .contact-chevron {
+        .section-fold[open] > summary .section-fold-chevron {
             transform: rotate(90deg);
         }
         .lead-month-details > summary {
@@ -105,7 +105,6 @@
         const STRIPE_CUSTOMER_FIELD = 'Stripe Customer';
         const CLIENT_NAME_FIELD = 'Name';
         const FIELD_TBC_LEAD_MODEL = 'TBC Lead Model';
-        const FIELD_LEADS_BILLED_CLIENT = 'Leads Billed';
         const QUALIFIED_STATUS = 'Qualified';
 
         const ALLOWED_EMAILS = new Set([
@@ -203,6 +202,23 @@
             const price = parseMoney(fields['Price']);
             const qty = parseChargeNumber(fields['Number']);
             return price * qty;
+        }
+
+        /** Sum of Charges "Number" (quantity billed per payment). Non-numeric / empty counts as 0. */
+        function parseChargeNumberForSum(val) {
+            if (val == null || val === '') return 0;
+            if (typeof val === 'number' && Number.isFinite(val) && val >= 0) return val;
+            const n = Number(String(val).trim().replace(/,/g, ''));
+            return Number.isFinite(n) && n >= 0 ? n : 0;
+        }
+
+        function sumChargeNumbersForLeadsBilled(charges) {
+            if (!charges || !charges.length) return 0;
+            let sum = 0;
+            for (const ch of charges) {
+                sum += parseChargeNumberForSum(ch.fields && ch.fields['Number']);
+            }
+            return Math.round(sum);
         }
 
         function formatContactFieldValue(v) {
@@ -496,33 +512,8 @@
             return statusIsExactly(fields, QUALIFIED_STATUS);
         }
 
-        /** B2C Leads: billed if checkbox(es) true or Status is exactly "Billed". */
-        function leadIsBilled(fields) {
-            if (fields['Billed'] === true) return true;
-            if (fields['Invoiced'] === true) return true;
-            if (fields['Lead Billed'] === true) return true;
-            return statusIsExactly(fields, 'Billed');
-        }
-
         function countQualifiedDelivered(leads) {
             return leads.filter((r) => leadIsQualifiedDelivered(r.fields || {})).length;
-        }
-
-        function countBilledFromLeads(leads) {
-            return leads.filter((r) => leadIsBilled(r.fields || {})).length;
-        }
-
-        /**
-         * Prefer Clients."Leads Billed" when Airtable provides a number (rollup/formula);
-         * otherwise count linked B2C leads marked billed.
-         */
-        function resolveLeadsBilledTotal(clientFields, leads) {
-            const raw = clientFields[FIELD_LEADS_BILLED_CLIENT];
-            if (raw != null && raw !== '') {
-                const n = Number(raw);
-                if (Number.isFinite(n)) return Math.round(n);
-            }
-            return countBilledFromLeads(leads);
         }
 
         function formatTotalsScalar(val) {
@@ -538,9 +529,9 @@
             return escapeHtml(String(val));
         }
 
-        function buildTotalsSectionHtml(clientRecord, leads) {
+        function buildTotalsSectionHtml(clientRecord, leads, leadsBilledFromPayments) {
             const cf = clientRecord.fields || {};
-            const leadsBilled = resolveLeadsBilledTotal(cf, leads);
+            const leadsBilled = leadsBilledFromPayments;
             const qualifiedDelivered = countQualifiedDelivered(leads);
             const leadsOwed = formatTotalsScalar(cf[FIELD_TBC_LEAD_MODEL]);
             return `
@@ -566,16 +557,20 @@
                         </section>`;
         }
 
-        function wrapContactsCollapsible(innerHtml) {
-            return `<details class="contact-details border border-slate-200 rounded-lg bg-white overflow-hidden shadow-sm">
+        function wrapSectionFold(title, innerHtml) {
+            return `<details class="section-fold border border-slate-200 rounded-lg bg-white overflow-hidden shadow-sm">
                 <summary class="px-4 py-3 cursor-pointer flex items-center justify-between gap-3 hover:bg-slate-50 text-left">
                     <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-slate-400 flex-shrink-0 contact-chevron transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                        <span class="text-sm font-semibold text-slate-900 uppercase tracking-wide">Contacts</span>
+                        <svg class="w-4 h-4 text-slate-400 flex-shrink-0 section-fold-chevron transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        <span class="text-sm font-semibold text-slate-900 uppercase tracking-wide">${escapeHtml(title)}</span>
                     </div>
                 </summary>
                 <div class="px-4 pb-4 pt-0 border-t border-slate-100 bg-slate-50/40">${innerHtml}</div>
             </details>`;
+        }
+
+        function wrapContactsCollapsible(innerHtml) {
+            return wrapSectionFold('Contacts', innerHtml);
         }
 
         async function loadContactsHtml(contactIds) {
@@ -636,7 +631,12 @@
                 ]);
 
                 const monthlyHtml = buildMonthlyRows(leads);
-                const totalsHtml = buildTotalsSectionHtml(clientRecord, leads);
+                const leadsBilledSum = sumChargeNumbersForLeadsBilled(paymentsResult.charges);
+                const totalsHtml = buildTotalsSectionHtml(clientRecord, leads, leadsBilledSum);
+                const paymentsInner = `<p class="text-sm text-slate-600 mb-3">Based on the date that we actually charged the owner's card on file</p>${paymentsResult.html}`;
+                const paymentsFoldHtml = wrapSectionFold('Payments', paymentsInner);
+                const monthlyInner = `<p class="text-sm text-slate-600 mb-3">Based on when the leads were actually delivered</p>${monthlyHtml}`;
+                const monthlyFoldHtml = wrapSectionFold('Monthly lead spend', monthlyInner);
 
                 panel.innerHTML = `
                     <div class="space-y-8 pt-2">
@@ -645,14 +645,10 @@
                             ${contactsHtml}
                         </section>
                         <section>
-                            <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wide mb-1">Payments</h3>
-                            <p class="text-sm text-slate-600 mb-3">Based on the date that we actually charged the owner's card on file</p>
-                            ${paymentsResult.html}
+                            ${paymentsFoldHtml}
                         </section>
                         <section>
-                            <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wide mb-1">Monthly lead spend</h3>
-                            <p class="text-sm text-slate-600 mb-3">Based on when the leads were actually delivered</p>
-                            ${monthlyHtml}
+                            ${monthlyFoldHtml}
                         </section>
                     </div>`;
                 loadedPanels.set(clientId, true);
