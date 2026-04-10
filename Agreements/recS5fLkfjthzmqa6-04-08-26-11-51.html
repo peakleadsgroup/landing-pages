@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
+    <title>Peak Leads Group - Service Agreement</title>
+    <meta name="description" content="Pay Per Result Service Agreement between Peak Leads Group and clients for qualified homeowner leads.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* Header Navigation */
+        .header {
+            background: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            height: 60px;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.5)), url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/BlissfulBathsBack.jpg?raw=true');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 40vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 1000px;
+            padding: 2rem;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-content h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            line-height: 1.2;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .hero-content .subtitle {
+            font-size: 1.5rem;
+            opacity: 0.95;
+            font-weight: 400;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Intro Section */
+        .intro-section {
+            padding: 5rem 2rem;
+            background: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .intro-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .intro {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        .intro p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #333;
+        }
+
+        /* Agreement Sections */
+        .agreement-section {
+            padding: 5rem 2rem;
+            background: #f8f9fa;
+        }
+
+        .agreement-section-alt {
+            padding: 5rem 2rem;
+            background: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .agreement-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .section {
+            background: white;
+            margin-bottom: 2rem;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #4a6fa5;
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .section-number {
+            background: #4a6fa5;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1.25rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .section p {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 1rem;
+        }
+
+        .section p:last-child {
+            margin-bottom: 0;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 1.75rem;
+            border-radius: 8px;
+            margin: 1.25rem 0;
+            border-left: 4px solid #f39c12;
+        }
+
+        .highlight p {
+            margin: 0;
+            color: #333;
+            font-size: 1.05rem;
+        }
+
+        .pricing {
+            background: #d4edda;
+            padding: 1.75rem;
+            border-radius: 8px;
+            margin: 1.25rem 0;
+            border-left: 4px solid #28a745;
+        }
+
+        .pricing h4 {
+            color: #155724;
+            margin-bottom: 0.75rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .pricing p {
+            color: #155724;
+            margin: 0;
+            font-size: 1.05rem;
+        }
+
+        .criteria-list {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 8px;
+            margin: 1.25rem 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .criteria-list ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .criteria-list li {
+            margin: 1rem 0;
+            padding-left: 2.5rem;
+            position: relative;
+            color: #555;
+            line-height: 1.8;
+            font-size: 1.05rem;
+        }
+
+        .criteria-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+            font-size: 1.3em;
+        }
+
+        /* Footer */
+        .footer {
+            background: white;
+            color: #333;
+            padding: 3rem 2rem 1.5rem;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .footer-logo img {
+            height: 60px;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer p {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 0.5rem 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-content .subtitle {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                min-height: 30vh;
+                background-attachment: scroll;
+            }
+
+            .intro-section,
+            .agreement-section-alt {
+                background-attachment: scroll;
+            }
+
+            .hero-content h1 {
+                font-size: 2rem;
+            }
+
+            .hero-content .subtitle {
+                font-size: 1.1rem;
+            }
+
+            .section {
+                padding: 1.5rem;
+            }
+
+            .section-title {
+                font-size: 1.3rem;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .section-number {
+                margin-bottom: 1rem;
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <a href="https://peakleadsgroup.com"><img src="https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Marketing Group" class="logo"></a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Service Agreement</h1>
+            <div class="subtitle">Pay Per Result Service Agreement</div>
+        </div>
+    </section>
+
+    <!-- Intro Section -->
+    <section class="intro-section">
+        <div class="intro-container">
+            <div class="intro">
+                <p><strong>This Service Agreement ("Agreement")</strong> is entered into by and between Peak Leads Group ("PLG") and Baths R Us ("Client"). By submitting payment for the onboarding invoice, the Client acknowledges and agrees to the terms set forth in this Agreement, and Peak Leads Group agrees to uphold its responsibilities as outlined herein. Payment constitutes mutual acceptance of this Agreement, including the services, responsibilities, and billing terms described below.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Agreement Sections -->
+    <section class="agreement-section">
+        <div class="agreement-container">
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-number">1</div>
+                    Services Provided
+                </div>
+                <p>PLG will deliver qualified homeowner leads through targeted Facebook and Instagram ad campaigns.</p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-number">2</div>
+                    Partnership Structure
+                </div>
+                <div class="pricing">
+                    <h4>Onboarding Package – $1980 (due upon signing)</h4>
+                    <p>This covers your full campaign setup and the first 20 qualified leads.</p>
+                </div>
+                <div class="pricing">
+                    <h4>Ongoing Billing – $99 per lead</h4>
+                    <p>After the initial 20 leads, the Client will be billed $99 per lead, charged upfront and automatically in agreed upon increments, unless otherwise agreed upon in writing by both parties.  By providing and maintaining a valid payment method, the Client authorizes PLG to process charges automatically in accordance with this Agreement.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-number">3</div>
+                    Qualified Leads
+                </div>
+                <p>A Qualified Lead meets all of the following:</p>
+                <div class="criteria-list">
+                    <ul>
+                        <li>Verified homeowner or businessowner as determined by the onboarding intake form on the landing page</li>
+                        <li>Zip code provided is within the agreed-upon service area</li>
+                        <li>Includes a phone number that is working and in service</li>
+                    </ul>
+                </div>
+                <p>If a lead does not meet these criteria, it can be reported to PLG within 7 days of delivery for review. If confirmed, it will be replaced free of charge.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="agreement-section-alt">
+        <div class="agreement-container">
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-number">4</div>
+                    Lead Delivery & Communication
+                </div>
+                <p>Qualified leads will be delivered to the client's chosen contact method. It is the client's responsibility to respond promptly to leads to ensure successful outcomes. The client agrees to receive a minimum of 30 qualified leads per month for the duration of their agreement with Peak Leads Group.</p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-number">5</div>
+                    Guarantee
+                </div>
+                <div class="highlight">
+                    <p>If PLG fails to deliver the initial 20 qualified leads within 60 days of campaign launch, the client can receive a refund for the remaining undelivered leads if they so choose.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-number">6</div>
+                    Cancellation Policy
+                </div>
+                <p>Either party may cancel this agreement at any time for any reason, provided the Client pays any outstanding balance owed for leads delivered up to the date of cancellation. Upon cancellation, lead delivery will cease within 24 hours. The Client remains responsible for paying for any qualified leads that are delivered during that 24-hour period.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="agreement-section">
+        <div class="agreement-container">
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-number">7</div>
+                    Payment Terms
+                </div>
+                <p>Client agrees to maintain a valid payment method on file. If a charge fails or is declined, lead delivery will be immediately paused until the issue is resolved. Repeated payment failures may result in termination of this agreement.</p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-number">8</div>
+                    Entire Agreement
+                </div>
+                <p>This Agreement constitutes the full understanding between the Client and PLG. No other promises or agreements shall be valid unless made in writing and signed by both parties.</p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-number">9</div>
+                    Limitation of Liability
+                </div>
+                <p>PLG shall not be held liable for any indirect, incidental, special, or consequential damages arising out of or related to this Agreement, including but not limited to lost profits or missed opportunities. PLG's total liability under this Agreement shall not exceed the total amount paid by the Client during the term of the Agreement.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="agreement-section-alt">
+        <div class="agreement-container">
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-number">10</div>
+                    Confidentiality
+                </div>
+                <p>Both parties agree to keep all proprietary or confidential information shared during the term of this Agreement strictly confidential and not disclose it to any third party without prior written consent, unless required by law.</p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-number">11</div>
+                    Dispute Resolution
+                </div>
+                <p>In the event of a dispute, both parties agree to attempt to resolve the matter through good faith negotiations. If a resolution cannot be reached, the parties agree to submit the matter to binding arbitration in the state of North Carolina.</p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-number">12</div>
+                    Electronic Agreement
+                </div>
+                <div class="highlight">
+                    <p>The Client acknowledges that by submitting payment through Stripe or another digital platform, they are entering into a legally binding agreement equivalent to a signed written contract.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-logo">
+                <img src="https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Marketing Group">
+            </div>
+            <p><strong>Peak Leads Group</strong></p>
+            <p>Professional Lead Generation Services</p>
+            <p style="margin-top: 1rem; opacity: 0.8;">Last Updated: June 2025</p>
+        </div>
+    </footer>
+</body>
+</html>
