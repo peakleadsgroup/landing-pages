@@ -525,6 +525,63 @@
   // Airtable Configuration
   const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
   const AIRTABLE_TABLE_ID = 'tbldNpwtCN9y5Pkiy';
+
+  /**
+   * Tiered POST so one bad field does not lose the lead. Notes holds the full summary.
+   */
+  async function submitHomeservicesLeadWithFallback(fullFields, notesPlain) {
+    const url = `/api/airtable/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}`;
+    let lastErrText = '';
+    const pick = (f) => Object.assign({}, f);
+    const tiers = [
+      () => pick(fullFields),
+      () => { const f = pick(fullFields); delete f['Niche(s)']; return f; },
+      () => { const f = pick(fullFields); delete f['Niche(s)']; delete f['Website']; return f; },
+      () => {
+        const f = pick(fullFields);
+        delete f['Niche(s)'];
+        delete f['Website'];
+        delete f['Phone Number'];
+        delete f['Contact Email'];
+        return f;
+      },
+      () => {
+        const f = pick(fullFields);
+        [
+          'Niche(s)', 'Website', 'Phone Number', 'Contact Email',
+          'Contact Name', 'Business Name', 'Location', 'Estimated monthly revenue', 'Other Services'
+        ].forEach((k) => { delete f[k]; });
+        return f;
+      },
+      () => {
+        const errBit = lastErrText
+          ? '\n\n--- Airtable API errors on prior save attempts (truncated) ---\n' + String(lastErrText).slice(0, 1500)
+          : '';
+        return {
+          'Source': fullFields['Source'] || 'Meta Ads',
+          'Unique Meta ID': fullFields['Unique Meta ID'],
+          'Notes': (notesPlain + errBit).slice(0, 99000)
+        };
+      }
+    ];
+    for (let i = 0; i < tiers.length; i++) {
+      const fields = tiers[i]();
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields })
+      });
+      const text = await res.text();
+      if (res.ok) {
+        if (i > 0) console.warn('homeservices Airtable: submit succeeded using fallback tier', i);
+        return { ok: true, tier: i, text };
+      }
+      lastErrText = text || String(res.status);
+      console.warn('homeservices Airtable: tier', i, 'failed', res.status, lastErrText);
+    }
+    return { ok: false, error: lastErrText };
+  }
+
   // ------------------ State ------------------
   const formData = { niches: [] };
   const bottomFormData = { niches: [] };
@@ -1014,42 +1071,28 @@
       if (data.business_website) airtableFields["Website"] = data.business_website;
       if (data.contact_name) airtableFields["Contact Name"] = data.contact_name;
       if (data.email) airtableFields["Contact Email"] = data.email;
-      if (data.interest_reason) airtableFields["Interest Reason"] = data.interest_reason;
-      
       // Include niches array (will be empty array if none selected)
       airtableFields["Niche(s)"] = data.niches || [];
       airtableFields["Other Services"] = "";
-
-      const airtableData = {
-        fields: airtableFields
-      };
 
       // Submit to Airtable
       const airtableFetchStart = performance.now();
       log('INFO', 'Airtable fetch START', { formId, uniqueMetaID, msSinceSubmit: Math.round(airtableFetchStart - submitStartTime) });
 
-      const airtableResponse = await fetch(`/api/airtable/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(airtableData)
-      });
+      const submitResult = await submitHomeservicesLeadWithFallback(airtableFields, fullSummary);
 
       const airtableFetchDuration = Math.round(performance.now() - airtableFetchStart);
       const totalDuration = Math.round(performance.now() - submitStartTime);
 
-      if (!airtableResponse.ok) {
-        const errorText = await airtableResponse.text();
-        log('ERROR', 'Airtable submission FAILED', {
+      if (!submitResult.ok) {
+        const errorText = submitResult.error || '';
+        log('ERROR', 'Airtable submission FAILED (all fallback tiers)', {
           formId,
-          status: airtableResponse.status,
-          statusText: airtableResponse.statusText,
           fetchDurationMs: airtableFetchDuration,
           totalDurationMs: totalDuration,
-          errorText: errorText.substring(0, 200)
+          errorText: errorText.substring(0, 500)
         });
         console.error('Airtable submission failed:', errorText);
-        // Try to parse and show a more helpful error
         try {
           const errorJson = JSON.parse(errorText);
           if (errorJson.error && errorJson.error.message) {
@@ -1068,7 +1111,7 @@
         uniqueMetaID,
         fetchDurationMs: airtableFetchDuration,
         totalDurationMs: totalDuration,
-        status: airtableResponse.status
+        airtableFallbackTier: submitResult.tier
       });
 
       // Fire Facebook Pixel conversion event with unique Meta ID

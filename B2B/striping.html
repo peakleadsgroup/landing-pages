@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
-    <title>Bathroom Remodeling Leads - Peak Leads Marketing Group</title>
+    <title>Line Striping & Pavement Marking Leads - Peak Leads Marketing Group</title>
 
     <!-- Meta Pixel Code -->
     <script>
@@ -401,7 +401,7 @@
             <!-- Step 1: Contractor -->
             <div class="form-step active" id="step1">
                 <div class="step-header">Ready to transform your business?</div>
-                <div class="step-subheader">Are you a bathroom remodeling contractor?</div>
+                <div class="step-subheader">Are you a parking lot or line striping contractor?</div>
                 <div class="options">
                     <div class="option" data-value="yes" onclick="selectOption(this, 'contractor', 'yes')">Yes</div>
                     <div class="option" data-value="no" onclick="selectOption(this, 'contractor', 'no')">No</div>
@@ -863,10 +863,10 @@
             const interestLabel = INTEREST_LABELS[formData.interest] || formData.interest || '';
 
             const summaryParts = [
-                '=== B2B BATHROOM QUALIFICATION ===',
+                '=== B2B STRIPING QUALIFICATION ===',
                 '',
                 'CONTRACTOR:',
-                `Bathroom remodeling contractor? ${formData.contractor === 'yes' ? 'Yes' : 'No'}`,
+                `Parking lot / line striping contractor? ${formData.contractor === 'yes' ? 'Yes' : 'No'}`,
                 '',
                 'INTEREST REASON:',
                 interestLabel,
@@ -896,7 +896,7 @@
             const airtableFields = {
                 'Source': 'Meta Ads',
                 'Notes': notes,
-                'Niche(s)': ['Bathroom remodeling']
+                'Niche(s)': ['Line striping']
             };
             if (formData.zipcode) airtableFields['Location'] = formData.zipcode;
             if (revenueLabel) airtableFields['Estimated monthly revenue'] = revenueLabel;

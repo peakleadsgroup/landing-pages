@@ -16,8 +16,28 @@
         "Website": { "type": "url", "description": "Business website URL" },
         "Contact Name": { "type": "singleLineText", "description": "Full name" },
         "Contact Email": { "type": "email", "description": "Email address" },
-        "Interest Reason": { "type": "singleLineText", "description": "Why interested in working with us" },
-        "Niche(s)": { "type": "multipleSelects", "description": "Service niches (homeservices form)" },
+        "Niche(s)": {
+          "type": "multipleSelects",
+          "description": "Vertical tag; each B2B page sends one option. Add every option below exactly (case and punctuation).",
+          "options": [
+            "Bathroom remodeling",
+            "Sprinkler & irrigation",
+            "Concrete polishing",
+            "Fencing",
+            "Line striping",
+            "Commercial roof coating",
+            "Patios",
+            "Basement & attic finishing",
+            "EV charging",
+            "Decks",
+            "Custom closets",
+            "Restoration",
+            "Foundation repair",
+            "Pools",
+            "Hardwood flooring",
+            "Kitchen remodeling"
+          ]
+        },
         "Other Services": { "type": "singleLineText", "description": "Other services (homeservices form)" }
       }
     }
@@ -25,7 +45,8 @@
   "fieldMappings": {
     "bathrooms.html": {
       "contractor": "Notes (in summary)",
-      "interest": "Interest Reason",
+      "interest": "Notes (INTEREST REASON section only)",
+      "niche": "Niche(s) single tag per page",
       "zipcode": "Location",
       "revenue": "Estimated monthly revenue",
       "business_name": "Business Name",
