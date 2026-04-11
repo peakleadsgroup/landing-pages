@@ -34,7 +34,7 @@
         </div>
 
         <p class="mt-8 text-xs text-slate-500">
-            <code class="bg-slate-100 px-1 rounded">CONFIG</code>: US Zips <strong>Zip</strong>; junction writes use <strong>Adset</strong> / <strong>US Zips</strong>. Reads also use <strong>ADSET_JUNCTION_LINK_FIELDS</strong> (reverse link on the Ad set).
+            Linked zips come from <strong>junction + link fields only</strong> (not a scan of all ~42k US Zips). Add a Lookup of zip on the junction and list it in <code class="bg-slate-100 px-1 rounded">JUNCTION_ZIP_LOOKUP_FIELDS</code> to skip US Zips reads entirely.
         </p>
     </div>
 
@@ -65,9 +65,27 @@
             /** Which junction column points at US Zips (try in order when reading) */
             JUNCTION_ZIP_LINK_FIELDS: ['US Zips', 'Zip'],
 
+            /**
+             * Optional Lookup/Rollup fields on the junction that already show the 5-digit zip.
+             * If set, the UI uses them and skips extra calls to the US Zips table (fastest).
+             * Example: a Lookup of {Zip} from the linked US Zips record — use that field name here.
+             */
+            JUNCTION_ZIP_LOOKUP_FIELDS: [],
+
+            /**
+             * Never true by default. When true only: if no junction rows match via links/filters,
+             * download and scan the entire junction table (slow; avoid unless debugging).
+             */
+            JUNCTION_FALLBACK_FULL_SCAN: false,
+
             US_ZIPS_MATCH_FIELD: 'Zip',
             US_ZIPS_MATCH_AS_NUMBER: true,
             US_ZIPS_MATCH_FIELD_CANDIDATES: [],
+
+            /** Batch list queries instead of one GET per zip (avoids Airtable 429 rate limits) */
+            US_ZIPS_BATCH_CHUNK: 20,
+            US_ZIPS_BATCH_PAUSE_MS: 150,
+            JUNCTION_BATCH_CHUNK: 20,
         };
 
         const BUILTIN_ZIP_FIELD_CANDIDATES = [
@@ -87,9 +105,28 @@
             return String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
         }
 
-        async function fetchJson(url, options) {
+        function sleep(ms) {
+            return new Promise((resolve) => setTimeout(resolve, ms));
+        }
+
+        /**
+         * Retries on 429 (Airtable rate limit). Avoids hammering the API with parallel per-record GETs elsewhere.
+         */
+        async function fetchJson(url, options, attempt = 0) {
+            const maxRetries = 6;
             const res = await fetch(url, options);
             const text = await res.text();
+
+            if (res.status === 429 && attempt < maxRetries) {
+                let ms = 500 * Math.pow(2, attempt);
+                const ra = res.headers.get('Retry-After');
+                if (ra && !Number.isNaN(Number(ra))) {
+                    ms = Math.max(ms, Number(ra) * 1000);
+                }
+                await sleep(ms);
+                return fetchJson(url, options, attempt + 1);
+            }
+
             let data;
             try {
                 data = text ? JSON.parse(text) : {};
@@ -228,17 +265,69 @@
             return rec ? rec.id : null;
         }
 
+        function zipCodeStringFromRaw(raw, fallbackId) {
+            if (typeof raw === 'number') return String(Math.floor(raw)).padStart(5, '0');
+            if (raw != null) return String(raw).trim().replace(/\D/g, '').slice(0, 5).padStart(5, '0');
+            return fallbackId;
+        }
+
+        /**
+         * Fills zipRecordIdToCode by record id only — OR(RECORD_ID()=...) on US Zips.
+         * Does not scan the full ~42k zip table; only loads rows for ids already linked from junction.
+         */
+        async function hydrateZipCodesBatch(recordIds) {
+            const unique = [...new Set(recordIds)].filter((id) => id && String(id).startsWith('rec'));
+            const missing = unique.filter((id) => !zipRecordIdToCode.has(id));
+            if (missing.length === 0) return;
+
+            const chunkSize = Math.max(5, Math.min(40, CONFIG.US_ZIPS_BATCH_CHUNK || 20));
+            const pauseMs = CONFIG.US_ZIPS_BATCH_PAUSE_MS ?? 150;
+
+            for (let i = 0; i < missing.length; i += chunkSize) {
+                const chunk = missing.slice(i, i + chunkSize);
+                const orInner = chunk.map((id) => `RECORD_ID()="${id}"`).join(',');
+                const formula = `OR(${orInner})`;
+                const u = new URL(airtableUrl(CONFIG.US_ZIPS_TABLE), window.location.origin);
+                u.searchParams.set('filterByFormula', formula);
+                u.searchParams.append('fields[]', usZipsMatchField);
+                u.searchParams.set('maxRecords', '100');
+
+                let data;
+                try {
+                    data = await fetchJson(u.toString());
+                } catch (e) {
+                    console.warn('Batch zip hydrate failed, falling back to single GETs', e);
+                    for (const id of chunk) {
+                        if (zipRecordIdToCode.has(id)) continue;
+                        try {
+                            const one = await fetchJson(
+                                `${airtableUrl(CONFIG.US_ZIPS_TABLE)}/${encodeURIComponent(id)}`
+                            );
+                            const raw = one.fields && one.fields[usZipsMatchField];
+                            zipRecordIdToCode.set(id, zipCodeStringFromRaw(raw, id));
+                        } catch (err) {
+                            zipRecordIdToCode.set(id, id);
+                        }
+                        await sleep(80);
+                    }
+                    continue;
+                }
+
+                for (const rec of data.records || []) {
+                    const raw = rec.fields && rec.fields[usZipsMatchField];
+                    zipRecordIdToCode.set(rec.id, zipCodeStringFromRaw(raw, rec.id));
+                }
+                for (const id of chunk) {
+                    if (!zipRecordIdToCode.has(id)) zipRecordIdToCode.set(id, id);
+                }
+
+                if (i + chunkSize < missing.length) await sleep(pauseMs);
+            }
+        }
+
         async function getZipCodeForRecordId(zipRecordId) {
-            if (zipRecordIdToCode.has(zipRecordId)) return zipRecordIdToCode.get(zipRecordId);
-            const url = `${airtableUrl(CONFIG.US_ZIPS_TABLE)}/${encodeURIComponent(zipRecordId)}`;
-            const data = await fetchJson(url);
-            const raw = data.fields && data.fields[usZipsMatchField];
-            let s;
-            if (typeof raw === 'number') s = String(Math.floor(raw)).padStart(5, '0');
-            else if (raw != null) s = String(raw).trim().replace(/\D/g, '').slice(0, 5).padStart(5, '0');
-            else s = zipRecordId;
-            zipRecordIdToCode.set(zipRecordId, s);
-            return s;
+            await hydrateZipCodesBatch([zipRecordId]);
+            return zipRecordIdToCode.get(zipRecordId) || zipRecordId;
         }
 
         function normalizeLinkIds(v) {
@@ -256,27 +345,81 @@
             return null;
         }
 
+        /** If junction has a Lookup/Rollup of the zip digits, use it and skip US Zips fetches. */
+        function tryLookupZipDisplay(fields) {
+            const names = CONFIG.JUNCTION_ZIP_LOOKUP_FIELDS || [];
+            for (const name of names) {
+                if (!name || !fields || fields[name] == null || fields[name] === '') continue;
+                const v = fields[name];
+                if (typeof v === 'number' && Number.isFinite(v)) {
+                    const s = String(Math.floor(v)).padStart(5, '0');
+                    if (/^\d{5}$/.test(s)) return s;
+                }
+                const s = String(v).trim().replace(/\D/g, '').slice(0, 5);
+                if (s.length === 5) return s;
+            }
+            return null;
+        }
+
+        function junctionRowFromRecord(r) {
+            const fields = r.fields || {};
+            const zipId = zipRecordIdFromJunctionFields(fields);
+            if (!zipId) return null;
+            const zipDisplay = tryLookupZipDisplay(fields);
+            return { junctionId: r.id, zipRecordId: zipId, zipDisplay: zipDisplay || null };
+        }
+
         function mapJunctionRecordsToRows(records) {
-            return records
-                .map((r) => {
-                    const zipId = zipRecordIdFromJunctionFields(r.fields || {});
-                    return zipId ? { junctionId: r.id, zipRecordId: zipId } : null;
-                })
-                .filter(Boolean);
+            return records.map(junctionRowFromRecord).filter(Boolean);
+        }
+
+        function junctionFieldsToRequest() {
+            const zipLink = [...(CONFIG.JUNCTION_ZIP_LINK_FIELDS || []), CONFIG.JUNCTION_ZIP_FIELD].filter(
+                (x, i, a) => x && a.indexOf(x) === i
+            );
+            const lookups = (CONFIG.JUNCTION_ZIP_LOOKUP_FIELDS || []).filter(
+                (x, i, a) => x && a.indexOf(x) === i
+            );
+            return [...zipLink, ...lookups];
         }
 
         async function loadJunctionRowsByJunctionIds(junctionIds) {
+            const unique = [...new Set(junctionIds)].filter(Boolean);
+            if (unique.length === 0) return [];
+
+            const zipFields = junctionFieldsToRequest();
+            const chunkSize = Math.max(5, Math.min(40, CONFIG.JUNCTION_BATCH_CHUNK || 20));
+            const pauseMs = CONFIG.US_ZIPS_BATCH_PAUSE_MS ?? 150;
             const rows = [];
-            for (const jid of junctionIds) {
+
+            for (let i = 0; i < unique.length; i += chunkSize) {
+                const chunk = unique.slice(i, i + chunkSize);
+                const formula = `OR(${chunk.map((id) => `RECORD_ID()="${id}"`).join(',')})`;
                 try {
-                    const data = await fetchJson(
-                        `${airtableUrl(CONFIG.ADSET_ZIPS_TABLE)}/${encodeURIComponent(jid)}`
-                    );
-                    const zipId = zipRecordIdFromJunctionFields(data.fields || {});
-                    if (zipId) rows.push({ junctionId: data.id, zipRecordId: zipId });
+                    const records = await fetchAllRecords(CONFIG.ADSET_ZIPS_TABLE, {
+                        formula,
+                        fields: zipFields.length ? zipFields : undefined,
+                    });
+                    for (const r of records) {
+                        const row = junctionRowFromRecord(r);
+                        if (row) rows.push(row);
+                    }
                 } catch (e) {
-                    console.warn('Junction row fetch failed', jid, e);
+                    console.warn('Batch junction fetch failed, using per-row GET', e);
+                    for (const jid of chunk) {
+                        try {
+                            const data = await fetchJson(
+                                `${airtableUrl(CONFIG.ADSET_ZIPS_TABLE)}/${encodeURIComponent(jid)}`
+                            );
+                            const row = junctionRowFromRecord(data);
+                            if (row) rows.push(row);
+                        } catch (err) {
+                            console.warn('Junction row fetch failed', jid, err);
+                        }
+                        await sleep(80);
+                    }
                 }
+                if (i + chunkSize < unique.length) await sleep(pauseMs);
             }
             return rows;
         }
@@ -295,7 +438,8 @@
         }
 
         /**
-         * Finds junction rows for an ad set: reverse link on Adset → filter/FIND on junction → full scan fallback.
+         * Junction rows for an ad set only — follows links and targeted filters.
+         * Never queries all US Zips; optional full junction scan only if CONFIG.JUNCTION_FALLBACK_FULL_SCAN.
          */
         async function fetchJunctionRowsForAdset(adsetId) {
             let adsetRecord = null;
@@ -318,15 +462,13 @@
             }
 
             const adsetFieldNames = CONFIG.JUNCTION_ADSET_FILTER_FIELDS || [CONFIG.JUNCTION_ADSET_FIELD];
-            const zipFields = [...(CONFIG.JUNCTION_ZIP_LINK_FIELDS || []), CONFIG.JUNCTION_ZIP_FIELD].filter(
-                (x, i, a) => x && a.indexOf(x) === i
-            );
+            const zipFields = junctionFieldsToRequest();
 
             for (const af of adsetFieldNames) {
                 try {
                     const records = await fetchAllRecords(CONFIG.ADSET_ZIPS_TABLE, {
                         formula: `{${af}}="${adsetId}"`,
-                        fields: zipFields,
+                        fields: zipFields.length ? zipFields : undefined,
                     });
                     const mapped = mapJunctionRecordsToRows(records);
                     if (mapped.length > 0) return mapped;
@@ -340,7 +482,7 @@
                 try {
                     const records = await fetchAllRecords(CONFIG.ADSET_ZIPS_TABLE, {
                         formula: `FIND("${esc}", ARRAYJOIN({${af}}))`,
-                        fields: zipFields,
+                        fields: zipFields.length ? zipFields : undefined,
                     });
                     const mapped = mapJunctionRecordsToRows(records);
                     if (mapped.length > 0) return mapped;
@@ -349,20 +491,33 @@
                 }
             }
 
-            const all = await fetchAllRecords(CONFIG.ADSET_ZIPS_TABLE);
-            const scanned = [];
-            for (const r of all) {
-                if (!junctionFieldsReferenceAdset(r.fields, adsetId)) continue;
-                const zipId = zipRecordIdFromJunctionFields(r.fields);
-                if (zipId) scanned.push({ junctionId: r.id, zipRecordId: zipId });
+            if (CONFIG.JUNCTION_FALLBACK_FULL_SCAN) {
+                const all = await fetchAllRecords(CONFIG.ADSET_ZIPS_TABLE);
+                const scanned = [];
+                for (const r of all) {
+                    if (!junctionFieldsReferenceAdset(r.fields, adsetId)) continue;
+                    const row = junctionRowFromRecord(r);
+                    if (row) scanned.push(row);
+                }
+                return scanned;
             }
-            return scanned;
+            return [];
         }
 
         async function commaSeparatedZipsForAdset(adsetId) {
             const rows = await fetchJunctionRowsForAdset(adsetId);
             if (rows.length === 0) return '';
-            const codes = await Promise.all(rows.map((r) => getZipCodeForRecordId(r.zipRecordId)));
+            const needHydrate = [];
+            for (const r of rows) {
+                if (r.zipDisplay) {
+                    zipRecordIdToCode.set(r.zipRecordId, r.zipDisplay);
+                } else {
+                    needHydrate.push(r.zipRecordId);
+                }
+            }
+            await hydrateZipCodesBatch(needHydrate);
+            const zipRecordIds = rows.map((r) => r.zipRecordId);
+            const codes = zipRecordIds.map((id) => zipRecordIdToCode.get(id) || id);
             codes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
             return codes.join(', ');
         }
