@@ -767,6 +767,7 @@
                         notFound.push(five);
                         continue;
                     }
+                    /* Already linked for this ad set — skip; do not POST another row or change the existing link */
                     if (existingZipIds.has(zipRecId)) {
                         duplicate.push(five);
                         continue;
@@ -786,7 +787,11 @@
                 await refreshAdsetPanel(adDetails);
 
                 const parts = [`Added ${toCreate.length} link${toCreate.length !== 1 ? 's' : ''}.`];
-                if (duplicate.length) parts.push(`Skipped ${duplicate.length} already linked: ${duplicate.join(', ')}.`);
+                if (duplicate.length) {
+                    parts.push(
+                        `Skipped ${duplicate.length} already linked (unchanged): ${duplicate.join(', ')}.`
+                    );
+                }
                 if (notFound.length) parts.push(`No US Zips row for: ${notFound.join(', ')}.`);
 
                 setGlobalStatus(
