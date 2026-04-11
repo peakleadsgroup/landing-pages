@@ -195,6 +195,21 @@
             return s;
         }
 
+        /** Numeric weekly cap for summing (none / empty / 0 → 0) */
+        function weeklyCapNumeric(fields) {
+            const fname = CONFIG.ADSET_WEEKLY_CAP_FIELD || 'Weekly Cap';
+            if (!fields || !fname) return 0;
+            const v = fields[fname];
+            if (v === null || v === undefined) return 0;
+            if (typeof v === 'number') {
+                return Number.isFinite(v) && v > 0 ? v : 0;
+            }
+            const s = String(v).trim();
+            if (s === '' || s === '0') return 0;
+            const n = parseFloat(s.replace(/,/g, ''));
+            return Number.isFinite(n) && n > 0 ? n : 0;
+        }
+
         function parseZipInput(raw) {
             if (!raw || !String(raw).trim()) return [];
             const parts = String(raw)
@@ -609,6 +624,11 @@
             for (const client of clientRecords) {
                 const cname = client.fields[CONFIG.CLIENT_NAME_FIELD] || '(unnamed)';
                 const adsetIds = getClientAdsetIds(client.fields);
+                let weeklyCapSum = 0;
+                for (const aid of adsetIds) {
+                    const rec = adsetById.get(aid);
+                    weeklyCapSum += weeklyCapNumeric(rec ? rec.fields : null);
+                }
 
                 const details = document.createElement('details');
                 details.className = 'cm-client group rounded-xl border border-slate-200 bg-white shadow-sm';
@@ -616,7 +636,7 @@
                 const summary = document.createElement('summary');
                 summary.className =
                     'flex cursor-pointer select-none items-center gap-2 px-4 py-3 text-left text-base font-semibold text-slate-900 hover:bg-slate-50 rounded-xl';
-                summary.innerHTML = `<span class="inline-block w-4 text-slate-400 cm-chevron-client">▸</span><span class="flex-1">${escapeHtml(cname)}</span><span class="text-xs font-normal text-slate-500">${adsetIds.length} ad set${adsetIds.length !== 1 ? 's' : ''}</span>`;
+                summary.innerHTML = `<span class="inline-block w-4 shrink-0 text-slate-400 cm-chevron-client">▸</span><span class="min-w-0 flex-1 truncate">${escapeHtml(cname)}</span><span class="shrink-0 text-right text-xs font-normal text-slate-500 leading-tight"><span class="block">Weekly cap sum: ${escapeHtml(String(Math.round(weeklyCapSum)))}</span><span class="block text-slate-400">${adsetIds.length} ad set${adsetIds.length !== 1 ? 's' : ''}</span></span>`;
 
                 const body = document.createElement('div');
                 body.className = 'border-t border-slate-100 px-3 pb-3 pt-1 space-y-1';
@@ -636,7 +656,7 @@
                         const adSum = document.createElement('summary');
                         adSum.className =
                             'flex cursor-pointer select-none items-center gap-2 px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-100/80 rounded-lg';
-                        adSum.innerHTML = `<span class="inline-block w-3.5 text-slate-400 text-xs cm-chevron-adset shrink-0">▸</span><span class="flex-1 min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0.5"><span>${escapeHtml(label)}</span><span class="text-xs font-normal text-slate-500">Weekly cap: ${escapeHtml(capText)}</span></span>`;
+                        adSum.innerHTML = `<span class="inline-block w-3.5 text-slate-400 text-xs cm-chevron-adset shrink-0">▸</span><span class="min-w-0 flex-1 truncate">${escapeHtml(label)}</span><span class="shrink-0 text-right text-xs font-normal text-slate-500 whitespace-nowrap pl-2">Weekly cap: ${escapeHtml(capText)}</span>`;
 
                         const adPanel = document.createElement('div');
                         adPanel.className = 'border-t border-slate-200/80 p-3 space-y-3 bg-white rounded-b-lg';
