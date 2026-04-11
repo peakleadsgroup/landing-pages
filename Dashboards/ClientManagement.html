@@ -7,103 +7,65 @@
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
     <title>Client management — Adset zips</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        details.cm-client > summary { list-style: none; }
+        details.cm-client > summary::-webkit-details-marker { display: none; }
+        details.cm-adset > summary { list-style: none; }
+        details.cm-adset > summary::-webkit-details-marker { display: none; }
+        details.cm-client[open] > summary .cm-chevron-client { transform: rotate(90deg); }
+        details.cm-adset[open] > summary .cm-chevron-adset { transform: rotate(90deg); }
+        .cm-chevron-client, .cm-chevron-adset { transition: transform 0.15s ease; }
+    </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-900">
-    <div class="max-w-xl mx-auto p-6 sm:p-10">
+    <div class="max-w-3xl mx-auto p-6 sm:p-10 pb-16">
         <header class="mb-8 flex items-start gap-4">
             <img src="https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads" class="h-10 w-auto shrink-0">
             <div>
                 <h1 class="text-2xl font-bold tracking-tight">Client management</h1>
-                <p class="text-sm text-slate-600 mt-1">Link US Zips to an ad set and record when each link was created (Adset Zips).</p>
+                <p class="text-sm text-slate-600 mt-1">Expand a client, then an ad set. Add or remove zip links in Adset Zip Tracking.</p>
             </div>
         </header>
 
-        <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
-            <div>
-                <label for="clientSelect" class="block text-sm font-medium text-slate-700 mb-1">Client</label>
-                <select id="clientSelect" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white">
-                    <option value="">Loading…</option>
-                </select>
-            </div>
+        <div id="globalStatus" class="hidden mb-4 rounded-lg border p-3 text-sm"></div>
 
-            <div>
-                <label for="adsetSelect" class="block text-sm font-medium text-slate-700 mb-1">Ad set</label>
-                <select id="adsetSelect" disabled class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-slate-50 disabled:opacity-70">
-                    <option value="">Select a client first</option>
-                </select>
-                <p id="adsetHint" class="mt-1 text-xs text-slate-500 hidden">No ad sets linked on this client in Airtable.</p>
-            </div>
-
-            <div>
-                <label for="zipInput" class="block text-sm font-medium text-slate-700 mb-1">Zip codes</label>
-                <textarea id="zipInput" rows="6" placeholder="One per line, or comma-separated — e.g.&#10;33101&#10;90210, 10001"
-                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-amber-500 focus:border-transparent"></textarea>
-                <p class="mt-1 text-xs text-slate-500">5-digit US zips only; extended ZIP+4 is shortened to the first five digits.</p>
-            </div>
-
-            <button type="button" id="submitBtn" class="w-full rounded-lg bg-slate-900 text-white py-2.5 text-sm font-medium hover:bg-slate-800 disabled:opacity-50 disabled:pointer-events-none">
-                Create links
-            </button>
-
-            <div id="status" class="hidden rounded-lg border p-3 text-sm"></div>
+        <div id="clientTreeHost" class="space-y-2">
+            <div class="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500 text-sm">Loading…</div>
         </div>
 
-        <p class="mt-6 text-xs text-slate-500">
-            Field names live in <code class="bg-slate-100 px-1 rounded">CONFIG</code> (US Zips: <strong>Zip</strong>; junction: <strong>Adset</strong>, <strong>US Zips</strong>). Change them if your Airtable names differ.
+        <p class="mt-8 text-xs text-slate-500">
+            Field names in <code class="bg-slate-100 px-1 rounded">CONFIG</code>: US Zips <strong>Zip</strong>; junction <strong>Adset</strong>, <strong>US Zips</strong>.
         </p>
     </div>
 
     <script>
-        /**
-         * Table IDs for base appmBb0lzqRK9dI8v.
-         * — Client + Adset: same IDs used elsewhere in this repo (landing pages / dashboards).
-         * — US Zips + Adset Zips: your junction + zip master tables.
-         */
         const CONFIG = {
             BASE_ID: 'appmBb0lzqRK9dI8v',
-            /** Clients: who you pick in the first dropdown */
             CLIENT_TABLE: 'tblH2nVfmGNG8pAjC',
-            /** Ad sets: names + links; must match Client → Adset link field */
             ADSET_TABLE: 'tblee61crNCoSfurx',
-            /** Adset Zips junction (Adset + US Zips + Linked at) */
             ADSET_ZIPS_TABLE: 'tbl87JqHAdJwgq1GL',
-            /** US Zips master list */
             US_ZIPS_TABLE: 'tblieaHIf6rDfFZFl',
 
             CLIENT_NAME_FIELD: 'Name',
-            /** Linked ad set(s) on the Client record — must match the exact field name in Airtable (this base uses "Adsets"). */
             CLIENT_ADSET_FIELDS: ['Adsets'],
 
             JUNCTION_ADSET_FIELD: 'Adset',
             JUNCTION_ZIP_FIELD: 'US Zips',
 
-            /**
-             * US Zips table fields (tblieaHIf6rDfFZFl): Zip (#), Lat, Long, Adset Zip Tracking (link).
-             * Match column for lookups — exact Airtable field name.
-             */
             US_ZIPS_MATCH_FIELD: 'Zip',
-            /** Zip is a Number field → formula uses {Zip}=12345 not quotes */
             US_ZIPS_MATCH_AS_NUMBER: true,
-
-            /** If US_ZIPS_MATCH_FIELD is empty only: extra names to try before built-in fallbacks */
             US_ZIPS_MATCH_FIELD_CANDIDATES: [],
         };
 
         const BUILTIN_ZIP_FIELD_CANDIDATES = [
-            'ZIP',
-            'Zip',
-            'zip',
-            'Name',
-            'ZCTA',
-            'Zcta',
-            'GEOID',
-            'Zip Code',
-            'ZIP Code',
+            'ZIP', 'Zip', 'zip', 'Name', 'ZCTA', 'Zcta', 'GEOID', 'Zip Code', 'ZIP Code',
         ];
 
-        /** Set by resolveUsZipsMatchField() */
         let usZipsMatchField = null;
         let usZipsMatchAsNumber = false;
+
+        /** @type {Map<string, string>} zip record id → display code (5 digits) */
+        const zipRecordIdToCode = new Map();
 
         const airtableUrl = (table) =>
             `/api/airtable/v0/${CONFIG.BASE_ID}/${encodeURIComponent(table)}`;
@@ -185,13 +147,9 @@
         }
 
         function zipMatchFormula(fiveDigit) {
-            if (!usZipsMatchField) {
-                throw new Error('Zip match field not ready. Reload the page.');
-            }
+            if (!usZipsMatchField) throw new Error('Zip match field not ready.');
             const n = parseInt(fiveDigit, 10);
-            if (usZipsMatchAsNumber) {
-                return `{${usZipsMatchField}}=${n}`;
-            }
+            if (usZipsMatchAsNumber) return `{${usZipsMatchField}}=${n}`;
             const z = airtableStringForFormula(fiveDigit);
             return `{${usZipsMatchField}}="${z}"`;
         }
@@ -200,46 +158,34 @@
             const data = await fetchJson(`${airtableUrl(CONFIG.US_ZIPS_TABLE)}?maxRecords=1`);
             const rec = data.records && data.records[0];
             if (!rec) {
-                throw new Error(
-                    'US Zips table has no rows. Add at least one zip record, or check CONFIG.US_ZIPS_TABLE.'
-                );
+                throw new Error('US Zips table has no rows. Check CONFIG.US_ZIPS_TABLE.');
             }
             const fields = rec.fields || {};
             const keys = Object.keys(fields);
-
             const preferred = (CONFIG.US_ZIPS_MATCH_FIELD || '').trim();
 
             if (preferred) {
                 if (!keys.includes(preferred)) {
-                    throw new Error(
-                        `US Zips has no field "${preferred}". Update CONFIG.US_ZIPS_MATCH_FIELD to match Airtable exactly.`
-                    );
+                    throw new Error(`US Zips has no field "${preferred}".`);
                 }
                 usZipsMatchField = preferred;
                 if (typeof CONFIG.US_ZIPS_MATCH_AS_NUMBER === 'boolean') {
                     usZipsMatchAsNumber = CONFIG.US_ZIPS_MATCH_AS_NUMBER;
                 } else {
-                    const sample = fields[preferred];
-                    usZipsMatchAsNumber = typeof sample === 'number';
+                    usZipsMatchAsNumber = typeof fields[preferred] === 'number';
                 }
-                return usZipsMatchField;
+                return;
             }
 
-            const tryOrder = [
-                ...(CONFIG.US_ZIPS_MATCH_FIELD_CANDIDATES || []),
-                ...BUILTIN_ZIP_FIELD_CANDIDATES,
-            ];
-
+            const tryOrder = [...(CONFIG.US_ZIPS_MATCH_FIELD_CANDIDATES || []), ...BUILTIN_ZIP_FIELD_CANDIDATES];
             usZipsMatchField = null;
             usZipsMatchAsNumber = false;
-
             for (const c of tryOrder) {
                 if (c && keys.includes(c)) {
                     usZipsMatchField = c;
                     break;
                 }
             }
-
             if (!usZipsMatchField) {
                 for (const k of keys) {
                     const v = fields[k];
@@ -255,19 +201,10 @@
                     }
                 }
             }
-
             if (!usZipsMatchField) {
-                throw new Error(
-                    'Set CONFIG.US_ZIPS_MATCH_FIELD to the column that stores the 5-digit zip (exact Airtable name).'
-                );
+                throw new Error('Set CONFIG.US_ZIPS_MATCH_FIELD.');
             }
-
-            const sample = fields[usZipsMatchField];
-            if (typeof sample === 'number') {
-                usZipsMatchAsNumber = true;
-            }
-
-            return usZipsMatchField;
+            if (typeof fields[usZipsMatchField] === 'number') usZipsMatchAsNumber = true;
         }
 
         async function findZipRecordId(fiveDigit) {
@@ -278,17 +215,66 @@
             return rec ? rec.id : null;
         }
 
-        async function fetchExistingZipIdsForAdset(adsetId) {
+        async function getZipCodeForRecordId(zipRecordId) {
+            if (zipRecordIdToCode.has(zipRecordId)) return zipRecordIdToCode.get(zipRecordId);
+            const url = `${airtableUrl(CONFIG.US_ZIPS_TABLE)}/${encodeURIComponent(zipRecordId)}`;
+            const data = await fetchJson(url);
+            const raw = data.fields && data.fields[usZipsMatchField];
+            let s;
+            if (typeof raw === 'number') s = String(Math.floor(raw)).padStart(5, '0');
+            else if (raw != null) s = String(raw).trim().replace(/\D/g, '').slice(0, 5).padStart(5, '0');
+            else s = zipRecordId;
+            zipRecordIdToCode.set(zipRecordId, s);
+            return s;
+        }
+
+        async function fetchJunctionRowsForAdset(adsetId) {
             const records = await fetchAllRecords(CONFIG.ADSET_ZIPS_TABLE, {
                 formula: `{${CONFIG.JUNCTION_ADSET_FIELD}}="${adsetId}"`,
                 fields: [CONFIG.JUNCTION_ZIP_FIELD],
             });
-            const zipIds = new Set();
-            for (const r of records) {
-                const z = r.fields[CONFIG.JUNCTION_ZIP_FIELD];
-                if (Array.isArray(z) && z[0]) zipIds.add(z[0]);
+            return records
+                .map((r) => {
+                    const z = r.fields[CONFIG.JUNCTION_ZIP_FIELD];
+                    const zipId = Array.isArray(z) ? z[0] : z;
+                    return zipId ? { junctionId: r.id, zipRecordId: zipId } : null;
+                })
+                .filter(Boolean);
+        }
+
+        async function commaSeparatedZipsForAdset(adsetId) {
+            const rows = await fetchJunctionRowsForAdset(adsetId);
+            if (rows.length === 0) return '';
+            const codes = await Promise.all(rows.map((r) => getZipCodeForRecordId(r.zipRecordId)));
+            codes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+            return codes.join(', ');
+        }
+
+        async function createJunctionRows(adsetId, zipRecordIds) {
+            const fieldAdset = CONFIG.JUNCTION_ADSET_FIELD;
+            const fieldZip = CONFIG.JUNCTION_ZIP_FIELD;
+            const batchSize = 10;
+            for (let i = 0; i < zipRecordIds.length; i += batchSize) {
+                const chunk = zipRecordIds.slice(i, i + batchSize);
+                const body = {
+                    records: chunk.map((zipRecId) => ({
+                        fields: {
+                            [fieldAdset]: [adsetId],
+                            [fieldZip]: [zipRecId],
+                        },
+                    })),
+                };
+                await fetchJson(airtableUrl(CONFIG.ADSET_ZIPS_TABLE), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                    body: JSON.stringify(body),
+                });
             }
-            return zipIds;
+        }
+
+        async function deleteJunctionRecord(junctionRecordId) {
+            const url = `${airtableUrl(CONFIG.ADSET_ZIPS_TABLE)}/${encodeURIComponent(junctionRecordId)}`;
+            await fetchJson(url, { method: 'DELETE', headers: { Accept: 'application/json' } });
         }
 
         let clientRecords = [];
@@ -297,9 +283,7 @@
         async function loadAdsets() {
             const records = await fetchAllRecords(CONFIG.ADSET_TABLE);
             adsetById.clear();
-            for (const r of records) {
-                adsetById.set(r.id, r);
-            }
+            for (const r of records) adsetById.set(r.id, r);
         }
 
         async function loadClients() {
@@ -313,118 +297,138 @@
             });
         }
 
-        function fillClientSelect() {
-            const sel = document.getElementById('clientSelect');
-            sel.innerHTML = '<option value="">Choose a client…</option>';
-            for (const r of clientRecords) {
-                const name = r.fields[CONFIG.CLIENT_NAME_FIELD] || '(unnamed)';
-                const opt = document.createElement('option');
-                opt.value = r.id;
-                opt.textContent = name;
-                sel.appendChild(opt);
-            }
-        }
-
-        function fillAdsetSelect(clientId) {
-            const sel = document.getElementById('adsetSelect');
-            const hint = document.getElementById('adsetHint');
-            sel.innerHTML = '';
-            hint.classList.add('hidden');
-
-            if (!clientId) {
-                sel.disabled = true;
-                sel.classList.add('bg-slate-50');
-                sel.innerHTML = '<option value="">Select a client first</option>';
-                return;
-            }
-
-            const client = clientRecords.find((c) => c.id === clientId);
-            const adsetIds = client ? getClientAdsetIds(client.fields) : [];
-
-            if (adsetIds.length === 0) {
-                sel.disabled = true;
-                sel.classList.add('bg-slate-50');
-                sel.innerHTML = '<option value="">No ad sets linked</option>';
-                hint.classList.remove('hidden');
-                return;
-            }
-
-            sel.disabled = false;
-            sel.classList.remove('bg-slate-50');
-            sel.innerHTML = '<option value="">Choose an ad set…</option>';
-            for (const aid of adsetIds) {
-                const ar = adsetById.get(aid);
-                const opt = document.createElement('option');
-                opt.value = aid;
-                opt.textContent = ar ? adsetLabel(ar.fields) : aid;
-                sel.appendChild(opt);
-            }
-        }
-
-        function setStatus(type, message) {
-            const el = document.getElementById('status');
-            el.classList.remove('hidden', 'border-green-200', 'bg-green-50', 'text-green-900', 'border-red-200', 'bg-red-50', 'text-red-900', 'border-slate-200', 'bg-slate-50');
-            if (type === 'ok') {
-                el.classList.add('border-green-200', 'bg-green-50', 'text-green-900');
-            } else if (type === 'err') {
-                el.classList.add('border-red-200', 'bg-red-50', 'text-red-900');
-            } else {
-                el.classList.add('border-slate-200', 'bg-slate-50', 'text-slate-800');
-            }
+        function setGlobalStatus(type, message) {
+            const el = document.getElementById('globalStatus');
+            el.classList.remove('hidden', 'border-green-200', 'bg-green-50', 'text-green-900', 'border-red-200', 'bg-red-50', 'text-red-900', 'border-slate-200', 'bg-slate-50', 'text-slate-800');
+            if (type === 'ok') el.classList.add('border-green-200', 'bg-green-50', 'text-green-900');
+            else if (type === 'err') el.classList.add('border-red-200', 'bg-red-50', 'text-red-900');
+            else el.classList.add('border-slate-200', 'bg-slate-50', 'text-slate-800');
             el.textContent = message;
+            el.classList.remove('hidden');
         }
 
-        async function createJunctionRows(adsetId, zipRecordIds) {
-            const fieldAdset = CONFIG.JUNCTION_ADSET_FIELD;
-            const fieldZip = CONFIG.JUNCTION_ZIP_FIELD;
-            const created = [];
-            const batchSize = 10;
-            for (let i = 0; i < zipRecordIds.length; i += batchSize) {
-                const chunk = zipRecordIds.slice(i, i + batchSize);
-                const body = {
-                    records: chunk.map((zipRecId) => ({
-                        fields: {
-                            [fieldAdset]: [adsetId],
-                            [fieldZip]: [zipRecId],
-                        },
-                    })),
-                };
-                const data = await fetchJson(airtableUrl(CONFIG.ADSET_ZIPS_TABLE), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-                    body: JSON.stringify(body),
-                });
-                created.push(...(data.records || []));
-            }
-            return created;
-        }
+        function renderClientTree() {
+            const host = document.getElementById('clientTreeHost');
+            host.innerHTML = '';
 
-        async function onSubmit() {
-            const clientId = document.getElementById('clientSelect').value;
-            const adsetId = document.getElementById('adsetSelect').value;
-            const raw = document.getElementById('zipInput').value;
-            const btn = document.getElementById('submitBtn');
-
-            if (!clientId || !adsetId) {
-                setStatus('err', 'Select a client and an ad set.');
+            if (clientRecords.length === 0) {
+                host.innerHTML = '<div class="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500 text-sm">No clients found.</div>';
                 return;
             }
 
+            for (const client of clientRecords) {
+                const cname = client.fields[CONFIG.CLIENT_NAME_FIELD] || '(unnamed)';
+                const adsetIds = getClientAdsetIds(client.fields);
+
+                const details = document.createElement('details');
+                details.className = 'cm-client group rounded-xl border border-slate-200 bg-white shadow-sm';
+
+                const summary = document.createElement('summary');
+                summary.className =
+                    'flex cursor-pointer select-none items-center gap-2 px-4 py-3 text-left text-base font-semibold text-slate-900 hover:bg-slate-50 rounded-xl';
+                summary.innerHTML = `<span class="inline-block w-4 text-slate-400 cm-chevron-client">▸</span><span class="flex-1">${escapeHtml(cname)}</span><span class="text-xs font-normal text-slate-500">${adsetIds.length} ad set${adsetIds.length !== 1 ? 's' : ''}</span>`;
+
+                const body = document.createElement('div');
+                body.className = 'border-t border-slate-100 px-3 pb-3 pt-1 space-y-1';
+
+                if (adsetIds.length === 0) {
+                    body.innerHTML = '<p class="px-2 py-2 text-sm text-slate-500">No ad sets linked on this client.</p>';
+                } else {
+                    for (const aid of adsetIds) {
+                        const ar = adsetById.get(aid);
+                        const label = ar ? adsetLabel(ar.fields) : aid;
+
+                        const adDetails = document.createElement('details');
+                        adDetails.className = 'cm-adset rounded-lg border border-slate-100 bg-slate-50/80';
+                        adDetails.dataset.adsetId = aid;
+
+                        const adSum = document.createElement('summary');
+                        adSum.className =
+                            'flex cursor-pointer select-none items-center gap-2 px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-100/80 rounded-lg';
+                        adSum.innerHTML = `<span class="inline-block w-3.5 text-slate-400 text-xs cm-chevron-adset">▸</span><span class="flex-1">${escapeHtml(label)}</span>`;
+
+                        const adPanel = document.createElement('div');
+                        adPanel.className = 'border-t border-slate-200/80 p-3 space-y-3 bg-white rounded-b-lg';
+                        adPanel.innerHTML = `
+                            <div>
+                                <p class="text-xs font-medium text-slate-600 mb-1">Linked zips</p>
+                                <p class="text-sm text-slate-700 font-mono leading-relaxed min-h-[1.25rem] break-words" data-role="zip-line">—</p>
+                            </div>
+                            <div>
+                                <label class="text-xs font-medium text-slate-600">Paste zips to add or remove</label>
+                                <textarea rows="3" placeholder="Comma or line-separated 5-digit zips"
+                                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-amber-500 focus:border-transparent" data-role="zip-input"></textarea>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" data-action="add" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50">Add Zips</button>
+                                <button type="button" data-action="remove" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50">Remove Zips</button>
+                            </div>
+                        `;
+
+                        adDetails.appendChild(adSum);
+                        adDetails.appendChild(adPanel);
+
+                        adDetails.addEventListener('toggle', () => {
+                            if (adDetails.open) refreshAdsetPanel(adDetails);
+                        });
+
+                        const btnAdd = adPanel.querySelector('[data-action="add"]');
+                        const btnRemove = adPanel.querySelector('[data-action="remove"]');
+                        btnAdd.addEventListener('click', () => onAddZips(adDetails));
+                        btnRemove.addEventListener('click', () => onRemoveZips(adDetails));
+
+                        body.appendChild(adDetails);
+                    }
+                }
+
+                details.appendChild(summary);
+                details.appendChild(body);
+                host.appendChild(details);
+            }
+        }
+
+        function escapeHtml(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        async function refreshAdsetPanel(adDetails) {
+            const adsetId = adDetails.dataset.adsetId;
+            const zipLine = adDetails.querySelector('[data-role="zip-line"]');
+            zipLine.textContent = 'Loading…';
+            try {
+                const line = await commaSeparatedZipsForAdset(adsetId);
+                zipLine.textContent = line || '(none)';
+            } catch (e) {
+                console.error(e);
+                zipLine.textContent = 'Error loading zips.';
+            }
+        }
+
+        async function onAddZips(adDetails) {
+            const adsetId = adDetails.dataset.adsetId;
+            const input = adDetails.querySelector('[data-role="zip-input"]');
+            const raw = input.value;
             const zips = parseZipInput(raw);
             if (zips.length === 0) {
-                setStatus('err', 'Enter at least one valid 5-digit zip code.');
+                setGlobalStatus('err', 'Enter at least one valid 5-digit zip.');
                 return;
             }
 
-            btn.disabled = true;
-            setStatus('info', 'Working…');
-
-            const notFound = [];
-            const duplicate = [];
-            const toCreate = [];
+            const btnAdd = adDetails.querySelector('[data-action="add"]');
+            const btnRemove = adDetails.querySelector('[data-action="remove"]');
+            btnAdd.disabled = true;
+            btnRemove.disabled = true;
+            setGlobalStatus('info', 'Adding zips…');
 
             try {
-                const existingZipIds = await fetchExistingZipIdsForAdset(adsetId);
+                const existingRows = await fetchJunctionRowsForAdset(adsetId);
+                const existingZipIds = new Set(existingRows.map((r) => r.zipRecordId));
+
+                const notFound = [];
+                const duplicate = [];
+                const toCreate = [];
 
                 for (const five of zips) {
                     const zipRecId = await findZipRecordId(five);
@@ -440,54 +444,101 @@
                     existingZipIds.add(zipRecId);
                 }
 
-                let createdCount = 0;
-                if (toCreate.length > 0) {
-                    await createJunctionRows(adsetId, toCreate);
-                    createdCount = toCreate.length;
-                }
+                if (toCreate.length > 0) await createJunctionRows(adsetId, toCreate);
 
-                const parts = [];
-                parts.push(`Created ${createdCount} link${createdCount !== 1 ? 's' : ''}.`);
-                if (duplicate.length) {
-                    parts.push(`Skipped ${duplicate.length} already linked: ${duplicate.join(', ')}.`);
-                }
-                if (notFound.length) {
-                    parts.push(
-                        `No US Zips row where {${usZipsMatchField}} matches: ${notFound.join(', ')}.`
-                    );
-                }
-                setStatus(notFound.length && createdCount === 0 && duplicate.length === 0 ? 'err' : 'ok', parts.join(' '));
+                const parts = [`Added ${toCreate.length} link${toCreate.length !== 1 ? 's' : ''}.`];
+                if (duplicate.length) parts.push(`Skipped ${duplicate.length} already linked: ${duplicate.join(', ')}.`);
+                if (notFound.length) parts.push(`No US Zips row for: ${notFound.join(', ')}.`);
 
-                if (createdCount > 0) {
-                    document.getElementById('zipInput').value = '';
-                }
+                setGlobalStatus(
+                    notFound.length && toCreate.length === 0 && duplicate.length === 0 ? 'err' : 'ok',
+                    parts.join(' ')
+                );
+
+                if (toCreate.length > 0) input.value = '';
+                await refreshAdsetPanel(adDetails);
             } catch (e) {
                 console.error(e);
-                setStatus('err', e.message || String(e));
+                setGlobalStatus('err', e.message || String(e));
             } finally {
-                btn.disabled = false;
+                btnAdd.disabled = false;
+                btnRemove.disabled = false;
+            }
+        }
+
+        async function onRemoveZips(adDetails) {
+            const adsetId = adDetails.dataset.adsetId;
+            const input = adDetails.querySelector('[data-role="zip-input"]');
+            const raw = input.value;
+            const zips = parseZipInput(raw);
+            if (zips.length === 0) {
+                setGlobalStatus('err', 'Enter at least one valid 5-digit zip to remove.');
+                return;
+            }
+
+            const btnAdd = adDetails.querySelector('[data-action="add"]');
+            const btnRemove = adDetails.querySelector('[data-action="remove"]');
+            btnAdd.disabled = true;
+            btnRemove.disabled = true;
+            setGlobalStatus('info', 'Removing links…');
+
+            try {
+                const rows = await fetchJunctionRowsForAdset(adsetId);
+                const zipIdToJunction = new Map();
+                for (const r of rows) zipIdToJunction.set(r.zipRecordId, r.junctionId);
+
+                const notFound = [];
+                const notLinked = [];
+                const toDelete = [];
+
+                for (const five of zips) {
+                    const zipRecId = await findZipRecordId(five);
+                    if (!zipRecId) {
+                        notFound.push(five);
+                        continue;
+                    }
+                    const jId = zipIdToJunction.get(zipRecId);
+                    if (!jId) {
+                        notLinked.push(five);
+                        continue;
+                    }
+                    toDelete.push({ five, junctionId: jId });
+                }
+
+                for (const { junctionId } of toDelete) {
+                    await deleteJunctionRecord(junctionId);
+                }
+
+                const parts = [`Removed ${toDelete.length} link${toDelete.length !== 1 ? 's' : ''}.`];
+                if (notLinked.length) parts.push(`Not linked for this ad set: ${notLinked.join(', ')}.`);
+                if (notFound.length) parts.push(`No US Zips row for: ${notFound.join(', ')}.`);
+
+                setGlobalStatus(
+                    toDelete.length === 0 && (notFound.length || notLinked.length) ? 'err' : 'ok',
+                    parts.join(' ')
+                );
+
+                if (toDelete.length > 0) input.value = '';
+                await refreshAdsetPanel(adDetails);
+            } catch (e) {
+                console.error(e);
+                setGlobalStatus('err', e.message || String(e));
+            } finally {
+                btnAdd.disabled = false;
+                btnRemove.disabled = false;
             }
         }
 
         async function init() {
-            const sel = document.getElementById('clientSelect');
-            const adsetSel = document.getElementById('adsetSelect');
+            const host = document.getElementById('clientTreeHost');
             try {
                 await Promise.all([loadClients(), loadAdsets()]);
                 await resolveUsZipsMatchField();
-                fillClientSelect();
+                renderClientTree();
             } catch (e) {
                 console.error(e);
-                sel.innerHTML = '<option value="">Failed to load</option>';
-                setStatus('err', `Could not load data: ${e.message || e}`);
-                return;
+                host.innerHTML = `<div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900">Could not load: ${escapeHtml(e.message || String(e))}</div>`;
             }
-
-            sel.addEventListener('change', () => {
-                fillAdsetSelect(sel.value);
-            });
-
-            document.getElementById('submitBtn').addEventListener('click', onSubmit);
         }
 
         init();
