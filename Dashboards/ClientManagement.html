@@ -306,9 +306,9 @@
 
         /**
          * Fills zipRecordIdToCode by record id only — OR(RECORD_ID()=...) on US Zips.
-         * Does not scan the full ~42k zip table; only loads rows for ids already linked from junction.
+         * @param {((done: number, total: number) => void) | null} onProgress
          */
-        async function hydrateZipCodesBatch(recordIds) {
+        async function hydrateZipCodesBatch(recordIds, onProgress) {
             const unique = [...new Set(recordIds)].filter((id) => id && String(id).startsWith('rec'));
             const missing = unique.filter((id) => !zipRecordIdToCode.has(id));
             if (missing.length === 0) return;
@@ -330,6 +330,7 @@
                     data = await fetchJson(u.toString());
                 } catch (e) {
                     console.warn('Batch zip hydrate failed, falling back to single GETs', e);
+                    let fb = 0;
                     for (const id of chunk) {
                         if (zipRecordIdToCode.has(id)) continue;
                         try {
@@ -341,6 +342,8 @@
                         } catch (err) {
                             zipRecordIdToCode.set(id, id);
                         }
+                        fb += 1;
+                        onProgress?.(i + fb, missing.length);
                         await sleep(80);
                     }
                     continue;
@@ -354,12 +357,14 @@
                     if (!zipRecordIdToCode.has(id)) zipRecordIdToCode.set(id, id);
                 }
 
+                onProgress?.(Math.min(i + chunk.length, missing.length), missing.length);
+
                 if (i + chunkSize < missing.length) await sleep(pauseMs);
             }
         }
 
         async function getZipCodeForRecordId(zipRecordId) {
-            await hydrateZipCodesBatch([zipRecordId]);
+            await hydrateZipCodesBatch([zipRecordId], null);
             return zipRecordIdToCode.get(zipRecordId) || zipRecordId;
         }
 
@@ -537,7 +542,9 @@
             return [];
         }
 
-        async function commaSeparatedZipsForAdset(adsetId) {
+        /** @param {(msg: string) => void} [onProgress] */
+        async function commaSeparatedZipsForAdset(adsetId, onProgress) {
+            onProgress?.('Finding linked zips…');
             const rows = await fetchJunctionRowsForAdset(adsetId);
             if (rows.length === 0) return '';
             const needHydrate = [];
@@ -548,17 +555,24 @@
                     needHydrate.push(r.zipRecordId);
                 }
             }
-            await hydrateZipCodesBatch(needHydrate);
+            if (needHydrate.length > 0) {
+                onProgress?.(`Loading zip names 0/${needHydrate.length}…`);
+                await hydrateZipCodesBatch(needHydrate, (done, total) => {
+                    onProgress?.(`Loading zip names ${done}/${total}…`);
+                });
+            }
             const zipRecordIds = rows.map((r) => r.zipRecordId);
             const codes = zipRecordIds.map((id) => zipRecordIdToCode.get(id) || id);
             codes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
             return codes.join(', ');
         }
 
-        async function createJunctionRows(adsetId, zipRecordIds) {
+        async function createJunctionRows(adsetId, zipRecordIds, onProgress) {
             const fieldAdset = CONFIG.JUNCTION_ADSET_FIELD;
             const fieldZip = CONFIG.JUNCTION_ZIP_FIELD;
             const batchSize = 10;
+            const total = zipRecordIds.length;
+            let done = 0;
             for (let i = 0; i < zipRecordIds.length; i += batchSize) {
                 const chunk = zipRecordIds.slice(i, i + batchSize);
                 const body = {
@@ -574,6 +588,8 @@
                     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
                     body: JSON.stringify(body),
                 });
+                done += chunk.length;
+                onProgress?.(done, total);
             }
         }
 
@@ -610,6 +626,13 @@
             else el.classList.add('border-slate-200', 'bg-slate-50', 'text-slate-800');
             el.textContent = message;
             el.classList.remove('hidden');
+        }
+
+        /** Mirror progress into the ad set panel zip line + global banner */
+        function setPanelProgress(adDetails, message) {
+            setGlobalStatus('info', message);
+            const zipLine = adDetails && adDetails.querySelector('[data-role="zip-line"]');
+            if (zipLine) zipLine.textContent = message;
         }
 
         function renderClientTree() {
@@ -709,7 +732,9 @@
             const zipLine = adDetails.querySelector('[data-role="zip-line"]');
             zipLine.textContent = 'Loading…';
             try {
-                const line = await commaSeparatedZipsForAdset(adsetId);
+                const line = await commaSeparatedZipsForAdset(adsetId, (msg) =>
+                    setPanelProgress(adDetails, msg)
+                );
                 zipLine.textContent = line || '(none)';
             } catch (e) {
                 console.error(e);
@@ -731,7 +756,8 @@
             const btnRemove = adDetails.querySelector('[data-action="remove"]');
             btnAdd.disabled = true;
             btnRemove.disabled = true;
-            setGlobalStatus('info', 'Adding zips…');
+            const totalIn = zips.length;
+            setPanelProgress(adDetails, `Add: loading current links… (0/${totalIn} zips)`);
 
             try {
                 const existingRows = await fetchJunctionRowsForAdset(adsetId);
@@ -741,7 +767,12 @@
                 const duplicate = [];
                 const toCreate = [];
 
-                for (const five of zips) {
+                for (let idx = 0; idx < zips.length; idx++) {
+                    const five = zips[idx];
+                    setPanelProgress(
+                        adDetails,
+                        `Add: looking up US Zips ${idx + 1}/${totalIn}…`
+                    );
                     const zipRecId = await findZipRecordId(five);
                     if (!zipRecId) {
                         notFound.push(five);
@@ -755,7 +786,15 @@
                     existingZipIds.add(zipRecId);
                 }
 
-                if (toCreate.length > 0) await createJunctionRows(adsetId, toCreate);
+                if (toCreate.length > 0) {
+                    setPanelProgress(adDetails, `Add: saving links 0/${toCreate.length}…`);
+                    await createJunctionRows(adsetId, toCreate, (done, tot) => {
+                        setPanelProgress(adDetails, `Add: saving links ${done}/${tot}…`);
+                    });
+                }
+
+                if (toCreate.length > 0) input.value = '';
+                await refreshAdsetPanel(adDetails);
 
                 const parts = [`Added ${toCreate.length} link${toCreate.length !== 1 ? 's' : ''}.`];
                 if (duplicate.length) parts.push(`Skipped ${duplicate.length} already linked: ${duplicate.join(', ')}.`);
@@ -765,9 +804,6 @@
                     notFound.length && toCreate.length === 0 && duplicate.length === 0 ? 'err' : 'ok',
                     parts.join(' ')
                 );
-
-                if (toCreate.length > 0) input.value = '';
-                await refreshAdsetPanel(adDetails);
             } catch (e) {
                 console.error(e);
                 setGlobalStatus('err', e.message || String(e));
@@ -791,7 +827,8 @@
             const btnRemove = adDetails.querySelector('[data-action="remove"]');
             btnAdd.disabled = true;
             btnRemove.disabled = true;
-            setGlobalStatus('info', 'Removing links…');
+            const totalIn = zips.length;
+            setPanelProgress(adDetails, `Remove: loading links… (0/${totalIn} zips)`);
 
             try {
                 const rows = await fetchJunctionRowsForAdset(adsetId);
@@ -802,7 +839,12 @@
                 const notLinked = [];
                 const toDelete = [];
 
-                for (const five of zips) {
+                for (let idx = 0; idx < zips.length; idx++) {
+                    const five = zips[idx];
+                    setPanelProgress(
+                        adDetails,
+                        `Remove: looking up ${idx + 1}/${totalIn}…`
+                    );
                     const zipRecId = await findZipRecordId(five);
                     if (!zipRecId) {
                         notFound.push(five);
@@ -816,9 +858,14 @@
                     toDelete.push({ five, junctionId: jId });
                 }
 
-                for (const { junctionId } of toDelete) {
-                    await deleteJunctionRecord(junctionId);
+                const delTotal = toDelete.length;
+                for (let d = 0; d < toDelete.length; d++) {
+                    setPanelProgress(adDetails, `Remove: deleting ${d + 1}/${delTotal}…`);
+                    await deleteJunctionRecord(toDelete[d].junctionId);
                 }
+
+                if (toDelete.length > 0) input.value = '';
+                await refreshAdsetPanel(adDetails);
 
                 const parts = [`Removed ${toDelete.length} link${toDelete.length !== 1 ? 's' : ''}.`];
                 if (notLinked.length) parts.push(`Not linked for this ad set: ${notLinked.join(', ')}.`);
@@ -828,9 +875,6 @@
                     toDelete.length === 0 && (notFound.length || notLinked.length) ? 'err' : 'ok',
                     parts.join(' ')
                 );
-
-                if (toDelete.length > 0) input.value = '';
-                await refreshAdsetPanel(adDetails);
             } catch (e) {
                 console.error(e);
                 setGlobalStatus('err', e.message || String(e));
