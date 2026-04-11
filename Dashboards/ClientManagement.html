@@ -49,7 +49,7 @@
         </div>
 
         <p class="mt-6 text-xs text-slate-500">
-            If lookups fail, edit <code class="bg-slate-100 px-1 rounded">CONFIG</code> — especially <strong>US_ZIPS_MATCH_FIELD</strong> (the field that stores the 5-digit zip) and the link field names on the junction (<strong>Adset</strong>, <strong>US Zips</strong>).
+            Field names live in <code class="bg-slate-100 px-1 rounded">CONFIG</code> (US Zips: <strong>Zip</strong>; junction: <strong>Adset</strong>, <strong>US Zips</strong>). Change them if your Airtable names differ.
         </p>
     </div>
 
@@ -78,10 +78,32 @@
             JUNCTION_ZIP_FIELD: 'US Zips',
 
             /**
-             * Field on US Zips used to match a 5-digit string (often the primary field "Name").
+             * US Zips table fields (tblieaHIf6rDfFZFl): Zip (#), Lat, Long, Adset Zip Tracking (link).
+             * Match column for lookups — exact Airtable field name.
              */
-            US_ZIPS_MATCH_FIELD: 'Name',
+            US_ZIPS_MATCH_FIELD: 'Zip',
+            /** Zip is a Number field → formula uses {Zip}=12345 not quotes */
+            US_ZIPS_MATCH_AS_NUMBER: true,
+
+            /** If US_ZIPS_MATCH_FIELD is empty only: extra names to try before built-in fallbacks */
+            US_ZIPS_MATCH_FIELD_CANDIDATES: [],
         };
+
+        const BUILTIN_ZIP_FIELD_CANDIDATES = [
+            'ZIP',
+            'Zip',
+            'zip',
+            'Name',
+            'ZCTA',
+            'Zcta',
+            'GEOID',
+            'Zip Code',
+            'ZIP Code',
+        ];
+
+        /** Set by resolveUsZipsMatchField() */
+        let usZipsMatchField = null;
+        let usZipsMatchAsNumber = false;
 
         const airtableUrl = (table) =>
             `/api/airtable/v0/${CONFIG.BASE_ID}/${encodeURIComponent(table)}`;
@@ -163,9 +185,89 @@
         }
 
         function zipMatchFormula(fiveDigit) {
-            const field = CONFIG.US_ZIPS_MATCH_FIELD;
+            if (!usZipsMatchField) {
+                throw new Error('Zip match field not ready. Reload the page.');
+            }
+            const n = parseInt(fiveDigit, 10);
+            if (usZipsMatchAsNumber) {
+                return `{${usZipsMatchField}}=${n}`;
+            }
             const z = airtableStringForFormula(fiveDigit);
-            return `{${field}}="${z}"`;
+            return `{${usZipsMatchField}}="${z}"`;
+        }
+
+        async function resolveUsZipsMatchField() {
+            const data = await fetchJson(`${airtableUrl(CONFIG.US_ZIPS_TABLE)}?maxRecords=1`);
+            const rec = data.records && data.records[0];
+            if (!rec) {
+                throw new Error(
+                    'US Zips table has no rows. Add at least one zip record, or check CONFIG.US_ZIPS_TABLE.'
+                );
+            }
+            const fields = rec.fields || {};
+            const keys = Object.keys(fields);
+
+            const preferred = (CONFIG.US_ZIPS_MATCH_FIELD || '').trim();
+
+            if (preferred) {
+                if (!keys.includes(preferred)) {
+                    throw new Error(
+                        `US Zips has no field "${preferred}". Update CONFIG.US_ZIPS_MATCH_FIELD to match Airtable exactly.`
+                    );
+                }
+                usZipsMatchField = preferred;
+                if (typeof CONFIG.US_ZIPS_MATCH_AS_NUMBER === 'boolean') {
+                    usZipsMatchAsNumber = CONFIG.US_ZIPS_MATCH_AS_NUMBER;
+                } else {
+                    const sample = fields[preferred];
+                    usZipsMatchAsNumber = typeof sample === 'number';
+                }
+                return usZipsMatchField;
+            }
+
+            const tryOrder = [
+                ...(CONFIG.US_ZIPS_MATCH_FIELD_CANDIDATES || []),
+                ...BUILTIN_ZIP_FIELD_CANDIDATES,
+            ];
+
+            usZipsMatchField = null;
+            usZipsMatchAsNumber = false;
+
+            for (const c of tryOrder) {
+                if (c && keys.includes(c)) {
+                    usZipsMatchField = c;
+                    break;
+                }
+            }
+
+            if (!usZipsMatchField) {
+                for (const k of keys) {
+                    const v = fields[k];
+                    if (typeof v === 'number' && Number.isFinite(v) && v >= 10000 && v <= 99999) {
+                        usZipsMatchField = k;
+                        usZipsMatchAsNumber = true;
+                        break;
+                    }
+                    if (typeof v === 'string' && /^\d{5}$/.test(v.trim())) {
+                        usZipsMatchField = k;
+                        usZipsMatchAsNumber = false;
+                        break;
+                    }
+                }
+            }
+
+            if (!usZipsMatchField) {
+                throw new Error(
+                    'Set CONFIG.US_ZIPS_MATCH_FIELD to the column that stores the 5-digit zip (exact Airtable name).'
+                );
+            }
+
+            const sample = fields[usZipsMatchField];
+            if (typeof sample === 'number') {
+                usZipsMatchAsNumber = true;
+            }
+
+            return usZipsMatchField;
         }
 
         async function findZipRecordId(fiveDigit) {
@@ -350,7 +452,9 @@
                     parts.push(`Skipped ${duplicate.length} already linked: ${duplicate.join(', ')}.`);
                 }
                 if (notFound.length) {
-                    parts.push(`No US Zips row for match field "${CONFIG.US_ZIPS_MATCH_FIELD}": ${notFound.join(', ')}.`);
+                    parts.push(
+                        `No US Zips row where {${usZipsMatchField}} matches: ${notFound.join(', ')}.`
+                    );
                 }
                 setStatus(notFound.length && createdCount === 0 && duplicate.length === 0 ? 'err' : 'ok', parts.join(' '));
 
@@ -370,6 +474,7 @@
             const adsetSel = document.getElementById('adsetSelect');
             try {
                 await Promise.all([loadClients(), loadAdsets()]);
+                await resolveUsZipsMatchField();
                 fillClientSelect();
             } catch (e) {
                 console.error(e);
