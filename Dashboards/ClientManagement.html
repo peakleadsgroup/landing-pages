@@ -62,8 +62,11 @@
              */
             ADSET_JUNCTION_LINK_FIELDS: ['Adset Zip Tracking', 'Ad Set Zip Tracking'],
 
-            /** If no reverse link: filter junction with {Field}=adsetId — try each name */
-            JUNCTION_ADSET_FILTER_FIELDS: ['Adset', 'Ad Set', 'Adsets'],
+            /**
+             * Junction column that links to Adset — must exist on tbl87JqHAdJwgq1GL (same as JUNCTION_ADSET_FIELD).
+             * Do not add names from other tables (e.g. Client’s “Adsets”); wrong names cause 422 on every request.
+             */
+            JUNCTION_ADSET_FILTER_FIELDS: ['Adset'],
 
             /** Which junction column points at US Zips. Use exact Airtable names only — “Zip” is not on this junction (only US Zips). */
             JUNCTION_ZIP_LINK_FIELDS: ['US Zips'],
@@ -512,20 +515,6 @@
                     if (mapped.length > 0) return mapped;
                 } catch (e) {
                     /* unknown field name in formula */
-                }
-            }
-
-            const esc = airtableStringForFormula(adsetId);
-            for (const af of adsetFieldNames) {
-                try {
-                    const records = await fetchAllRecords(CONFIG.ADSET_ZIPS_TABLE, {
-                        formula: `FIND("${esc}", ARRAYJOIN({${af}}))`,
-                        fields: zipFields.length ? zipFields : undefined,
-                    });
-                    const mapped = mapJunctionRecordsToRows(records);
-                    if (mapped.length > 0) return mapped;
-                } catch (e) {
-                    /* invalid formula for this field type */
                 }
             }
 
