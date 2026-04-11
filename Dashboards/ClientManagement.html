@@ -34,7 +34,7 @@
         </div>
 
         <p class="mt-8 text-xs text-slate-500">
-            Field names in <code class="bg-slate-100 px-1 rounded">CONFIG</code>: US Zips <strong>Zip</strong>; junction <strong>Adset</strong>, <strong>US Zips</strong>.
+            <code class="bg-slate-100 px-1 rounded">CONFIG</code>: US Zips <strong>Zip</strong>; junction writes use <strong>Adset</strong> / <strong>US Zips</strong>. Reads also use <strong>ADSET_JUNCTION_LINK_FIELDS</strong> (reverse link on the Ad set).
         </p>
     </div>
 
@@ -49,8 +49,21 @@
             CLIENT_NAME_FIELD: 'Name',
             CLIENT_ADSET_FIELDS: ['Adsets'],
 
+            /** Writing new junction rows — must match your junction table */
             JUNCTION_ADSET_FIELD: 'Adset',
             JUNCTION_ZIP_FIELD: 'US Zips',
+
+            /**
+             * Reading links: Adset record often has a reverse link to the junction (e.g. “Adset Zip Tracking”).
+             * Tried first — finds rows even if the junction’s Adset column wasn’t back-filled.
+             */
+            ADSET_JUNCTION_LINK_FIELDS: ['Adset Zip Tracking', 'Ad Set Zip Tracking'],
+
+            /** If no reverse link: filter junction with {Field}=adsetId — try each name */
+            JUNCTION_ADSET_FILTER_FIELDS: ['Adset', 'Ad Set', 'Adsets'],
+
+            /** Which junction column points at US Zips (try in order when reading) */
+            JUNCTION_ZIP_LINK_FIELDS: ['US Zips', 'Zip'],
 
             US_ZIPS_MATCH_FIELD: 'Zip',
             US_ZIPS_MATCH_AS_NUMBER: true,
@@ -228,18 +241,122 @@
             return s;
         }
 
-        async function fetchJunctionRowsForAdset(adsetId) {
-            const records = await fetchAllRecords(CONFIG.ADSET_ZIPS_TABLE, {
-                formula: `{${CONFIG.JUNCTION_ADSET_FIELD}}="${adsetId}"`,
-                fields: [CONFIG.JUNCTION_ZIP_FIELD],
-            });
+        function normalizeLinkIds(v) {
+            if (!v) return [];
+            return Array.isArray(v) ? v : [v];
+        }
+
+        function zipRecordIdFromJunctionFields(fields) {
+            const keys = CONFIG.JUNCTION_ZIP_LINK_FIELDS || [CONFIG.JUNCTION_ZIP_FIELD];
+            for (const k of keys) {
+                const z = fields[k];
+                const id = Array.isArray(z) ? z[0] : z;
+                if (id && typeof id === 'string' && id.startsWith('rec')) return id;
+            }
+            return null;
+        }
+
+        function mapJunctionRecordsToRows(records) {
             return records
                 .map((r) => {
-                    const z = r.fields[CONFIG.JUNCTION_ZIP_FIELD];
-                    const zipId = Array.isArray(z) ? z[0] : z;
+                    const zipId = zipRecordIdFromJunctionFields(r.fields || {});
                     return zipId ? { junctionId: r.id, zipRecordId: zipId } : null;
                 })
                 .filter(Boolean);
+        }
+
+        async function loadJunctionRowsByJunctionIds(junctionIds) {
+            const rows = [];
+            for (const jid of junctionIds) {
+                try {
+                    const data = await fetchJson(
+                        `${airtableUrl(CONFIG.ADSET_ZIPS_TABLE)}/${encodeURIComponent(jid)}`
+                    );
+                    const zipId = zipRecordIdFromJunctionFields(data.fields || {});
+                    if (zipId) rows.push({ junctionId: data.id, zipRecordId: zipId });
+                } catch (e) {
+                    console.warn('Junction row fetch failed', jid, e);
+                }
+            }
+            return rows;
+        }
+
+        function junctionFieldsReferenceAdset(fields, adsetId) {
+            if (!fields) return false;
+            for (const k of Object.keys(fields)) {
+                const v = fields[k];
+                if (Array.isArray(v)) {
+                    if (v.includes(adsetId)) return true;
+                } else if (v === adsetId) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Finds junction rows for an ad set: reverse link on Adset → filter/FIND on junction → full scan fallback.
+         */
+        async function fetchJunctionRowsForAdset(adsetId) {
+            let adsetRecord = null;
+            try {
+                adsetRecord = await fetchJson(
+                    `${airtableUrl(CONFIG.ADSET_TABLE)}/${encodeURIComponent(adsetId)}`
+                );
+            } catch (e) {
+                console.warn('Could not load ad set for link discovery', e);
+            }
+
+            if (adsetRecord && adsetRecord.fields) {
+                for (const linkField of CONFIG.ADSET_JUNCTION_LINK_FIELDS || []) {
+                    const juncIds = normalizeLinkIds(adsetRecord.fields[linkField]);
+                    if (juncIds.length > 0) {
+                        const rows = await loadJunctionRowsByJunctionIds(juncIds);
+                        if (rows.length > 0) return rows;
+                    }
+                }
+            }
+
+            const adsetFieldNames = CONFIG.JUNCTION_ADSET_FILTER_FIELDS || [CONFIG.JUNCTION_ADSET_FIELD];
+            const zipFields = [...(CONFIG.JUNCTION_ZIP_LINK_FIELDS || []), CONFIG.JUNCTION_ZIP_FIELD].filter(
+                (x, i, a) => x && a.indexOf(x) === i
+            );
+
+            for (const af of adsetFieldNames) {
+                try {
+                    const records = await fetchAllRecords(CONFIG.ADSET_ZIPS_TABLE, {
+                        formula: `{${af}}="${adsetId}"`,
+                        fields: zipFields,
+                    });
+                    const mapped = mapJunctionRecordsToRows(records);
+                    if (mapped.length > 0) return mapped;
+                } catch (e) {
+                    /* unknown field name in formula */
+                }
+            }
+
+            const esc = airtableStringForFormula(adsetId);
+            for (const af of adsetFieldNames) {
+                try {
+                    const records = await fetchAllRecords(CONFIG.ADSET_ZIPS_TABLE, {
+                        formula: `FIND("${esc}", ARRAYJOIN({${af}}))`,
+                        fields: zipFields,
+                    });
+                    const mapped = mapJunctionRecordsToRows(records);
+                    if (mapped.length > 0) return mapped;
+                } catch (e) {
+                    /* invalid formula for this field type */
+                }
+            }
+
+            const all = await fetchAllRecords(CONFIG.ADSET_ZIPS_TABLE);
+            const scanned = [];
+            for (const r of all) {
+                if (!junctionFieldsReferenceAdset(r.fields, adsetId)) continue;
+                const zipId = zipRecordIdFromJunctionFields(r.fields);
+                if (zipId) scanned.push({ junctionId: r.id, zipRecordId: zipId });
+            }
+            return scanned;
         }
 
         async function commaSeparatedZipsForAdset(adsetId) {
