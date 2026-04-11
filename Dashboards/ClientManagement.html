@@ -62,8 +62,8 @@
             /** If no reverse link: filter junction with {Field}=adsetId — try each name */
             JUNCTION_ADSET_FILTER_FIELDS: ['Adset', 'Ad Set', 'Adsets'],
 
-            /** Which junction column points at US Zips (try in order when reading) */
-            JUNCTION_ZIP_LINK_FIELDS: ['US Zips', 'Zip'],
+            /** Which junction column points at US Zips. Use exact Airtable names only — “Zip” is not on this junction (only US Zips). */
+            JUNCTION_ZIP_LINK_FIELDS: ['US Zips'],
 
             /**
              * Optional Lookup/Rollup fields on the junction that already show the 5-digit zip.
