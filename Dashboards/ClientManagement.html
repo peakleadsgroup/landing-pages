@@ -49,6 +49,9 @@
             CLIENT_NAME_FIELD: 'Name',
             CLIENT_ADSET_FIELDS: ['Adsets'],
 
+            /** Adset table — shown next to each ad set name (0 / empty → displays as “none”) */
+            ADSET_WEEKLY_CAP_FIELD: 'Weekly Cap',
+
             /** Writing new junction rows — must match your junction table */
             JUNCTION_ADSET_FIELD: 'Adset',
             JUNCTION_ZIP_FIELD: 'US Zips',
@@ -175,6 +178,21 @@
                 (fields['Adset ID'] != null ? String(fields['Adset ID']) : '') ||
                 'Ad set'
             );
+        }
+
+        /** Weekly cap for UI: 0 or empty → "none" */
+        function weeklyCapDisplay(fields) {
+            const fname = CONFIG.ADSET_WEEKLY_CAP_FIELD || 'Weekly Cap';
+            if (!fields || !fname) return 'none';
+            const v = fields[fname];
+            if (v === null || v === undefined) return 'none';
+            if (typeof v === 'number') {
+                if (!Number.isFinite(v) || v === 0) return 'none';
+                return String(Math.round(v));
+            }
+            const s = String(v).trim();
+            if (s === '' || s === '0') return 'none';
+            return s;
         }
 
         function parseZipInput(raw) {
@@ -609,6 +627,7 @@
                     for (const aid of adsetIds) {
                         const ar = adsetById.get(aid);
                         const label = ar ? adsetLabel(ar.fields) : aid;
+                        const capText = weeklyCapDisplay(ar ? ar.fields : null);
 
                         const adDetails = document.createElement('details');
                         adDetails.className = 'cm-adset rounded-lg border border-slate-100 bg-slate-50/80';
@@ -617,7 +636,7 @@
                         const adSum = document.createElement('summary');
                         adSum.className =
                             'flex cursor-pointer select-none items-center gap-2 px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-100/80 rounded-lg';
-                        adSum.innerHTML = `<span class="inline-block w-3.5 text-slate-400 text-xs cm-chevron-adset">▸</span><span class="flex-1">${escapeHtml(label)}</span>`;
+                        adSum.innerHTML = `<span class="inline-block w-3.5 text-slate-400 text-xs cm-chevron-adset shrink-0">▸</span><span class="flex-1 min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0.5"><span>${escapeHtml(label)}</span><span class="text-xs font-normal text-slate-500">Weekly cap: ${escapeHtml(capText)}</span></span>`;
 
                         const adPanel = document.createElement('div');
                         adPanel.className = 'border-t border-slate-200/80 p-3 space-y-3 bg-white rounded-b-lg';
