@@ -271,6 +271,44 @@
         .get-leads-btn {
             padding: 18px 48px;
             font-size: 18px;
+            position: relative;
+            min-width: 200px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .get-leads-btn .get-leads-btn-label {
+            transition: opacity 0.15s ease;
+        }
+
+        .get-leads-btn .get-leads-btn-spinner {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.35);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: get-leads-spin 0.65s linear infinite;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .get-leads-btn.is-loading .get-leads-btn-label {
+            opacity: 0;
+        }
+
+        .get-leads-btn.is-loading .get-leads-btn-spinner {
+            opacity: 1;
+        }
+
+        .get-leads-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.92;
+        }
+
+        @keyframes get-leads-spin {
+            to { transform: rotate(360deg); }
         }
 
         .stat-number {
@@ -566,11 +604,37 @@
         </div>
 
         <div class="get-leads-cta">
-            <button type="button" class="nav-btn get-leads-btn" onclick="document.querySelector('.form-wrapper').scrollIntoView({ behavior: 'smooth', block: 'start' })">Get Leads</button>
+            <button type="button" class="nav-btn get-leads-btn" id="getLeadsCtaBtn" onclick="getLeadsScrollToForm(this)" aria-busy="false">
+                <span class="get-leads-btn-label">Get Leads</span>
+                <span class="get-leads-btn-spinner" aria-hidden="true"></span>
+            </button>
         </div>
     </div>
 
     <script>
+        function getLeadsScrollToForm(btn) {
+            if (!btn || btn.disabled || btn.classList.contains('is-loading')) return;
+            btn.disabled = true;
+            btn.classList.add('is-loading');
+            btn.setAttribute('aria-busy', 'true');
+            const wrap = document.querySelector('.form-wrapper');
+            if (wrap) wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            let settled = false;
+            const done = () => {
+                if (settled) return;
+                settled = true;
+                btn.disabled = false;
+                btn.classList.remove('is-loading');
+                btn.setAttribute('aria-busy', 'false');
+            };
+            const fallbackMs = 1200;
+            const t = setTimeout(done, fallbackMs);
+            window.addEventListener('scrollend', () => {
+                clearTimeout(t);
+                done();
+            }, { once: true, passive: true });
+        }
+
         const TOTAL_STEPS = 9;
         let currentStep = 1;
         const formData = {};
