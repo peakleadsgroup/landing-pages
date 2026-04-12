@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
+    <title>B2C Lead → Adset linker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            background: #f8f9fa;
+            color: #202124;
+        }
+        header {
+            background: #fff;
+            border-bottom: 1px solid #dadce0;
+            padding: 1rem 1.5rem;
+        }
+        header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        header p {
+            margin-top: 0.35rem;
+            font-size: 0.875rem;
+            color: #5f6368;
+            max-width: 52rem;
+            line-height: 1.45;
+        }
+        main {
+            padding: 1.5rem;
+            max-width: 960px;
+        }
+        .panel {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+        @media (max-width: 640px) {
+            .row { grid-template-columns: 1fr; }
+        }
+        label {
+            display: block;
+            margin-bottom: 0.35rem;
+            font-weight: 500;
+            color: #5f6368;
+            font-size: 0.875rem;
+        }
+        select {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+            font-size: 0.9375rem;
+            background: #fff;
+        }
+        select:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+        select:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: center;
+            margin-top: 1.25rem;
+        }
+        button {
+            font-size: 0.9375rem;
+            font-weight: 500;
+            padding: 0.55rem 1.1rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+        }
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+        .btn-primary {
+            background: #1a73e8;
+            color: #fff;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: #1557b0;
+        }
+        .btn-secondary {
+            background: #e8eaed;
+            color: #202124;
+        }
+        .btn-secondary:hover:not(:disabled) {
+            background: #dadce0;
+        }
+        .status {
+            margin-top: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            display: none;
+        }
+        .status.visible { display: block; }
+        .status.info { background: #e8f0fe; color: #174ea6; }
+        .status.success { background: #e6f4ea; color: #137333; }
+        .status.error { background: #fce8e6; color: #c5221f; }
+        .hint {
+            font-size: 0.8125rem;
+            color: #5f6368;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>B2C Lead → Adset linker</h1>
+        <p>
+            Choose a <strong>B2C Client</strong> and an <strong>Adset</strong>, then apply.
+            Every row in <strong>B2C Leads</strong> whose <strong>Linked Client</strong> includes that client
+            will have its <strong>Adset</strong> link set to the selected ad set (replacing any previous Adset links on those rows).
+        </p>
+    </header>
+    <main>
+        <div class="panel">
+            <div class="row">
+                <div>
+                    <label for="client-select">B2C Client</label>
+                    <select id="client-select" disabled>
+                        <option value="">Loading clients…</option>
+                    </select>
+                    <p class="hint">Table: B2C Clients</p>
+                </div>
+                <div>
+                    <label for="adset-select">Adset</label>
+                    <select id="adset-select" disabled>
+                        <option value="">Loading ad sets…</option>
+                    </select>
+                    <p class="hint">Table: Adset</p>
+                </div>
+            </div>
+            <div class="actions">
+                <button type="button" class="btn-primary" id="btn-apply" disabled>Apply to matching leads</button>
+                <button type="button" class="btn-secondary" id="btn-reload">Reload lists</button>
+            </div>
+            <div id="status" class="status" role="status"></div>
+        </div>
+    </main>
+
+    <script>
+        (function () {
+            const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
+            const AIRTABLE_BASE_URL = '/api/airtable/v0/' + AIRTABLE_BASE_ID;
+            const TABLE_CLIENTS = 'B2C Clients';
+            const TABLE_LEADS = 'B2C Leads';
+            const TABLE_ADSET = 'Adset';
+            const FIELD_LINKED_CLIENT = 'Linked Client';
+            const FIELD_ADSET = 'Adset';
+
+            const clientSelect = document.getElementById('client-select');
+            const adsetSelect = document.getElementById('adset-select');
+            const btnApply = document.getElementById('btn-apply');
+            const btnReload = document.getElementById('btn-reload');
+            const statusEl = document.getElementById('status');
+
+            function showStatus(kind, message) {
+                statusEl.className = 'status visible ' + (kind || 'info');
+                statusEl.textContent = message;
+            }
+
+            function hideStatus() {
+                statusEl.className = 'status';
+                statusEl.textContent = '';
+            }
+
+            async function fetchAirtableJson(url) {
+                const res = await fetch(url);
+                const text = await res.text();
+                let data;
+                try {
+                    data = text ? JSON.parse(text) : {};
+                } catch (e) {
+                    throw new Error('Invalid JSON from Airtable proxy (' + res.status + ')');
+                }
+                if (!res.ok) {
+                    const msg = (data && data.error) || data.message || text || res.statusText;
+                    throw new Error(typeof msg === 'string' ? msg : 'Airtable error ' + res.status);
+                }
+                return data;
+            }
+
+            function recordLabel(fields) {
+                if (!fields) return 'Unnamed';
+                var name = fields.Name || fields.Client || fields.Title;
+                if (name != null && String(name).trim()) return String(name).trim();
+                for (var k in fields) {
+                    if (!Object.prototype.hasOwnProperty.call(fields, k)) continue;
+                    var v = fields[k];
+                    if (typeof v === 'string' && v.trim()) return v.trim();
+                }
+                return 'Unnamed';
+            }
+
+            function fetchAllRecords(tableName, filterFormula) {
+                var basePath = AIRTABLE_BASE_URL + '/' + encodeURIComponent(tableName);
+                var url = basePath;
+                if (filterFormula) {
+                    url += '?filterByFormula=' + encodeURIComponent(filterFormula);
+                }
+                var records = [];
+                function getPage(offset) {
+                    var pageUrl = url;
+                    if (offset) {
+                        pageUrl += (pageUrl.indexOf('?') >= 0 ? '&' : '?') + 'offset=' + encodeURIComponent(offset);
+                    }
+                    return fetchAirtableJson(pageUrl).then(function (data) {
+                        records.push.apply(records, data.records || []);
+                        if (data.offset) return getPage(data.offset);
+                    });
+                }
+                return getPage(null).then(function () {
+                    return records;
+                });
+            }
+
+            function leadsFilterForClient(clientRecordId) {
+                var safeId = String(clientRecordId).replace(/'/g, "''");
+                return (
+                    "FIND('" +
+                    safeId +
+                    "', ARRAYJOIN({" +
+                    FIELD_LINKED_CLIENT +
+                    "}, ','))"
+                );
+            }
+
+            function chunk(arr, size) {
+                var out = [];
+                for (var i = 0; i < arr.length; i += size) {
+                    out.push(arr.slice(i, i + size));
+                }
+                return out;
+            }
+
+            function patchLeadBatch(recordIds, adsetRecordId) {
+                var records = recordIds.map(function (id) {
+                    return {
+                        id: id,
+                        fields: (function () {
+                            var o = {};
+                            o[FIELD_ADSET] = [adsetRecordId];
+                            return o;
+                        })()
+                    };
+                });
+                var body = JSON.stringify({ records: records });
+                return fetch(AIRTABLE_BASE_URL + '/' + encodeURIComponent(TABLE_LEADS), {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                    body: body
+                }).then(function (res) {
+                    return res.text().then(function (text) {
+                        var data;
+                        try {
+                            data = text ? JSON.parse(text) : {};
+                        } catch (e) {
+                            data = {};
+                        }
+                        if (!res.ok) {
+                            var msg = (data && data.error && data.error.message) || data.error || text || res.statusText;
+                            throw new Error(typeof msg === 'string' ? msg : 'PATCH failed ' + res.status);
+                        }
+                        return data;
+                    });
+                });
+            }
+
+            function setLoading(loading) {
+                clientSelect.disabled = loading;
+                adsetSelect.disabled = loading;
+                btnApply.disabled = loading || !clientSelect.value || !adsetSelect.value;
+                btnReload.disabled = loading;
+            }
+
+            function populateSelect(select, placeholder, items) {
+                select.innerHTML = '';
+                var opt0 = document.createElement('option');
+                opt0.value = '';
+                opt0.textContent = placeholder;
+                select.appendChild(opt0);
+                items.forEach(function (item) {
+                    var opt = document.createElement('option');
+                    opt.value = item.id;
+                    opt.textContent = item.label;
+                    select.appendChild(opt);
+                });
+                select.disabled = false;
+            }
+
+            function loadDropdowns() {
+                hideStatus();
+                setLoading(true);
+                clientSelect.innerHTML = '<option value="">Loading…</option>';
+                adsetSelect.innerHTML = '<option value="">Loading…</option>';
+                clientSelect.disabled = true;
+                adsetSelect.disabled = true;
+
+                return Promise.all([
+                    fetchAllRecords(TABLE_CLIENTS, null),
+                    fetchAllRecords(TABLE_ADSET, null)
+                ])
+                    .then(function (results) {
+                        var clientRecs = results[0];
+                        var adsetRecs = results[1];
+                        var clients = clientRecs
+                            .map(function (r) {
+                                return { id: r.id, label: recordLabel(r.fields) };
+                            })
+                            .sort(function (a, b) {
+                                return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' });
+                            });
+                        var adsets = adsetRecs
+                            .map(function (r) {
+                                return { id: r.id, label: recordLabel(r.fields) };
+                            })
+                            .sort(function (a, b) {
+                                return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' });
+                            });
+
+                        populateSelect(clientSelect, 'Select a client…', clients);
+                        populateSelect(adsetSelect, 'Select an ad set…', adsets);
+                        showStatus('success', 'Loaded ' + clients.length + ' clients and ' + adsets.length + ' ad sets.');
+                    })
+                    .catch(function (err) {
+                        populateSelect(clientSelect, 'Failed to load', []);
+                        populateSelect(adsetSelect, 'Failed to load', []);
+                        clientSelect.disabled = true;
+                        adsetSelect.disabled = true;
+                        showStatus('error', err.message || 'Failed to load data.');
+                    })
+                    .then(function () {
+                        setLoading(false);
+                        updateApplyEnabled();
+                    });
+            }
+
+            function updateApplyEnabled() {
+                btnApply.disabled =
+                    clientSelect.disabled ||
+                    adsetSelect.disabled ||
+                    !clientSelect.value ||
+                    !adsetSelect.value;
+            }
+
+            clientSelect.addEventListener('change', updateApplyEnabled);
+            adsetSelect.addEventListener('change', updateApplyEnabled);
+
+            btnReload.addEventListener('click', function () {
+                loadDropdowns();
+            });
+
+            btnApply.addEventListener('click', function () {
+                var clientId = clientSelect.value;
+                var adsetId = adsetSelect.value;
+                var clientLabel = clientSelect.options[clientSelect.selectedIndex].text;
+                var adsetLabel = adsetSelect.options[adsetSelect.selectedIndex].text;
+                if (!clientId || !adsetId) return;
+
+                hideStatus();
+                btnApply.disabled = true;
+                btnReload.disabled = true;
+                showStatus('info', 'Finding matching leads in B2C Leads…');
+
+                var formula = leadsFilterForClient(clientId);
+                fetchAllRecords(TABLE_LEADS, formula)
+                    .then(function (leads) {
+                        if (leads.length === 0) {
+                            showStatus('info', 'No B2C Leads found with Linked Client including this client.');
+                            return null;
+                        }
+                        var msg =
+                            'Set Adset to "' +
+                            adsetLabel +
+                            '" for ' +
+                            leads.length +
+                            ' lead(s) linked to client "' +
+                            clientLabel +
+                            '"?\n\nThis overwrites the Adset field on those rows.';
+                        if (!window.confirm(msg)) {
+                            showStatus('info', 'Cancelled.');
+                            return null;
+                        }
+                        showStatus('info', 'Updating ' + leads.length + ' lead(s)…');
+                        var ids = leads.map(function (r) {
+                            return r.id;
+                        });
+                        var batches = chunk(ids, 10);
+                        var done = 0;
+                        function runBatch(i) {
+                            if (i >= batches.length) {
+                                return Promise.resolve();
+                            }
+                            return patchLeadBatch(batches[i], adsetId).then(function () {
+                                done += batches[i].length;
+                                showStatus('info', 'Updated ' + done + ' / ' + ids.length + '…');
+                                return runBatch(i + 1);
+                            });
+                        }
+                        return runBatch(0).then(function () {
+                            showStatus(
+                                'success',
+                                'Done. Set Adset to "' + adsetLabel + '" on ' + leads.length + ' lead(s).'
+                            );
+                        });
+                    })
+                    .catch(function (err) {
+                        showStatus('error', err.message || 'Request failed.');
+                    })
+                    .then(function () {
+                        btnReload.disabled = false;
+                        updateApplyEnabled();
+                    });
+            });
+
+            loadDropdowns();
+        })();
+    </script>
+</body>
+</html>
