@@ -100,6 +100,9 @@
             US_ZIPS_MATCH_AS_NUMBER: true,
             US_ZIPS_MATCH_FIELD_CANDIDATES: [],
 
+            /** US Zips — two-letter state on each zip row (exact Airtable field name) */
+            US_ZIPS_STATE_FIELD: 'State',
+
             /** Batch list queries instead of one GET per zip (avoids Airtable 429 rate limits) */
             US_ZIPS_BATCH_CHUNK: 20,
             US_ZIPS_BATCH_PAUSE_MS: 150,
@@ -110,11 +113,21 @@
             'ZIP', 'Zip', 'zip', 'Name', 'ZCTA', 'Zcta', 'GEOID', 'Zip Code', 'ZIP Code',
         ];
 
+        /** 50 states + DC — two-letter abbreviations, sorted A–Z (for “not included” vs linked zips). */
+        const ALL_US_STATE_ABBREVS = [
+            'AK', 'AL', 'AR', 'AZ', 'CA', 'CO', 'CT', 'DC', 'DE', 'FL', 'GA', 'HI', 'IA', 'ID', 'IL', 'IN', 'KS',
+            'KY', 'LA', 'MA', 'MD', 'ME', 'MI', 'MN', 'MO', 'MS', 'MT', 'NC', 'ND', 'NE', 'NH', 'NJ', 'NM', 'NV',
+            'NY', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VA', 'VT', 'WA', 'WI', 'WV', 'WY',
+        ];
+
         let usZipsMatchField = null;
         let usZipsMatchAsNumber = false;
 
         /** @type {Map<string, string>} zip record id → display code (5 digits) */
         const zipRecordIdToCode = new Map();
+
+        /** @type {Map<string, string>} zip record id → state abbreviation (US Zips field) */
+        const zipRecordIdToState = new Map();
 
         const airtableUrl = (table) =>
             `/api/airtable/v0/${CONFIG.BASE_ID}/${encodeURIComponent(table)}`;
@@ -319,13 +332,31 @@
             return fallbackId;
         }
 
+        function stateAbbrevFromUSZipsField(raw) {
+            if (raw == null || raw === '') return null;
+            const s = String(raw).trim();
+            if (/^[A-Za-z]{2}$/.test(s)) return s.toUpperCase();
+            return null;
+        }
+
+        function usZipsStateFieldName() {
+            const n = (CONFIG.US_ZIPS_STATE_FIELD || '').trim();
+            return n || null;
+        }
+
         /**
          * Fills zipRecordIdToCode by record id only — OR(RECORD_ID()=...) on US Zips.
+         * When US_ZIPS_STATE_FIELD is set, also fills zipRecordIdToState (same batch).
          * @param {((done: number, total: number) => void) | null} onProgress
          */
         async function hydrateZipCodesBatch(recordIds, onProgress) {
             const unique = [...new Set(recordIds)].filter((id) => id && String(id).startsWith('rec'));
-            const missing = unique.filter((id) => !zipRecordIdToCode.has(id));
+            const stateField = usZipsStateFieldName();
+            const missing = unique.filter((id) => {
+                if (!zipRecordIdToCode.has(id)) return true;
+                if (stateField && !zipRecordIdToState.has(id)) return true;
+                return false;
+            });
             if (missing.length === 0) return;
 
             const chunkSize = Math.max(5, Math.min(40, CONFIG.US_ZIPS_BATCH_CHUNK || 20));
@@ -338,6 +369,7 @@
                 const u = new URL(airtableUrl(CONFIG.US_ZIPS_TABLE), window.location.origin);
                 u.searchParams.set('filterByFormula', formula);
                 u.searchParams.append('fields[]', usZipsMatchField);
+                if (stateField) u.searchParams.append('fields[]', stateField);
                 u.searchParams.set('maxRecords', '100');
 
                 let data;
@@ -347,13 +379,18 @@
                     console.warn('Batch zip hydrate failed, falling back to single GETs', e);
                     let fb = 0;
                     for (const id of chunk) {
-                        if (zipRecordIdToCode.has(id)) continue;
+                        if (zipRecordIdToCode.has(id) && (!stateField || zipRecordIdToState.has(id))) continue;
                         try {
                             const one = await fetchJson(
                                 `${airtableUrl(CONFIG.US_ZIPS_TABLE)}/${encodeURIComponent(id)}`
                             );
-                            const raw = one.fields && one.fields[usZipsMatchField];
+                            const f = one.fields || {};
+                            const raw = f[usZipsMatchField];
                             zipRecordIdToCode.set(id, zipCodeStringFromRaw(raw, id));
+                            if (stateField) {
+                                const abbr = stateAbbrevFromUSZipsField(f[stateField]);
+                                if (abbr) zipRecordIdToState.set(id, abbr);
+                            }
                         } catch (err) {
                             zipRecordIdToCode.set(id, id);
                         }
@@ -365,8 +402,13 @@
                 }
 
                 for (const rec of data.records || []) {
-                    const raw = rec.fields && rec.fields[usZipsMatchField];
+                    const f = rec.fields || {};
+                    const raw = f[usZipsMatchField];
                     zipRecordIdToCode.set(rec.id, zipCodeStringFromRaw(raw, rec.id));
+                    if (stateField) {
+                        const abbr = stateAbbrevFromUSZipsField(f[stateField]);
+                        if (abbr) zipRecordIdToState.set(rec.id, abbr);
+                    }
                 }
                 for (const id of chunk) {
                     if (!zipRecordIdToCode.has(id)) zipRecordIdToCode.set(id, id);
@@ -543,11 +585,21 @@
             return [];
         }
 
-        /** @param {(msg: string) => void} [onProgress] */
+        /**
+         * Linked zip codes plus distinct state abbreviations from US Zips (State field).
+         * @param {(msg: string) => void} [onProgress]
+         * @returns {Promise<{ zips: string, states: string, statesNotIncluded: string }>}
+         */
         async function commaSeparatedZipsForAdset(adsetId, onProgress) {
             onProgress?.('Finding linked zips…');
             const rows = await fetchJunctionRowsForAdset(adsetId);
-            if (rows.length === 0) return '';
+            if (rows.length === 0) {
+                return {
+                    zips: '',
+                    states: '',
+                    statesNotIncluded: usZipsStateFieldName() ? ALL_US_STATE_ABBREVS.join(', ') : '',
+                };
+            }
             const needHydrate = [];
             for (const r of rows) {
                 if (r.zipDisplay) {
@@ -556,16 +608,33 @@
                     needHydrate.push(r.zipRecordId);
                 }
             }
+            const allZipIds = rows.map((r) => r.zipRecordId);
+            if (usZipsStateFieldName()) {
+                for (const id of allZipIds) needHydrate.push(id);
+            }
             if (needHydrate.length > 0) {
-                onProgress?.(`Loading zip names 0/${needHydrate.length}…`);
-                await hydrateZipCodesBatch(needHydrate, (done, total) => {
-                    onProgress?.(`Loading zip names ${done}/${total}…`);
+                const total = [...new Set(needHydrate)].length;
+                onProgress?.(`Loading zip names 0/${total}…`);
+                await hydrateZipCodesBatch(needHydrate, (done, n) => {
+                    onProgress?.(`Loading zip names ${done}/${n}…`);
                 });
             }
             const zipRecordIds = rows.map((r) => r.zipRecordId);
             const codes = zipRecordIds.map((id) => zipRecordIdToCode.get(id) || id);
             codes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-            return codes.join(', ');
+            const stateSet = new Set();
+            if (usZipsStateFieldName()) {
+                for (const id of zipRecordIds) {
+                    const abbr = zipRecordIdToState.get(id);
+                    if (abbr) stateSet.add(abbr);
+                }
+            }
+            const states = [...stateSet].sort((a, b) => a.localeCompare(b));
+            let statesNotIncluded = '';
+            if (usZipsStateFieldName()) {
+                statesNotIncluded = ALL_US_STATE_ABBREVS.filter((abbr) => !stateSet.has(abbr)).join(', ');
+            }
+            return { zips: codes.join(', '), states: states.join(', '), statesNotIncluded };
         }
 
         async function createJunctionRows(adsetId, zipRecordIds, onProgress) {
@@ -634,6 +703,10 @@
             setGlobalStatus('info', message);
             const zipLine = adDetails && adDetails.querySelector('[data-role="zip-line"]');
             if (zipLine) zipLine.textContent = message;
+            const statesLine = adDetails && adDetails.querySelector('[data-role="states-line"]');
+            if (statesLine) statesLine.textContent = message;
+            const statesNotLine = adDetails && adDetails.querySelector('[data-role="states-not-included-line"]');
+            if (statesNotLine) statesNotLine.textContent = message;
         }
 
         function renderClientTree() {
@@ -690,6 +763,14 @@
                                 <p class="text-sm text-slate-700 font-mono leading-relaxed min-h-[1.25rem] break-words" data-role="zip-line">—</p>
                             </div>
                             <div>
+                                <p class="text-xs font-medium text-slate-600 mb-1">Linked states</p>
+                                <p class="text-sm text-slate-700 font-mono leading-relaxed min-h-[1.25rem] break-words" data-role="states-line">—</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-medium text-slate-600 mb-1">States not included</p>
+                                <p class="text-sm text-slate-700 font-mono leading-relaxed min-h-[1.25rem] break-words" data-role="states-not-included-line">—</p>
+                            </div>
+                            <div>
                                 <label class="text-xs font-medium text-slate-600">Paste zips to add or remove</label>
                                 <textarea rows="3" placeholder="Comma or line-separated 5-digit zips"
                                     class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-amber-500 focus:border-transparent" data-role="zip-input"></textarea>
@@ -731,15 +812,27 @@
         async function refreshAdsetPanel(adDetails) {
             const adsetId = adDetails.dataset.adsetId;
             const zipLine = adDetails.querySelector('[data-role="zip-line"]');
+            const statesLine = adDetails.querySelector('[data-role="states-line"]');
+            const statesNotLine = adDetails.querySelector('[data-role="states-not-included-line"]');
             zipLine.textContent = 'Loading…';
+            if (statesLine) statesLine.textContent = 'Loading…';
+            if (statesNotLine) statesNotLine.textContent = 'Loading…';
             try {
-                const line = await commaSeparatedZipsForAdset(adsetId, (msg) =>
+                const { zips, states, statesNotIncluded } = await commaSeparatedZipsForAdset(adsetId, (msg) =>
                     setPanelProgress(adDetails, msg)
                 );
-                zipLine.textContent = line || '(none)';
+                zipLine.textContent = zips || '(none)';
+                if (statesLine) statesLine.textContent = states || '—';
+                if (statesNotLine) {
+                    if (statesNotIncluded) statesNotLine.textContent = statesNotIncluded;
+                    else if (usZipsStateFieldName()) statesNotLine.textContent = zips ? '(none)' : ALL_US_STATE_ABBREVS.join(', ');
+                    else statesNotLine.textContent = '—';
+                }
             } catch (e) {
                 console.error(e);
                 zipLine.textContent = 'Error loading zips.';
+                if (statesLine) statesLine.textContent = '—';
+                if (statesNotLine) statesNotLine.textContent = '—';
             }
         }
 
