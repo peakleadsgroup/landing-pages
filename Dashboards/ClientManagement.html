@@ -785,18 +785,33 @@
                         const adPanel = document.createElement('div');
                         adPanel.className = 'border-t border-slate-200/80 p-3 space-y-3 bg-white rounded-b-lg';
                         adPanel.innerHTML = `
-                            <div>
-                                <p class="text-xs font-medium text-slate-600 mb-1">Linked zips</p>
-                                <p class="text-sm text-slate-700 font-mono leading-relaxed min-h-[1.25rem] break-words" data-role="zip-line">—</p>
-                            </div>
-                            <div>
-                                <p class="text-xs font-medium text-slate-600 mb-1">Linked states</p>
-                                <p class="text-sm text-slate-700 font-mono leading-relaxed min-h-[1.25rem] break-words" data-role="states-line">—</p>
-                            </div>
-                            <div>
-                                <p class="text-xs font-medium text-slate-600 mb-1">States not included</p>
-                                <p class="text-sm text-slate-700 font-mono leading-relaxed min-h-[1.25rem] break-words" data-role="states-not-included-line">—</p>
-                            </div>
+                            <details class="cm-available-zips rounded-lg border border-slate-200 bg-slate-50/50" data-role="linked-zips-details">
+                                <summary class="flex cursor-pointer select-none items-center gap-2 rounded-lg px-2 py-2 text-left text-xs font-medium text-slate-600 hover:bg-slate-100/80">
+                                    <span class="inline-block w-3 shrink-0 text-slate-400 text-[10px] cm-chevron-avail">▸</span>
+                                    <span>Linked zips</span>
+                                </summary>
+                                <div class="border-t border-slate-200/80 px-2 pb-3 pt-2">
+                                    <p class="text-sm text-slate-700 font-mono leading-relaxed min-h-[1.25rem] break-words" data-role="zip-line">—</p>
+                                </div>
+                            </details>
+                            <details class="cm-available-zips rounded-lg border border-slate-200 bg-slate-50/50" data-role="linked-states-details">
+                                <summary class="flex cursor-pointer select-none items-center gap-2 rounded-lg px-2 py-2 text-left text-xs font-medium text-slate-600 hover:bg-slate-100/80">
+                                    <span class="inline-block w-3 shrink-0 text-slate-400 text-[10px] cm-chevron-avail">▸</span>
+                                    <span>Linked states</span>
+                                </summary>
+                                <div class="border-t border-slate-200/80 px-2 pb-3 pt-2">
+                                    <p class="text-sm text-slate-700 font-mono leading-relaxed min-h-[1.25rem] break-words" data-role="states-line">—</p>
+                                </div>
+                            </details>
+                            <details class="cm-available-zips rounded-lg border border-slate-200 bg-slate-50/50" data-role="states-not-included-details">
+                                <summary class="flex cursor-pointer select-none items-center gap-2 rounded-lg px-2 py-2 text-left text-xs font-medium text-slate-600 hover:bg-slate-100/80">
+                                    <span class="inline-block w-3 shrink-0 text-slate-400 text-[10px] cm-chevron-avail">▸</span>
+                                    <span>States not included</span>
+                                </summary>
+                                <div class="border-t border-slate-200/80 px-2 pb-3 pt-2">
+                                    <p class="text-sm text-slate-700 font-mono leading-relaxed min-h-[1.25rem] break-words" data-role="states-not-included-line">—</p>
+                                </div>
+                            </details>
                             <details class="cm-available-zips rounded-lg border border-slate-200 bg-slate-50/50" data-role="available-zips-details">
                                 <summary class="flex cursor-pointer select-none items-center gap-2 rounded-lg px-2 py-2 text-left text-xs font-medium text-slate-600 hover:bg-slate-100/80">
                                     <span class="inline-block w-3 shrink-0 text-slate-400 text-[10px] cm-chevron-avail">▸</span>
@@ -935,8 +950,14 @@
 
         async function refreshAdsetPanel(adDetails) {
             adDetails._cmDataRevision = (adDetails._cmDataRevision || 0) + 1;
+            const linkedZipsDet = adDetails.querySelector('[data-role="linked-zips-details"]');
+            const linkedStatesDet = adDetails.querySelector('[data-role="linked-states-details"]');
+            const statesNotIncDet = adDetails.querySelector('[data-role="states-not-included-details"]');
             const availDet = adDetails.querySelector('[data-role="available-zips-details"]');
             const availBody = adDetails.querySelector('[data-role="available-zips-body"]');
+            if (linkedZipsDet) linkedZipsDet.open = false;
+            if (linkedStatesDet) linkedStatesDet.open = false;
+            if (statesNotIncDet) statesNotIncDet.open = false;
             if (availDet) availDet.open = false;
             if (availBody) {
                 availBody.innerHTML =
