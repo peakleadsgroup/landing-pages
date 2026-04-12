@@ -191,6 +191,13 @@
             const TABLE_US_ZIPS = 'tblieaHIf6rDfFZFl';
             const FIELD_JUNCTION_ADSET = 'Adset';
             const FIELD_JUNCTION_ZIP = 'US Zips';
+            /**
+             * Mirrors Dashboards/ClientManagement.html CONFIG + fetchJunctionRowsForAdset().
+             * Order: (1) reverse link from Adset → junction ids, (2) filter junction where {Adset}=rec.
+             */
+            const ADSET_JUNCTION_REVERSE_LINK_FIELDS = ['Adset Zip Tracking', 'Ad Set Zip Tracking'];
+            const JUNCTION_ADSET_FILTER_FIELDS = ['Adset'];
+            const JUNCTION_ZIP_LINK_FIELDS = ['US Zips'];
             /** Special client: map each lead’s zip to an ad set via junction zips (scoped to this client’s Adsets). */
             const EXPO_ZIP_ROUTE_CLIENT_NAME = 'Expo Home Improvement';
             /** Expected “Expo Home Improvement - …” regional ad sets (order used for tie-breaks if a zip appears on more than one ad set). */
@@ -544,8 +551,49 @@
                 });
             }
 
-            /** Chunk OR({Adset}="rec",...) for junction filter (keep formulas reasonably small). */
-            function fetchJunctionForAdsetIds(adsetIds) {
+            /** US Zips record id from a junction row — same idea as zipRecordIdFromJunctionFields in ClientManagement. */
+            function zipRecordIdFromJunctionFields(fields) {
+                if (!fields) return null;
+                var keys = JUNCTION_ZIP_LINK_FIELDS.length
+                    ? JUNCTION_ZIP_LINK_FIELDS
+                    : [FIELD_JUNCTION_ZIP];
+                var ki;
+                for (ki = 0; ki < keys.length; ki++) {
+                    var z = fields[keys[ki]];
+                    var id = Array.isArray(z) ? z[0] : z;
+                    if (id && typeof id === 'string' && id.startsWith('rec')) return id;
+                }
+                return null;
+            }
+
+            /** Load junction rows by RECORD_ID() (batches). */
+            function loadJunctionRecordsByIds(junctionRecordIds) {
+                var ids = junctionRecordIds.filter(function (id, i, a) {
+                    return id && a.indexOf(id) === i;
+                });
+                if (ids.length === 0) return Promise.resolve([]);
+                var parts = chunk(ids, 45);
+                var all = [];
+                function runBatch(i) {
+                    if (i >= parts.length) return Promise.resolve(all);
+                    var inner = parts[i]
+                        .map(function (id) {
+                            return 'RECORD_ID()="' + id + '"';
+                        })
+                        .join(',');
+                    var formula = 'OR(' + inner + ')';
+                    return fetchAllRecords(TABLE_ADSET_ZIPS, formula, true).then(function (rows) {
+                        all.push.apply(all, rows || []);
+                        return runBatch(i + 1);
+                    });
+                }
+                return runBatch(0);
+            }
+
+            /**
+             * Filter Adset Zip Tracking where junction column (e.g. {Adset}) = ad set id — ClientManagement step 2.
+             */
+            function fetchJunctionByAdsetFieldFormula(adsetIds, adsetFieldName) {
                 var unique = adsetIds.filter(function (id, i, a) {
                     return id && a.indexOf(id) === i;
                 });
@@ -553,22 +601,128 @@
                 var chunkSize = 12;
                 var chunks = chunk(unique, chunkSize);
                 var all = [];
-                function run(i) {
+                var fname = adsetFieldName || FIELD_JUNCTION_ADSET;
+                function runOr(i) {
                     if (i >= chunks.length) return Promise.resolve(all);
                     var part = chunks[i];
                     var inner = part
                         .map(function (id) {
-                            return '{' + FIELD_JUNCTION_ADSET + '}="' + id + '"';
+                            return '{' + fname + '}="' + id + '"';
                         })
                         .join(',');
                     var formula = 'OR(' + inner + ')';
-                    log('log', 'Expo: junction chunk', { chunkIndex: i + 1, of: chunks.length, formulaPreview: formula.slice(0, 120) });
+                    log('log', 'Expo: junction filterByFormula', {
+                        junctionColumn: fname,
+                        chunkIndex: i + 1,
+                        of: chunks.length,
+                        formulaPreview: formula.slice(0, 100)
+                    });
                     return fetchAllRecords(TABLE_ADSET_ZIPS, formula, true).then(function (rows) {
-                        all.push.apply(all, rows);
-                        return run(i + 1);
+                        all.push.apply(all, rows || []);
+                        return runOr(i + 1);
                     });
                 }
-                return run(0);
+                return runOr(0);
+            }
+
+            /**
+             * Same strategy as ClientManagement fetchJunctionRowsForAdset(adsetId):
+             * 1) GET each Adset → read Adset Zip Tracking / Ad Set Zip Tracking → load junction rows by RECORD_ID.
+             * 2) If none, filter junction table with {JUNCTION_ADSET_FILTER_FIELDS} = ad set id.
+             */
+            function fetchJunctionForAdsetIds(adsetIds) {
+                var unique = adsetIds.filter(function (id, i, a) {
+                    return id && a.indexOf(id) === i;
+                });
+                if (unique.length === 0) return Promise.resolve([]);
+                return fetchJunctionViaAdsetReverseLinks(unique).then(function (fromReverse) {
+                    if (fromReverse && fromReverse.length > 0) {
+                        log('log', 'Expo: junction rows (step 1 — Adset reverse links, same as ClientManagement)', {
+                            count: fromReverse.length
+                        });
+                        return fromReverse;
+                    }
+                    log(
+                        'warn',
+                        'Expo: no junction ids on Adset records — step 2: filter junction by linked Adset column'
+                    );
+                    var fIdx = 0;
+                    function tryNextFilterField() {
+                        if (fIdx >= JUNCTION_ADSET_FILTER_FIELDS.length) {
+                            log('error', 'Expo: junction still empty — check Adset Zip Tracking on Adset rows and {Adset} on tbl87JqHAdJwgq1GL');
+                            return [];
+                        }
+                        var col = JUNCTION_ADSET_FILTER_FIELDS[fIdx];
+                        fIdx += 1;
+                        return fetchJunctionByAdsetFieldFormula(unique, col).then(function (rows) {
+                            if (rows && rows.length > 0) {
+                                log('log', 'Expo: junction rows (step 2 — filter by {' + col + '})', {
+                                    count: rows.length
+                                });
+                                return rows;
+                            }
+                            return tryNextFilterField();
+                        });
+                    }
+                    return tryNextFilterField();
+                });
+            }
+
+            function fetchJunctionViaAdsetReverseLinks(adsetIds) {
+                return Promise.all(
+                    adsetIds.map(function (adId) {
+                        var url =
+                            AIRTABLE_BASE_URL +
+                            '/' +
+                            encodeURIComponent(TABLE_ADSET) +
+                            '/' +
+                            encodeURIComponent(adId);
+                        return fetchAirtableJson(url).then(function (rec) {
+                            return { adId: adId, fields: (rec && rec.fields) || {} };
+                        });
+                    })
+                ).then(function (pairs) {
+                    var juncIdToAdset = {};
+                    pairs.forEach(function (p) {
+                        ADSET_JUNCTION_REVERSE_LINK_FIELDS.forEach(function (fname) {
+                            normalizeLinkIds(p.fields[fname]).forEach(function (jid) {
+                                if (!juncIdToAdset[jid]) juncIdToAdset[jid] = p.adId;
+                                else if (juncIdToAdset[jid] !== p.adId) {
+                                    log('warn', 'Expo: same junction id linked from two ad sets?', {
+                                        junctionId: jid,
+                                        a: juncIdToAdset[jid],
+                                        b: p.adId
+                                    });
+                                }
+                            });
+                        });
+                        var total = 0;
+                        ADSET_JUNCTION_REVERSE_LINK_FIELDS.forEach(function (fn) {
+                            total += normalizeLinkIds(p.fields[fn]).length;
+                        });
+                        log('log', 'Expo: ad set reverse-link junction ids', {
+                            adsetId: p.adId,
+                            junctionLinkCount: total
+                        });
+                    });
+                    var juncIds = Object.keys(juncIdToAdset);
+                    if (juncIds.length === 0) {
+                        log(
+                            'log',
+                            'Expo: no junction ids on Adset reverse-link fields — will try junction filterByFormula next (ClientManagement step 2)'
+                        );
+                        return [];
+                    }
+                    return loadJunctionRecordsByIds(juncIds).then(function (rows) {
+                        (rows || []).forEach(function (row) {
+                            row._implicitAdsetId = juncIdToAdset[row.id];
+                        });
+                        log('log', 'Expo: junction rows loaded by RECORD_ID from reverse links', {
+                            count: (rows || []).length
+                        });
+                        return rows || [];
+                    });
+                });
             }
 
             /**
@@ -580,8 +734,9 @@
                     var zipToCandidates = {};
                     juncRows.forEach(function (row) {
                         var f = row.fields || {};
-                        var aid = normalizeLinkIds(f[FIELD_JUNCTION_ADSET])[0];
-                        var zid = normalizeLinkIds(f[FIELD_JUNCTION_ZIP])[0];
+                        var aid =
+                            normalizeLinkIds(f[FIELD_JUNCTION_ADSET])[0] || row._implicitAdsetId;
+                        var zid = zipRecordIdFromJunctionFields(f);
                         if (!aid || !zid) return;
                         if (!zipToCandidates[zid]) zipToCandidates[zid] = [];
                         if (zipToCandidates[zid].indexOf(aid) < 0) zipToCandidates[zid].push(aid);
