@@ -617,11 +617,78 @@
                             conflicts.slice(0, 12)
                         );
                     }
-                    log('log', 'Expo: built zip→adset map', {
-                        uniqueZips: Object.keys(zipToAdset).length,
-                        junctionRows: juncRows.length
+                    return enrichFiveDigitToAdsetFromJunction(zipToAdset, adsetIdToName).then(function (fiveDigitToAdset) {
+                        log('log', 'Expo: built zip→adset map', {
+                            uniqueZipRecordIds: Object.keys(zipToAdset).length,
+                            fiveDigitFallbackEntries: Object.keys(fiveDigitToAdset).length,
+                            junctionRows: juncRows.length
+                        });
+                        return {
+                            zipToAdset: zipToAdset,
+                            conflicts: conflicts,
+                            fiveDigitToAdset: fiveDigitToAdset
+                        };
                     });
-                    return { zipToAdset: zipToAdset, conflicts: conflicts };
+                });
+            }
+
+            /**
+             * Junction stores US Zips **record ids**. Leads may resolve the same ZIP to a *different* US Zips row
+             * (duplicate zips in the table). This builds 5-digit → ad set from the same junction rows so we can still match.
+             */
+            function enrichFiveDigitToAdsetFromJunction(zipToAdset, adsetIdToName) {
+                var zids = Object.keys(zipToAdset);
+                if (zids.length === 0) return Promise.resolve({});
+                return resolveUsZipMatchMode().then(function (cfg) {
+                    var zipField = cfg.field;
+                    var parts = chunk(zids, 40);
+                    var recIdToFive = {};
+                    function runBatch(i) {
+                        if (i >= parts.length) {
+                            var fiveToAd = {};
+                            zids.forEach(function (zid) {
+                                var five = recIdToFive[zid];
+                                if (!five) return;
+                                var ad = zipToAdset[zid];
+                                if (fiveToAd[five] && fiveToAd[five] !== ad) {
+                                    var a1 = fiveToAd[five];
+                                    var a2 = ad;
+                                    var r1 = regionRankFromExpoAdsetName(
+                                        adsetIdToName && adsetIdToName[a1]
+                                    );
+                                    var r2 = regionRankFromExpoAdsetName(
+                                        adsetIdToName && adsetIdToName[a2]
+                                    );
+                                    fiveToAd[five] = r1 <= r2 ? a1 : a2;
+                                    log('warn', 'Expo: junction had two US Zips rows for same 5-digit zip — tie-broke by region', {
+                                        five: five,
+                                        kept: fiveToAd[five]
+                                    });
+                                } else {
+                                    fiveToAd[five] = ad;
+                                }
+                            });
+                            return fiveToAd;
+                        }
+                        var batch = parts[i];
+                        var formula =
+                            'OR(' +
+                            batch
+                                .map(function (id) {
+                                    return 'RECORD_ID()="' + id + '"';
+                                })
+                                .join(',') +
+                            ')';
+                        return fetchAllRecords(TABLE_US_ZIPS, formula, false).then(function (rows) {
+                            (rows || []).forEach(function (r) {
+                                var raw = r.fields && r.fields[zipField];
+                                var five = normalizeLeadZipToFiveDigits(raw);
+                                if (five) recIdToFive[r.id] = five;
+                            });
+                            return runBatch(i + 1);
+                        });
+                    }
+                    return runBatch(0);
                 });
             }
 
@@ -673,26 +740,37 @@
                     .then(function (built) {
                         return resolveUsZipMatchMode().then(function () {
                             var zipToAdset = built.zipToAdset;
+                            var fiveDigitToAdset = built.fiveDigitToAdset || {};
                             var planByAdset = {};
                             var skipped = [];
                             return leads
                                 .reduce(function (seq, lead) {
                                     return seq.then(function () {
                                         return leadZipToUsZipRecordId(lead.fields || {}).then(function (zipRecId) {
-                                            if (!zipRecId) {
-                                                skipped.push({
-                                                    leadId: lead.id,
-                                                    reason: 'missing_or_unresolved_Zip'
-                                                });
-                                                return;
-                                            }
-                                            var targetAd = zipToAdset[zipRecId];
+                                            var rawFields = lead.fields || {};
+                                            var rawZip = rawFields[FIELD_LEAD_ZIP];
+                                            var five = normalizeLeadZipToFiveDigits(rawZip);
+                                            /** Prefer exact US Zips record id from junction; else same 5-digit (different US Zips row). */
+                                            var targetAd =
+                                                (zipRecId && zipToAdset[zipRecId]) ||
+                                                (five && fiveDigitToAdset[five]) ||
+                                                null;
                                             if (!targetAd) {
-                                                skipped.push({
-                                                    leadId: lead.id,
-                                                    zipRecordId: zipRecId,
-                                                    reason: 'no_adset_for_zip_in_junction'
-                                                });
+                                                if (!zipRecId && !five) {
+                                                    skipped.push({
+                                                        leadId: lead.id,
+                                                        reason: 'missing_or_unresolved_Zip'
+                                                    });
+                                                } else {
+                                                    skipped.push({
+                                                        leadId: lead.id,
+                                                        reason: 'no_adset_for_zip_in_junction',
+                                                        zipRecId: zipRecId || null,
+                                                        five: five || null,
+                                                        hadRecIdButNotInMap: !!(zipRecId && !zipToAdset[zipRecId]),
+                                                        hadFiveButNotInMap: !!(five && !fiveDigitToAdset[five])
+                                                    });
+                                                }
                                                 return;
                                             }
                                             if (adsetIds.indexOf(targetAd) < 0) {
@@ -708,9 +786,17 @@
                                     });
                                 }, Promise.resolve())
                                 .then(function () {
+                                    var skippedByReason = {};
+                                    skipped.forEach(function (s) {
+                                        var k = s.reason || 'unknown';
+                                        skippedByReason[k] = (skippedByReason[k] || 0) + 1;
+                                    });
                                     log('log', 'Expo: assignment plan', {
+                                        howItWorks:
+                                            'For each Expo lead (already filtered by Linked Client): read Zip → match Adset Zip Tracking by US Zips record id, then by 5-digit zip if ids differ.',
                                         planByAdset: planByAdset,
-                                        skippedSample: skipped.slice(0, 15),
+                                        skippedByReason: skippedByReason,
+                                        skippedSample: skipped.slice(0, 20),
                                         skippedTotal: skipped.length
                                     });
                                     return {
@@ -772,7 +858,7 @@
                         if (total === 0) {
                             showStatus(
                                 'error',
-                                'No leads could be assigned: check Zip on each lead and that Adset Zip Tracking links those zips to Expo’s ad sets.'
+                                'No leads could be assigned. Check console for Expo: skippedByReason — usually Zip is empty, or the zip is not linked to an Expo ad set in Adset Zip Tracking (or the lead’s US Zips row differs from the junction’s; 5-digit fallback should help).'
                             );
                             return Promise.reject(new Error('EXPO_NO_ASSIGNMENTS'));
                         }
