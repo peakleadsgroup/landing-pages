@@ -15,6 +15,10 @@
         details.cm-client[open] > summary .cm-chevron-client { transform: rotate(90deg); }
         details.cm-adset[open] > summary .cm-chevron-adset { transform: rotate(90deg); }
         .cm-chevron-client, .cm-chevron-adset { transition: transform 0.15s ease; }
+        details.cm-available-zips > summary { list-style: none; }
+        details.cm-available-zips > summary::-webkit-details-marker { display: none; }
+        details.cm-available-zips[open] > summary .cm-chevron-avail { transform: rotate(90deg); }
+        .cm-chevron-avail { transition: transform 0.15s ease; display: inline-block; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-900">
@@ -107,6 +111,9 @@
             US_ZIPS_BATCH_CHUNK: 20,
             US_ZIPS_BATCH_PAUSE_MS: 150,
             JUNCTION_BATCH_CHUNK: 20,
+
+            /** Max states per filterByFormula OR(...) when loading “other zips in linked states” (keep under Airtable formula limits). */
+            US_ZIPS_STATE_OR_CHUNK: 12,
         };
 
         const BUILTIN_ZIP_FIELD_CANDIDATES = [
@@ -263,6 +270,17 @@
             if (usZipsMatchAsNumber) return `{${usZipsMatchField}}=${n}`;
             const z = airtableStringForFormula(fiveDigit);
             return `{${usZipsMatchField}}="${z}"`;
+        }
+
+        /** filterByFormula: US Zips rows whose State is one of the given abbreviations. */
+        function formulaStatesOr(stateAbbrevs, stateFieldName) {
+            const parts = stateAbbrevs.map((abbr) => {
+                const z = airtableStringForFormula(abbr);
+                return `{${stateFieldName}}="${z}"`;
+            });
+            if (parts.length === 0) return 'FALSE()';
+            if (parts.length === 1) return parts[0];
+            return `OR(${parts.join(',')})`;
         }
 
         async function resolveUsZipsMatchField() {
@@ -588,7 +606,7 @@
         /**
          * Linked zip codes plus distinct state abbreviations from US Zips (State field).
          * @param {(msg: string) => void} [onProgress]
-         * @returns {Promise<{ zips: string, states: string, statesNotIncluded: string }>}
+         * @returns {Promise<{ zips: string, states: string, statesNotIncluded: string, linkedZipFives: string[], linkedStateAbbrevs: string[] }>}
          */
         async function commaSeparatedZipsForAdset(adsetId, onProgress) {
             onProgress?.('Finding linked zips…');
@@ -598,6 +616,8 @@
                     zips: '',
                     states: '',
                     statesNotIncluded: usZipsStateFieldName() ? ALL_US_STATE_ABBREVS.join(', ') : '',
+                    linkedZipFives: [],
+                    linkedStateAbbrevs: [],
                 };
             }
             const needHydrate = [];
@@ -634,7 +654,14 @@
             if (usZipsStateFieldName()) {
                 statesNotIncluded = ALL_US_STATE_ABBREVS.filter((abbr) => !stateSet.has(abbr)).join(', ');
             }
-            return { zips: codes.join(', '), states: states.join(', '), statesNotIncluded };
+            const linkedZipFives = codes.filter((c) => /^\d{5}$/.test(String(c).trim()));
+            return {
+                zips: codes.join(', '),
+                states: states.join(', '),
+                statesNotIncluded,
+                linkedZipFives,
+                linkedStateAbbrevs: states,
+            };
         }
 
         async function createJunctionRows(adsetId, zipRecordIds, onProgress) {
@@ -770,6 +797,15 @@
                                 <p class="text-xs font-medium text-slate-600 mb-1">States not included</p>
                                 <p class="text-sm text-slate-700 font-mono leading-relaxed min-h-[1.25rem] break-words" data-role="states-not-included-line">—</p>
                             </div>
+                            <details class="cm-available-zips rounded-lg border border-slate-200 bg-slate-50/50" data-role="available-zips-details">
+                                <summary class="flex cursor-pointer select-none items-center gap-2 rounded-lg px-2 py-2 text-left text-xs font-medium text-slate-600 hover:bg-slate-100/80">
+                                    <span class="inline-block w-3 shrink-0 text-slate-400 text-[10px] cm-chevron-avail">▸</span>
+                                    <span>Other US Zips in linked states (not linked) — open to load</span>
+                                </summary>
+                                <div class="border-t border-slate-200/80 px-2 pb-3 pt-2" data-role="available-zips-body">
+                                    <p class="text-xs text-slate-500">Open this section to load from US Zips.</p>
+                                </div>
+                            </details>
                             <div>
                                 <label class="text-xs font-medium text-slate-600">Paste zips to add or remove</label>
                                 <textarea rows="3" placeholder="Comma or line-separated 5-digit zips"
@@ -787,6 +823,15 @@
                         adDetails.addEventListener('toggle', () => {
                             if (adDetails.open) refreshAdsetPanel(adDetails);
                         });
+
+                        const availZipDetails = adPanel.querySelector('[data-role="available-zips-details"]');
+                        if (availZipDetails) {
+                            availZipDetails.addEventListener('toggle', () => {
+                                if (availZipDetails.open) {
+                                    loadAvailableZipsInLinkedStatesPanel(adDetails, availZipDetails);
+                                }
+                            });
+                        }
 
                         const btnAdd = adPanel.querySelector('[data-action="add"]');
                         const btnRemove = adPanel.querySelector('[data-action="remove"]');
@@ -809,8 +854,99 @@
             return d.innerHTML;
         }
 
+        /**
+         * Lazy: first time the nested details opens, fetch all US Zips rows in linked states and list 5-digit zips not linked for this ad set (one flat sorted list).
+         */
+        async function loadAvailableZipsInLinkedStatesPanel(adDetails, availDetails) {
+            const body = availDetails.querySelector('[data-role="available-zips-body"]');
+            if (!body) return;
+
+            const startedRev = adDetails._cmDataRevision;
+            if (adDetails._cmAvailZipsLoadedRev === startedRev) return;
+            if (adDetails._cmAvailZipsLoading) return;
+
+            const stateField = usZipsStateFieldName();
+            if (!stateField || !usZipsMatchField) {
+                body.innerHTML =
+                    '<p class="text-xs text-slate-600">US Zips State field is not configured.</p>';
+                adDetails._cmAvailZipsLoadedRev = startedRev;
+                return;
+            }
+
+            if (adDetails._cmLinkedStates === null) {
+                body.innerHTML =
+                    '<p class="text-xs text-slate-500">Linked zips are still loading — try again in a moment.</p>';
+                return;
+            }
+
+            const linkedStates = adDetails._cmLinkedStates;
+            const linkedZipSet = adDetails._cmLinkedZipFives instanceof Set ? adDetails._cmLinkedZipFives : new Set();
+
+            if (linkedStates.length === 0) {
+                body.innerHTML =
+                    '<p class="text-xs text-slate-600">No linked states. Add zips in at least one state first.</p>';
+                adDetails._cmAvailZipsLoadedRev = startedRev;
+                return;
+            }
+
+            adDetails._cmAvailZipsLoading = true;
+            body.innerHTML = '<p class="text-xs text-slate-500">Loading US Zips for linked states…</p>';
+
+            try {
+                const chunkN = Math.max(1, Math.min(20, CONFIG.US_ZIPS_STATE_OR_CHUNK || 12));
+                const pauseMs = CONFIG.US_ZIPS_BATCH_PAUSE_MS ?? 150;
+                const collected = new Set();
+
+                for (let i = 0; i < linkedStates.length; i += chunkN) {
+                    if (adDetails._cmDataRevision !== startedRev) return;
+                    const chunk = linkedStates.slice(i, i + chunkN);
+                    const formula = formulaStatesOr(chunk, stateField);
+                    const records = await fetchAllRecords(CONFIG.US_ZIPS_TABLE, {
+                        formula,
+                        fields: [usZipsMatchField, stateField],
+                    });
+                    for (const r of records) {
+                        const raw = r.fields && r.fields[usZipsMatchField];
+                        const five = zipCodeStringFromRaw(raw, r.id);
+                        if (/^\d{5}$/.test(five) && !linkedZipSet.has(five)) collected.add(five);
+                    }
+                    if (i + chunkN < linkedStates.length) await sleep(pauseMs);
+                }
+
+                if (adDetails._cmDataRevision !== startedRev) return;
+
+                const sorted = [...collected].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+                adDetails._cmAvailZipsLoadedRev = startedRev;
+                if (sorted.length === 0) {
+                    body.innerHTML =
+                        '<p class="text-xs text-slate-600">No other US Zips rows in those states, or every zip there is already linked.</p>';
+                } else {
+                    body.innerHTML = `<p class="text-sm text-slate-700 font-mono leading-relaxed break-words">${escapeHtml(sorted.join(', '))}</p>`;
+                }
+            } catch (e) {
+                console.error(e);
+                if (adDetails._cmDataRevision === startedRev) {
+                    body.innerHTML = `<p class="text-xs text-red-700">Could not load: ${escapeHtml(e.message || String(e))}</p>`;
+                }
+            } finally {
+                adDetails._cmAvailZipsLoading = false;
+            }
+        }
+
         async function refreshAdsetPanel(adDetails) {
+            adDetails._cmDataRevision = (adDetails._cmDataRevision || 0) + 1;
+            const availDet = adDetails.querySelector('[data-role="available-zips-details"]');
+            const availBody = adDetails.querySelector('[data-role="available-zips-body"]');
+            if (availDet) availDet.open = false;
+            if (availBody) {
+                availBody.innerHTML =
+                    '<p class="text-xs text-slate-500">Open this section to load from US Zips.</p>';
+            }
+
             const adsetId = adDetails.dataset.adsetId;
+            adDetails._cmLinkedStates = null;
+            adDetails._cmLinkedZipFives = null;
+
             const zipLine = adDetails.querySelector('[data-role="zip-line"]');
             const statesLine = adDetails.querySelector('[data-role="states-line"]');
             const statesNotLine = adDetails.querySelector('[data-role="states-not-included-line"]');
@@ -818,9 +954,11 @@
             if (statesLine) statesLine.textContent = 'Loading…';
             if (statesNotLine) statesNotLine.textContent = 'Loading…';
             try {
-                const { zips, states, statesNotIncluded } = await commaSeparatedZipsForAdset(adsetId, (msg) =>
-                    setPanelProgress(adDetails, msg)
-                );
+                const { zips, states, statesNotIncluded, linkedZipFives, linkedStateAbbrevs } =
+                    await commaSeparatedZipsForAdset(adsetId, (msg) => setPanelProgress(adDetails, msg));
+                adDetails._cmLinkedZipFives = new Set(linkedZipFives || []);
+                adDetails._cmLinkedStates = linkedStateAbbrevs || [];
+
                 zipLine.textContent = zips || '(none)';
                 if (statesLine) statesLine.textContent = states || '—';
                 if (statesNotLine) {
@@ -830,6 +968,8 @@
                 }
             } catch (e) {
                 console.error(e);
+                adDetails._cmLinkedZipFives = new Set();
+                adDetails._cmLinkedStates = [];
                 zipLine.textContent = 'Error loading zips.';
                 if (statesLine) statesLine.textContent = '—';
                 if (statesNotLine) statesNotLine.textContent = '—';
