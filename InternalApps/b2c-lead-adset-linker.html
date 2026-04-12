@@ -128,9 +128,9 @@
     <header>
         <h1>B2C Lead → Adset linker</h1>
         <p>
-            Choose a <strong>client</strong> and an <strong>Adset</strong>, then apply.
-            Matching uses your client’s <strong>Name</strong> as it appears inside <strong>Linked Client</strong> in Airtable (plus your client’s record id), then every matching <strong>B2C Leads</strong> row gets that <strong>Adset</strong> link (replacing prior Adset links on those rows).
-            Open the browser console for <code>[B2C Adset Linker]</code> logs if something looks wrong.
+            Choose a <strong>client</strong> and an <strong>Adset</strong>, then apply — except <strong>Expo Home Improvement</strong>, which routes each lead to one of the five regional ad sets (<strong>STX, NTX, ETX, CTX, HTX</strong>) using the lead’s <strong>Zip</strong> and your <strong>Adset Zip Tracking</strong> zips per ad set.
+            Other clients: match on <strong>Name</strong> in <strong>Linked Client</strong> plus record id, then set the chosen ad set.
+            Console: <code>[B2C Adset Linker]</code>.
         </p>
     </header>
     <main>
@@ -148,7 +148,7 @@
                     <select id="adset-select" disabled>
                         <option value="">Loading ad sets…</option>
                     </select>
-                    <p class="hint">Table: Adset · shown: Adset Name</p>
+                    <p class="hint" id="adset-hint">Table: Adset · shown: Adset Name</p>
                 </div>
             </div>
             <div class="actions">
@@ -172,16 +172,32 @@
             const FIELD_ADSET_NAME = 'Adset Name';
             /** Value shown in ARRAYJOIN({Linked Client}) — usually the Clients table primary field (see Dashboards/fivestar.html). */
             const FIELD_CLIENT_NAME = 'Name';
+            /** Clients → Adset links (same as Dashboards/ClientManagement.html). */
+            const FIELD_CLIENT_ADSETS = 'Adsets';
+            /** B2C Leads — zip for routing (text, number, or link to US Zips). */
+            const FIELD_LEAD_ZIP = 'Zip';
+            /** Junction “Adset Zip Tracking” (same table id as ClientManagement). */
+            const TABLE_ADSET_ZIPS = 'tbl87JqHAdJwgq1GL';
+            const TABLE_US_ZIPS = 'tblieaHIf6rDfFZFl';
+            const FIELD_JUNCTION_ADSET = 'Adset';
+            const FIELD_JUNCTION_ZIP = 'US Zips';
+            /** Special client: map each lead’s zip to an ad set via junction zips (scoped to this client’s Adsets). */
+            const EXPO_ZIP_ROUTE_CLIENT_NAME = 'Expo Home Improvement';
+            /** Expected “Expo Home Improvement - …” regional ad sets (order used for tie-breaks if a zip appears on more than one ad set). */
+            const EXPO_REGION_CODES = ['STX', 'NTX', 'ETX', 'CTX', 'HTX'];
             const LOG_PREFIX = '[B2C Adset Linker]';
 
             /** Maps client record id → string used in FIND(..., ARRAYJOIN({Linked Client})). */
             var clientFilterNamesById = {};
+            /** Resolved from first US Zips row: { field, asNumber }. */
+            var usZipMatchCache = null;
 
             const clientSelect = document.getElementById('client-select');
             const adsetSelect = document.getElementById('adset-select');
             const btnApply = document.getElementById('btn-apply');
             const btnReload = document.getElementById('btn-reload');
             const statusEl = document.getElementById('status');
+            const adsetHintEl = document.getElementById('adset-hint');
 
             function log(level, message, data) {
                 var fn = console[level] || console.log;
@@ -229,7 +245,7 @@
             }
 
             function looksLikeAirtableRecordId(s) {
-                return typeof s === 'string' && /^rec[A-Za-z0-9]{14}$/.test(s);
+                return typeof s === 'string' && /^rec[A-Za-z0-9]{14}$/.test(String(s).trim());
             }
 
             function fieldAsDisplayString(v) {
@@ -356,6 +372,405 @@
                 return '{' + FIELD_LINKED_CLIENT + "} = '" + String(clientRecordId).replace(/'/g, "''") + "'";
             }
 
+            function isExpoZipRoutingClient(nameForFormula, clientLabel) {
+                var t = EXPO_ZIP_ROUTE_CLIENT_NAME.toLowerCase();
+                return (
+                    String(nameForFormula || '')
+                        .trim()
+                        .toLowerCase() === t ||
+                    String(clientLabel || '')
+                        .trim()
+                        .toLowerCase() === t
+                );
+            }
+
+            function normalizeLinkIds(val) {
+                if (val == null || val === '') return [];
+                return Array.isArray(val) ? val.filter(Boolean) : [val];
+            }
+
+            function resolveUsZipMatchMode() {
+                if (usZipMatchCache) return Promise.resolve(usZipMatchCache);
+                var url = AIRTABLE_BASE_URL + '/' + encodeURIComponent(TABLE_US_ZIPS) + '?maxRecords=1';
+                return fetchAirtableJson(url).then(function (data) {
+                    var rec = data.records && data.records[0];
+                    var fields = (rec && rec.fields) || {};
+                    var field = 'Zip';
+                    if (Object.prototype.hasOwnProperty.call(fields, 'Zip')) {
+                        field = 'Zip';
+                    } else {
+                        var keys = Object.keys(fields);
+                        var found = keys.filter(function (k) {
+                            return /zip/i.test(k);
+                        })[0];
+                        if (found) field = found;
+                    }
+                    usZipMatchCache = {
+                        field: field,
+                        asNumber: typeof fields[field] === 'number'
+                    };
+                    log('log', 'US Zips field for zip code lookup', usZipMatchCache);
+                    return usZipMatchCache;
+                });
+            }
+
+            function findUsZipRecordIdForFiveDigits(five) {
+                var digits = String(five || '').replace(/\D/g, '').slice(0, 5);
+                if (digits.length !== 5) return Promise.resolve(null);
+                return resolveUsZipMatchMode().then(function (cfg) {
+                    var n = parseInt(digits, 10);
+                    var formula;
+                    if (cfg.asNumber) {
+                        formula = '{' + cfg.field + '}=' + n;
+                    } else {
+                        formula = '{' + cfg.field + '}="' + airtableEscapeDoubleQuotes(digits) + '"';
+                    }
+                    var u =
+                        AIRTABLE_BASE_URL +
+                        '/' +
+                        encodeURIComponent(TABLE_US_ZIPS) +
+                        '?maxRecords=1&filterByFormula=' +
+                        encodeURIComponent(formula);
+                    return fetchAirtableJson(u).then(function (data) {
+                        var r = data.records && data.records[0];
+                        return r ? r.id : null;
+                    });
+                });
+            }
+
+            function normalizeLeadZipToFiveDigits(raw) {
+                if (raw == null || raw === '') return null;
+                if (typeof raw === 'number' && Number.isFinite(raw)) {
+                    var s = String(Math.floor(raw)).replace(/\D/g, '').slice(0, 5);
+                    return s.length === 5 ? s : null;
+                }
+                var t = String(raw).trim();
+                var m = t.match(/\d{5}/);
+                return m ? m[0] : null;
+            }
+
+            /**
+             * Resolve B2C Leads Zip to a US Zips record id (linked field, raw rec id, or 5-digit lookup).
+             */
+            function leadZipToUsZipRecordId(leadFields) {
+                var z = leadFields && leadFields[FIELD_LEAD_ZIP];
+                if (z == null || z === '') {
+                    return Promise.resolve(null);
+                }
+                if (Array.isArray(z) && z.length) {
+                    var id0 = z[0];
+                    if (typeof id0 === 'string' && looksLikeAirtableRecordId(id0)) return Promise.resolve(id0);
+                }
+                if (typeof z === 'string' && looksLikeAirtableRecordId(z)) return Promise.resolve(z.trim());
+                var five = normalizeLeadZipToFiveDigits(z);
+                if (!five) return Promise.resolve(null);
+                return findUsZipRecordIdForFiveDigits(five);
+            }
+
+            function regionRankFromExpoAdsetName(name) {
+                var s = String(name || '');
+                for (var i = 0; i < EXPO_REGION_CODES.length; i++) {
+                    if (s.indexOf(EXPO_REGION_CODES[i]) >= 0) return i;
+                }
+                return 99;
+            }
+
+            /** Load Adset rows by record id for Expo naming / tie-breaks. */
+            function fetchAdsetRecordsByIds(recordIds) {
+                var ids = recordIds.filter(function (id) {
+                    return id && String(id).indexOf('rec') === 0;
+                });
+                if (ids.length === 0) return Promise.resolve([]);
+                var chunkSize = 40;
+                var parts = chunk(ids, chunkSize);
+                var all = [];
+                function run(i) {
+                    if (i >= parts.length) return Promise.resolve(all);
+                    var inner = parts[i]
+                        .map(function (id) {
+                            return 'RECORD_ID()="' + id + '"';
+                        })
+                        .join(',');
+                    var formula = 'OR(' + inner + ')';
+                    return fetchAllRecords(TABLE_ADSET, formula, false).then(function (rows) {
+                        all.push.apply(all, rows);
+                        return run(i + 1);
+                    });
+                }
+                return run(0);
+            }
+
+            function buildAdsetIdToNameMap(adsetRecords) {
+                var m = {};
+                adsetRecords.forEach(function (r) {
+                    var f = r.fields || {};
+                    var nm = fieldAsDisplayString(f[FIELD_ADSET_NAME] || f.Name || '').trim();
+                    m[r.id] = nm || r.id;
+                });
+                return m;
+            }
+
+            function logExpoRegionalAdsetCoverage(adsetIdToName) {
+                var byCode = {};
+                EXPO_REGION_CODES.forEach(function (code) {
+                    byCode[code] = [];
+                    Object.keys(adsetIdToName || {}).forEach(function (aid) {
+                        var nm = adsetIdToName[aid];
+                        if (String(nm).indexOf(code) >= 0) byCode[code].push({ id: aid, name: nm });
+                    });
+                });
+                log('log', 'Expo: regional ad sets (link these on the Clients row + zips in Adset Zip Tracking)', {
+                    byRegion: byCode,
+                    note: 'Each lead’s Zip should map to exactly one regional ad set via junction rows.'
+                });
+                EXPO_REGION_CODES.forEach(function (code) {
+                    if (!byCode[code] || byCode[code].length === 0) {
+                        log('warn', 'Expo: no linked ad set found whose name contains "' + code + '"', {
+                            expect: 'Expo Home Improvement - ' + code
+                        });
+                    } else if (byCode[code].length > 1) {
+                        log('warn', 'Expo: multiple ad sets match region ' + code, byCode[code]);
+                    }
+                });
+            }
+
+            /** Chunk OR({Adset}="rec",...) for junction filter (keep formulas reasonably small). */
+            function fetchJunctionForAdsetIds(adsetIds) {
+                var unique = adsetIds.filter(function (id, i, a) {
+                    return id && a.indexOf(id) === i;
+                });
+                if (unique.length === 0) return Promise.resolve([]);
+                var chunkSize = 12;
+                var chunks = chunk(unique, chunkSize);
+                var all = [];
+                function run(i) {
+                    if (i >= chunks.length) return Promise.resolve(all);
+                    var part = chunks[i];
+                    var inner = part
+                        .map(function (id) {
+                            return '{' + FIELD_JUNCTION_ADSET + '}="' + id + '"';
+                        })
+                        .join(',');
+                    var formula = 'OR(' + inner + ')';
+                    log('log', 'Expo: junction chunk', { chunkIndex: i + 1, of: chunks.length, formulaPreview: formula.slice(0, 120) });
+                    return fetchAllRecords(TABLE_ADSET_ZIPS, formula, true).then(function (rows) {
+                        all.push.apply(all, rows);
+                        return run(i + 1);
+                    });
+                }
+                return run(0);
+            }
+
+            /**
+             * @param {Object.<string,string>} [adsetIdToName] — Adset Name per id (for Expo regional tie-breaks).
+             * @returns {Promise<{ zipToAdset: Object.<string,string>, conflicts: Array }>}
+             */
+            function buildZipToAdsetMap(adsetIds, adsetIdToName) {
+                return fetchJunctionForAdsetIds(adsetIds).then(function (juncRows) {
+                    var zipToCandidates = {};
+                    juncRows.forEach(function (row) {
+                        var f = row.fields || {};
+                        var aid = normalizeLinkIds(f[FIELD_JUNCTION_ADSET])[0];
+                        var zid = normalizeLinkIds(f[FIELD_JUNCTION_ZIP])[0];
+                        if (!aid || !zid) return;
+                        if (!zipToCandidates[zid]) zipToCandidates[zid] = [];
+                        if (zipToCandidates[zid].indexOf(aid) < 0) zipToCandidates[zid].push(aid);
+                    });
+                    var zipToAdset = {};
+                    var conflicts = [];
+                    Object.keys(zipToCandidates).forEach(function (zid) {
+                        var cands = zipToCandidates[zid].slice();
+                        function rank(aid) {
+                            var nm = adsetIdToName && adsetIdToName[aid];
+                            return regionRankFromExpoAdsetName(nm);
+                        }
+                        cands.sort(function (a, b) {
+                            var ra = rank(a);
+                            var rb = rank(b);
+                            if (ra !== rb) return ra - rb;
+                            return String(a).localeCompare(String(b));
+                        });
+                        if (cands.length > 1) {
+                            conflicts.push({
+                                zipRecordId: zid,
+                                adsetIds: cands,
+                                picked: cands[0],
+                                pickedName: adsetIdToName && adsetIdToName[cands[0]]
+                            });
+                        }
+                        zipToAdset[zid] = cands[0];
+                    });
+                    if (conflicts.length) {
+                        log(
+                            'warn',
+                            'Expo: same zip linked to multiple ad sets — picked by regional name order (STX→NTX→ETX→CTX→HTX)',
+                            conflicts.slice(0, 12)
+                        );
+                    }
+                    log('log', 'Expo: built zip→adset map', {
+                        uniqueZips: Object.keys(zipToAdset).length,
+                        junctionRows: juncRows.length
+                    });
+                    return { zipToAdset: zipToAdset, conflicts: conflicts };
+                });
+            }
+
+            function applyExpoZipRoutingToLeads(leads, clientId, clientLabel) {
+                log('log', 'Expo zip routing: loading client row for Adsets', { clientId: clientId });
+                return fetchAirtableJson(
+                    AIRTABLE_BASE_URL + '/' + encodeURIComponent(TABLE_CLIENTS) + '/' + encodeURIComponent(clientId)
+                )
+                    .then(function (clientRow) {
+                        var adsetIds = normalizeLinkIds(
+                            clientRow.fields && clientRow.fields[FIELD_CLIENT_ADSETS]
+                        );
+                        log('log', 'Expo: client Adsets', { count: adsetIds.length, adsetIds: adsetIds });
+                        if (adsetIds.length === 0) {
+                            showStatus(
+                                'error',
+                                'Expo has no ad sets linked on the Clients row (field “' +
+                                    FIELD_CLIENT_ADSETS +
+                                    '”). Link ad sets there first.'
+                            );
+                            return Promise.reject(new Error('EXPO_NO_CLIENT_ADSETS'));
+                        }
+                        return fetchAdsetRecordsByIds(adsetIds)
+                            .then(function (adsetRecs) {
+                                var adsetIdToName = buildAdsetIdToNameMap(adsetRecs);
+                                logExpoRegionalAdsetCoverage(adsetIdToName);
+                                return buildZipToAdsetMap(adsetIds, adsetIdToName);
+                            })
+                            .then(function (built) {
+                            return resolveUsZipMatchMode().then(function () {
+                                var zipToAdset = built.zipToAdset;
+                                var planByAdset = {};
+                                var skipped = [];
+                                return leads
+                                    .reduce(function (seq, lead) {
+                                        return seq.then(function () {
+                                            return leadZipToUsZipRecordId(lead.fields || {}).then(function (zipRecId) {
+                                                if (!zipRecId) {
+                                                    skipped.push({
+                                                        leadId: lead.id,
+                                                        reason: 'missing_or_unresolved_Zip'
+                                                    });
+                                                    return;
+                                                }
+                                                var targetAd = zipToAdset[zipRecId];
+                                                if (!targetAd) {
+                                                    skipped.push({
+                                                        leadId: lead.id,
+                                                        zipRecordId: zipRecId,
+                                                        reason: 'no_adset_for_zip_in_junction'
+                                                    });
+                                                    return;
+                                                }
+                                                if (adsetIds.indexOf(targetAd) < 0) {
+                                                    skipped.push({
+                                                        leadId: lead.id,
+                                                        reason: 'adset_not_in_client_Adsets'
+                                                    });
+                                                    return;
+                                                }
+                                                if (!planByAdset[targetAd]) planByAdset[targetAd] = [];
+                                                planByAdset[targetAd].push(lead.id);
+                                            });
+                                        });
+                                    }, Promise.resolve())
+                                    .then(function () {
+                                        log('log', 'Expo: assignment plan', {
+                                            planByAdset: planByAdset,
+                                            skippedSample: skipped.slice(0, 15),
+                                            skippedTotal: skipped.length
+                                        });
+                                        return {
+                                            planByAdset: planByAdset,
+                                            skipped: skipped,
+                                            adsetIds: adsetIds,
+                                            zipToAdset: zipToAdset
+                                        };
+                                    });
+                            });
+                        });
+                    })
+                    .then(function (plan) {
+                        var total = 0;
+                        Object.keys(plan.planByAdset).forEach(function (k) {
+                            total += plan.planByAdset[k].length;
+                        });
+                        if (total === 0) {
+                            showStatus(
+                                'error',
+                                'No leads could be assigned: check Zip on each lead and that Adset Zip Tracking links those zips to Expo’s ad sets.'
+                            );
+                            return Promise.reject(new Error('EXPO_NO_ASSIGNMENTS'));
+                        }
+                        var msg =
+                            'Expo Home Improvement: set Adset per lead zip (' +
+                            total +
+                            ' lead(s), ' +
+                            plan.skipped.length +
+                            ' skipped). Continue?';
+                        if (!window.confirm(msg)) {
+                            showStatus('info', 'Cancelled.');
+                            return Promise.reject(new Error('USER_CANCEL'));
+                        }
+                        showStatus('info', 'Updating ' + total + ' lead(s) across ad sets…');
+                        var adsetKeys = Object.keys(plan.planByAdset).sort();
+                        var runAdset = function (idx) {
+                            if (idx >= adsetKeys.length) {
+                                return Promise.resolve();
+                            }
+                            var adId = adsetKeys[idx];
+                            var ids = plan.planByAdset[adId];
+                            var batches = chunk(ids, 10);
+                            var runBatch = function (bi) {
+                                if (bi >= batches.length) return Promise.resolve();
+                                log('log', 'Expo: PATCH batch', {
+                                    adsetId: adId,
+                                    batch: bi + 1,
+                                    of: batches.length,
+                                    size: batches[bi].length
+                                });
+                                return patchLeadBatch(batches[bi], adId).then(function () {
+                                    return runBatch(bi + 1);
+                                });
+                            };
+                            return runBatch(0).then(function () {
+                                return runAdset(idx + 1);
+                            });
+                        };
+                        return runAdset(0).then(function () {
+                            log('log', 'Expo: complete', { updated: total, skipped: plan.skipped.length });
+                            showStatus(
+                                'success',
+                                'Done (Expo). Updated ' +
+                                    total +
+                                    ' lead(s); ' +
+                                    plan.skipped.length +
+                                    ' skipped. See console for details.'
+                            );
+                        });
+                    });
+            }
+
+            function updateAdsetUiForClient() {
+                var cid = clientSelect.value;
+                var nameFor = (cid && clientFilterNamesById[cid]) || '';
+                var label = cid ? clientSelect.options[clientSelect.selectedIndex].text : '';
+                var expo = !!cid && isExpoZipRoutingClient(nameFor, label);
+                if (adsetHintEl) {
+                    adsetHintEl.textContent = expo
+                        ? 'Expo: STX / NTX / ETX / CTX / HTX — each lead’s Zip picks the ad set that owns that zip in Adset Zip Tracking.'
+                        : 'Table: Adset · shown: Adset Name';
+                }
+                if (clientSelect.disabled) {
+                    return;
+                }
+                adsetSelect.disabled = expo;
+                updateApplyEnabled();
+            }
+
             function chunk(arr, size) {
                 var out = [];
                 for (var i = 0; i < arr.length; i += size) {
@@ -400,8 +815,12 @@
             function setLoading(loading) {
                 clientSelect.disabled = loading;
                 adsetSelect.disabled = loading;
-                btnApply.disabled = loading || !clientSelect.value || !adsetSelect.value;
                 btnReload.disabled = loading;
+                if (loading) {
+                    btnApply.disabled = true;
+                } else {
+                    updateAdsetUiForClient();
+                }
             }
 
             function populateSelect(select, placeholder, items) {
@@ -486,19 +905,29 @@
                     })
                     .then(function () {
                         setLoading(false);
-                        updateApplyEnabled();
                     });
             }
 
             function updateApplyEnabled() {
-                btnApply.disabled =
-                    clientSelect.disabled ||
-                    adsetSelect.disabled ||
-                    !clientSelect.value ||
-                    !adsetSelect.value;
+                if (clientSelect.disabled) {
+                    btnApply.disabled = true;
+                    return;
+                }
+                var cid = clientSelect.value;
+                if (!cid) {
+                    btnApply.disabled = true;
+                    return;
+                }
+                var nameFor = clientFilterNamesById[cid] || '';
+                var label = (clientSelect.options[clientSelect.selectedIndex] || {}).text || '';
+                if (isExpoZipRoutingClient(nameFor, label)) {
+                    btnApply.disabled = false;
+                    return;
+                }
+                btnApply.disabled = !adsetSelect.value;
             }
 
-            clientSelect.addEventListener('change', updateApplyEnabled);
+            clientSelect.addEventListener('change', updateAdsetUiForClient);
             adsetSelect.addEventListener('change', updateApplyEnabled);
 
             btnReload.addEventListener('click', function () {
@@ -510,19 +939,23 @@
                 var adsetId = adsetSelect.value;
                 var clientLabel = clientSelect.options[clientSelect.selectedIndex].text;
                 var adsetLabel = adsetSelect.options[adsetSelect.selectedIndex].text;
-                if (!clientId || !adsetId) return;
+                if (!clientId) return;
+
+                var nameForFormula = clientFilterNamesById[clientId] || clientLabel;
+                var expoZip = isExpoZipRoutingClient(nameForFormula, clientLabel);
+                if (!expoZip && !adsetId) return;
 
                 hideStatus();
                 btnApply.disabled = true;
                 btnReload.disabled = true;
                 showStatus('info', 'Finding matching leads in B2C Leads…');
 
-                var nameForFormula = clientFilterNamesById[clientId] || clientLabel;
                 log('log', 'Apply: selection', {
                     clientId: clientId,
                     clientLabel: clientLabel,
                     nameForFormula: nameForFormula,
                     nameSource: clientFilterNamesById[clientId] ? 'FIELD_CLIENT_NAME map' : 'dropdown label fallback',
+                    expoZipRouting: expoZip,
                     adsetId: adsetId,
                     adsetLabel: adsetLabel
                 });
@@ -603,6 +1036,11 @@
                             return null;
                         }
 
+                        if (expoZip) {
+                            log('log', 'Apply: Expo — zip-based ad set assignment', { leadCount: leads.length });
+                            return applyExpoZipRoutingToLeads(leads, clientId, clientLabel);
+                        }
+
                         var msg =
                             'Set Adset to "' +
                             adsetLabel +
@@ -645,12 +1083,21 @@
                         if (err && err.message === 'NAME_FILTER_ID_MISMATCH') {
                             return;
                         }
+                        if (err && err.message === 'USER_CANCEL') {
+                            return;
+                        }
+                        if (err && err.message === 'EXPO_NO_CLIENT_ADSETS') {
+                            return;
+                        }
+                        if (err && err.message === 'EXPO_NO_ASSIGNMENTS') {
+                            return;
+                        }
                         log('error', 'Apply failed', { message: err && err.message, err: err });
                         showStatus('error', err.message || 'Request failed.');
                     })
                     .then(function () {
                         btnReload.disabled = false;
-                        updateApplyEnabled();
+                        updateAdsetUiForClient();
                     });
             });
 
