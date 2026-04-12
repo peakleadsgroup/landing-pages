@@ -148,7 +148,7 @@
                     <select id="adset-select" disabled>
                         <option value="">Loading ad sets…</option>
                     </select>
-                    <p class="hint">Table: Adset</p>
+                    <p class="hint">Table: Adset · shown: Adset Name</p>
                 </div>
             </div>
             <div class="actions">
@@ -169,6 +169,7 @@
             const TABLE_ADSET = 'tblee61crNCoSfurx';
             const FIELD_LINKED_CLIENT = 'Linked Client';
             const FIELD_ADSET = 'Adset';
+            const FIELD_ADSET_NAME = 'Adset Name';
 
             const clientSelect = document.getElementById('client-select');
             const adsetSelect = document.getElementById('adset-select');
@@ -210,14 +211,46 @@
                 return data;
             }
 
-            function recordLabel(fields) {
+            function looksLikeAirtableRecordId(s) {
+                return typeof s === 'string' && /^rec[A-Za-z0-9]{14}$/.test(s);
+            }
+
+            function fieldAsDisplayString(v) {
+                if (v == null || v === '') return '';
+                if (Array.isArray(v)) {
+                    if (!v.length) return '';
+                    return v
+                        .map(function (x) {
+                            if (x && typeof x === 'object' && x.name != null) return String(x.name);
+                            return String(x);
+                        })
+                        .join(', ');
+                }
+                if (typeof v === 'object' && v !== null && v.name != null) return String(v.name);
+                return String(v);
+            }
+
+            /** preferredKeys: try these field names first (e.g. Adset table → "Adset Name"). */
+            function recordLabel(fields, preferredKeys) {
                 if (!fields) return 'Unnamed';
-                var name = fields.Name || fields.Client || fields.Title;
-                if (name != null && String(name).trim()) return String(name).trim();
+                var pk = preferredKeys || [];
+                var i;
+                for (i = 0; i < pk.length; i++) {
+                    var s = fieldAsDisplayString(fields[pk[i]]).trim();
+                    if (s) return s;
+                }
+                var name = fieldAsDisplayString(fields.Name || fields.Client || fields.Title).trim();
+                if (name) return name;
                 for (var k in fields) {
                     if (!Object.prototype.hasOwnProperty.call(fields, k)) continue;
                     var v = fields[k];
-                    if (typeof v === 'string' && v.trim()) return v.trim();
+                    var disp = fieldAsDisplayString(v).trim();
+                    if (disp && !looksLikeAirtableRecordId(disp)) return disp;
+                }
+                for (var k2 in fields) {
+                    if (!Object.prototype.hasOwnProperty.call(fields, k2)) continue;
+                    var d2 = fieldAsDisplayString(fields[k2]).trim();
+                    if (d2) return d2;
                 }
                 return 'Unnamed';
             }
@@ -342,7 +375,10 @@
                             });
                         var adsets = adsetRecs
                             .map(function (r) {
-                                return { id: r.id, label: recordLabel(r.fields) };
+                                return {
+                                    id: r.id,
+                                    label: recordLabel(r.fields, [FIELD_ADSET_NAME])
+                                };
                             })
                             .sort(function (a, b) {
                                 return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' });
