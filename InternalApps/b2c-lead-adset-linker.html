@@ -128,9 +128,9 @@
     <header>
         <h1>B2C Lead → Adset linker</h1>
         <p>
-            Choose a <strong>B2C Client</strong> and an <strong>Adset</strong>, then apply.
-            Every row in <strong>B2C Leads</strong> whose <strong>Linked Client</strong> includes that client
-            will have its <strong>Adset</strong> link set to the selected ad set (replacing any previous Adset links on those rows).
+            Choose a <strong>client</strong> and an <strong>Adset</strong>, then apply.
+            Matching uses your client’s <strong>Name</strong> as it appears inside <strong>Linked Client</strong> in Airtable (plus your client’s record id), then every matching <strong>B2C Leads</strong> row gets that <strong>Adset</strong> link (replacing prior Adset links on those rows).
+            Open the browser console for <code>[B2C Adset Linker]</code> logs if something looks wrong.
         </p>
     </header>
     <main>
@@ -170,12 +170,24 @@
             const FIELD_LINKED_CLIENT = 'Linked Client';
             const FIELD_ADSET = 'Adset';
             const FIELD_ADSET_NAME = 'Adset Name';
+            /** Value shown in ARRAYJOIN({Linked Client}) — usually the Clients table primary field (see Dashboards/fivestar.html). */
+            const FIELD_CLIENT_NAME = 'Name';
+            const LOG_PREFIX = '[B2C Adset Linker]';
+
+            /** Maps client record id → string used in FIND(..., ARRAYJOIN({Linked Client})). */
+            var clientFilterNamesById = {};
 
             const clientSelect = document.getElementById('client-select');
             const adsetSelect = document.getElementById('adset-select');
             const btnApply = document.getElementById('btn-apply');
             const btnReload = document.getElementById('btn-reload');
             const statusEl = document.getElementById('status');
+
+            function log(level, message, data) {
+                var fn = console[level] || console.log;
+                if (data !== undefined) fn(LOG_PREFIX, message, data);
+                else fn(LOG_PREFIX, message);
+            }
 
             function showStatus(kind, message) {
                 statusEl.className = 'status visible ' + (kind || 'info');
@@ -204,6 +216,11 @@
                         data.message ||
                         text ||
                         res.statusText;
+                    log('error', 'fetchAirtableJson: non-OK response', {
+                        status: res.status,
+                        bodyPreview: (text && text.slice(0, 500)) || null,
+                        parsedError: err || null
+                    });
                     throw new Error(
                         typeof msg === 'string' ? msg + ' (' + res.status + ')' : 'Airtable error ' + res.status
                     );
@@ -255,11 +272,21 @@
                 return 'Unnamed';
             }
 
-            function fetchAllRecords(tableName, filterFormula) {
+            /**
+             * @param {boolean} [debug] - Log each page and totals (use when loading leads for Apply).
+             */
+            function fetchAllRecords(tableName, filterFormula, debug) {
                 var basePath = AIRTABLE_BASE_URL + '/' + encodeURIComponent(tableName);
                 var url = basePath;
                 if (filterFormula) {
                     url += '?filterByFormula=' + encodeURIComponent(filterFormula);
+                }
+                if (debug) {
+                    log('log', 'fetchAllRecords: start', {
+                        tableName: tableName,
+                        filterFormula: filterFormula || null,
+                        formulaEncodedLength: filterFormula ? encodeURIComponent(filterFormula).length : 0
+                    });
                 }
                 var records = [];
                 function getPage(offset) {
@@ -267,25 +294,66 @@
                     if (offset) {
                         pageUrl += (pageUrl.indexOf('?') >= 0 ? '&' : '?') + 'offset=' + encodeURIComponent(offset);
                     }
+                    if (debug) {
+                        log('log', 'fetchAllRecords: request page', {
+                            offset: offset != null ? offset : '(first)',
+                            urlTail: pageUrl.length > 200 ? '…' + pageUrl.slice(-200) : pageUrl
+                        });
+                    }
                     return fetchAirtableJson(pageUrl).then(function (data) {
-                        records.push.apply(records, data.records || []);
+                        var pageRecs = data.records || [];
+                        records.push.apply(records, pageRecs);
+                        if (debug) {
+                            log('log', 'fetchAllRecords: page result', {
+                                pageCount: pageRecs.length,
+                                cumulative: records.length,
+                                nextOffset: data.offset || null
+                            });
+                        }
                         if (data.offset) return getPage(data.offset);
                     });
                 }
                 return getPage(null).then(function () {
+                    if (debug) log('log', 'fetchAllRecords: complete', { tableName: tableName, totalRecords: records.length });
                     return records;
                 });
             }
 
-            function leadsFilterForClient(clientRecordId) {
-                var safeId = String(clientRecordId).replace(/'/g, "''");
-                return (
-                    "FIND('" +
-                    safeId +
-                    "', ARRAYJOIN({" +
-                    FIELD_LINKED_CLIENT +
-                    "}, ','))"
-                );
+            /** Escape double quotes inside Airtable formula string literals (same as fivestar.html). */
+            function airtableEscapeDoubleQuotes(s) {
+                return String(s).replace(/"/g, '""');
+            }
+
+            /**
+             * ARRAYJOIN({Linked Client}) lists linked records’ primary-field values, not record ids.
+             * FIND by name narrows the result set; we then require the selected client rec id in the API field array.
+             */
+            function leadsFilterFormulaByClientPrimaryName(clientPrimaryName) {
+                var inner = airtableEscapeDoubleQuotes(clientPrimaryName.trim());
+                return 'FIND("' + inner + '", ARRAYJOIN({' + FIELD_LINKED_CLIENT + '}))';
+            }
+
+            function filterLeadsLinkedToClientRecord(leads, clientRecordId) {
+                var missingArrayLogged = false;
+                return leads.filter(function (r) {
+                    var links = r.fields && r.fields[FIELD_LINKED_CLIENT];
+                    if (!Array.isArray(links)) {
+                        if (!missingArrayLogged) {
+                            missingArrayLogged = true;
+                            log('warn', 'Lead(s) without Linked Client as array — skipped in id filter', {
+                                exampleLeadId: r.id,
+                                linkedClientType: typeof links,
+                                linkedClientValue: links
+                            });
+                        }
+                        return false;
+                    }
+                    return links.indexOf(clientRecordId) >= 0;
+                });
+            }
+
+            function linkedRecordEqualityFormula(clientRecordId) {
+                return '{' + FIELD_LINKED_CLIENT + "} = '" + String(clientRecordId).replace(/'/g, "''") + "'";
             }
 
             function chunk(arr, size) {
@@ -354,10 +422,13 @@
             function loadDropdowns() {
                 hideStatus();
                 setLoading(true);
+                clientFilterNamesById = {};
                 clientSelect.innerHTML = '<option value="">Loading…</option>';
                 adsetSelect.innerHTML = '<option value="">Loading…</option>';
                 clientSelect.disabled = true;
                 adsetSelect.disabled = true;
+
+                log('log', 'loadDropdowns: fetching Clients + Adset tables');
 
                 return Promise.all([
                     fetchAllRecords(TABLE_CLIENTS, null),
@@ -366,9 +437,22 @@
                     .then(function (results) {
                         var clientRecs = results[0];
                         var adsetRecs = results[1];
+                        log('log', 'loadDropdowns: raw row counts', {
+                            clientsFromApi: clientRecs.length,
+                            adsetsFromApi: adsetRecs.length
+                        });
                         var clients = clientRecs
                             .map(function (r) {
-                                return { id: r.id, label: recordLabel(r.fields) };
+                                var f = r.fields || {};
+                                var nameForFormula = fieldAsDisplayString(f[FIELD_CLIENT_NAME]).trim();
+                                if (!nameForFormula) {
+                                    nameForFormula = fieldAsDisplayString(f.Client).trim();
+                                }
+                                if (!nameForFormula) {
+                                    nameForFormula = recordLabel(f);
+                                }
+                                clientFilterNamesById[r.id] = nameForFormula;
+                                return { id: r.id, label: recordLabel(f) };
                             })
                             .sort(function (a, b) {
                                 return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' });
@@ -386,9 +470,14 @@
 
                         populateSelect(clientSelect, 'Select a client…', clients);
                         populateSelect(adsetSelect, 'Select an ad set…', adsets);
+                        log('log', 'loadDropdowns: clientFilterNamesById sample', {
+                            firstClientId: clients[0] && clients[0].id,
+                            firstFilterName: clients[0] && clientFilterNamesById[clients[0].id]
+                        });
                         showStatus('success', 'Loaded ' + clients.length + ' clients and ' + adsets.length + ' ad sets.');
                     })
                     .catch(function (err) {
+                        log('error', 'loadDropdowns failed', { message: err.message, err: err });
                         populateSelect(clientSelect, 'Failed to load', []);
                         populateSelect(adsetSelect, 'Failed to load', []);
                         clientSelect.disabled = true;
@@ -428,13 +517,92 @@
                 btnReload.disabled = true;
                 showStatus('info', 'Finding matching leads in B2C Leads…');
 
-                var formula = leadsFilterForClient(clientId);
-                fetchAllRecords(TABLE_LEADS, formula)
+                var nameForFormula = clientFilterNamesById[clientId] || clientLabel;
+                log('log', 'Apply: selection', {
+                    clientId: clientId,
+                    clientLabel: clientLabel,
+                    nameForFormula: nameForFormula,
+                    nameSource: clientFilterNamesById[clientId] ? 'FIELD_CLIENT_NAME map' : 'dropdown label fallback',
+                    adsetId: adsetId,
+                    adsetLabel: adsetLabel
+                });
+
+                var formulaPrimary = leadsFilterFormulaByClientPrimaryName(nameForFormula);
+                log('log', 'Apply: primary filterByFormula (FIND name in ARRAYJOIN of linked primary values)', {
+                    formula: formulaPrimary
+                });
+
+                fetchAllRecords(TABLE_LEADS, formulaPrimary, true)
+                    .then(function (rawFromName) {
+                        log('log', 'Apply: name formula — merged API rows', {
+                            rawCount: rawFromName.length,
+                            sample: rawFromName[0]
+                                ? {
+                                      id: rawFromName[0].id,
+                                      linkedClient: rawFromName[0].fields && rawFromName[0].fields[FIELD_LINKED_CLIENT]
+                                  }
+                                : null
+                        });
+
+                        var leads = filterLeadsLinkedToClientRecord(rawFromName, clientId);
+                        log('log', 'Apply: after requiring Linked Client array to include clientId', {
+                            leadsCount: leads.length,
+                            clientId: clientId
+                        });
+
+                        if (leads.length === 0 && rawFromName.length > 0) {
+                            log('warn', 'Apply: name filter returned rows but none linked to this record id', {
+                                rawCount: rawFromName.length,
+                                clientId: clientId,
+                                nameForFormula: nameForFormula,
+                                hint: 'Duplicate client names or Clients primary field differs from Name used here.'
+                            });
+                            showStatus(
+                                'error',
+                                'Found ' +
+                                    rawFromName.length +
+                                    ' lead(s) matching the name "' +
+                                    nameForFormula +
+                                    '" in Linked Client, but none use this client record. Check duplicate names or change FIELD_CLIENT_NAME if your primary field is not Name.'
+                            );
+                            return Promise.reject(new Error('NAME_FILTER_ID_MISMATCH'));
+                        }
+
+                        if (leads.length > 0) {
+                            return leads;
+                        }
+
+                        var formulaEq = linkedRecordEqualityFormula(clientId);
+                        log('log', 'Apply: name formula returned 0 rows — fallback {Linked Client} = record id', {
+                            formula: formulaEq
+                        });
+                        return fetchAllRecords(TABLE_LEADS, formulaEq, true).then(function (rawEq) {
+                            log('log', 'Apply: equality formula — merged API rows', {
+                                rawCount: rawEq.length,
+                                sample: rawEq[0]
+                                    ? {
+                                          id: rawEq[0].id,
+                                          linkedClient: rawEq[0].fields && rawEq[0].fields[FIELD_LINKED_CLIENT]
+                                      }
+                                    : null
+                            });
+                            var leadsEq = filterLeadsLinkedToClientRecord(rawEq, clientId);
+                            log('log', 'Apply: equality path after id filter', { leadsCount: leadsEq.length });
+                            return leadsEq;
+                        });
+                    })
                     .then(function (leads) {
-                        if (leads.length === 0) {
-                            showStatus('info', 'No B2C Leads found with Linked Client including this client.');
+                        if (!leads || leads.length === 0) {
+                            log('warn', 'Apply: no leads to update after all strategies', { clientId: clientId });
+                            showStatus(
+                                'info',
+                                    'No B2C Leads found for this client. Open the browser console (' +
+                                    LOG_PREFIX +
+                                    ') for formula details.'
+                            );
                             return null;
                         }
+
                         var msg =
                             'Set Adset to "' +
                             adsetLabel +
@@ -448,6 +616,7 @@
                             return null;
                         }
                         showStatus('info', 'Updating ' + leads.length + ' lead(s)…');
+                        log('log', 'Apply: PATCH batches starting', { leadCount: leads.length, batchSize: 10 });
                         var ids = leads.map(function (r) {
                             return r.id;
                         });
@@ -457,6 +626,7 @@
                             if (i >= batches.length) {
                                 return Promise.resolve();
                             }
+                            log('log', 'Apply: PATCH batch', { index: i + 1, of: batches.length, size: batches[i].length });
                             return patchLeadBatch(batches[i], adsetId).then(function () {
                                 done += batches[i].length;
                                 showStatus('info', 'Updated ' + done + ' / ' + ids.length + '…');
@@ -464,6 +634,7 @@
                             });
                         }
                         return runBatch(0).then(function () {
+                            log('log', 'Apply: complete', { updated: leads.length });
                             showStatus(
                                 'success',
                                 'Done. Set Adset to "' + adsetLabel + '" on ' + leads.length + ' lead(s).'
@@ -471,6 +642,10 @@
                         });
                     })
                     .catch(function (err) {
+                        if (err && err.message === 'NAME_FILTER_ID_MISMATCH') {
+                            return;
+                        }
+                        log('error', 'Apply failed', { message: err && err.message, err: err });
                         showStatus('error', err.message || 'Request failed.');
                     })
                     .then(function () {
