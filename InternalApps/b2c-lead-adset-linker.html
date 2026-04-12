@@ -128,7 +128,7 @@
     <header>
         <h1>B2C Lead → Adset linker</h1>
         <p>
-            Choose a <strong>client</strong> and an <strong>Adset</strong>, then apply — except <strong>Expo Home Improvement</strong>, which routes each lead to one of the five regional ad sets (<strong>STX, NTX, ETX, CTX, HTX</strong>) using the lead’s <strong>Zip</strong> and your <strong>Adset Zip Tracking</strong> zips per ad set.
+            Choose a <strong>client</strong> and an <strong>Adset</strong>, then apply — except clients that use <strong>zip routing</strong> (<strong>Expo Home Improvement</strong>: STX, NTX, ETX, CTX, HTX; <strong>EZ Pro Bath Express</strong>: Charlotte, SC, Raleigh), which route each lead using the lead’s <strong>Zip</strong> and <strong>Adset Zip Tracking</strong> zips per regional ad set.
             Other clients: match on <strong>Name</strong> in <strong>Linked Client</strong> plus record id, then set the chosen ad set.
             Console: <code>[B2C Adset Linker]</code>.
         </p>
@@ -174,7 +174,7 @@
             const FIELD_CLIENT_NAME = 'Name';
             /** Primary Clients → Adset link field (many bases also use one of the candidates below). */
             const FIELD_CLIENT_ADSETS = 'Adsets';
-            /** If the Expo client row has no links, try each of these field names on Clients. */
+            /** If a zip-routing client row has no links, try each of these field names on Clients. */
             const FIELD_CLIENT_ADSETS_CANDIDATES = [
                 'Adsets',
                 'Linked Adsets',
@@ -198,10 +198,20 @@
             const ADSET_JUNCTION_REVERSE_LINK_FIELDS = ['Adset Zip Tracking', 'Ad Set Zip Tracking'];
             const JUNCTION_ADSET_FILTER_FIELDS = ['Adset'];
             const JUNCTION_ZIP_LINK_FIELDS = ['US Zips'];
-            /** Special client: map each lead’s zip to an ad set via junction zips (scoped to this client’s Adsets). */
-            const EXPO_ZIP_ROUTE_CLIENT_NAME = 'Expo Home Improvement';
-            /** Expected “Expo Home Improvement - …” regional ad sets (order used for tie-breaks if a zip appears on more than one ad set). */
-            const EXPO_REGION_CODES = ['STX', 'NTX', 'ETX', 'CTX', 'HTX'];
+            /**
+             * Clients that map each lead’s zip to an ad set via junction zips (scoped to this client’s Adsets).
+             * regionTokens: substrings of Adset Name used for tie-breaks when the same zip maps to multiple ad sets (earlier wins).
+             */
+            const ZIP_ROUTE_CLIENTS = [
+                {
+                    displayName: 'Expo Home Improvement',
+                    regionTokens: ['STX', 'NTX', 'ETX', 'CTX', 'HTX']
+                },
+                {
+                    displayName: 'EZ Pro Bath Express',
+                    regionTokens: ['Charlotte', 'SC', 'Raleigh']
+                }
+            ];
             const LOG_PREFIX = '[B2C Adset Linker]';
 
             /** Maps client record id → string used in FIND(..., ARRAYJOIN({Linked Client})). */
@@ -389,16 +399,21 @@
                 return '{' + FIELD_LINKED_CLIENT + "} = '" + String(clientRecordId).replace(/'/g, "''") + "'";
             }
 
-            function isExpoZipRoutingClient(nameForFormula, clientLabel) {
-                var t = EXPO_ZIP_ROUTE_CLIENT_NAME.toLowerCase();
-                return (
-                    String(nameForFormula || '')
-                        .trim()
-                        .toLowerCase() === t ||
-                    String(clientLabel || '')
-                        .trim()
-                        .toLowerCase() === t
-                );
+            function getZipRouteConfigForClient(nameForFormula, clientLabel) {
+                var nf = String(nameForFormula || '').trim().toLowerCase();
+                var lb = String(clientLabel || '').trim().toLowerCase();
+                var i;
+                for (i = 0; i < ZIP_ROUTE_CLIENTS.length; i++) {
+                    var dn = ZIP_ROUTE_CLIENTS[i].displayName.toLowerCase();
+                    if (nf === dn || lb === dn) {
+                        return ZIP_ROUTE_CLIENTS[i];
+                    }
+                }
+                return null;
+            }
+
+            function isZipRoutingClient(nameForFormula, clientLabel) {
+                return getZipRouteConfigForClient(nameForFormula, clientLabel) != null;
             }
 
             function normalizeLinkIds(val) {
@@ -484,15 +499,16 @@
                 return findUsZipRecordIdForFiveDigits(five);
             }
 
-            function regionRankFromExpoAdsetName(name) {
+            function regionRankFromAdsetName(name, regionTokens) {
                 var s = String(name || '');
-                for (var i = 0; i < EXPO_REGION_CODES.length; i++) {
-                    if (s.indexOf(EXPO_REGION_CODES[i]) >= 0) return i;
+                var tokens = regionTokens || [];
+                for (var i = 0; i < tokens.length; i++) {
+                    if (s.indexOf(tokens[i]) >= 0) return i;
                 }
                 return 99;
             }
 
-            /** Load Adset rows by record id for Expo naming / tie-breaks. */
+            /** Load Adset rows by record id for regional name / tie-breaks. */
             function fetchAdsetRecordsByIds(recordIds) {
                 var ids = recordIds.filter(function (id) {
                     return id && String(id).indexOf('rec') === 0;
@@ -527,26 +543,28 @@
                 return m;
             }
 
-            function logExpoRegionalAdsetCoverage(adsetIdToName) {
+            function logZipRouteRegionalAdsetCoverage(adsetIdToName, zipConfig) {
+                var tokens = (zipConfig && zipConfig.regionTokens) || [];
                 var byCode = {};
-                EXPO_REGION_CODES.forEach(function (code) {
+                var dn = (zipConfig && zipConfig.displayName) || 'Zip route';
+                tokens.forEach(function (code) {
                     byCode[code] = [];
                     Object.keys(adsetIdToName || {}).forEach(function (aid) {
                         var nm = adsetIdToName[aid];
                         if (String(nm).indexOf(code) >= 0) byCode[code].push({ id: aid, name: nm });
                     });
                 });
-                log('log', 'Expo: regional ad sets (Clients link and/or Adset Name fallback + zips in Adset Zip Tracking)', {
+                log('log', dn + ': regional ad sets (Clients link and/or Adset Name fallback + zips in Adset Zip Tracking)', {
                     byRegion: byCode,
                     note: 'Each lead’s Zip should map to exactly one regional ad set via junction rows.'
                 });
-                EXPO_REGION_CODES.forEach(function (code) {
+                tokens.forEach(function (code) {
                     if (!byCode[code] || byCode[code].length === 0) {
-                        log('warn', 'Expo: no linked ad set found whose name contains "' + code + '"', {
-                            expect: 'Expo Home Improvement - ' + code
+                        log('warn', dn + ': no linked ad set found whose name contains "' + code + '"', {
+                            expect: dn + ' - ' + code
                         });
                     } else if (byCode[code].length > 1) {
-                        log('warn', 'Expo: multiple ad sets match region ' + code, byCode[code]);
+                        log('warn', dn + ': multiple ad sets match region ' + code, byCode[code]);
                     }
                 });
             }
@@ -593,7 +611,7 @@
             /**
              * Filter Adset Zip Tracking where junction column (e.g. {Adset}) = ad set id — ClientManagement step 2.
              */
-            function fetchJunctionByAdsetFieldFormula(adsetIds, adsetFieldName) {
+            function fetchJunctionByAdsetFieldFormula(adsetIds, adsetFieldName, zipConfig) {
                 var unique = adsetIds.filter(function (id, i, a) {
                     return id && a.indexOf(id) === i;
                 });
@@ -602,6 +620,7 @@
                 var chunks = chunk(unique, chunkSize);
                 var all = [];
                 var fname = adsetFieldName || FIELD_JUNCTION_ADSET;
+                var logDn = (zipConfig && zipConfig.displayName) || 'Zip route';
                 function runOr(i) {
                     if (i >= chunks.length) return Promise.resolve(all);
                     var part = chunks[i];
@@ -611,7 +630,7 @@
                         })
                         .join(',');
                     var formula = 'OR(' + inner + ')';
-                    log('log', 'Expo: junction filterByFormula', {
+                    log('log', logDn + ': junction filterByFormula', {
                         junctionColumn: fname,
                         chunkIndex: i + 1,
                         of: chunks.length,
@@ -630,33 +649,34 @@
              * 1) GET each Adset → read Adset Zip Tracking / Ad Set Zip Tracking → load junction rows by RECORD_ID.
              * 2) If none, filter junction table with {JUNCTION_ADSET_FILTER_FIELDS} = ad set id.
              */
-            function fetchJunctionForAdsetIds(adsetIds) {
+            function fetchJunctionForAdsetIds(adsetIds, zipConfig) {
+                var logDn = (zipConfig && zipConfig.displayName) || 'Zip route';
                 var unique = adsetIds.filter(function (id, i, a) {
                     return id && a.indexOf(id) === i;
                 });
                 if (unique.length === 0) return Promise.resolve([]);
-                return fetchJunctionViaAdsetReverseLinks(unique).then(function (fromReverse) {
+                return fetchJunctionViaAdsetReverseLinks(unique, zipConfig).then(function (fromReverse) {
                     if (fromReverse && fromReverse.length > 0) {
-                        log('log', 'Expo: junction rows (step 1 — Adset reverse links, same as ClientManagement)', {
+                        log('log', logDn + ': junction rows (step 1 — Adset reverse links, same as ClientManagement)', {
                             count: fromReverse.length
                         });
                         return fromReverse;
                     }
                     log(
                         'warn',
-                        'Expo: no junction ids on Adset records — step 2: filter junction by linked Adset column'
+                        logDn + ': no junction ids on Adset records — step 2: filter junction by linked Adset column'
                     );
                     var fIdx = 0;
                     function tryNextFilterField() {
                         if (fIdx >= JUNCTION_ADSET_FILTER_FIELDS.length) {
-                            log('error', 'Expo: junction still empty — check Adset Zip Tracking on Adset rows and {Adset} on tbl87JqHAdJwgq1GL');
+                            log('error', logDn + ': junction still empty — check Adset Zip Tracking on Adset rows and {Adset} on tbl87JqHAdJwgq1GL');
                             return [];
                         }
                         var col = JUNCTION_ADSET_FILTER_FIELDS[fIdx];
                         fIdx += 1;
-                        return fetchJunctionByAdsetFieldFormula(unique, col).then(function (rows) {
+                        return fetchJunctionByAdsetFieldFormula(unique, col, zipConfig).then(function (rows) {
                             if (rows && rows.length > 0) {
-                                log('log', 'Expo: junction rows (step 2 — filter by {' + col + '})', {
+                                log('log', logDn + ': junction rows (step 2 — filter by {' + col + '})', {
                                     count: rows.length
                                 });
                                 return rows;
@@ -668,7 +688,8 @@
                 });
             }
 
-            function fetchJunctionViaAdsetReverseLinks(adsetIds) {
+            function fetchJunctionViaAdsetReverseLinks(adsetIds, zipConfig) {
+                var logDn = (zipConfig && zipConfig.displayName) || 'Zip route';
                 return Promise.all(
                     adsetIds.map(function (adId) {
                         var url =
@@ -688,7 +709,7 @@
                             normalizeLinkIds(p.fields[fname]).forEach(function (jid) {
                                 if (!juncIdToAdset[jid]) juncIdToAdset[jid] = p.adId;
                                 else if (juncIdToAdset[jid] !== p.adId) {
-                                    log('warn', 'Expo: same junction id linked from two ad sets?', {
+                                    log('warn', logDn + ': same junction id linked from two ad sets?', {
                                         junctionId: jid,
                                         a: juncIdToAdset[jid],
                                         b: p.adId
@@ -700,7 +721,7 @@
                         ADSET_JUNCTION_REVERSE_LINK_FIELDS.forEach(function (fn) {
                             total += normalizeLinkIds(p.fields[fn]).length;
                         });
-                        log('log', 'Expo: ad set reverse-link junction ids', {
+                        log('log', logDn + ': ad set reverse-link junction ids', {
                             adsetId: p.adId,
                             junctionLinkCount: total
                         });
@@ -709,7 +730,7 @@
                     if (juncIds.length === 0) {
                         log(
                             'log',
-                            'Expo: no junction ids on Adset reverse-link fields — will try junction filterByFormula next (ClientManagement step 2)'
+                            logDn + ': no junction ids on Adset reverse-link fields — will try junction filterByFormula next (ClientManagement step 2)'
                         );
                         return [];
                     }
@@ -717,7 +738,7 @@
                         (rows || []).forEach(function (row) {
                             row._implicitAdsetId = juncIdToAdset[row.id];
                         });
-                        log('log', 'Expo: junction rows loaded by RECORD_ID from reverse links', {
+                        log('log', logDn + ': junction rows loaded by RECORD_ID from reverse links', {
                             count: (rows || []).length
                         });
                         return rows || [];
@@ -726,11 +747,14 @@
             }
 
             /**
-             * @param {Object.<string,string>} [adsetIdToName] — Adset Name per id (for Expo regional tie-breaks).
+             * @param {Object.<string,string>} [adsetIdToName] — Adset Name per id (for regional tie-breaks).
              * @returns {Promise<{ zipToAdset: Object.<string,string>, conflicts: Array }>}
              */
-            function buildZipToAdsetMap(adsetIds, adsetIdToName) {
-                return fetchJunctionForAdsetIds(adsetIds).then(function (juncRows) {
+            function buildZipToAdsetMap(adsetIds, adsetIdToName, zipConfig) {
+                var tokens = (zipConfig && zipConfig.regionTokens) || [];
+                var logDn = (zipConfig && zipConfig.displayName) || 'Zip route';
+                var tieBreakHint = tokens.length ? tokens.join('→') : 'record id';
+                return fetchJunctionForAdsetIds(adsetIds, zipConfig).then(function (juncRows) {
                     var zipToCandidates = {};
                     juncRows.forEach(function (row) {
                         var f = row.fields || {};
@@ -747,7 +771,7 @@
                         var cands = zipToCandidates[zid].slice();
                         function rank(aid) {
                             var nm = adsetIdToName && adsetIdToName[aid];
-                            return regionRankFromExpoAdsetName(nm);
+                            return regionRankFromAdsetName(nm, tokens);
                         }
                         cands.sort(function (a, b) {
                             var ra = rank(a);
@@ -768,12 +792,12 @@
                     if (conflicts.length) {
                         log(
                             'warn',
-                            'Expo: same zip linked to multiple ad sets — picked by regional name order (STX→NTX→ETX→CTX→HTX)',
+                            logDn + ': same zip linked to multiple ad sets — picked by regional name order (' + tieBreakHint + ')',
                             conflicts.slice(0, 12)
                         );
                     }
-                    return enrichFiveDigitToAdsetFromJunction(zipToAdset, adsetIdToName).then(function (fiveDigitToAdset) {
-                        log('log', 'Expo: built zip→adset map', {
+                    return enrichFiveDigitToAdsetFromJunction(zipToAdset, adsetIdToName, zipConfig).then(function (fiveDigitToAdset) {
+                        log('log', logDn + ': built zip→adset map', {
                             uniqueZipRecordIds: Object.keys(zipToAdset).length,
                             fiveDigitFallbackEntries: Object.keys(fiveDigitToAdset).length,
                             junctionRows: juncRows.length
@@ -791,7 +815,9 @@
              * Junction stores US Zips **record ids**. Leads may resolve the same ZIP to a *different* US Zips row
              * (duplicate zips in the table). This builds 5-digit → ad set from the same junction rows so we can still match.
              */
-            function enrichFiveDigitToAdsetFromJunction(zipToAdset, adsetIdToName) {
+            function enrichFiveDigitToAdsetFromJunction(zipToAdset, adsetIdToName, zipConfig) {
+                var tokens = (zipConfig && zipConfig.regionTokens) || [];
+                var logDn = (zipConfig && zipConfig.displayName) || 'Zip route';
                 var zids = Object.keys(zipToAdset);
                 if (zids.length === 0) return Promise.resolve({});
                 return resolveUsZipMatchMode().then(function (cfg) {
@@ -808,14 +834,16 @@
                                 if (fiveToAd[five] && fiveToAd[five] !== ad) {
                                     var a1 = fiveToAd[five];
                                     var a2 = ad;
-                                    var r1 = regionRankFromExpoAdsetName(
-                                        adsetIdToName && adsetIdToName[a1]
+                                    var r1 = regionRankFromAdsetName(
+                                        adsetIdToName && adsetIdToName[a1],
+                                        tokens
                                     );
-                                    var r2 = regionRankFromExpoAdsetName(
-                                        adsetIdToName && adsetIdToName[a2]
+                                    var r2 = regionRankFromAdsetName(
+                                        adsetIdToName && adsetIdToName[a2],
+                                        tokens
                                     );
                                     fiveToAd[five] = r1 <= r2 ? a1 : a2;
-                                    log('warn', 'Expo: junction had two US Zips rows for same 5-digit zip — tie-broke by region', {
+                                    log('warn', logDn + ': junction had two US Zips rows for same 5-digit zip — tie-broke by region', {
                                         five: five,
                                         kept: fiveToAd[five]
                                     });
@@ -850,7 +878,8 @@
             /**
              * @returns {{ ids: string[], sourceField: string|null, keysSample: string[]|null }}
              */
-            function getAdsetIdsFromClientRecord(fields) {
+            function getAdsetIdsFromClientRecord(fields, zipConfig) {
+                var logDn = (zipConfig && zipConfig.displayName) || 'Zip route';
                 if (!fields) {
                     return { ids: [], sourceField: null, keysSample: null };
                 }
@@ -861,7 +890,10 @@
                     if (!Object.prototype.hasOwnProperty.call(fields, fname)) continue;
                     var ids = normalizeLinkIds(fields[fname]);
                     if (ids.length) {
-                        log('log', 'Expo: found ad set links on Clients field', { field: fname, count: ids.length });
+                        log('log', logDn + ': found ad set links on Clients field', {
+                            field: fname,
+                            count: ids.length
+                        });
                         return { ids: ids, sourceField: fname, keysSample: null };
                     }
                 }
@@ -872,11 +904,12 @@
                 };
             }
 
-            /** When Clients row has no link field filled: all ad sets whose Adset Name contains the client name (e.g. five “Expo Home Improvement - …” rows). */
-            function fetchExpoAdsetIdsFromAdsetTableByName() {
-                var q = airtableEscapeDoubleQuotes(EXPO_ZIP_ROUTE_CLIENT_NAME);
+            /** When Clients row has no link field filled: all ad sets whose Adset Name contains the client display name. */
+            function fetchZipRouteAdsetIdsFromAdsetTableByName(clientDisplayName, zipConfig) {
+                var logDn = (zipConfig && zipConfig.displayName) || clientDisplayName || 'Zip route';
+                var q = airtableEscapeDoubleQuotes(clientDisplayName);
                 var formula = 'FIND("' + q + '", {' + FIELD_ADSET_NAME + '})';
-                log('log', 'Expo: fallback — Adset table filterByFormula', { formula: formula });
+                log('log', logDn + ': fallback — Adset table filterByFormula', { formula: formula });
                 return fetchAllRecords(TABLE_ADSET, formula, true).then(function (recs) {
                     return recs.map(function (r) {
                         return r.id;
@@ -884,13 +917,13 @@
                 });
             }
 
-            /** Build zip map + per-lead plan for Expo (adsetIds from Clients or fallback). */
-            function runExpoZipPlanWithAdsetIds(leads, adsetIds) {
+            /** Build zip map + per-lead plan (adsetIds from Clients or Adset Name fallback). */
+            function runZipRoutePlanWithAdsetIds(leads, adsetIds, zipConfig) {
                 return fetchAdsetRecordsByIds(adsetIds)
                     .then(function (adsetRecs) {
                         var adsetIdToName = buildAdsetIdToNameMap(adsetRecs);
-                        logExpoRegionalAdsetCoverage(adsetIdToName);
-                        return buildZipToAdsetMap(adsetIds, adsetIdToName);
+                        logZipRouteRegionalAdsetCoverage(adsetIdToName, zipConfig);
+                        return buildZipToAdsetMap(adsetIds, adsetIdToName, zipConfig);
                     })
                     .then(function (built) {
                         return resolveUsZipMatchMode().then(function () {
@@ -946,9 +979,9 @@
                                         var k = s.reason || 'unknown';
                                         skippedByReason[k] = (skippedByReason[k] || 0) + 1;
                                     });
-                                    log('log', 'Expo: assignment plan', {
+                                    log('log', (zipConfig && zipConfig.displayName) + ': assignment plan', {
                                         howItWorks:
-                                            'For each Expo lead (already filtered by Linked Client): read Zip → match Adset Zip Tracking by US Zips record id, then by 5-digit zip if ids differ.',
+                                            'For each lead (already filtered by Linked Client): read Zip → match Adset Zip Tracking by US Zips record id, then by 5-digit zip if ids differ.',
                                         planByAdset: planByAdset,
                                         skippedByReason: skippedByReason,
                                         skippedSample: skipped.slice(0, 20),
@@ -965,44 +998,47 @@
                     });
             }
 
-            function applyExpoZipRoutingToLeads(leads, clientId, clientLabel) {
-                log('log', 'Expo zip routing: loading client row for Adsets', { clientId: clientId });
+            function applyZipRoutingToLeads(leads, clientId, clientLabel, zipConfig) {
+                var dn = (zipConfig && zipConfig.displayName) || 'Zip route';
+                log('log', dn + ' zip routing: loading client row for Adsets', { clientId: clientId });
                 return fetchAirtableJson(
                     AIRTABLE_BASE_URL + '/' + encodeURIComponent(TABLE_CLIENTS) + '/' + encodeURIComponent(clientId)
                 )
                     .then(function (clientRow) {
                         var fields = clientRow.fields || {};
-                        var got = getAdsetIdsFromClientRecord(fields);
+                        var got = getAdsetIdsFromClientRecord(fields, zipConfig);
                         var adsetIds = got.ids;
-                        log('log', 'Expo: client row summary', {
+                        log('log', dn + ': client row summary', {
                             adsetLinkCount: adsetIds.length,
                             sourceField: got.sourceField,
                             adsetIds: adsetIds,
                             clientFieldKeysSample: got.keysSample
                         });
                         if (adsetIds.length > 0) {
-                            return runExpoZipPlanWithAdsetIds(leads, adsetIds);
+                            return runZipRoutePlanWithAdsetIds(leads, adsetIds, zipConfig);
                         }
-                        log('warn', 'Expo: no linked ad sets on Clients — fallback to Adset table (Adset Name contains client name)', {
+                        log('warn', dn + ': no linked ad sets on Clients — fallback to Adset table (Adset Name contains client name)', {
                             triedFields: FIELD_CLIENT_ADSETS_CANDIDATES
                         });
-                        return fetchExpoAdsetIdsFromAdsetTableByName().then(function (fallbackIds) {
+                        return fetchZipRouteAdsetIdsFromAdsetTableByName(zipConfig.displayName, zipConfig).then(function (fallbackIds) {
                             if (!fallbackIds || fallbackIds.length === 0) {
                                 showStatus(
                                     'error',
-                                    'Could not find Expo ad sets. Either link them on the Clients row (field names we try: ' +
+                                    'Could not find ad sets for ' +
+                                        dn +
+                                        '. Either link them on the Clients row (field names we try: ' +
                                         FIELD_CLIENT_ADSETS_CANDIDATES.join(', ') +
                                         '), or ensure “Adset Name” contains “' +
-                                        EXPO_ZIP_ROUTE_CLIENT_NAME +
+                                        zipConfig.displayName +
                                         '”.'
                                 );
-                                return Promise.reject(new Error('EXPO_NO_CLIENT_ADSETS'));
+                                return Promise.reject(new Error('ZIP_ROUTE_NO_CLIENT_ADSETS'));
                             }
-                            log('log', 'Expo: using ad set ids from Adset name search', {
+                            log('log', dn + ': using ad set ids from Adset name search', {
                                 count: fallbackIds.length,
                                 ids: fallbackIds
                             });
-                            return runExpoZipPlanWithAdsetIds(leads, fallbackIds);
+                            return runZipRoutePlanWithAdsetIds(leads, fallbackIds, zipConfig);
                         });
                     })
                     .then(function (plan) {
@@ -1013,12 +1049,15 @@
                         if (total === 0) {
                             showStatus(
                                 'error',
-                                'No leads could be assigned. Check console for Expo: skippedByReason — usually Zip is empty, or the zip is not linked to an Expo ad set in Adset Zip Tracking (or the lead’s US Zips row differs from the junction’s; 5-digit fallback should help).'
+                                'No leads could be assigned. Check console for ' +
+                                    dn +
+                                    ': skippedByReason — usually Zip is empty, or the zip is not linked to a regional ad set in Adset Zip Tracking (or the lead’s US Zips row differs from the junction’s; 5-digit fallback should help).'
                             );
-                            return Promise.reject(new Error('EXPO_NO_ASSIGNMENTS'));
+                            return Promise.reject(new Error('ZIP_ROUTE_NO_ASSIGNMENTS'));
                         }
                         var msg =
-                            'Expo Home Improvement: set Adset per lead zip (' +
+                            dn +
+                            ': set Adset per lead zip (' +
                             total +
                             ' lead(s), ' +
                             plan.skipped.length +
@@ -1038,7 +1077,7 @@
                             var batches = chunk(ids, 10);
                             var runBatch = function (bi) {
                                 if (bi >= batches.length) return Promise.resolve();
-                                log('log', 'Expo: PATCH batch', {
+                                log('log', dn + ': PATCH batch', {
                                     adsetId: adId,
                                     batch: bi + 1,
                                     of: batches.length,
@@ -1053,10 +1092,12 @@
                             });
                         };
                         return runAdset(0).then(function () {
-                            log('log', 'Expo: complete', { updated: total, skipped: plan.skipped.length });
+                            log('log', dn + ': complete', { updated: total, skipped: plan.skipped.length });
                             showStatus(
                                 'success',
-                                'Done (Expo). Updated ' +
+                                'Done (' +
+                                    dn +
+                                    '). Updated ' +
                                     total +
                                     ' lead(s); ' +
                                     plan.skipped.length +
@@ -1070,16 +1111,20 @@
                 var cid = clientSelect.value;
                 var nameFor = (cid && clientFilterNamesById[cid]) || '';
                 var label = cid ? clientSelect.options[clientSelect.selectedIndex].text : '';
-                var expo = !!cid && isExpoZipRoutingClient(nameFor, label);
+                var zipCfg = cid ? getZipRouteConfigForClient(nameFor, label) : null;
+                var zipRoute = !!zipCfg;
                 if (adsetHintEl) {
-                    adsetHintEl.textContent = expo
-                        ? 'Expo: STX / NTX / ETX / CTX / HTX — each lead’s Zip picks the ad set that owns that zip in Adset Zip Tracking.'
+                    adsetHintEl.textContent = zipRoute
+                        ? zipCfg.displayName +
+                          ' — regions: ' +
+                          zipCfg.regionTokens.join(', ') +
+                          ' — each lead’s Zip picks the ad set that owns that zip in Adset Zip Tracking.'
                         : 'Table: Adset · shown: Adset Name';
                 }
                 if (clientSelect.disabled) {
                     return;
                 }
-                adsetSelect.disabled = expo;
+                adsetSelect.disabled = zipRoute;
                 updateApplyEnabled();
             }
 
@@ -1232,7 +1277,7 @@
                 }
                 var nameFor = clientFilterNamesById[cid] || '';
                 var label = (clientSelect.options[clientSelect.selectedIndex] || {}).text || '';
-                if (isExpoZipRoutingClient(nameFor, label)) {
+                if (isZipRoutingClient(nameFor, label)) {
                     btnApply.disabled = false;
                     return;
                 }
@@ -1254,8 +1299,9 @@
                 if (!clientId) return;
 
                 var nameForFormula = clientFilterNamesById[clientId] || clientLabel;
-                var expoZip = isExpoZipRoutingClient(nameForFormula, clientLabel);
-                if (!expoZip && !adsetId) return;
+                var zipCfg = getZipRouteConfigForClient(nameForFormula, clientLabel);
+                var zipRouteMode = !!zipCfg;
+                if (!zipRouteMode && !adsetId) return;
 
                 hideStatus();
                 btnApply.disabled = true;
@@ -1267,7 +1313,7 @@
                     clientLabel: clientLabel,
                     nameForFormula: nameForFormula,
                     nameSource: clientFilterNamesById[clientId] ? 'FIELD_CLIENT_NAME map' : 'dropdown label fallback',
-                    expoZipRouting: expoZip,
+                    zipRouteRouting: zipRouteMode,
                     adsetId: adsetId,
                     adsetLabel: adsetLabel
                 });
@@ -1348,9 +1394,12 @@
                             return null;
                         }
 
-                        if (expoZip) {
-                            log('log', 'Apply: Expo — zip-based ad set assignment', { leadCount: leads.length });
-                            return applyExpoZipRoutingToLeads(leads, clientId, clientLabel);
+                        if (zipRouteMode) {
+                            log('log', 'Apply: zip route — regional assignment by Zip', {
+                                leadCount: leads.length,
+                                client: zipCfg.displayName
+                            });
+                            return applyZipRoutingToLeads(leads, clientId, clientLabel, zipCfg);
                         }
 
                         var msg =
@@ -1398,10 +1447,10 @@
                         if (err && err.message === 'USER_CANCEL') {
                             return;
                         }
-                        if (err && err.message === 'EXPO_NO_CLIENT_ADSETS') {
+                        if (err && err.message === 'ZIP_ROUTE_NO_CLIENT_ADSETS') {
                             return;
                         }
-                        if (err && err.message === 'EXPO_NO_ASSIGNMENTS') {
+                        if (err && err.message === 'ZIP_ROUTE_NO_ASSIGNMENTS') {
                             return;
                         }
                         log('error', 'Apply failed', { message: err && err.message, err: err });
