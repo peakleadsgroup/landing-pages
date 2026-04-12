@@ -141,7 +141,7 @@
                     <select id="client-select" disabled>
                         <option value="">Loading clients…</option>
                     </select>
-                    <p class="hint">Table: B2C Clients</p>
+                    <p class="hint">Table: Clients</p>
                 </div>
                 <div>
                     <label for="adset-select">Adset</label>
@@ -163,9 +163,10 @@
         (function () {
             const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
             const AIRTABLE_BASE_URL = '/api/airtable/v0/' + AIRTABLE_BASE_ID;
-            const TABLE_CLIENTS = 'B2C Clients';
-            const TABLE_LEADS = 'B2C Leads';
-            const TABLE_ADSET = 'Adset';
+            /** Table IDs — B2C Leads / Clients / Adset in base appmBb0lzqRK9dI8v. */
+            const TABLE_CLIENTS = 'tblMl8Y97cMSbricC';
+            const TABLE_LEADS = 'tblPt6Wc79hTBSmcD';
+            const TABLE_ADSET = 'tblee61crNCoSfurx';
             const FIELD_LINKED_CLIENT = 'Linked Client';
             const FIELD_ADSET = 'Adset';
 
@@ -195,8 +196,16 @@
                     throw new Error('Invalid JSON from Airtable proxy (' + res.status + ')');
                 }
                 if (!res.ok) {
-                    const msg = (data && data.error) || data.message || text || res.statusText;
-                    throw new Error(typeof msg === 'string' ? msg : 'Airtable error ' + res.status);
+                    var err = data && data.error;
+                    var msg =
+                        (typeof err === 'string' && err) ||
+                        (err && err.message) ||
+                        data.message ||
+                        text ||
+                        res.statusText;
+                    throw new Error(
+                        typeof msg === 'string' ? msg + ' (' + res.status + ')' : 'Airtable error ' + res.status
+                    );
                 }
                 return data;
             }
