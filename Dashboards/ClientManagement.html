@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
-    <title>Client management — Adset zips</title>
+    <title>Client management — Ad set zips</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         details.cm-client > summary { list-style: none; }
@@ -126,6 +126,68 @@
             'KY', 'LA', 'MA', 'MD', 'ME', 'MI', 'MN', 'MO', 'MS', 'MT', 'NC', 'ND', 'NE', 'NH', 'NJ', 'NM', 'NV',
             'NY', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VA', 'VT', 'WA', 'WI', 'WV', 'WY',
         ];
+
+        /** Full names for dashboard copy only; formulas and Airtable still use abbreviations. */
+        const STATE_NAME_BY_ABBREV = {
+            AL: 'Alabama',
+            AK: 'Alaska',
+            AZ: 'Arizona',
+            AR: 'Arkansas',
+            CA: 'California',
+            CO: 'Colorado',
+            CT: 'Connecticut',
+            DE: 'Delaware',
+            DC: 'District of Columbia',
+            FL: 'Florida',
+            GA: 'Georgia',
+            HI: 'Hawaii',
+            ID: 'Idaho',
+            IL: 'Illinois',
+            IN: 'Indiana',
+            IA: 'Iowa',
+            KS: 'Kansas',
+            KY: 'Kentucky',
+            LA: 'Louisiana',
+            ME: 'Maine',
+            MD: 'Maryland',
+            MA: 'Massachusetts',
+            MI: 'Michigan',
+            MN: 'Minnesota',
+            MS: 'Mississippi',
+            MO: 'Missouri',
+            MT: 'Montana',
+            NE: 'Nebraska',
+            NV: 'Nevada',
+            NH: 'New Hampshire',
+            NJ: 'New Jersey',
+            NM: 'New Mexico',
+            NY: 'New York',
+            NC: 'North Carolina',
+            ND: 'North Dakota',
+            OH: 'Ohio',
+            OK: 'Oklahoma',
+            OR: 'Oregon',
+            PA: 'Pennsylvania',
+            RI: 'Rhode Island',
+            SC: 'South Carolina',
+            SD: 'South Dakota',
+            TN: 'Tennessee',
+            TX: 'Texas',
+            UT: 'Utah',
+            VT: 'Vermont',
+            VA: 'Virginia',
+            WA: 'Washington',
+            WV: 'West Virginia',
+            WI: 'Wisconsin',
+            WY: 'Wyoming',
+        };
+
+        /** @param {string[]} abbrs */
+        function stateAbbrevsToSortedDisplayLine(abbrs) {
+            const names = abbrs.map((abbr) => STATE_NAME_BY_ABBREV[abbr] || abbr);
+            names.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+            return names.join(', ');
+        }
 
         let usZipsMatchField = null;
         let usZipsMatchAsNumber = false;
@@ -604,7 +666,8 @@
         }
 
         /**
-         * Linked zip codes plus distinct state abbreviations from US Zips (State field).
+         * Linked zip codes; `states` / `statesNotIncluded` are full state names for UI.
+         * `linkedStateAbbrevs` stays two-letter codes for Airtable queries.
          * @param {(msg: string) => void} [onProgress]
          * @returns {Promise<{ zips: string, states: string, statesNotIncluded: string, linkedZipFives: string[], linkedStateAbbrevs: string[] }>}
          */
@@ -615,7 +678,9 @@
                 return {
                     zips: '',
                     states: '',
-                    statesNotIncluded: usZipsStateFieldName() ? ALL_US_STATE_ABBREVS.join(', ') : '',
+                    statesNotIncluded: usZipsStateFieldName()
+                        ? stateAbbrevsToSortedDisplayLine(ALL_US_STATE_ABBREVS)
+                        : '',
                     linkedZipFives: [],
                     linkedStateAbbrevs: [],
                 };
@@ -649,18 +714,23 @@
                     if (abbr) stateSet.add(abbr);
                 }
             }
-            const states = [...stateSet].sort((a, b) => a.localeCompare(b));
+            const linkedStateAbbrevs = [...stateSet].sort((a, b) => a.localeCompare(b));
             let statesNotIncluded = '';
             if (usZipsStateFieldName()) {
-                statesNotIncluded = ALL_US_STATE_ABBREVS.filter((abbr) => !stateSet.has(abbr)).join(', ');
+                statesNotIncluded = stateAbbrevsToSortedDisplayLine(
+                    ALL_US_STATE_ABBREVS.filter((abbr) => !stateSet.has(abbr))
+                );
             }
             const linkedZipFives = codes.filter((c) => /^\d{5}$/.test(String(c).trim()));
+            const states = usZipsStateFieldName()
+                ? stateAbbrevsToSortedDisplayLine(linkedStateAbbrevs)
+                : '';
             return {
                 zips: codes.join(', '),
-                states: states.join(', '),
+                states,
                 statesNotIncluded,
                 linkedZipFives,
-                linkedStateAbbrevs: states,
+                linkedStateAbbrevs,
             };
         }
 
@@ -984,7 +1054,8 @@
                 if (statesLine) statesLine.textContent = states || '—';
                 if (statesNotLine) {
                     if (statesNotIncluded) statesNotLine.textContent = statesNotIncluded;
-                    else if (usZipsStateFieldName()) statesNotLine.textContent = zips ? '(none)' : ALL_US_STATE_ABBREVS.join(', ');
+                    else if (usZipsStateFieldName())
+                        statesNotLine.textContent = zips ? '(none)' : stateAbbrevsToSortedDisplayLine(ALL_US_STATE_ABBREVS);
                     else statesNotLine.textContent = '—';
                 }
             } catch (e) {
