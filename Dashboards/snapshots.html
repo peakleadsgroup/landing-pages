@@ -76,29 +76,15 @@
                         <div class="flex gap-3">
                             <div class="w-4 h-4 rounded flex-shrink-0 mt-1" style="background-color: rgb(59, 130, 246);"></div>
                             <div>
-                                <span class="text-gray-700 font-medium block mb-1">Tangible Cash</span>
-                                <p class="text-sm text-gray-600">Total cash in the bank that we can currently touch and use</p>
+                                <span class="text-gray-700 font-medium block mb-1">CASH</span>
+                                <p class="text-sm text-gray-600">Cash value pulled directly from Airtable</p>
                             </div>
                         </div>
                         <div class="flex gap-3">
                             <div class="w-4 h-4 rounded flex-shrink-0 mt-1" style="background-color: rgb(16, 185, 129);"></div>
                             <div>
-                                <span class="text-gray-700 font-medium block mb-1">Tangible Cash + Reserve</span>
-                                <p class="text-sm text-gray-600">Tangible cash plus amount in stripe reserve</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-3">
-                            <div class="w-4 h-4 rounded flex-shrink-0 mt-1" style="background-color: rgb(245, 158, 11);"></div>
-                            <div>
-                                <span class="text-gray-700 font-medium block mb-1">Realized Cash</span>
-                                <p class="text-sm text-gray-600">Total cash in the bank that we have a right to because we've already generated the leads. Think about this as total tangible cash minus money owed to clients</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-3">
-                            <div class="w-4 h-4 rounded flex-shrink-0 mt-1" style="background-color: rgb(239, 68, 68);"></div>
-                            <div>
-                                <span class="text-gray-700 font-medium block mb-1">Realized Cash + Reserve</span>
-                                <p class="text-sm text-gray-600">Realized cash plus amount in stripe reserve</p>
+                                <span class="text-gray-700 font-medium block mb-1">CASH + AR</span>
+                                <p class="text-sm text-gray-600">Cash plus accounts receivable from Airtable</p>
                             </div>
                         </div>
                     </div>
@@ -199,17 +185,13 @@
                     const created = formatDate(record.fields['Created']);
                     if (!created) return;
 
-                    const tangibleCash = parseCurrency(record.fields['Tangible Cash']);
-                    const tangibleCashReserve = parseCurrency(record.fields['Tangible Cash + Reserve']);
-                    const realizedCash = parseCurrency(record.fields['Realized Cash']);
-                    const realizedCashReserve = parseCurrency(record.fields['Realized Cash + Reserve']);
+                    const cash = parseCurrency(record.fields['CASH'] ?? record.fields['Cash'] ?? record.fields['Tangible Cash']);
+                    const cashAr = parseCurrency(record.fields['CASH + AR'] ?? record.fields['Cash + AR'] ?? record.fields['Cash+AR']);
 
                     processedData.push({
                         date: created,
-                        tangibleCash: tangibleCash,
-                        tangibleCashReserve: tangibleCashReserve,
-                        realizedCash: realizedCash,
-                        realizedCashReserve: realizedCashReserve
+                        cash: cash,
+                        cashAr: cashAr
                     });
                 });
 
@@ -238,10 +220,8 @@
 
             // Prepare data for chart
             const dates = data.map(d => d.date);
-            const tangibleCashData = data.map(d => d.tangibleCash);
-            const tangibleCashReserveData = data.map(d => d.tangibleCashReserve);
-            const realizedCashData = data.map(d => d.realizedCash);
-            const realizedCashReserveData = data.map(d => d.realizedCashReserve);
+            const cashData = data.map(d => d.cash);
+            const cashArData = data.map(d => d.cashAr);
 
             // Find all Tuesdays in the date range
             function getTuesdaysInRange(startDate, endDate) {
@@ -290,8 +270,8 @@
                     labels: dates,
                     datasets: [
                         {
-                            label: 'Tangible Cash',
-                            data: tangibleCashData,
+                            label: 'CASH',
+                            data: cashData,
                             borderColor: 'rgb(59, 130, 246)',
                             backgroundColor: 'rgba(59, 130, 246, 0.1)',
                             borderWidth: 2,
@@ -301,32 +281,10 @@
                             pointHoverRadius: 6
                         },
                         {
-                            label: 'Tangible Cash + Reserve',
-                            data: tangibleCashReserveData,
+                            label: 'CASH + AR',
+                            data: cashArData,
                             borderColor: 'rgb(16, 185, 129)',
                             backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.3,
-                            fill: false,
-                            pointRadius: 3,
-                            pointHoverRadius: 6
-                        },
-                        {
-                            label: 'Realized Cash',
-                            data: realizedCashData,
-                            borderColor: 'rgb(245, 158, 11)',
-                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.3,
-                            fill: false,
-                            pointRadius: 3,
-                            pointHoverRadius: 6
-                        },
-                        {
-                            label: 'Realized Cash + Reserve',
-                            data: realizedCashReserveData,
-                            borderColor: 'rgb(239, 68, 68)',
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
                             borderWidth: 2,
                             tension: 0.3,
                             fill: false,
