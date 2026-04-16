@@ -97,6 +97,18 @@
         </div>
     </div>
 
+    <div id="locationSelectModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-6 border w-11/12 max-w-xl shadow-lg rounded-md bg-white">
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Which locations would you like to turn on?</h3>
+            <p class="text-sm text-gray-600 mb-4">Choose one or more locations to activate now.</p>
+            <div id="locationSelectList" class="max-h-72 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2"></div>
+            <div class="mt-5 flex items-center justify-end gap-3">
+                <button id="locationSelectCancelBtn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Cancel</button>
+                <button id="locationSelectConfirmBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">Turn On Selected Locations</button>
+            </div>
+        </div>
+    </div>
+
     <div id="editLeadModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
         <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
             <div class="flex items-center justify-between mb-4">
@@ -947,6 +959,18 @@
                 );
                 if (!confirmed) return;
             }
+            if (currentStatus === 'Paused' && status === 'Active') {
+                const chosenAdsets = await openLocationActivationModal();
+                if (chosenAdsets === null) return;
+                if (chosenAdsets.length) {
+                    try {
+                        await activateSelectedAdsets(chosenAdsets);
+                    } catch (err) {
+                        alert(`Unable to update selected locations: ${err.message}`);
+                        return;
+                    }
+                }
+            }
             input.value = status;
             const activeBtn = document.getElementById('statusBtnActive');
             const pausedBtn = document.getElementById('statusBtnPaused');
@@ -961,6 +985,70 @@
             }
 
             scheduleAutoSave();
+        }
+
+        async function openLocationActivationModal() {
+            const modal = document.getElementById('locationSelectModal');
+            const listEl = document.getElementById('locationSelectList');
+            const cancelBtn = document.getElementById('locationSelectCancelBtn');
+            const confirmBtn = document.getElementById('locationSelectConfirmBtn');
+            if (!modal || !listEl || !cancelBtn || !confirmBtn) return null;
+
+            const adsetIds = Array.isArray(currentRecord && currentRecord.fields ? currentRecord.fields.Adsets : [])
+                ? currentRecord.fields.Adsets
+                : [];
+            if (!adsetIds.length) {
+                return [];
+            }
+
+            listEl.innerHTML = '<p class="text-sm text-gray-600">Loading locations...</p>';
+            modal.classList.remove('hidden');
+
+            const adsetRecords = await Promise.allSettled(adsetIds.map((id) => fetchAdsetById(id)));
+            const options = adsetRecords.map((result, idx) => {
+                const adsetId = adsetIds[idx];
+                const adset = result.status === 'fulfilled' ? result.value : null;
+                const name = adset && adset.fields ? (adset.fields['Adset Name'] || adset.fields.Name || adsetId) : adsetId;
+                return { adsetId, name };
+            });
+
+            listEl.innerHTML = options.map((opt) => `
+                <label class="flex items-center gap-3 p-2 rounded-md hover:bg-gray-50 cursor-pointer">
+                    <input type="checkbox" class="location-activate-checkbox h-4 w-4" value="${opt.adsetId}" checked>
+                    <span class="text-sm text-gray-800">${opt.name}</span>
+                </label>
+            `).join('');
+
+            return await new Promise((resolve) => {
+                const cleanup = () => {
+                    cancelBtn.onclick = null;
+                    confirmBtn.onclick = null;
+                    modal.classList.add('hidden');
+                };
+                cancelBtn.onclick = () => {
+                    cleanup();
+                    resolve(null);
+                };
+                confirmBtn.onclick = () => {
+                    const selected = Array.from(listEl.querySelectorAll('.location-activate-checkbox:checked')).map((el) => el.value);
+                    cleanup();
+                    resolve(selected);
+                };
+            });
+        }
+
+        async function activateSelectedAdsets(adsetIds) {
+            for (const adsetId of adsetIds) {
+                const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.adsetsTableName)}/${adsetId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fields: { 'Location Campaign Status': 'Active' } })
+                });
+                if (!response.ok) {
+                    throw new Error(`Failed for location ${adsetId}`);
+                }
+                await loadLocationHeader(adsetId);
+            }
         }
 
         async function setPortalCharging(charging) {
