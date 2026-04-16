@@ -1039,16 +1039,41 @@
 
         async function activateSelectedAdsets(adsetIds) {
             for (const adsetId of adsetIds) {
-                const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.adsetsTableName)}/${adsetId}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fields: { 'Location Campaign Status': 'Active' } })
-                });
-                if (!response.ok) {
-                    throw new Error(`Failed for location ${adsetId}`);
-                }
+                await updateAdsetCampaignStatus(adsetId, 'Active');
                 await loadLocationHeader(adsetId);
             }
+        }
+
+        async function updateAdsetCampaignStatus(adsetId, nextStatus) {
+            const url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.adsetsTableName)}/${adsetId}`;
+            const payloads = [
+                { fields: { 'Location Campaign Status': nextStatus } },
+                { fields: { 'Location Campaign Status': [nextStatus] } }
+            ];
+            let lastErrorMessage = '';
+
+            for (const payload of payloads) {
+                const response = await fetch(url, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok) return await response.json();
+
+                let errText = '';
+                try {
+                    const errJson = await response.json();
+                    errText = errJson && errJson.error ? (errJson.error.message || errJson.error.type || '') : '';
+                } catch (e) {
+                    errText = '';
+                }
+                lastErrorMessage = errText || `status ${response.status}`;
+
+                // Retry with alternate payload only for validation-style 422 responses.
+                if (response.status !== 422) break;
+            }
+
+            throw new Error(`Failed to update location ${adsetId}: ${lastErrorMessage}`);
         }
 
         async function setPortalCharging(charging) {
@@ -2021,13 +2046,10 @@
                 if (!confirmed) return;
             }
 
-            const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.adsetsTableName)}/${adsetId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fields: { 'Location Campaign Status': nextStatus } })
-            });
-            if (!response.ok) {
-                alert('Failed to update location status');
+            try {
+                await updateAdsetCampaignStatus(adsetId, nextStatus);
+            } catch (err) {
+                alert(err.message || 'Failed to update location status');
                 return;
             }
             await loadLocationHeader(adsetId);
@@ -2545,11 +2567,7 @@
 
             for (const adsetId of adsetIds) {
                 try {
-                    await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.adsetsTableName)}/${adsetId}`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ fields: { 'Location Campaign Status': 'Paused' } })
-                    });
+                    await updateAdsetCampaignStatus(adsetId, 'Paused');
                 } catch (e) {
                     // Best effort; continue pausing remaining locations.
                 }
