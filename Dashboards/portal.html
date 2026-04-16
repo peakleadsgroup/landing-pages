@@ -38,8 +38,6 @@
                         <h1 class="text-2xl font-bold text-gray-900">Portal Dashboard</h1>
                     </div>
                     <div class="flex flex-wrap gap-2">
-                        <button onclick="openBillingModal()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">Billing</button>
-                        <button onclick="openBillingContactsModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Billing Contacts</button>
                     </div>
                 </div>
             </div>
@@ -79,18 +77,34 @@
         </div>
     </div>
 
+    <div id="confirmModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-24 mx-auto p-6 border w-11/12 max-w-xl shadow-lg rounded-md bg-white">
+            <h3 id="confirmModalTitle" class="text-xl font-semibold text-gray-900 mb-3"></h3>
+            <div id="confirmModalBody" class="text-sm text-gray-700 space-y-2 mb-6"></div>
+            <div class="flex items-center justify-end gap-3">
+                <button id="confirmModalCancelBtn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Cancel</button>
+                <button id="confirmModalConfirmBtn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"></button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const CONFIG = {
             baseId: 'appmBb0lzqRK9dI8v',
             tableName: 'tblH2nVfmGNG8pAjC',
             contactsTableName: 'Contacts',
+            contactsLinkedField: 'Contacts',
             customersTableName: 'Customers',
             adsetsTableName: 'Adsets',
+            leadsTableName: 'B2C Leads',
             billingContactsField: 'Billing Contacts'
         };
 
         let currentRecordId = null;
         let currentRecord = null;
+        let currentContacts = [];
+        let autoSaveTimer = null;
+        let confirmResolver = null;
 
         function getURLParameter(name) {
             const urlParams = new URLSearchParams(window.location.search);
@@ -105,6 +119,18 @@
 
         async function fetchContactById(contactId) {
             const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.contactsTableName)}/${contactId}`);
+            if (!response.ok) return null;
+            return response.json();
+        }
+
+        async function fetchAdsetById(adsetId) {
+            const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.adsetsTableName)}/${adsetId}`);
+            if (!response.ok) return null;
+            return response.json();
+        }
+
+        async function fetchLeadById(leadId) {
+            const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.leadsTableName)}/${leadId}`);
             if (!response.ok) return null;
             return response.json();
         }
@@ -179,7 +205,9 @@
             hideError();
             try {
                 currentRecord = await fetchRecordById(currentRecordId);
+                currentContacts = await fetchContactsForAccount(currentRecord);
                 renderPortalCard(currentRecord);
+                await loadBillingSection();
                 document.querySelector('h1').textContent = `Portal Dashboard - ${currentRecord.fields.Name || 'Account'}`;
                 document.getElementById('portalCard').classList.remove('hidden');
             } catch (err) {
@@ -235,6 +263,20 @@
             `;
         }
 
+        async function fetchContactsForAccount(record) {
+            const billingIds = Array.isArray(record.fields[CONFIG.billingContactsField]) ? record.fields[CONFIG.billingContactsField] : [];
+            const linkedIds = Array.isArray(record.fields[CONFIG.contactsLinkedField]) ? record.fields[CONFIG.contactsLinkedField] : [];
+            const contactIds = Array.from(new Set([ ...billingIds, ...linkedIds ]));
+            if (!contactIds.length) return [];
+
+            const contacts = [];
+            for (const id of contactIds) {
+                const contact = await fetchContactById(id);
+                if (contact) contacts.push(contact);
+            }
+            return contacts;
+        }
+
         function getNumericField(record, fieldName) {
             const rawValue = record && record.fields ? record.fields[fieldName] : null;
             const value = Array.isArray(rawValue) ? rawValue[0] : rawValue;
@@ -287,24 +329,76 @@
 
         function renderChargingControl(charging) {
             const normalized = String(charging || '').toLowerCase();
-            const effectiveCharging = normalized === 'pause' ? 'Pause' : 'Charging';
-            const chargingClasses = effectiveCharging === 'Charging'
+            const effectiveCharging = normalized === 'pause' ? 'Paused' : 'Active';
+            const activeClasses = effectiveCharging === 'Active'
                 ? 'bg-green-600 text-white border-green-600 shadow-sm'
                 : 'bg-white text-green-700 border-green-300 hover:bg-green-50';
-            const pauseClasses = effectiveCharging === 'Pause'
+            const pausedClasses = effectiveCharging === 'Paused'
                 ? 'bg-red-600 text-white border-red-600 shadow-sm'
                 : 'bg-white text-red-700 border-red-300 hover:bg-red-50';
 
             return `
                 <div class="inline-flex rounded-lg border border-gray-200 overflow-hidden">
-                    <button id="chargingBtnCharging" type="button" onclick="setPortalCharging('Charging')" class="px-4 py-2 text-sm font-semibold border-r border-gray-200 transition-colors ${chargingClasses}">
-                        Charging
+                    <button id="chargingBtnActive" type="button" onclick="setPortalCharging('Active')" class="px-4 py-2 text-sm font-semibold border-r border-gray-200 transition-colors ${activeClasses}">
+                        Active
                     </button>
-                    <button id="chargingBtnPause" type="button" onclick="setPortalCharging('Pause')" class="px-4 py-2 text-sm font-semibold transition-colors ${pauseClasses}">
-                        Pause
+                    <button id="chargingBtnPaused" type="button" onclick="setPortalCharging('Paused')" class="px-4 py-2 text-sm font-semibold transition-colors ${pausedClasses}">
+                        Paused
                     </button>
                 </div>
                 <input type="hidden" id="chargingValue" value="${effectiveCharging}">
+            `;
+        }
+
+        function hasNotification(contact, notificationName) {
+            const notifications = Array.isArray(contact.fields.Notifications) ? contact.fields.Notifications : [];
+            return notifications.some((n) => String(n).toLowerCase() === notificationName.toLowerCase());
+        }
+
+        function renderContactsSection() {
+            if (!currentContacts.length) {
+                return `
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 py-2">
+                        <div class="text-sm font-medium text-gray-700">Contacts</div>
+                        <div class="sm:col-span-2 text-sm text-gray-500">No linked contacts found.</div>
+                    </div>
+                `;
+            }
+
+            const billingIds = Array.isArray(currentRecord.fields[CONFIG.billingContactsField]) ? currentRecord.fields[CONFIG.billingContactsField] : [];
+            const rows = currentContacts.map((contact) => {
+                const name = contact.fields.Name || 'Unnamed';
+                const email = contact.fields.Email || 'No email';
+                const phone = contact.fields.Phone || 'No phone';
+                const billingSelected = billingIds.includes(contact.id) || hasNotification(contact, 'Billing');
+                const newLeadsSelected = hasNotification(contact, 'New Leads');
+
+                return `
+                    <div class="border border-gray-200 rounded-lg p-3 space-y-2">
+                        <div class="text-sm font-medium text-gray-900">${name}</div>
+                        <div class="text-xs text-gray-600">${email}</div>
+                        <div class="text-xs text-gray-600">${phone}</div>
+                        <div class="flex flex-wrap gap-4 pt-1">
+                            <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                                <input type="checkbox" class="contact-delivery-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500" data-contact-id="${contact.id}" data-delivery="billing" ${billingSelected ? 'checked' : ''}>
+                                Billing
+                            </label>
+                            <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                                <input type="checkbox" class="contact-delivery-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500" data-contact-id="${contact.id}" data-delivery="new-leads" ${newLeadsSelected ? 'checked' : ''}>
+                                New Leads
+                            </label>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 py-2">
+                    <div class="text-sm font-medium text-gray-700">Contacts</div>
+                    <div class="sm:col-span-2 space-y-3">
+                        ${rows}
+                    </div>
+                </div>
             `;
         }
 
@@ -324,8 +418,8 @@
                         <summary class="px-4 py-3 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
                             <span class="text-lg font-semibold text-gray-900 inline-flex items-center gap-2">
                                 <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.983 5.5a1.5 1.5 0 013 0l.159 1.12a1.5 1.5 0 001.15 1.24l1.09.25a1.5 1.5 0 01.87 2.42l-.72.88a1.5 1.5 0 000 1.9l.72.88a1.5 1.5 0 01-.87 2.42l-1.09.25a1.5 1.5 0 00-1.15 1.24l-.16 1.12a1.5 1.5 0 01-2.99 0l-.16-1.12a1.5 1.5 0 00-1.15-1.24l-1.09-.25a1.5 1.5 0 01-.87-2.42l.72-.88a1.5 1.5 0 000-1.9l-.72-.88a1.5 1.5 0 01.87-2.42l1.09-.25a1.5 1.5 0 001.15-1.24l.16-1.12z"></path>
-                                    <circle cx="12" cy="12" r="2.5" stroke-width="2"></circle>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.427 1.756 2.925 0 3.352a1.724 1.724 0 00-1.066 2.572c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.427 1.756-2.925 1.756-3.352 0a1.724 1.724 0 00-2.572-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.427-1.756-2.925 0-3.352a1.724 1.724 0 001.066-2.572c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                 </svg>
                                 <span>Account Settings</span>
                             </span>
@@ -348,12 +442,14 @@
                                 <label class="text-sm font-medium text-gray-700">Status</label>
                                 <div class="sm:col-span-2">
                                     ${renderStatusControl(record.fields.Status)}
+                                    <p class="mt-2 text-xs text-gray-500">'Active' = one or all of your campaigns are actively running. 'Pause' = all of your campaigns are paused</p>
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 py-2">
                                 <label class="text-sm font-medium text-gray-700">Charging</label>
                                 <div class="sm:col-span-2">
                                     ${renderChargingControl(record.fields.Charging)}
+                                    <p class="mt-2 text-xs text-gray-500">'Charging' = you will automatically be billed when the leads we owe you are all sent so your campaign continues running. 'Pause' = your campaign will pause when the leads we owe you are completed and your campaign will pause</p>
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 py-2">
@@ -363,6 +459,7 @@
                                     <p class="mt-1 text-xs text-gray-500">Number of leads we bill for at a time</p>
                                 </div>
                             </div>
+                            ${renderContactsSection()}
                         </div>
                     </details>
                     <details class="border border-gray-200 rounded-lg mb-4">
@@ -395,16 +492,88 @@
                             </div>
                         </div>
                     </details>
-                    <div class="pt-4">
-                        <button onclick="savePortalFields()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Save Changes</button>
-                    </div>
+                    <details class="border border-gray-200 rounded-lg mb-4">
+                        <summary class="px-4 py-3 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
+                            <span class="text-lg font-semibold text-gray-900">Billing</span>
+                            <span class="text-sm text-gray-500">Expand</span>
+                        </summary>
+                        <div class="px-4 pb-4 border-t border-gray-100">
+                            <div id="billingSectionContent" class="pt-3 text-sm text-gray-600">Loading billing info...</div>
+                        </div>
+                    </details>
                 </div>
             `;
+
+            const nameInput = document.getElementById('nameInput');
+            if (nameInput) {
+                nameInput.addEventListener('input', scheduleAutoSave);
+                nameInput.addEventListener('blur', function() {
+                    savePortalFields();
+                });
+            }
+
+            const contactCheckboxes = document.querySelectorAll('.contact-delivery-checkbox');
+            contactCheckboxes.forEach((checkbox) => {
+                checkbox.addEventListener('change', scheduleAutoSave);
+            });
+
+            setupLocationDropdowns(adsetValues);
         }
 
-        function setPortalStatus(status) {
+        async function loadBillingSection() {
+            const content = document.getElementById('billingSectionContent');
+            if (!content) return;
+            content.innerHTML = '<p class="text-gray-600">Loading billing info...</p>';
+
+            try {
+                if (!currentRecord) {
+                    content.innerHTML = '<p class="text-gray-600">No account loaded.</p>';
+                    return;
+                }
+
+                const customerIds = currentRecord.fields.Customers;
+                if (!Array.isArray(customerIds) || !customerIds.length) {
+                    content.innerHTML = '<p class="text-gray-600">No linked customers.</p>';
+                    return;
+                }
+
+                const customerCards = [];
+                for (const customerId of customerIds) {
+                    const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.customersTableName)}/${customerId}`);
+                    if (!response.ok) continue;
+                    const customer = await response.json();
+                    const fields = customer.fields || {};
+                    customerCards.push(`
+                        <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-2">${fields.Name || 'Customer'}</h4>
+                            <div class="text-sm text-gray-700 space-y-1">
+                                <p><strong>Email:</strong> ${fields.Email || '—'}</p>
+                                <p><strong>Phone:</strong> ${fields.Phone || '—'}</p>
+                                <p><strong>Address:</strong> ${fields.Address || '—'}</p>
+                            </div>
+                        </div>
+                    `);
+                }
+
+                content.innerHTML = customerCards.length ? customerCards.join('') : '<p class="text-gray-600">No readable customer records found.</p>';
+            } catch (err) {
+                content.innerHTML = `<p class="text-red-600">${err.message}</p>`;
+            }
+        }
+
+        async function setPortalStatus(status) {
             const input = document.getElementById('statusValue');
             if (!input) return;
+            const currentStatus = input.value;
+            if (currentStatus === 'Active' && status === 'Paused') {
+                const confirmed = await openConfirmModal(
+                    'Are you sure you want to pause all of your campaigns?',
+                    'This will immediately pause all of your areas and campaigns.',
+                    'If done it can take multiple days to start seeing new leads once re-activated',
+                    'Yes, pause all of my campaigns'
+                );
+                if (!confirmed) return;
+            }
             input.value = status;
             const activeBtn = document.getElementById('statusBtnActive');
             const pausedBtn = document.getElementById('statusBtnPaused');
@@ -417,41 +586,285 @@
                 activeBtn.className = 'px-4 py-2 text-sm font-semibold border-r border-gray-200 transition-colors bg-white text-green-700 border-green-300 hover:bg-green-50';
                 pausedBtn.className = 'px-4 py-2 text-sm font-semibold transition-colors bg-red-600 text-white border-red-600 shadow-sm';
             }
+
+            scheduleAutoSave();
         }
 
-        function setPortalCharging(charging) {
+        async function setPortalCharging(charging) {
             const input = document.getElementById('chargingValue');
             if (!input) return;
-            input.value = charging;
-            const chargingBtn = document.getElementById('chargingBtnCharging');
-            const pauseBtn = document.getElementById('chargingBtnPause');
-            if (!chargingBtn || !pauseBtn) return;
-
-            if (charging === 'Charging') {
-                chargingBtn.className = 'px-4 py-2 text-sm font-semibold border-r border-gray-200 transition-colors bg-green-600 text-white border-green-600 shadow-sm';
-                pauseBtn.className = 'px-4 py-2 text-sm font-semibold transition-colors bg-white text-red-700 border-red-300 hover:bg-red-50';
-            } else {
-                chargingBtn.className = 'px-4 py-2 text-sm font-semibold border-r border-gray-200 transition-colors bg-white text-green-700 border-green-300 hover:bg-green-50';
-                pauseBtn.className = 'px-4 py-2 text-sm font-semibold transition-colors bg-red-600 text-white border-red-600 shadow-sm';
+            const currentCharging = input.value;
+            if (currentCharging === 'Active' && charging === 'Paused') {
+                const confirmed = await openConfirmModal(
+                    'Are you sure you want to pause charging?',
+                    'Your campaigns will automatically pause once the current leads we owe you are all sent.',
+                    'If campaigns are paused it can take multiple days to start seeing new leads once re-activated',
+                    'Yes, pause charging after this set of leads'
+                );
+                if (!confirmed) return;
             }
+            input.value = charging;
+            const activeBtn = document.getElementById('chargingBtnActive');
+            const pausedBtn = document.getElementById('chargingBtnPaused');
+            if (!activeBtn || !pausedBtn) return;
+
+            if (charging === 'Active') {
+                activeBtn.className = 'px-4 py-2 text-sm font-semibold border-r border-gray-200 transition-colors bg-green-600 text-white border-green-600 shadow-sm';
+                pausedBtn.className = 'px-4 py-2 text-sm font-semibold transition-colors bg-white text-red-700 border-red-300 hover:bg-red-50';
+            } else {
+                activeBtn.className = 'px-4 py-2 text-sm font-semibold border-r border-gray-200 transition-colors bg-white text-green-700 border-green-300 hover:bg-green-50';
+                pausedBtn.className = 'px-4 py-2 text-sm font-semibold transition-colors bg-red-600 text-white border-red-600 shadow-sm';
+            }
+
+            scheduleAutoSave();
+        }
+
+        function openConfirmModal(title, line1, boldLine, confirmLabel) {
+            const modal = document.getElementById('confirmModal');
+            const titleEl = document.getElementById('confirmModalTitle');
+            const bodyEl = document.getElementById('confirmModalBody');
+            const confirmBtn = document.getElementById('confirmModalConfirmBtn');
+            const cancelBtn = document.getElementById('confirmModalCancelBtn');
+
+            titleEl.textContent = title;
+            bodyEl.innerHTML = `
+                <p>${line1}</p>
+                <p><strong>${boldLine}</strong></p>
+            `;
+            confirmBtn.textContent = confirmLabel;
+            modal.classList.remove('hidden');
+
+            return new Promise((resolve) => {
+                confirmResolver = resolve;
+
+                const cleanup = () => {
+                    modal.classList.add('hidden');
+                    confirmBtn.onclick = null;
+                    cancelBtn.onclick = null;
+                    confirmResolver = null;
+                };
+
+                confirmBtn.onclick = () => {
+                    cleanup();
+                    resolve(true);
+                };
+
+                cancelBtn.onclick = () => {
+                    cleanup();
+                    resolve(false);
+                };
+            });
         }
 
         function renderLocationDropdowns(adsetValues) {
             if (!adsetValues.length) {
                 return '<p class="text-sm text-gray-500">No locations linked yet.</p>';
             }
-            return adsetValues.map((adset, index) => `
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Location ${index + 1}</label>
-                    <select class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50" disabled>
-                        <option selected>${adset}</option>
-                    </select>
-                </div>
+            return adsetValues.map((adsetId, index) => `
+                <details class="border border-gray-200 rounded-lg" data-location-adset-id="${adsetId}">
+                    <summary class="px-3 py-2 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
+                        <span class="text-sm font-medium text-gray-800">Location ${index + 1}</span>
+                        <span class="text-xs text-gray-500">Expand</span>
+                    </summary>
+                    <div class="px-3 pb-3 border-t border-gray-100">
+                        <div id="location-adset-name-${adsetId}" class="text-sm text-gray-700 font-medium pt-2">Loading location...</div>
+                        <div id="location-leads-${adsetId}" class="pt-2 text-sm text-gray-600">Open to load leads...</div>
+                    </div>
+                </details>
             `).join('');
+        }
+
+        function formatLeadCreated(value) {
+            if (!value) return '';
+            try {
+                const date = new Date(value);
+                if (!isNaN(date.getTime())) {
+                    return date.toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                }
+            } catch (e) {}
+            return String(value);
+        }
+
+        function formatLeadPhone(value) {
+            if (!value) return '';
+            const cleaned = String(value).replace(/\D/g, '');
+            if (cleaned.length === 10) {
+                return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+            }
+            return String(value);
+        }
+
+        function formatLeadPrice(value) {
+            const num = Number(value);
+            if (!Number.isFinite(num)) return '';
+            return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function renderBadge(value, kind) {
+            if (!value) return '';
+            const lower = String(value).toLowerCase();
+            let badgeColor = 'bg-gray-100 text-gray-800';
+            if (kind === 'stage') {
+                if (['close won'].includes(lower)) badgeColor = 'bg-green-100 text-green-800';
+                else if (['close lost', 'not interested', 'cancelled'].includes(lower)) badgeColor = 'bg-red-100 text-red-800';
+                else if (['follow up', '2nd follow up', 'final follow up'].includes(lower)) badgeColor = 'bg-yellow-100 text-yellow-800';
+                else if (['appointment ran'].includes(lower)) badgeColor = 'bg-purple-100 text-purple-800';
+                else if (['contacted', 'first contact'].includes(lower)) badgeColor = 'bg-blue-100 text-blue-800';
+            } else if (kind === 'status') {
+                if (lower === 'qualified') badgeColor = 'bg-green-100 text-green-800';
+                else if (lower === 'pending') badgeColor = 'bg-yellow-100 text-yellow-800';
+                else if (lower === 'unqualified') badgeColor = 'bg-red-100 text-red-800';
+            }
+            return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${badgeColor}">${value}</span>`;
+        }
+
+        function renderLeadsTable(leads) {
+            if (!leads.length) {
+                return '<p class="text-sm text-gray-500">No linked B2C leads found for this location.</p>';
+            }
+
+            const rows = leads.map((lead) => {
+                const fields = lead.fields || {};
+                const fullName = fields['Full Name'] || '';
+                const stage = fields['Stage'] || '';
+                const status = fields['Status'] || '';
+                const created = formatLeadCreated(fields['Created']);
+                const phone = formatLeadPhone(fields['Phone']);
+                const email = fields['Email'] || '';
+                const address = fields['Address'] || '';
+                const price = formatLeadPrice(fields['Price']);
+                const appt = fields['Appt'] || '';
+                const notes = fields['Notes'] || '';
+                return `
+                    <tr class="border-t border-gray-200 align-top">
+                        <td class="px-3 py-2 text-sm text-gray-900 whitespace-nowrap">${fullName}</td>
+                        <td class="px-3 py-2 text-sm">${renderBadge(stage, 'stage')}</td>
+                        <td class="px-3 py-2 text-sm">${renderBadge(status, 'status')}</td>
+                        <td class="px-3 py-2 text-sm text-gray-700 whitespace-nowrap">${created}</td>
+                        <td class="px-3 py-2 text-sm text-gray-700 whitespace-nowrap">${phone}</td>
+                        <td class="px-3 py-2 text-sm text-gray-700">${email}</td>
+                        <td class="px-3 py-2 text-sm text-gray-700">${address}</td>
+                        <td class="px-3 py-2 text-sm text-gray-700 whitespace-nowrap">${price}</td>
+                        <td class="px-3 py-2 text-sm text-gray-700 whitespace-nowrap">${appt}</td>
+                        <td class="px-3 py-2 text-sm text-gray-700 min-w-[240px]">${notes}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            return `
+                <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                    <table class="w-full bg-white">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Full Name</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Stage</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Created</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Phone</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Email</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Address</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Price</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Appt</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function getLinkedB2CLeadIds(adsetRecord) {
+            const fields = adsetRecord.fields || {};
+            const possibleFields = ['B2C Leads', 'Leads', 'Linked Leads'];
+            for (const key of possibleFields) {
+                if (Array.isArray(fields[key])) return fields[key];
+            }
+            return [];
+        }
+
+        async function loadLocationAdsetAndLeads(adsetId) {
+            const nameEl = document.getElementById(`location-adset-name-${adsetId}`);
+            const leadsEl = document.getElementById(`location-leads-${adsetId}`);
+            if (!nameEl || !leadsEl) return;
+
+            leadsEl.innerHTML = '<p class="text-sm text-gray-600">Loading linked leads...</p>';
+            const adset = await fetchAdsetById(adsetId);
+            if (!adset) {
+                nameEl.textContent = `Location (${adsetId})`;
+                leadsEl.innerHTML = '<p class="text-sm text-red-600">Unable to load this location.</p>';
+                return;
+            }
+
+            const adsetName = adset.fields['Adset Name'] || adset.fields['Name'] || `Location (${adsetId})`;
+            nameEl.textContent = adsetName;
+
+            const leadIds = getLinkedB2CLeadIds(adset);
+            if (!leadIds.length) {
+                leadsEl.innerHTML = '<p class="text-sm text-gray-500">No linked B2C leads found for this location.</p>';
+                return;
+            }
+
+            const leadRecords = [];
+            for (const leadId of leadIds) {
+                const lead = await fetchLeadById(leadId);
+                if (lead) leadRecords.push(lead);
+            }
+
+            leadRecords.sort((a, b) => new Date((b.fields || {})['Created'] || 0) - new Date((a.fields || {})['Created'] || 0));
+            leadsEl.innerHTML = renderLeadsTable(leadRecords);
+        }
+
+        function setupLocationDropdowns(adsetValues) {
+            if (!adsetValues.length) return;
+            adsetValues.forEach((adsetId) => {
+                const wrapper = document.querySelector(`details[data-location-adset-id="${adsetId}"]`);
+                if (!wrapper) return;
+                wrapper.addEventListener('toggle', function() {
+                    if (!wrapper.open || wrapper.dataset.loaded === 'true') return;
+                    wrapper.dataset.loaded = 'true';
+                    loadLocationAdsetAndLeads(adsetId);
+                });
+            });
         }
 
         function getMultiSelectValues(selectEl) {
             return Array.from(selectEl.selectedOptions).map(option => option.value);
+        }
+
+        function scheduleAutoSave() {
+            if (autoSaveTimer) {
+                clearTimeout(autoSaveTimer);
+            }
+            autoSaveTimer = setTimeout(function() {
+                autoSaveTimer = null;
+                savePortalFields();
+            }, 500);
+        }
+
+        function getContactDeliverySelections() {
+            const selections = {};
+            const checkboxes = document.querySelectorAll('.contact-delivery-checkbox');
+            checkboxes.forEach((checkbox) => {
+                const contactId = checkbox.getAttribute('data-contact-id');
+                const delivery = checkbox.getAttribute('data-delivery');
+                if (!selections[contactId]) {
+                    selections[contactId] = { billing: false, newLeads: false };
+                }
+                if (delivery === 'billing') {
+                    selections[contactId].billing = checkbox.checked;
+                } else if (delivery === 'new-leads') {
+                    selections[contactId].newLeads = checkbox.checked;
+                }
+            });
+            return selections;
         }
 
         async function savePortalFields() {
@@ -462,12 +875,16 @@
             const rawStatus = fieldDisplay(currentRecord, 'Status', '');
             const status = statusInput ? statusInput.value : rawStatus;
             const chargingInput = document.getElementById('chargingValue');
-            const charging = chargingInput ? chargingInput.value : (currentRecord.fields.Charging || 'Charging');
+            const chargingUi = chargingInput ? chargingInput.value : (String(currentRecord.fields.Charging || '').toLowerCase() === 'pause' ? 'Paused' : 'Active');
+            const charging = chargingUi === 'Paused' ? 'Pause' : 'Charging';
+            const contactSelections = getContactDeliverySelections();
+            const billingContacts = Object.keys(contactSelections).filter((id) => contactSelections[id].billing);
 
             const fields = {
                 Name: name,
                 Status: status,
-                Charging: charging
+                Charging: charging,
+                [CONFIG.billingContactsField]: billingContacts
             };
 
             try {
@@ -477,10 +894,48 @@
                     body: JSON.stringify({ fields })
                 });
                 if (!response.ok) throw new Error('Failed to save changes');
-                await initializeDashboard();
-                alert('Portal fields saved successfully.');
+                const updated = await response.json();
+                currentRecord = updated;
+                await saveContactNotificationSelections(contactSelections);
+                currentContacts = await fetchContactsForAccount(currentRecord);
+                renderPortalCard(currentRecord);
+                await loadBillingSection();
+                document.querySelector('h1').textContent = `Portal Dashboard - ${currentRecord.fields.Name || 'Account'}`;
             } catch (err) {
                 alert(`Error saving portal fields: ${err.message}`);
+            }
+        }
+
+        async function saveContactNotificationSelections(contactSelections) {
+            const updates = [];
+            for (const contact of currentContacts) {
+                const selection = contactSelections[contact.id] || { billing: false, newLeads: false };
+                const existingNotifications = Array.isArray(contact.fields.Notifications) ? contact.fields.Notifications : [];
+                const notificationsWithoutManaged = existingNotifications.filter((n) => {
+                    const lower = String(n).toLowerCase();
+                    return lower !== 'billing' && lower !== 'new leads';
+                });
+                if (selection.billing) notificationsWithoutManaged.push('Billing');
+                if (selection.newLeads) notificationsWithoutManaged.push('New Leads');
+
+                const oldNormalized = [...existingNotifications].sort().join('|');
+                const newNormalized = [...notificationsWithoutManaged].sort().join('|');
+                if (oldNormalized === newNormalized) continue;
+
+                updates.push(
+                    fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.contactsTableName)}/${contact.id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ fields: { Notifications: notificationsWithoutManaged } })
+                    })
+                );
+            }
+
+            if (!updates.length) return;
+            const results = await Promise.all(updates);
+            const failed = results.find((res) => !res.ok);
+            if (failed) {
+                throw new Error('Failed to update one or more contact delivery preferences');
             }
         }
 
@@ -628,6 +1083,15 @@
 
         document.getElementById('billingContactsModal').addEventListener('click', function(e) {
             if (e.target === this) closeBillingContactsModal();
+        });
+
+        document.getElementById('confirmModal').addEventListener('click', function(e) {
+            if (e.target === this && confirmResolver) {
+                const resolve = confirmResolver;
+                confirmResolver = null;
+                this.classList.add('hidden');
+                resolve(false);
+            }
         });
 
         (function init() {
