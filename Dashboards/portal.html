@@ -140,14 +140,24 @@
             return urlParams.get(name);
         }
 
+        async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                return await fetch(url, { ...options, signal: controller.signal });
+            } finally {
+                clearTimeout(timeoutId);
+            }
+        }
+
         async function fetchRecordById(recordId) {
-            const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${recordId}`);
+            const response = await fetchWithTimeout(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${recordId}`);
             if (!response.ok) throw new Error(`Failed to fetch portal record: ${response.status}`);
             return response.json();
         }
 
         async function fetchContactById(contactId) {
-            const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.contactsTableName)}/${contactId}`);
+            const response = await fetchWithTimeout(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.contactsTableName)}/${contactId}`);
             if (!response.ok) return null;
             return response.json();
         }
@@ -181,14 +191,24 @@
             const leadContactIds = Array.isArray(record.fields['Lead Contacts']) ? record.fields['Lead Contacts'] : [];
             const contactIds = Array.from(new Set([...billingContactIds, ...leadContactIds]));
             if (!Array.isArray(contactIds) || contactIds.length === 0) return [];
+            const results = await Promise.allSettled(contactIds.map((contactId) => fetchContactById(contactId)));
             const emails = [];
-            for (const contactId of contactIds) {
-                const contact = await fetchContactById(contactId);
-                if (contact && contact.fields && contact.fields.Email) {
-                    emails.push(String(contact.fields.Email).trim().toLowerCase());
+            results.forEach((result) => {
+                if (result.status !== 'fulfilled') return;
+                const contact = result.value;
+                const email = contact && contact.fields ? contact.fields.Email : null;
+                if (!email) return;
+                if (Array.isArray(email)) {
+                    email.forEach((value) => {
+                        const normalized = String(value || '').trim().toLowerCase();
+                        if (normalized) emails.push(normalized);
+                    });
+                    return;
                 }
-            }
-            return emails;
+                const normalized = String(email).trim().toLowerCase();
+                if (normalized) emails.push(normalized);
+            });
+            return Array.from(new Set(emails));
         }
 
         async function verifyEmail(event) {
@@ -223,7 +243,10 @@
                 currentRecordId = atid;
                 await initializeDashboard();
             } catch (err) {
-                showEmailGateError(err.message);
+                const message = err && err.name === 'AbortError'
+                    ? 'Verification timed out. Please try again.'
+                    : (err && err.message ? err.message : 'Unable to verify this account.');
+                showEmailGateError(message);
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Continue';
