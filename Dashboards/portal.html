@@ -944,6 +944,15 @@
                         ${renderChevronToggle()}
                     </summary>
                     <div class="px-3 pb-3 border-t border-gray-100">
+                        <div class="border border-gray-200 rounded-lg mt-2 p-3 bg-gray-50">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 items-center">
+                                <div class="text-sm font-medium text-gray-700">Location Campaign Status</div>
+                                <div class="sm:col-span-2">
+                                    <div id="location-status-toggle-${adsetId}" class="text-sm text-gray-500">Loading status...</div>
+                                    <p class="mt-1 text-xs text-gray-500">Activate or pause this specific location</p>
+                                </div>
+                            </div>
+                        </div>
                         <details class="border border-gray-200 rounded-lg mt-2" data-location-leads-section="${adsetId}">
                             <summary class="px-3 py-2 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
                                 <span class="text-sm font-medium text-gray-800">Leads</span>
@@ -971,13 +980,6 @@
                                 ${renderChevronToggle()}
                             </summary>
                             <div id="location-submit-screen-${adsetId}" class="px-3 pb-3 border-t border-gray-100 pt-2 text-sm text-gray-600">Open to load submit screen settings...</div>
-                        </details>
-                        <details class="border border-gray-200 rounded-lg mt-2" data-location-settings-section="${adsetId}">
-                            <summary class="px-3 py-2 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
-                                <span class="text-sm font-medium text-gray-800">Settings</span>
-                                ${renderChevronToggle()}
-                            </summary>
-                            <div id="location-settings-${adsetId}" class="px-3 pb-3 border-t border-gray-100 pt-2 text-sm text-gray-600">Settings options coming soon.</div>
                         </details>
                     </div>
                 </details>
@@ -1614,6 +1616,72 @@
             return 'Lead Contacts';
         }
 
+        function getLocationCampaignStatus(adsetRecord) {
+            const fields = adsetRecord && adsetRecord.fields ? adsetRecord.fields : {};
+            const raw = fields['Location Campaign Status'];
+            const value = Array.isArray(raw) ? raw[0] : raw;
+            const normalized = String(value || '').toLowerCase();
+            if (normalized === 'paused') return 'Paused';
+            return 'Active';
+        }
+
+        function renderLocationCampaignStatusToggle(adsetId, status) {
+            const activeClasses = status === 'Active'
+                ? 'bg-green-600 text-white border-green-600 shadow-sm'
+                : 'bg-white text-green-700 border-green-300 hover:bg-green-50';
+            const pausedClasses = status === 'Paused'
+                ? 'bg-red-600 text-white border-red-600 shadow-sm'
+                : 'bg-white text-red-700 border-red-300 hover:bg-red-50';
+            return `
+                <div class="inline-flex rounded-lg border border-gray-200 overflow-hidden">
+                    <button type="button" onclick="setLocationCampaignStatus('${adsetId}', 'Active')" class="px-4 py-2 text-sm font-semibold border-r border-gray-200 transition-colors ${activeClasses}">Active</button>
+                    <button type="button" onclick="setLocationCampaignStatus('${adsetId}', 'Paused')" class="px-4 py-2 text-sm font-semibold transition-colors ${pausedClasses}">Paused</button>
+                </div>
+                <input type="hidden" id="locationStatusValue-${adsetId}" value="${status}">
+            `;
+        }
+
+        async function setLocationCampaignStatus(adsetId, nextStatus) {
+            const hidden = document.getElementById(`locationStatusValue-${adsetId}`);
+            const currentStatus = hidden ? hidden.value : 'Active';
+            if (currentStatus === nextStatus) return;
+
+            if (currentStatus === 'Active' && nextStatus === 'Paused') {
+                const confirmed = await openConfirmModal(
+                    'Are you sure you want to pause this location?',
+                    'This will only pause this one location, not all locations if you are running multiple',
+                    'If you choose to pause this location, it can take multiple days to start producing leads again after being re-activated',
+                    'Yes, pause this location'
+                );
+                if (!confirmed) return;
+            }
+
+            const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.adsetsTableName)}/${adsetId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fields: { 'Location Campaign Status': nextStatus } })
+            });
+            if (!response.ok) {
+                alert('Failed to update location status');
+                return;
+            }
+            await loadLocationHeader(adsetId);
+        }
+
+        async function loadLocationHeader(adsetId) {
+            const summaryNameEl = document.getElementById(`location-summary-name-${adsetId}`);
+            const statusHost = document.getElementById(`location-status-toggle-${adsetId}`);
+            if (!summaryNameEl && !statusHost) return;
+            const adset = await fetchAdsetById(adsetId);
+            const adsetName = adset && adset.fields ? (adset.fields['Adset Name'] || adset.fields['Name']) : null;
+            const displayName = adsetName || `Location (${adsetId})`;
+            if (summaryNameEl) summaryNameEl.textContent = displayName;
+            if (statusHost) {
+                const status = getLocationCampaignStatus(adset);
+                statusHost.innerHTML = renderLocationCampaignStatusToggle(adsetId, status);
+            }
+        }
+
         function getSubmitScreenMode(adsetRecord) {
             const raw = adsetRecord && adsetRecord.fields ? adsetRecord.fields['Submit Screen'] : null;
             const values = Array.isArray(raw) ? raw : (raw ? [raw] : []);
@@ -1915,7 +1983,7 @@
                 const wrapper = document.querySelector(`details[data-location-adset-id="${adsetId}"]`);
                 if (!wrapper) return;
 
-                loadLocationSummaryName(adsetId);
+                loadLocationHeader(adsetId);
 
                 wrapper.addEventListener('toggle', function() {
                     if (!wrapper.open || wrapper.dataset.bound === 'true') return;
@@ -1955,15 +2023,6 @@
                     wrapper.dataset.bound = 'true';
                 });
             });
-        }
-
-        async function loadLocationSummaryName(adsetId) {
-            const summaryNameEl = document.getElementById(`location-summary-name-${adsetId}`);
-            if (!summaryNameEl) return;
-            const adset = await fetchAdsetById(adsetId);
-            const adsetName = adset && adset.fields ? (adset.fields['Adset Name'] || adset.fields['Name']) : null;
-            const displayName = adsetName || `Location (${adsetId})`;
-            summaryNameEl.textContent = displayName;
         }
 
         function getMultiSelectValues(selectEl) {
