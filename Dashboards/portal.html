@@ -493,13 +493,6 @@
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 py-2">
-                                <label class="text-sm font-medium text-gray-700">Charging Status</label>
-                                <div class="sm:col-span-2">
-                                    ${renderChargingControl(record.fields.Charging)}
-                                    <p class="mt-2 text-xs text-gray-500">'Charging' = you will automatically be billed when the leads we owe you are all sent so your campaign continues running. 'Pause' = your campaign will pause when the leads we owe you are completed</p>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 py-2">
                                 <div class="text-sm font-medium text-gray-700">Charge Cadence</div>
                                 <div class="sm:col-span-2 text-sm text-gray-900">
                                     <div>${fieldDisplay(record, 'Charge Cadence')}</div>
@@ -2148,12 +2141,32 @@
                 if (!response.ok) throw new Error('Failed to save changes');
                 const updated = await response.json();
                 currentRecord = updated;
+                if (status === 'Paused') {
+                    await pauseAllLinkedAdsets();
+                }
                 currentContacts = await fetchContactsForAccount(currentRecord);
                 renderPortalCard(currentRecord);
                 await loadBillingSection();
                 document.querySelector('h1').textContent = `${currentRecord.fields.Name || 'Account'}`;
             } catch (err) {
                 alert(`Error saving portal fields: ${err.message}`);
+            }
+        }
+
+        async function pauseAllLinkedAdsets() {
+            const adsetIds = Array.isArray(currentRecord.fields.Adsets) ? currentRecord.fields.Adsets : [];
+            if (!adsetIds.length) return;
+
+            for (const adsetId of adsetIds) {
+                try {
+                    await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.adsetsTableName)}/${adsetId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ fields: { 'Location Campaign Status': 'Paused' } })
+                    });
+                } catch (e) {
+                    // Best effort; continue pausing remaining locations.
+                }
             }
         }
 
