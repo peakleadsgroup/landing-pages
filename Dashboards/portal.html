@@ -1798,26 +1798,47 @@
             const textEl = document.getElementById(`submitText-${adsetId}`);
 
             const fields = {
-                'Submit Screen': [mode],
-                'Timezone': timezoneEl ? timezoneEl.value : null,
-                'Call': callEl ? (callEl.value || '') : '',
-                'Text': textEl ? (textEl.value || '') : ''
+                'Submit Screen': mode
             };
 
-            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            days.forEach((day) => {
-                const sel = document.querySelector(`select[data-submit-day="${day}"][data-adset-id="${adsetId}"]`);
-                if (sel) {
-                    fields[day] = Array.from(sel.selectedOptions).map((o) => o.value);
+            // Only patch fields that are relevant/visible to avoid Airtable 422s from null/invalid updates.
+            if (mode === 'Calendar') {
+                if (timezoneEl && timezoneEl.value) {
+                    fields['Timezone'] = timezoneEl.value;
                 }
-            });
+            }
+            if (mode === 'Phone' || mode === 'Phone/Text') {
+                if (callEl) fields['Call'] = callEl.value || '';
+            }
+            if (mode === 'Text' || mode === 'Phone/Text') {
+                if (textEl) fields['Text'] = textEl.value || '';
+            }
+
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            if (mode === 'Calendar') {
+                days.forEach((day) => {
+                    const sel = document.querySelector(`select[data-submit-day="${day}"][data-adset-id="${adsetId}"]`);
+                    if (sel) {
+                        fields[day] = Array.from(sel.selectedOptions).map((o) => o.value);
+                    }
+                });
+            }
 
             const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.adsetsTableName)}/${adsetId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ fields })
             });
-            if (!response.ok) throw new Error('Failed to save submit screen settings');
+            if (!response.ok) {
+                let detail = '';
+                try {
+                    const err = await response.json();
+                    detail = err?.error?.message || JSON.stringify(err);
+                } catch {
+                    detail = await response.text();
+                }
+                throw new Error(`Failed to save submit screen settings${detail ? `: ${detail}` : ''}`);
+            }
         }
 
         function bindSubmitScreenEditor(adsetId) {
