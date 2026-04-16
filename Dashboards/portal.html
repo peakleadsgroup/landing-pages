@@ -144,6 +144,7 @@
         const loadedLeadsById = new Map();
         const leadToAdsetMap = new Map();
         const submitScreenSaveTimers = new Map();
+        const contactAutoSaveTimers = new Map();
         let currentLeadEditRecordId = null;
         const adsetLeadPaginationState = new Map();
 
@@ -505,6 +506,13 @@
             `;
         }
 
+        function escapeHtmlAttr(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;');
+        }
+
         function renderBillingContactsManager() {
             const rows = currentContacts.map((contact) => {
                 const name = contact.fields.Name || '';
@@ -513,9 +521,9 @@
                 return `
                     <div class="border border-gray-200 rounded-lg p-3 space-y-2" data-billing-contact-row="${contact.id}">
                         <div class="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-2 items-center">
-                            <input type="text" value="${name}" data-contact-id="${contact.id}" data-contact-field="Name" class="billing-contact-input px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" placeholder="Name" disabled>
-                            <input type="email" value="${email}" data-contact-id="${contact.id}" data-contact-field="Email" class="billing-contact-input px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" placeholder="Email" disabled>
-                            <input type="text" value="${phone}" data-contact-id="${contact.id}" data-contact-field="Phone" class="billing-contact-input px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" placeholder="Phone" disabled>
+                            <input type="text" value="${escapeHtmlAttr(name)}" data-saved-value="${escapeHtmlAttr(name)}" data-contact-id="${contact.id}" data-contact-field="Name" class="billing-contact-input px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" placeholder="Name" disabled>
+                            <input type="email" value="${escapeHtmlAttr(email)}" data-saved-value="${escapeHtmlAttr(email)}" data-contact-id="${contact.id}" data-contact-field="Email" class="billing-contact-input px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" placeholder="Email" disabled>
+                            <input type="text" value="${escapeHtmlAttr(phone)}" data-saved-value="${escapeHtmlAttr(phone)}" data-contact-id="${contact.id}" data-contact-field="Phone" class="billing-contact-input px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" placeholder="Phone" disabled>
                             <div class="flex items-center gap-2">
                                 <button class="billing-contact-edit p-2 text-blue-600 hover:bg-blue-50 rounded-md" data-contact-id="${contact.id}" title="Edit contact">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -809,17 +817,47 @@
             }
         }
 
+        function scheduleContactFieldSave(contactId, fieldName, value, inputEl) {
+            const key = `${contactId}:${fieldName}`;
+            const prev = contactAutoSaveTimers.get(key);
+            if (prev) clearTimeout(prev);
+            const t = setTimeout(async () => {
+                contactAutoSaveTimers.delete(key);
+                try {
+                    await saveContactField(contactId, fieldName, value, inputEl);
+                } catch (err) {
+                    alert(err.message);
+                }
+            }, 450);
+            contactAutoSaveTimers.set(key, t);
+        }
+
+        async function flushContactFieldSave(contactId, fieldName, value, inputEl) {
+            const key = `${contactId}:${fieldName}`;
+            const prev = contactAutoSaveTimers.get(key);
+            if (prev) {
+                clearTimeout(prev);
+                contactAutoSaveTimers.delete(key);
+            }
+            try {
+                await saveContactField(contactId, fieldName, value, inputEl);
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
         function attachBillingContactEditorListeners() {
             const inputs = document.querySelectorAll('.billing-contact-input');
             inputs.forEach((input) => {
-                input.addEventListener('blur', async function() {
-                    try {
-                        const contactId = input.getAttribute('data-contact-id');
-                        const fieldName = input.getAttribute('data-contact-field');
-                        await saveContactField(contactId, fieldName, input.value);
-                    } catch (err) {
-                        alert(err.message);
-                    }
+                input.addEventListener('input', function() {
+                    const contactId = input.getAttribute('data-contact-id');
+                    const fieldName = input.getAttribute('data-contact-field');
+                    scheduleContactFieldSave(contactId, fieldName, input.value, input);
+                });
+                input.addEventListener('blur', function() {
+                    const contactId = input.getAttribute('data-contact-id');
+                    const fieldName = input.getAttribute('data-contact-field');
+                    flushContactFieldSave(contactId, fieldName, input.value, input);
                 });
             });
 
@@ -862,11 +900,16 @@
             });
         }
 
-        async function saveContactField(contactId, fieldName, value) {
+        async function saveContactField(contactId, fieldName, value, inputEl) {
             if (!contactId || !fieldName) return;
-            const contact = currentContacts.find((c) => c.id === contactId);
-            const existingValue = contact && contact.fields ? (contact.fields[fieldName] || '') : '';
-            if (String(existingValue) === String(value || '')) return;
+            let baseline = '';
+            if (inputEl && Object.prototype.hasOwnProperty.call(inputEl.dataset, 'savedValue')) {
+                baseline = inputEl.dataset.savedValue;
+            } else {
+                const contact = currentContacts.find((c) => c.id === contactId);
+                baseline = contact && contact.fields ? (contact.fields[fieldName] || '') : '';
+            }
+            if (String(baseline) === String(value ?? '')) return;
 
             const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.contactsTableName)}/${contactId}`, {
                 method: 'PATCH',
@@ -879,6 +922,7 @@
             const updatedContact = await response.json();
             const idx = currentContacts.findIndex((c) => c.id === contactId);
             if (idx >= 0) currentContacts[idx] = updatedContact;
+            if (inputEl) inputEl.dataset.savedValue = value ?? '';
         }
 
         async function addNewContactAndLink() {
@@ -2143,12 +2187,19 @@
 
         function renderDayTimeSelect(dayName, selectedValues, adsetId) {
             const options = submitScreenTimeOptions();
+            const selectedSet = new Set(Array.isArray(selectedValues) ? selectedValues : []);
             return `
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">${dayName}</label>
-                    <select multiple data-submit-day="${dayName}" data-adset-id="${adsetId}" class="submit-screen-input w-full h-28 px-2 py-2 border border-gray-300 rounded-md text-sm">
-                        ${options.map((opt) => `<option value="${opt}" ${selectedValues.includes(opt) ? 'selected' : ''}>${opt}</option>`).join('')}
-                    </select>
+                <div class="border border-gray-200 rounded-lg p-3 bg-gray-50/50">
+                    <div class="text-xs font-medium text-gray-700 mb-2">${dayName}</div>
+                    <p class="text-[11px] text-gray-500 mb-2">Select all times you are available (multiple allowed).</p>
+                    <div class="flex flex-wrap gap-x-3 gap-y-1.5 max-h-36 overflow-y-auto pr-1">
+                        ${options.map((opt) => `
+                            <label class="inline-flex items-center gap-1.5 text-xs text-gray-800 cursor-pointer select-none">
+                                <input type="checkbox" class="submit-screen-input submit-screen-time-slot rounded border-gray-300 text-blue-600 focus:ring-blue-500" data-submit-day="${dayName}" data-adset-id="${adsetId}" data-time-slot="${escapeHtmlAttr(opt)}" ${selectedSet.has(opt) ? 'checked' : ''}>
+                                <span>${opt}</span>
+                            </label>
+                        `).join('')}
+                    </div>
                 </div>
             `;
         }
@@ -2232,10 +2283,8 @@
             const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             if (mode === 'Calendar') {
                 days.forEach((day) => {
-                    const sel = document.querySelector(`select[data-submit-day="${day}"][data-adset-id="${adsetId}"]`);
-                    if (sel) {
-                        fields[day] = Array.from(sel.selectedOptions).map((o) => o.value);
-                    }
+                    const boxes = document.querySelectorAll(`input.submit-screen-time-slot[data-submit-day="${day}"][data-adset-id="${adsetId}"]:checked`);
+                    fields[day] = Array.from(boxes).map((b) => b.getAttribute('data-time-slot')).filter(Boolean);
                 });
             }
 
@@ -2271,7 +2320,9 @@
 
             const inputs = document.querySelectorAll(`.submit-screen-input[data-adset-id="${adsetId}"]`);
             inputs.forEach((el) => {
-                const evt = el.tagName.toLowerCase() === 'select' ? 'change' : 'input';
+                const tag = el.tagName.toLowerCase();
+                const isCheck = tag === 'input' && el.type === 'checkbox';
+                const evt = tag === 'select' || isCheck ? 'change' : 'input';
                 el.addEventListener(evt, () => scheduleSubmitScreenSave(adsetId));
             });
         }
@@ -2310,7 +2361,11 @@
                                 </select>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                ${days.map((day) => renderDayTimeSelect(day, Array.isArray(fields[day]) ? fields[day] : [], adsetId)).join('')}
+                                ${days.map((day) => {
+                                    const raw = fields[day];
+                                    const dayVals = Array.isArray(raw) ? raw : (raw ? [raw] : []);
+                                    return renderDayTimeSelect(day, dayVals, adsetId);
+                                }).join('')}
                             </div>
                         </div>
 
@@ -2363,12 +2418,16 @@
                     if (c) contacts.push(c);
                 }
 
-                const rows = contacts.map((c) => `
+                const rows = contacts.map((c) => {
+                    const n = c.fields.Name || '';
+                    const e = c.fields.Email || '';
+                    const p = c.fields.Phone || '';
+                    return `
                     <div class="border border-gray-200 rounded-lg p-3 flex items-center justify-between gap-3">
                         <div class="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr] gap-2 flex-1">
-                            <input type="text" value="${c.fields.Name || ''}" data-contact-id="${c.id}" data-contact-field="Name" class="location-contact-input px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" disabled>
-                            <input type="email" value="${c.fields.Email || ''}" data-contact-id="${c.id}" data-contact-field="Email" class="location-contact-input px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" disabled>
-                            <input type="text" value="${c.fields.Phone || ''}" data-contact-id="${c.id}" data-contact-field="Phone" class="location-contact-input px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" disabled>
+                            <input type="text" value="${escapeHtmlAttr(n)}" data-saved-value="${escapeHtmlAttr(n)}" data-contact-id="${c.id}" data-contact-field="Name" class="location-contact-input px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" disabled>
+                            <input type="email" value="${escapeHtmlAttr(e)}" data-saved-value="${escapeHtmlAttr(e)}" data-contact-id="${c.id}" data-contact-field="Email" class="location-contact-input px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" disabled>
+                            <input type="text" value="${escapeHtmlAttr(p)}" data-saved-value="${escapeHtmlAttr(p)}" data-contact-id="${c.id}" data-contact-field="Phone" class="location-contact-input px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" disabled>
                         </div>
                         <div class="flex items-center gap-2">
                             <button class="location-contact-edit p-2 text-blue-600 hover:bg-blue-50 rounded-md" data-contact-id="${c.id}" title="Edit contact">
@@ -2383,7 +2442,8 @@
                             </button>
                         </div>
                     </div>
-                `).join('');
+                `;
+                }).join('');
 
                 contactsEl.innerHTML = `
                     <div class="space-y-2">
@@ -2430,14 +2490,15 @@
                 });
 
                 contactsEl.querySelectorAll('.location-contact-input').forEach((input) => {
-                    input.addEventListener('blur', async () => {
-                        try {
-                            const contactId = input.getAttribute('data-contact-id');
-                            const fieldName = input.getAttribute('data-contact-field');
-                            await saveContactField(contactId, fieldName, input.value);
-                        } catch (err) {
-                            alert(err.message);
-                        }
+                    input.addEventListener('input', () => {
+                        const contactId = input.getAttribute('data-contact-id');
+                        const fieldName = input.getAttribute('data-contact-field');
+                        scheduleContactFieldSave(contactId, fieldName, input.value, input);
+                    });
+                    input.addEventListener('blur', () => {
+                        const contactId = input.getAttribute('data-contact-id');
+                        const fieldName = input.getAttribute('data-contact-field');
+                        flushContactFieldSave(contactId, fieldName, input.value, input);
                     });
                 });
 
