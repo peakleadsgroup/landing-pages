@@ -1046,41 +1046,31 @@
 
         async function updateAdsetCampaignStatus(adsetId, nextStatus) {
             const url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.adsetsTableName)}/${adsetId}`;
-            const statusFields = ['Adset Status', 'Location Campaign Status', 'Status'];
-            const payloads = [];
-            statusFields.forEach((fieldName) => {
-                payloads.push({ fields: { [fieldName]: nextStatus } });
-                payloads.push({ fields: { [fieldName]: [nextStatus] } });
+            const normalizedStatus = String(nextStatus || '').toLowerCase() === 'paused' ? 'Paused' : 'Active';
+            const response = await fetch(url, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fields: { 'Adset Status': normalizedStatus },
+                    typecast: true
+                })
             });
-            let lastErrorMessage = '';
+            if (response.ok) return await response.json();
 
-            for (const payload of payloads) {
-                const response = await fetch(url, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (response.ok) return await response.json();
-
-                let errText = '';
+            let errText = '';
+            try {
+                const rawText = await response.text();
                 try {
-                    const rawText = await response.text();
-                    try {
-                        const errJson = rawText ? JSON.parse(rawText) : null;
-                        errText = errJson && errJson.error ? (errJson.error.message || errJson.error.type || '') : rawText;
-                    } catch (e) {
-                        errText = rawText || '';
-                    }
+                    const errJson = rawText ? JSON.parse(rawText) : null;
+                    errText = errJson && errJson.error ? (errJson.error.message || errJson.error.type || '') : rawText;
                 } catch (e) {
-                    errText = '';
+                    errText = rawText || '';
                 }
-                lastErrorMessage = errText || `status ${response.status}`;
-
-                // Retry with alternate payload only for validation-style 422 responses.
-                if (response.status !== 422) break;
+            } catch (e) {
+                errText = '';
             }
 
-            throw new Error(`Failed to update location ${adsetId}: ${lastErrorMessage}`);
+            throw new Error(`Failed to update location ${adsetId}: ${errText || `status ${response.status}`}`);
         }
 
         async function setPortalCharging(charging) {
@@ -2022,7 +2012,7 @@
                 : fields['Status'];
             const value = Array.isArray(raw) ? raw[0] : raw;
             const normalized = String(value || '').toLowerCase();
-            if (normalized === 'paused') return 'Paused';
+            if (normalized === 'paused' || normalized === 'off' || normalized === 'disabled' || normalized === 'false' || normalized === '0') return 'Paused';
             return 'Active';
         }
 
