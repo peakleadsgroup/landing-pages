@@ -7,6 +7,11 @@
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
     <title>Portal Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .chevron-open { display: none; }
+        details[open] .chevron-open { display: inline; }
+        details[open] .chevron-closed { display: none; }
+    </style>
 </head>
 <body class="bg-gray-50">
     <div id="emailGate" class="min-h-screen flex items-center justify-center p-6">
@@ -209,7 +214,7 @@
                 currentContacts = await fetchContactsForAccount(currentRecord);
                 renderPortalCard(currentRecord);
                 await loadBillingSection();
-                document.querySelector('h1').textContent = `Portal Dashboard - ${currentRecord.fields.Name || 'Account'}`;
+                document.querySelector('h1').textContent = `${currentRecord.fields.Name || 'Account'}`;
                 document.getElementById('portalCard').classList.remove('hidden');
             } catch (err) {
                 showError(err.message);
@@ -261,6 +266,19 @@
                     <div class="text-sm font-medium text-gray-700">${label}</div>
                     <div class="sm:col-span-2 text-sm text-gray-900">${value}</div>
                 </div>
+            `;
+        }
+
+        function renderChevronToggle() {
+            return `
+                <span class="text-gray-500">
+                    <svg class="w-5 h-5 chevron-closed" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                    <svg class="w-5 h-5 chevron-open" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                    </svg>
+                </span>
             `;
         }
 
@@ -351,53 +369,36 @@
             `;
         }
 
-        function hasNotification(contact, notificationName) {
-            const notifications = Array.isArray(contact.fields.Notifications) ? contact.fields.Notifications : [];
-            return notifications.some((n) => String(n).toLowerCase() === notificationName.toLowerCase());
-        }
-
-        function renderContactsSection() {
-            if (!currentContacts.length) {
-                return `
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 py-2">
-                        <div class="text-sm font-medium text-gray-700">Contacts</div>
-                        <div class="sm:col-span-2 text-sm text-gray-500">No linked contacts found.</div>
-                    </div>
-                `;
-            }
-
-            const billingIds = Array.isArray(currentRecord.fields[CONFIG.billingContactsField]) ? currentRecord.fields[CONFIG.billingContactsField] : [];
+        function renderBillingContactsManager() {
             const rows = currentContacts.map((contact) => {
-                const name = contact.fields.Name || 'Unnamed';
-                const email = contact.fields.Email || 'No email';
-                const phone = contact.fields.Phone || 'No phone';
-                const billingSelected = billingIds.includes(contact.id) || hasNotification(contact, 'Billing');
-                const newLeadsSelected = hasNotification(contact, 'New Leads');
-
+                const name = contact.fields.Name || '';
+                const email = contact.fields.Email || '';
+                const phone = contact.fields.Phone || '';
                 return `
-                    <div class="border border-gray-200 rounded-lg p-3 space-y-2">
-                        <div class="text-sm font-medium text-gray-900">${name}</div>
-                        <div class="text-xs text-gray-600">${email}</div>
-                        <div class="text-xs text-gray-600">${phone}</div>
-                        <div class="flex flex-wrap gap-4 pt-1">
-                            <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-                                <input type="checkbox" class="contact-delivery-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500" data-contact-id="${contact.id}" data-delivery="billing" ${billingSelected ? 'checked' : ''}>
-                                Billing
-                            </label>
-                            <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-                                <input type="checkbox" class="contact-delivery-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500" data-contact-id="${contact.id}" data-delivery="new-leads" ${newLeadsSelected ? 'checked' : ''}>
-                                New Leads
-                            </label>
+                    <div class="border border-gray-200 rounded-lg p-3 space-y-2" data-billing-contact-row="${contact.id}">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <input type="text" value="${name}" data-contact-id="${contact.id}" data-contact-field="Name" class="billing-contact-input sm:col-span-1 px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Name">
+                            <input type="email" value="${email}" data-contact-id="${contact.id}" data-contact-field="Email" class="billing-contact-input sm:col-span-1 px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Email">
+                            <input type="text" value="${phone}" data-contact-id="${contact.id}" data-contact-field="Phone" class="billing-contact-input sm:col-span-1 px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Phone">
                         </div>
                     </div>
                 `;
             }).join('');
 
             return `
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 py-2">
-                    <div class="text-sm font-medium text-gray-700">Contacts</div>
-                    <div class="sm:col-span-2 space-y-3">
-                        ${rows}
+                <div class="mt-4">
+                    <h5 class="text-sm font-semibold text-gray-800 mb-2">Contacts</h5>
+                    <div class="space-y-2">
+                        ${rows || '<p class="text-sm text-gray-500">No contacts linked yet.</p>'}
+                    </div>
+                    <div class="border border-dashed border-gray-300 rounded-lg p-3 mt-3">
+                        <div class="text-sm font-medium text-gray-800 mb-2">Add New Contact</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <input id="newContactName" type="text" class="px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Name">
+                            <input id="newContactEmail" type="email" class="px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Email">
+                            <input id="newContactPhone" type="text" class="px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Phone">
+                        </div>
+                        <button id="addContactBtn" class="mt-3 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">Add Contact</button>
                     </div>
                 </div>
             `;
@@ -424,7 +425,7 @@
                                 </svg>
                                 <span>Account Settings</span>
                             </span>
-                            <span class="text-sm text-gray-500">Expand</span>
+                            ${renderChevronToggle()}
                         </summary>
                         <div class="px-4 pb-4 border-t border-gray-100">
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 py-3">
@@ -440,17 +441,17 @@
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 py-3">
-                                <label class="text-sm font-medium text-gray-700">Status</label>
+                                <label class="text-sm font-medium text-gray-700">Campaign Status</label>
                                 <div class="sm:col-span-2">
                                     ${renderStatusControl(record.fields.Status)}
                                     <p class="mt-2 text-xs text-gray-500">'Active' = one or all of your campaigns are actively running. 'Pause' = all of your campaigns are paused</p>
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 py-2">
-                                <label class="text-sm font-medium text-gray-700">Charging</label>
+                                <label class="text-sm font-medium text-gray-700">Charging Status</label>
                                 <div class="sm:col-span-2">
                                     ${renderChargingControl(record.fields.Charging)}
-                                    <p class="mt-2 text-xs text-gray-500">'Charging' = you will automatically be billed when the leads we owe you are all sent so your campaign continues running. 'Pause' = your campaign will pause when the leads we owe you are completed and your campaign will pause</p>
+                                    <p class="mt-2 text-xs text-gray-500">'Charging' = you will automatically be billed when the leads we owe you are all sent so your campaign continues running. 'Pause' = your campaign will pause when the leads we owe you are completed</p>
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 py-2">
@@ -460,7 +461,8 @@
                                     <p class="mt-1 text-xs text-gray-500">Number of leads we bill for at a time</p>
                                 </div>
                             </div>
-                            ${renderContactsSection()}
+                            ${createReadOnlyRow('Lead Price', moneyDisplay(record.fields['Lead Price']))}
+                            ${createReadOnlyRow('Niche', fieldDisplay(record, 'Niche'))}
                         </div>
                     </details>
                     <details class="border border-gray-200 rounded-lg mb-4">
@@ -471,7 +473,7 @@
                                 </svg>
                                 <span>Overview</span>
                             </span>
-                            <span class="text-sm text-gray-500">Expand</span>
+                            ${renderChevronToggle()}
                         </summary>
                         <div class="px-4 pb-4 border-t border-gray-100">
                             ${createReadOnlyRow('Qualified Leads Sent', fieldDisplay(record, 'Qualified Leads'))}
@@ -483,11 +485,9 @@
                                     ${leadsOwedHelper}
                                 </div>
                             </div>
-                            ${createReadOnlyRow('Lead Price', moneyDisplay(record.fields['Lead Price']))}
-                            ${createReadOnlyRow('Niche', fieldDisplay(record, 'Niche'))}
                         </div>
                     </details>
-                    <details class="border border-gray-200 rounded-lg mb-4" open>
+                    <details class="border border-gray-200 rounded-lg mb-4">
                         <summary class="px-4 py-3 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
                             <span class="text-lg font-semibold text-gray-900 inline-flex items-center gap-2">
                                 <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -496,7 +496,7 @@
                                 </svg>
                                 <span>Locations & Leads</span>
                             </span>
-                            <span class="text-sm text-gray-500">Collapse</span>
+                            ${renderChevronToggle()}
                         </summary>
                         <div class="px-4 pb-4 border-t border-gray-100">
                             <div class="space-y-2" id="locationsContainer">
@@ -512,7 +512,7 @@
                                 </svg>
                                 <span>Billing</span>
                             </span>
-                            <span class="text-sm text-gray-500">Expand</span>
+                            ${renderChevronToggle()}
                         </summary>
                         <div class="px-4 pb-4 border-t border-gray-100">
                             <div id="billingSectionContent" class="pt-3 text-sm text-gray-600">Loading billing info...</div>
@@ -528,11 +528,6 @@
                     savePortalFields();
                 });
             }
-
-            const contactCheckboxes = document.querySelectorAll('.contact-delivery-checkbox');
-            contactCheckboxes.forEach((checkbox) => {
-                checkbox.addEventListener('change', scheduleAutoSave);
-            });
 
             setupLocationDropdowns(adsetValues);
         }
@@ -641,10 +636,102 @@
                     `);
                 }
 
-                content.innerHTML = customerCards.length ? customerCards.join('') : '<p class="text-gray-600">No readable customer records found.</p>';
+                const billingCardsHtml = customerCards.length ? customerCards.join('') : '<p class="text-gray-600">No readable customer records found.</p>';
+                content.innerHTML = `${billingCardsHtml}${renderBillingContactsManager()}`;
+                attachBillingContactEditorListeners();
             } catch (err) {
                 content.innerHTML = `<p class="text-red-600">${err.message}</p>`;
             }
+        }
+
+        function attachBillingContactEditorListeners() {
+            const inputs = document.querySelectorAll('.billing-contact-input');
+            inputs.forEach((input) => {
+                input.addEventListener('blur', async function() {
+                    try {
+                        const contactId = input.getAttribute('data-contact-id');
+                        const fieldName = input.getAttribute('data-contact-field');
+                        await saveContactField(contactId, fieldName, input.value);
+                    } catch (err) {
+                        alert(err.message);
+                    }
+                });
+            });
+
+            const addBtn = document.getElementById('addContactBtn');
+            if (addBtn) {
+                addBtn.addEventListener('click', async function() {
+                    try {
+                        await addNewContactAndLink();
+                    } catch (err) {
+                        alert(err.message);
+                    }
+                });
+            }
+        }
+
+        async function saveContactField(contactId, fieldName, value) {
+            if (!contactId || !fieldName) return;
+            const contact = currentContacts.find((c) => c.id === contactId);
+            const existingValue = contact && contact.fields ? (contact.fields[fieldName] || '') : '';
+            if (String(existingValue) === String(value || '')) return;
+
+            const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.contactsTableName)}/${contactId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fields: { [fieldName]: value || '' } })
+            });
+            if (!response.ok) {
+                throw new Error(`Failed to update contact ${fieldName}`);
+            }
+            const updatedContact = await response.json();
+            const idx = currentContacts.findIndex((c) => c.id === contactId);
+            if (idx >= 0) currentContacts[idx] = updatedContact;
+        }
+
+        async function addNewContactAndLink() {
+            if (!currentRecordId || !currentRecord) return;
+            const nameInput = document.getElementById('newContactName');
+            const emailInput = document.getElementById('newContactEmail');
+            const phoneInput = document.getElementById('newContactPhone');
+            const name = (nameInput && nameInput.value ? nameInput.value.trim() : '');
+            const email = (emailInput && emailInput.value ? emailInput.value.trim() : '');
+            const phone = (phoneInput && phoneInput.value ? phoneInput.value.trim() : '');
+
+            if (!name && !email && !phone) return;
+
+            const createRes = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.contactsTableName)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fields: { Name: name, Email: email, Phone: phone } })
+            });
+            if (!createRes.ok) {
+                throw new Error('Failed to create contact');
+            }
+            const newContact = await createRes.json();
+
+            const existingContacts = Array.isArray(currentRecord.fields[CONFIG.contactsLinkedField]) ? currentRecord.fields[CONFIG.contactsLinkedField] : [];
+            const existingBillingContacts = Array.isArray(currentRecord.fields[CONFIG.billingContactsField]) ? currentRecord.fields[CONFIG.billingContactsField] : [];
+            const updatedContacts = Array.from(new Set([...existingContacts, newContact.id]));
+            const updatedBillingContacts = Array.from(new Set([...existingBillingContacts, newContact.id]));
+
+            const linkRes = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${currentRecordId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fields: {
+                        [CONFIG.contactsLinkedField]: updatedContacts,
+                        [CONFIG.billingContactsField]: updatedBillingContacts
+                    }
+                })
+            });
+            if (!linkRes.ok) {
+                throw new Error('Failed to link new contact');
+            }
+
+            currentRecord = await linkRes.json();
+            currentContacts = await fetchContactsForAccount(currentRecord);
+            await loadBillingSection();
         }
 
         function renderChargeStatusBadge(status) {
@@ -764,7 +851,7 @@
                 <details class="border border-gray-200 rounded-lg" data-location-adset-id="${adsetId}">
                     <summary class="px-3 py-2 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
                         <span id="location-summary-name-${adsetId}" class="text-sm font-medium text-gray-800">Loading location...</span>
-                        <span class="text-xs text-gray-500">Expand</span>
+                        ${renderChevronToggle()}
                     </summary>
                     <div class="px-3 pb-3 border-t border-gray-100">
                         <div id="location-leads-${adsetId}" class="pt-2 text-sm text-gray-600">Open to load leads...</div>
@@ -939,7 +1026,10 @@
                 let leadRecords = [];
 
                 if (leadIds.length) {
-                    for (const leadId of leadIds) {
+                    const total = leadIds.length;
+                    for (let i = 0; i < leadIds.length; i++) {
+                        const leadId = leadIds[i];
+                        leadsEl.innerHTML = `<p class="text-sm text-gray-600">Loading ${i + 1}/${total} leads...</p>`;
                         const lead = await fetchLeadById(leadId);
                         if (lead) leadRecords.push(lead);
                     }
@@ -994,24 +1084,6 @@
             }, 500);
         }
 
-        function getContactDeliverySelections() {
-            const selections = {};
-            const checkboxes = document.querySelectorAll('.contact-delivery-checkbox');
-            checkboxes.forEach((checkbox) => {
-                const contactId = checkbox.getAttribute('data-contact-id');
-                const delivery = checkbox.getAttribute('data-delivery');
-                if (!selections[contactId]) {
-                    selections[contactId] = { billing: false, newLeads: false };
-                }
-                if (delivery === 'billing') {
-                    selections[contactId].billing = checkbox.checked;
-                } else if (delivery === 'new-leads') {
-                    selections[contactId].newLeads = checkbox.checked;
-                }
-            });
-            return selections;
-        }
-
         async function savePortalFields() {
             if (!currentRecordId) return;
             const nameInput = document.getElementById('nameInput');
@@ -1022,14 +1094,11 @@
             const chargingInput = document.getElementById('chargingValue');
             const chargingUi = chargingInput ? chargingInput.value : (String(currentRecord.fields.Charging || '').toLowerCase() === 'pause' ? 'Paused' : 'Active');
             const charging = chargingUi === 'Paused' ? 'Pause' : 'Charging';
-            const contactSelections = getContactDeliverySelections();
-            const billingContacts = Object.keys(contactSelections).filter((id) => contactSelections[id].billing);
 
             const fields = {
                 Name: name,
                 Status: status,
-                Charging: charging,
-                [CONFIG.billingContactsField]: billingContacts
+                Charging: charging
             };
 
             try {
@@ -1041,46 +1110,12 @@
                 if (!response.ok) throw new Error('Failed to save changes');
                 const updated = await response.json();
                 currentRecord = updated;
-                await saveContactNotificationSelections(contactSelections);
                 currentContacts = await fetchContactsForAccount(currentRecord);
                 renderPortalCard(currentRecord);
                 await loadBillingSection();
-                document.querySelector('h1').textContent = `Portal Dashboard - ${currentRecord.fields.Name || 'Account'}`;
+                document.querySelector('h1').textContent = `${currentRecord.fields.Name || 'Account'}`;
             } catch (err) {
                 alert(`Error saving portal fields: ${err.message}`);
-            }
-        }
-
-        async function saveContactNotificationSelections(contactSelections) {
-            const updates = [];
-            for (const contact of currentContacts) {
-                const selection = contactSelections[contact.id] || { billing: false, newLeads: false };
-                const existingNotifications = Array.isArray(contact.fields.Notifications) ? contact.fields.Notifications : [];
-                const notificationsWithoutManaged = existingNotifications.filter((n) => {
-                    const lower = String(n).toLowerCase();
-                    return lower !== 'billing' && lower !== 'new leads';
-                });
-                if (selection.billing) notificationsWithoutManaged.push('Billing');
-                if (selection.newLeads) notificationsWithoutManaged.push('New Leads');
-
-                const oldNormalized = [...existingNotifications].sort().join('|');
-                const newNormalized = [...notificationsWithoutManaged].sort().join('|');
-                if (oldNormalized === newNormalized) continue;
-
-                updates.push(
-                    fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.contactsTableName)}/${contact.id}`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ fields: { Notifications: notificationsWithoutManaged } })
-                    })
-                );
-            }
-
-            if (!updates.length) return;
-            const results = await Promise.all(updates);
-            const failed = results.find((res) => !res.ok);
-            if (failed) {
-                throw new Error('Failed to update one or more contact delivery preferences');
             }
         }
 
