@@ -408,13 +408,22 @@
                 const phone = contact.fields.Phone || '';
                 return `
                     <div class="border border-gray-200 rounded-lg p-3 space-y-2" data-billing-contact-row="${contact.id}">
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            <input type="text" value="${name}" data-contact-id="${contact.id}" data-contact-field="Name" class="billing-contact-input sm:col-span-1 px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Name">
-                            <input type="email" value="${email}" data-contact-id="${contact.id}" data-contact-field="Email" class="billing-contact-input sm:col-span-1 px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Email">
-                            <input type="text" value="${phone}" data-contact-id="${contact.id}" data-contact-field="Phone" class="billing-contact-input sm:col-span-1 px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Phone">
-                        </div>
-                        <div>
-                            <button class="billing-contact-remove px-3 py-1.5 text-sm bg-red-50 text-red-700 rounded-md hover:bg-red-100" data-contact-id="${contact.id}">Remove Billing Contact</button>
+                        <div class="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-2 items-center">
+                            <input type="text" value="${name}" data-contact-id="${contact.id}" data-contact-field="Name" class="billing-contact-input px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" placeholder="Name" disabled>
+                            <input type="email" value="${email}" data-contact-id="${contact.id}" data-contact-field="Email" class="billing-contact-input px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" placeholder="Email" disabled>
+                            <input type="text" value="${phone}" data-contact-id="${contact.id}" data-contact-field="Phone" class="billing-contact-input px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" placeholder="Phone" disabled>
+                            <div class="flex items-center gap-2">
+                                <button class="billing-contact-edit p-2 text-blue-600 hover:bg-blue-50 rounded-md" data-contact-id="${contact.id}" title="Edit contact">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                <button class="billing-contact-remove p-2 text-red-600 hover:bg-red-50 rounded-md" data-contact-id="${contact.id}" title="Remove billing contact">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-1-2a1 1 0 00-1-1h-2a1 1 0 00-1 1l-1 2h6l-1-2z"></path>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -717,6 +726,21 @@
                 });
             });
 
+            const editBtns = document.querySelectorAll('.billing-contact-edit');
+            editBtns.forEach((btn) => {
+                btn.addEventListener('click', function() {
+                    const contactId = btn.getAttribute('data-contact-id');
+                    const row = document.querySelector(`[data-billing-contact-row="${contactId}"]`);
+                    if (!row) return;
+                    const rowInputs = row.querySelectorAll('.billing-contact-input');
+                    rowInputs.forEach((input) => {
+                        input.disabled = false;
+                        input.classList.remove('bg-gray-50');
+                    });
+                    if (rowInputs.length) rowInputs[0].focus();
+                });
+            });
+
             const addBtn = document.getElementById('addContactBtn');
             if (addBtn) {
                 addBtn.addEventListener('click', async function() {
@@ -969,7 +993,7 @@
                         </details>
                         <details class="border border-gray-200 rounded-lg mt-2" data-location-contacts-section="${adsetId}">
                             <summary class="px-3 py-2 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
-                                <span class="text-sm font-medium text-gray-800">Contacts</span>
+                                <span class="text-sm font-medium text-gray-800">Lead Notification Contacts</span>
                                 ${renderChevronToggle()}
                             </summary>
                             <div id="location-contacts-${adsetId}" class="px-3 pb-3 border-t border-gray-100 pt-2 text-sm text-gray-600">Open to load contacts...</div>
@@ -1905,11 +1929,23 @@
 
                 const rows = contacts.map((c) => `
                     <div class="border border-gray-200 rounded-lg p-3 flex items-center justify-between gap-3">
-                        <div class="text-sm text-gray-800">
-                            <div class="font-medium">${c.fields.Name || 'Unnamed'}</div>
-                            <div class="text-gray-600">${c.fields.Email || 'No email'} · ${c.fields.Phone || 'No phone'}</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr] gap-2 flex-1">
+                            <input type="text" value="${c.fields.Name || ''}" data-contact-id="${c.id}" data-contact-field="Name" class="location-contact-input px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" disabled>
+                            <input type="email" value="${c.fields.Email || ''}" data-contact-id="${c.id}" data-contact-field="Email" class="location-contact-input px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" disabled>
+                            <input type="text" value="${c.fields.Phone || ''}" data-contact-id="${c.id}" data-contact-field="Phone" class="location-contact-input px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" disabled>
                         </div>
-                        <button class="location-contact-remove px-3 py-1.5 text-sm bg-red-50 text-red-700 rounded-md hover:bg-red-100" data-adset-id="${adsetId}" data-contacts-field="${contactsFieldName}" data-contact-id="${c.id}">Remove</button>
+                        <div class="flex items-center gap-2">
+                            <button class="location-contact-edit p-2 text-blue-600 hover:bg-blue-50 rounded-md" data-contact-id="${c.id}" title="Edit contact">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </button>
+                            <button class="location-contact-remove p-2 text-red-600 hover:bg-red-50 rounded-md" data-adset-id="${adsetId}" data-contacts-field="${contactsFieldName}" data-contact-id="${c.id}" title="Remove contact">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-1-2a1 1 0 00-1-1h-2a1 1 0 00-1 1l-1 2h6l-1-2z"></path>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 `).join('');
 
@@ -1938,6 +1974,31 @@
                             const updated = ids.filter((id) => id !== contactId);
                             await patchAdsetContacts(adsetId, fieldName, updated);
                             await loadLocationContacts(adsetId);
+                        } catch (err) {
+                            alert(err.message);
+                        }
+                    });
+                });
+
+                contactsEl.querySelectorAll('.location-contact-edit').forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                        const row = btn.closest('.border');
+                        if (!row) return;
+                        const inputs = row.querySelectorAll('.location-contact-input');
+                        inputs.forEach((input) => {
+                            input.disabled = false;
+                            input.classList.remove('bg-gray-50');
+                        });
+                        if (inputs.length) inputs[0].focus();
+                    });
+                });
+
+                contactsEl.querySelectorAll('.location-contact-input').forEach((input) => {
+                    input.addEventListener('blur', async () => {
+                        try {
+                            const contactId = input.getAttribute('data-contact-id');
+                            const fieldName = input.getAttribute('data-contact-field');
+                            await saveContactField(contactId, fieldName, input.value);
                         } catch (err) {
                             alert(err.message);
                         }
