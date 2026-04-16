@@ -6,11 +6,14 @@
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
     <title>Portal Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <style>
-        .chevron-open { display: none; }
-        details[open] .chevron-open { display: inline; }
-        details[open] .chevron-closed { display: none; }
+        details > summary .chevron-open { display: none; }
+        details[open] > summary .chevron-open { display: inline; }
+        details[open] > summary .chevron-closed { display: none; }
+        .zip-map { height: 260px; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -93,6 +96,16 @@
         </div>
     </div>
 
+    <div id="editLeadModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">Edit Lead</h3>
+                <button onclick="closeLeadEditModal()" class="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+            <div id="editLeadModalContent" class="max-h-[70vh] overflow-y-auto"></div>
+        </div>
+    </div>
+
     <script>
         const CONFIG = {
             baseId: 'appmBb0lzqRK9dI8v',
@@ -101,6 +114,8 @@
             contactsLinkedField: 'Contacts',
             customersTableName: 'Customers',
             adsetsTableName: 'Adsets',
+            adsetZipTrackingTableName: 'Adset Zip Tracking',
+            usZipsTableName: 'US Zips',
             leadsTableName: 'B2C Leads',
             chargesTableName: 'Charges',
             billingContactsField: 'Billing Contacts'
@@ -111,6 +126,10 @@
         let currentContacts = [];
         let autoSaveTimer = null;
         let confirmResolver = null;
+        let detailsOpenState = null;
+        const zipMapInstances = new Map();
+        const loadedLeadsById = new Map();
+        const leadToAdsetMap = new Map();
 
         function getURLParameter(name) {
             const urlParams = new URLSearchParams(window.location.search);
@@ -137,6 +156,18 @@
 
         async function fetchLeadById(leadId) {
             const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.leadsTableName)}/${leadId}`);
+            if (!response.ok) return null;
+            return response.json();
+        }
+
+        async function fetchAdsetZipJunctionById(junctionId) {
+            const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.adsetZipTrackingTableName)}/${junctionId}`);
+            if (!response.ok) return null;
+            return response.json();
+        }
+
+        async function fetchUSZipById(zipId) {
+            const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.usZipsTableName)}/${zipId}`);
             if (!response.ok) return null;
             return response.json();
         }
@@ -381,13 +412,17 @@
                             <input type="email" value="${email}" data-contact-id="${contact.id}" data-contact-field="Email" class="billing-contact-input sm:col-span-1 px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Email">
                             <input type="text" value="${phone}" data-contact-id="${contact.id}" data-contact-field="Phone" class="billing-contact-input sm:col-span-1 px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Phone">
                         </div>
+                        <div>
+                            <button class="billing-contact-remove px-3 py-1.5 text-sm bg-red-50 text-red-700 rounded-md hover:bg-red-100" data-contact-id="${contact.id}">Remove Billing Contact</button>
+                        </div>
                     </div>
                 `;
             }).join('');
 
             return `
                 <div class="mt-4">
-                    <h5 class="text-sm font-semibold text-gray-800 mb-2">Contacts</h5>
+                    <h5 class="text-sm font-semibold text-gray-800 mb-1">Billing Contacts</h5>
+                    <p class="text-xs text-gray-500 mb-2">Billing updates and receipts will be sent to the people listed below</p>
                     <div class="space-y-2">
                         ${rows || '<p class="text-sm text-gray-500">No contacts linked yet.</p>'}
                     </div>
@@ -416,7 +451,7 @@
 
             container.innerHTML = `
                 <div>
-                    <details class="border border-gray-200 rounded-lg mb-4">
+                    <details class="border border-gray-200 rounded-lg mb-4" data-section-id="account-settings">
                         <summary class="px-4 py-3 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
                             <span class="text-lg font-semibold text-gray-900 inline-flex items-center gap-2">
                                 <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -462,10 +497,10 @@
                                 </div>
                             </div>
                             ${createReadOnlyRow('Lead Price', moneyDisplay(record.fields['Lead Price']))}
-                            ${createReadOnlyRow('Niche', fieldDisplay(record, 'Niche'))}
+                            ${createReadOnlyRow('Vertical', fieldDisplay(record, 'Niche'))}
                         </div>
                     </details>
-                    <details class="border border-gray-200 rounded-lg mb-4">
+                    <details class="border border-gray-200 rounded-lg mb-4" data-section-id="overview">
                         <summary class="px-4 py-3 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
                             <span class="text-lg font-semibold text-gray-900 inline-flex items-center gap-2">
                                 <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -487,7 +522,7 @@
                             </div>
                         </div>
                     </details>
-                    <details class="border border-gray-200 rounded-lg mb-4">
+                    <details class="border border-gray-200 rounded-lg mb-4" data-section-id="locations-leads">
                         <summary class="px-4 py-3 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
                             <span class="text-lg font-semibold text-gray-900 inline-flex items-center gap-2">
                                 <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -504,11 +539,12 @@
                             </div>
                         </div>
                     </details>
-                    <details class="border border-gray-200 rounded-lg mb-4">
+                    <details class="border border-gray-200 rounded-lg mb-4" data-section-id="billing">
                         <summary class="px-4 py-3 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
                             <span class="text-lg font-semibold text-gray-900 inline-flex items-center gap-2">
                                 <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v10m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                    <circle cx="12" cy="12" r="9" stroke-width="2"></circle>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v10m0-10c-1.5 0-2.5.8-2.5 1.8S10.5 10.6 12 10.6s2.5.8 2.5 1.8S13.5 14.2 12 14.2s-2.5.8-2.5 1.8S10.5 17.8 12 17.8"></path>
                                 </svg>
                                 <span>Billing</span>
                             </span>
@@ -530,6 +566,34 @@
             }
 
             setupLocationDropdowns(adsetValues);
+            restoreDetailsOpenState();
+        }
+
+        function captureDetailsOpenState() {
+            const state = {};
+            const detailEls = document.querySelectorAll('#portalCard details');
+            detailEls.forEach((el) => {
+                const sectionId = el.getAttribute('data-section-id');
+                const locationId = el.getAttribute('data-location-adset-id');
+                const key = sectionId ? `section:${sectionId}` : (locationId ? `location:${locationId}` : null);
+                if (key) {
+                    state[key] = el.open;
+                }
+            });
+            detailsOpenState = state;
+        }
+
+        function restoreDetailsOpenState() {
+            if (!detailsOpenState) return;
+            const detailEls = document.querySelectorAll('#portalCard details');
+            detailEls.forEach((el) => {
+                const sectionId = el.getAttribute('data-section-id');
+                const locationId = el.getAttribute('data-location-adset-id');
+                const key = sectionId ? `section:${sectionId}` : (locationId ? `location:${locationId}` : null);
+                if (key && Object.prototype.hasOwnProperty.call(detailsOpenState, key)) {
+                    el.open = !!detailsOpenState[key];
+                }
+            });
         }
 
         async function loadBillingSection() {
@@ -622,11 +686,6 @@
                     customerCards.push(`
                         <div class="border border-gray-200 rounded-lg p-4 mb-4">
                             <h4 class="text-lg font-semibold text-gray-900 mb-2">${fields.Name || 'Customer'}</h4>
-                            <div class="text-sm text-gray-700 space-y-1">
-                                <p><strong>Email:</strong> ${fields.Email || '—'}</p>
-                                <p><strong>Phone:</strong> ${fields.Phone || '—'}</p>
-                                <p><strong>Address:</strong> ${fields.Address || '—'}</p>
-                            </div>
                             <div class="mt-3 rounded-md bg-gray-50 px-3 py-2">
                                 <div class="text-xs text-gray-500">Total Amount Charged</div>
                                 <div class="text-lg font-semibold text-gray-900">${formattedAmount}</div>
@@ -668,6 +727,18 @@
                     }
                 });
             }
+
+            const removeBtns = document.querySelectorAll('.billing-contact-remove');
+            removeBtns.forEach((btn) => {
+                btn.addEventListener('click', async function() {
+                    try {
+                        const contactId = btn.getAttribute('data-contact-id');
+                        await removeBillingContact(contactId);
+                    } catch (err) {
+                        alert(err.message);
+                    }
+                });
+            });
         }
 
         async function saveContactField(contactId, fieldName, value) {
@@ -730,6 +801,31 @@
             }
 
             currentRecord = await linkRes.json();
+            currentContacts = await fetchContactsForAccount(currentRecord);
+            await loadBillingSection();
+        }
+
+        async function removeBillingContact(contactId) {
+            if (!currentRecordId || !contactId || !currentRecord) return;
+            const existingContacts = Array.isArray(currentRecord.fields[CONFIG.contactsLinkedField]) ? currentRecord.fields[CONFIG.contactsLinkedField] : [];
+            const existingBillingContacts = Array.isArray(currentRecord.fields[CONFIG.billingContactsField]) ? currentRecord.fields[CONFIG.billingContactsField] : [];
+            const updatedContacts = existingContacts.filter((id) => id !== contactId);
+            const updatedBillingContacts = existingBillingContacts.filter((id) => id !== contactId);
+
+            const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${currentRecordId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fields: {
+                        [CONFIG.contactsLinkedField]: updatedContacts,
+                        [CONFIG.billingContactsField]: updatedBillingContacts
+                    }
+                })
+            });
+            if (!response.ok) {
+                throw new Error('Failed to remove billing contact');
+            }
+            currentRecord = await response.json();
             currentContacts = await fetchContactsForAccount(currentRecord);
             await loadBillingSection();
         }
@@ -854,7 +950,27 @@
                         ${renderChevronToggle()}
                     </summary>
                     <div class="px-3 pb-3 border-t border-gray-100">
-                        <div id="location-leads-${adsetId}" class="pt-2 text-sm text-gray-600">Open to load leads...</div>
+                        <details class="border border-gray-200 rounded-lg mt-2" data-location-leads-section="${adsetId}">
+                            <summary class="px-3 py-2 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
+                                <span class="text-sm font-medium text-gray-800">Leads</span>
+                                ${renderChevronToggle()}
+                            </summary>
+                            <div id="location-leads-${adsetId}" class="px-3 pb-3 border-t border-gray-100 pt-2 text-sm text-gray-600">Open to load leads...</div>
+                        </details>
+                        <details class="border border-gray-200 rounded-lg mt-2" data-location-zips-section="${adsetId}">
+                            <summary class="px-3 py-2 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
+                                <span class="text-sm font-medium text-gray-800">Zip Codes</span>
+                                ${renderChevronToggle()}
+                            </summary>
+                            <div id="location-zips-${adsetId}" class="px-3 pb-3 border-t border-gray-100 pt-2 text-sm text-gray-600">Open to load zip codes...</div>
+                        </details>
+                        <details class="border border-gray-200 rounded-lg mt-2" data-location-contacts-section="${adsetId}">
+                            <summary class="px-3 py-2 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
+                                <span class="text-sm font-medium text-gray-800">Contacts</span>
+                                ${renderChevronToggle()}
+                            </summary>
+                            <div id="location-contacts-${adsetId}" class="px-3 pb-3 border-t border-gray-100 pt-2 text-sm text-gray-600">Open to load contacts...</div>
+                        </details>
                     </div>
                 </details>
             `).join('');
@@ -931,9 +1047,11 @@
                 return `
                     <tr class="border-t border-gray-200 align-top">
                         <td class="px-3 py-2 text-sm text-gray-500 whitespace-nowrap">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                            </svg>
+                            <button onclick="openLeadEditModal('${lead.id}')" class="text-blue-600 hover:text-blue-800" title="Edit lead">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </button>
                         </td>
                         <td class="px-3 py-2 text-sm text-gray-900 whitespace-nowrap">${fullName}</td>
                         <td class="px-3 py-2 text-sm">${renderBadge(stage, 'stage')}</td>
@@ -1039,9 +1157,525 @@
                 }
 
                 leadRecords.sort((a, b) => new Date((b.fields || {})['Created'] || 0) - new Date((a.fields || {})['Created'] || 0));
+                leadRecords.forEach((lead) => {
+                    loadedLeadsById.set(lead.id, lead);
+                    leadToAdsetMap.set(lead.id, adsetId);
+                });
                 leadsEl.innerHTML = renderLeadsTable(leadRecords);
             } catch (err) {
                 leadsEl.innerHTML = `<p class="text-sm text-red-600">Unable to load linked leads: ${err.message}</p>`;
+            }
+        }
+
+        function parseApptToDatetime(apptStr) {
+            if (!apptStr || apptStr.trim() === '') return null;
+            const match = apptStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+at\s+(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+            if (!match) return null;
+            const [, month, day, year, hour, min, ampm] = match;
+            let h = parseInt(hour, 10);
+            if (ampm.toUpperCase() === 'PM' && h !== 12) h += 12;
+            if (ampm.toUpperCase() === 'AM' && h === 12) h = 0;
+            return { date: `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`, time: `${String(h).padStart(2, '0')}:${min}` };
+        }
+
+        function formatAppointmentForAirtable(dateStr, timeStr) {
+            if (!dateStr || !timeStr) return '';
+            const [y, m, d] = dateStr.split('-');
+            const [hour, min] = timeStr.split(':');
+            let h = parseInt(hour, 10);
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12 || 12;
+            return `${m}/${d}/${y} at ${String(h).padStart(2, '0')}:${min} ${ampm}`;
+        }
+
+        function getBaseSummaryWithoutAppt(fullSummary) {
+            if (!fullSummary || typeof fullSummary !== 'string') return fullSummary || '';
+            const match = fullSummary.match(/^Appointment:\s*[^\n]+\n\n?/i);
+            if (match) return fullSummary.slice(match[0].length).trim();
+            return fullSummary;
+        }
+
+        function getBaseSummaryHTMLWithoutAppt(fullSummaryHTML) {
+            if (!fullSummaryHTML || typeof fullSummaryHTML !== 'string') return fullSummaryHTML || '';
+            const match = fullSummaryHTML.match(/^Appointment:\s*[^<]+<BR>\s*<BR>\s*/i);
+            if (match) return fullSummaryHTML.slice(match[0].length).trim();
+            return fullSummaryHTML;
+        }
+
+        async function saveLeadApptOnly(recordId, onSuccess) {
+            const apptDateField = document.getElementById('leadEditApptDateField');
+            const apptTimeField = document.getElementById('leadEditApptTimeField');
+            if (!apptDateField || !apptTimeField) return;
+            const record = loadedLeadsById.get(recordId);
+            if (!record) return;
+            const newAppt = (apptDateField.value && apptTimeField.value) ? formatAppointmentForAirtable(apptDateField.value, apptTimeField.value) : '';
+
+            let fullSummaryUpdate = null;
+            let fullSummaryHTMLUpdate = null;
+            if (newAppt || record.fields['Appt']) {
+                const baseSummary = getBaseSummaryWithoutAppt(record.fields['Full Summary']);
+                const baseSummaryHTML = getBaseSummaryHTMLWithoutAppt(record.fields['Full Summary HTML']);
+                if (newAppt) {
+                    fullSummaryUpdate = `Appointment: ${newAppt}\n\n${baseSummary}`;
+                    fullSummaryHTMLUpdate = `Appointment: ${newAppt}<BR><BR>${baseSummaryHTML}`;
+                } else {
+                    fullSummaryUpdate = baseSummary;
+                    fullSummaryHTMLUpdate = baseSummaryHTML;
+                }
+            }
+
+            const fieldsToUpdate = { Appt: newAppt };
+            if (fullSummaryUpdate !== null) fieldsToUpdate['Full Summary'] = fullSummaryUpdate;
+            if (fullSummaryHTMLUpdate !== null) fieldsToUpdate['Full Summary HTML'] = fullSummaryHTMLUpdate;
+
+            try {
+                const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.leadsTableName)}/${recordId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fields: fieldsToUpdate })
+                });
+                if (!response.ok) throw new Error('Failed to save appointment');
+                const updated = await response.json();
+                loadedLeadsById.set(recordId, updated);
+                if (onSuccess) onSuccess(updated.fields['Full Summary'] || '');
+            } catch (err) {
+                alert(`Error saving appointment: ${err.message}`);
+                if (onSuccess) onSuccess(null);
+            }
+        }
+
+        function openLeadEditModal(recordId) {
+            const record = loadedLeadsById.get(recordId);
+            if (!record) return;
+            const modal = document.getElementById('editLeadModal');
+            const content = document.getElementById('editLeadModalContent');
+            const stageOptions = ['Uncontacted', 'Contacted', 'First Contact', 'Follow Up', '2nd Follow Up', 'Final Follow Up', 'No show', 'Appointment ran', 'Not Interested', 'Cancelled', 'Unresponsive', 'Close lost', 'Close won'];
+            const currentStage = record.fields['Stage'] || '';
+            const currentNotes = record.fields['Notes'] || '';
+            const fullSummary = record.fields['Full Summary'] || '';
+            const apptValue = record.fields['Appt'] || '';
+
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <div class="border-b border-gray-200 pb-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Full Summary</label>
+                        <div id="leadEditSummaryValue" class="text-sm text-gray-900 whitespace-pre-wrap">${fullSummary || '<span class="text-gray-400">No data</span>'}</div>
+                    </div>
+                    <div class="border-b border-gray-200 pb-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Appointment Date & Time</label>
+                        <div class="flex flex-wrap gap-3 items-end">
+                            <input type="date" id="leadEditApptDateField" class="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <input type="time" id="leadEditApptTimeField" class="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <button type="button" id="leadEditApptClearBtn" class="text-sm text-gray-500 hover:text-gray-700 underline">Clear appointment</button>
+                            <span id="leadEditApptSavedIndicator" class="text-sm text-green-600 hidden">Saved</span>
+                        </div>
+                        <small class="block text-gray-500 mt-1">Saves automatically. Leave empty to clear appointment.</small>
+                    </div>
+                    <div class="border-b border-gray-200 pb-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Stage</label>
+                        <select id="leadEditStageField" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">-- Select Stage --</option>
+                            ${stageOptions.map((opt) => `<option value="${opt}" ${opt === currentStage ? 'selected' : ''}>${opt}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                        <textarea id="leadEditNotesField" rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">${currentNotes || ''}</textarea>
+                    </div>
+                    <div class="flex flex-wrap gap-2 pt-1">
+                        <button id="leadEditSaveBtn" class="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors">Save Changes</button>
+                        <button id="leadEditReportBtn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">Report as Unqualified</button>
+                    </div>
+                </div>
+            `;
+
+            const parsedAppt = parseApptToDatetime(String(apptValue).trim());
+            if (parsedAppt) {
+                document.getElementById('leadEditApptDateField').value = parsedAppt.date;
+                document.getElementById('leadEditApptTimeField').value = parsedAppt.time;
+            }
+
+            let apptSaveTimeout = null;
+            const scheduleApptSave = () => {
+                if (apptSaveTimeout) clearTimeout(apptSaveTimeout);
+                apptSaveTimeout = setTimeout(() => {
+                    apptSaveTimeout = null;
+                    saveLeadApptOnly(recordId, (newSummary) => {
+                        if (newSummary !== null) {
+                            const summaryEl = document.getElementById('leadEditSummaryValue');
+                            if (summaryEl) summaryEl.textContent = newSummary || 'No data';
+                        }
+                        const indicator = document.getElementById('leadEditApptSavedIndicator');
+                        if (indicator) {
+                            indicator.classList.remove('hidden');
+                            setTimeout(() => indicator.classList.add('hidden'), 2000);
+                        }
+                    });
+                }, 400);
+            };
+
+            document.getElementById('leadEditApptDateField').addEventListener('change', scheduleApptSave);
+            document.getElementById('leadEditApptTimeField').addEventListener('change', scheduleApptSave);
+            document.getElementById('leadEditApptTimeField').addEventListener('input', scheduleApptSave);
+            document.getElementById('leadEditApptClearBtn').addEventListener('click', () => {
+                document.getElementById('leadEditApptDateField').value = '';
+                document.getElementById('leadEditApptTimeField').value = '';
+                scheduleApptSave();
+            });
+            document.getElementById('leadEditSaveBtn').addEventListener('click', async () => saveLeadModalChanges(recordId));
+            document.getElementById('leadEditReportBtn').addEventListener('click', () => showLeadUnqualifiedReport(recordId));
+            modal.classList.remove('hidden');
+        }
+
+        async function saveLeadModalChanges(recordId) {
+            const record = loadedLeadsById.get(recordId);
+            if (!record) return;
+            const stage = document.getElementById('leadEditStageField').value;
+            const notes = document.getElementById('leadEditNotesField').value;
+            const apptDate = document.getElementById('leadEditApptDateField').value;
+            const apptTime = document.getElementById('leadEditApptTimeField').value;
+            const newAppt = (apptDate && apptTime) ? formatAppointmentForAirtable(apptDate, apptTime) : '';
+
+            let fullSummaryUpdate = null;
+            let fullSummaryHTMLUpdate = null;
+            if (newAppt || record.fields['Appt']) {
+                const baseSummary = getBaseSummaryWithoutAppt(record.fields['Full Summary']);
+                const baseSummaryHTML = getBaseSummaryHTMLWithoutAppt(record.fields['Full Summary HTML']);
+                if (newAppt) {
+                    fullSummaryUpdate = `Appointment: ${newAppt}\n\n${baseSummary}`;
+                    fullSummaryHTMLUpdate = `Appointment: ${newAppt}<BR><BR>${baseSummaryHTML}`;
+                } else {
+                    fullSummaryUpdate = baseSummary;
+                    fullSummaryHTMLUpdate = baseSummaryHTML;
+                }
+            }
+
+            const fieldsToUpdate = { Stage: stage, Notes: notes, Appt: newAppt };
+            if (fullSummaryUpdate !== null) fieldsToUpdate['Full Summary'] = fullSummaryUpdate;
+            if (fullSummaryHTMLUpdate !== null) fieldsToUpdate['Full Summary HTML'] = fullSummaryHTMLUpdate;
+            try {
+                const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.leadsTableName)}/${recordId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fields: fieldsToUpdate })
+                });
+                if (!response.ok) throw new Error('Failed to save lead changes');
+                const updated = await response.json();
+                loadedLeadsById.set(recordId, updated);
+                await refreshLeadTableForRecord(recordId);
+                closeLeadEditModal();
+            } catch (err) {
+                alert(`Error saving lead changes: ${err.message}`);
+            }
+        }
+
+        function showLeadUnqualifiedReport(recordId) {
+            const record = loadedLeadsById.get(recordId);
+            if (!record) return;
+            const content = document.getElementById('editLeadModalContent');
+            const whyUnqualified = record.fields['Why Unqualified'] || '';
+            const unqualifiedReasoning = record.fields['Unqualified Reasoning'] || '';
+            const isAlreadyReported = whyUnqualified !== '';
+            const fullName = record.fields['Full Name'] || 'Unknown';
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <h2 class="text-2xl font-bold text-gray-900">Report ${fullName} as unqualified</h2>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Why is this lead unqualified?</label>
+                        <select id="leadWhyUnqualifiedSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md" ${isAlreadyReported ? 'disabled' : ''}>
+                            ${['', 'Out of area', 'Phone is out of service', 'Duplicate lead'].map((opt) => `<option value="${opt}" ${opt === whyUnqualified ? 'selected' : ''}>${opt || '-- Select --'}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Leave a note for our team</label>
+                        <textarea id="leadUnqualifiedReasoningField" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md" ${isAlreadyReported ? 'disabled' : ''}>${unqualifiedReasoning}</textarea>
+                    </div>
+                    ${isAlreadyReported ? '<div class="text-sm text-yellow-700">This lead has already been reported.</div>' : '<button id="leadSubmitUnqualifiedBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Submit</button>'}
+                    <button id="leadBackToEditBtn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Back to Edit</button>
+                </div>
+            `;
+            document.getElementById('leadBackToEditBtn').addEventListener('click', () => openLeadEditModal(recordId));
+            if (!isAlreadyReported) {
+                document.getElementById('leadSubmitUnqualifiedBtn').addEventListener('click', async () => submitLeadUnqualifiedReport(recordId));
+            }
+        }
+
+        async function submitLeadUnqualifiedReport(recordId) {
+            const whyValue = document.getElementById('leadWhyUnqualifiedSelect').value;
+            const reasoningValue = document.getElementById('leadUnqualifiedReasoningField').value;
+            try {
+                const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.leadsTableName)}/${recordId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fields: { 'Why Unqualified': whyValue, 'Unqualified Reasoning': reasoningValue } })
+                });
+                if (!response.ok) throw new Error('Failed to submit report');
+                const updated = await response.json();
+                loadedLeadsById.set(recordId, updated);
+                await refreshLeadTableForRecord(recordId);
+                closeLeadEditModal();
+            } catch (err) {
+                alert(`Error submitting report: ${err.message}`);
+            }
+        }
+
+        async function refreshLeadTableForRecord(recordId) {
+            const adsetId = leadToAdsetMap.get(recordId);
+            if (!adsetId) return;
+            await loadLocationAdsetAndLeads(adsetId);
+        }
+
+        function closeLeadEditModal() {
+            document.getElementById('editLeadModal').classList.add('hidden');
+        }
+
+        function extractZipCodeFromUSZipRecord(zipRecord) {
+            const fields = zipRecord && zipRecord.fields ? zipRecord.fields : {};
+            const candidates = ['Zip', 'ZIP', 'Zip Code', 'ZIP Code', 'Name'];
+            for (const key of candidates) {
+                const raw = fields[key];
+                if (raw === null || raw === undefined || raw === '') continue;
+                const digits = String(raw).replace(/\D/g, '').slice(0, 5);
+                if (digits.length === 5) return digits;
+            }
+            return null;
+        }
+
+        function getAdsetJunctionIds(adsetRecord) {
+            const fields = adsetRecord && adsetRecord.fields ? adsetRecord.fields : {};
+            const keys = ['Adset Zip Tracking', 'Ad Set Zip Tracking'];
+            for (const key of keys) {
+                if (Array.isArray(fields[key])) return fields[key];
+            }
+            return [];
+        }
+
+        function getJunctionZipId(junctionRecord) {
+            const fields = junctionRecord && junctionRecord.fields ? junctionRecord.fields : {};
+            const keys = ['US Zips', 'US Zip', 'Zip'];
+            for (const key of keys) {
+                const v = fields[key];
+                if (Array.isArray(v) && v.length) return v[0];
+                if (typeof v === 'string' && v.startsWith('rec')) return v;
+            }
+            return null;
+        }
+
+        async function geocodeZip(zip) {
+            try {
+                const res = await fetch(`https://api.zippopotam.us/us/${encodeURIComponent(zip)}`);
+                if (!res.ok) return null;
+                const data = await res.json();
+                const place = data.places && data.places[0];
+                if (!place) return null;
+                const lat = Number(place.latitude);
+                const lon = Number(place.longitude);
+                if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+                return { lat, lon };
+            } catch {
+                return null;
+            }
+        }
+
+        async function renderZipMap(containerId, zipCodes) {
+            const mapContainer = document.getElementById(containerId);
+            if (!mapContainer) return;
+
+            const existingMap = zipMapInstances.get(containerId);
+            if (existingMap) {
+                existingMap.remove();
+                zipMapInstances.delete(containerId);
+            }
+
+            const points = [];
+            for (const zip of zipCodes) {
+                const point = await geocodeZip(zip);
+                if (point) points.push({ zip, ...point });
+            }
+
+            if (!points.length) {
+                mapContainer.innerHTML = '<p class="text-sm text-gray-500">Unable to plot zip map for these zip codes.</p>';
+                return;
+            }
+
+            mapContainer.innerHTML = '';
+            const map = L.map(containerId, { scrollWheelZoom: false });
+            zipMapInstances.set(containerId, map);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            const bounds = [];
+            points.forEach((p) => {
+                L.marker([p.lat, p.lon]).addTo(map).bindPopup(`ZIP ${p.zip}`);
+                bounds.push([p.lat, p.lon]);
+            });
+            if (bounds.length === 1) {
+                map.setView(bounds[0], 9);
+            } else {
+                map.fitBounds(bounds, { padding: [20, 20] });
+            }
+        }
+
+        async function loadLocationZipCodes(adsetId) {
+            const zipEl = document.getElementById(`location-zips-${adsetId}`);
+            if (!zipEl) return;
+            zipEl.innerHTML = '<p class="text-sm text-gray-600">Loading zip codes...</p>';
+
+            try {
+                const adset = await fetchAdsetById(adsetId);
+                if (!adset) {
+                    zipEl.innerHTML = '<p class="text-sm text-red-600">Unable to load zip codes for this location.</p>';
+                    return;
+                }
+
+                const junctionIds = getAdsetJunctionIds(adset);
+                if (!junctionIds.length) {
+                    zipEl.innerHTML = '<p class="text-sm text-gray-500">No linked zip codes found for this location.</p>';
+                    return;
+                }
+
+                const zipCodes = [];
+                for (const junctionId of junctionIds) {
+                    const junction = await fetchAdsetZipJunctionById(junctionId);
+                    if (!junction) continue;
+                    const zipRecordId = getJunctionZipId(junction);
+                    if (!zipRecordId) continue;
+                    const zipRecord = await fetchUSZipById(zipRecordId);
+                    const zipCode = extractZipCodeFromUSZipRecord(zipRecord);
+                    if (zipCode) zipCodes.push(zipCode);
+                }
+
+                const uniqueZipCodes = Array.from(new Set(zipCodes)).sort((a, b) => a.localeCompare(b));
+                if (!uniqueZipCodes.length) {
+                    zipEl.innerHTML = '<p class="text-sm text-gray-500">No linked zip codes found for this location.</p>';
+                    return;
+                }
+
+                const mapId = `zip-map-${adsetId}`;
+                zipEl.innerHTML = `
+                    <div id="${mapId}" class="zip-map border border-gray-200 rounded-lg mb-3"></div>
+                    <div class="border border-gray-200 rounded-lg p-3 bg-white">
+                        <div class="text-sm font-medium text-gray-800 mb-2">Linked Zip Codes</div>
+                        <div class="text-sm text-gray-700">${uniqueZipCodes.join(', ')}</div>
+                    </div>
+                `;
+                await renderZipMap(mapId, uniqueZipCodes);
+            } catch (err) {
+                zipEl.innerHTML = `<p class="text-sm text-red-600">Unable to load zip codes: ${err.message}</p>`;
+            }
+        }
+
+        function getAdsetContactsFieldName(adsetRecord) {
+            const fields = adsetRecord && adsetRecord.fields ? adsetRecord.fields : {};
+            const candidates = ['Contacts', 'Billing Contacts'];
+            for (const key of candidates) {
+                if (Array.isArray(fields[key])) return key;
+            }
+            return 'Contacts';
+        }
+
+        async function patchAdsetContacts(adsetId, contactsFieldName, contactIds) {
+            const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.adsetsTableName)}/${adsetId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fields: { [contactsFieldName]: contactIds } })
+            });
+            if (!response.ok) throw new Error('Failed to update location contacts');
+            return response.json();
+        }
+
+        async function loadLocationContacts(adsetId) {
+            const contactsEl = document.getElementById(`location-contacts-${adsetId}`);
+            if (!contactsEl) return;
+            contactsEl.innerHTML = '<p class="text-sm text-gray-600">Loading contacts...</p>';
+
+            try {
+                const adset = await fetchAdsetById(adsetId);
+                if (!adset) {
+                    contactsEl.innerHTML = '<p class="text-sm text-red-600">Unable to load contacts for this location.</p>';
+                    return;
+                }
+
+                const contactsFieldName = getAdsetContactsFieldName(adset);
+                const contactIds = Array.isArray(adset.fields[contactsFieldName]) ? adset.fields[contactsFieldName] : [];
+                const contacts = [];
+                for (const contactId of contactIds) {
+                    const c = await fetchContactById(contactId);
+                    if (c) contacts.push(c);
+                }
+
+                const rows = contacts.map((c) => `
+                    <div class="border border-gray-200 rounded-lg p-3 flex items-center justify-between gap-3">
+                        <div class="text-sm text-gray-800">
+                            <div class="font-medium">${c.fields.Name || 'Unnamed'}</div>
+                            <div class="text-gray-600">${c.fields.Email || 'No email'} · ${c.fields.Phone || 'No phone'}</div>
+                        </div>
+                        <button class="location-contact-remove px-3 py-1.5 text-sm bg-red-50 text-red-700 rounded-md hover:bg-red-100" data-adset-id="${adsetId}" data-contacts-field="${contactsFieldName}" data-contact-id="${c.id}">Remove</button>
+                    </div>
+                `).join('');
+
+                contactsEl.innerHTML = `
+                    <div class="space-y-2">
+                        ${rows || '<p class="text-sm text-gray-500">No linked contacts for this location.</p>'}
+                    </div>
+                    <div class="border border-dashed border-gray-300 rounded-lg p-3 mt-3">
+                        <div class="text-sm font-medium text-gray-800 mb-2">Add Contact to Location</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <input id="locationNewContactName-${adsetId}" type="text" class="px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Name">
+                            <input id="locationNewContactEmail-${adsetId}" type="email" class="px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Email">
+                            <input id="locationNewContactPhone-${adsetId}" type="text" class="px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Phone">
+                        </div>
+                        <button class="location-contact-add mt-3 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm" data-adset-id="${adsetId}" data-contacts-field="${contactsFieldName}">Add Contact</button>
+                    </div>
+                `;
+
+                contactsEl.querySelectorAll('.location-contact-remove').forEach((btn) => {
+                    btn.addEventListener('click', async () => {
+                        try {
+                            const contactId = btn.getAttribute('data-contact-id');
+                            const fieldName = btn.getAttribute('data-contacts-field');
+                            const latest = await fetchAdsetById(adsetId);
+                            const ids = Array.isArray(latest.fields[fieldName]) ? latest.fields[fieldName] : [];
+                            const updated = ids.filter((id) => id !== contactId);
+                            await patchAdsetContacts(adsetId, fieldName, updated);
+                            await loadLocationContacts(adsetId);
+                        } catch (err) {
+                            alert(err.message);
+                        }
+                    });
+                });
+
+                const addBtn = contactsEl.querySelector('.location-contact-add');
+                if (addBtn) {
+                    addBtn.addEventListener('click', async () => {
+                        try {
+                            const fieldName = addBtn.getAttribute('data-contacts-field');
+                            const name = (document.getElementById(`locationNewContactName-${adsetId}`)?.value || '').trim();
+                            const email = (document.getElementById(`locationNewContactEmail-${adsetId}`)?.value || '').trim();
+                            const phone = (document.getElementById(`locationNewContactPhone-${adsetId}`)?.value || '').trim();
+                            if (!name && !email && !phone) return;
+
+                            const createRes = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.contactsTableName)}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ fields: { Name: name, Email: email, Phone: phone } })
+                            });
+                            if (!createRes.ok) throw new Error('Failed to create contact');
+                            const newContact = await createRes.json();
+
+                            const latest = await fetchAdsetById(adsetId);
+                            const ids = Array.isArray(latest.fields[fieldName]) ? latest.fields[fieldName] : [];
+                            const updated = Array.from(new Set([...ids, newContact.id]));
+                            await patchAdsetContacts(adsetId, fieldName, updated);
+                            await loadLocationContacts(adsetId);
+                        } catch (err) {
+                            alert(err.message);
+                        }
+                    });
+                }
+            } catch (err) {
+                contactsEl.innerHTML = `<p class="text-sm text-red-600">Unable to load contacts: ${err.message}</p>`;
             }
         }
 
@@ -1054,9 +1688,33 @@
                 loadLocationSummaryName(adsetId);
 
                 wrapper.addEventListener('toggle', function() {
-                    if (!wrapper.open || wrapper.dataset.loaded === 'true') return;
-                    wrapper.dataset.loaded = 'true';
-                    loadLocationAdsetAndLeads(adsetId);
+                    if (!wrapper.open || wrapper.dataset.bound === 'true') return;
+                    const leadsSection = wrapper.querySelector(`details[data-location-leads-section="${adsetId}"]`);
+                    const zipsSection = wrapper.querySelector(`details[data-location-zips-section="${adsetId}"]`);
+                    const contactsSection = wrapper.querySelector(`details[data-location-contacts-section="${adsetId}"]`);
+
+                    if (leadsSection) {
+                        leadsSection.addEventListener('toggle', function() {
+                            if (!leadsSection.open || leadsSection.dataset.loaded === 'true') return;
+                            leadsSection.dataset.loaded = 'true';
+                            loadLocationAdsetAndLeads(adsetId);
+                        });
+                    }
+                    if (zipsSection) {
+                        zipsSection.addEventListener('toggle', function() {
+                            if (!zipsSection.open || zipsSection.dataset.loaded === 'true') return;
+                            zipsSection.dataset.loaded = 'true';
+                            loadLocationZipCodes(adsetId);
+                        });
+                    }
+                    if (contactsSection) {
+                        contactsSection.addEventListener('toggle', function() {
+                            if (!contactsSection.open || contactsSection.dataset.loaded === 'true') return;
+                            contactsSection.dataset.loaded = 'true';
+                            loadLocationContacts(adsetId);
+                        });
+                    }
+                    wrapper.dataset.bound = 'true';
                 });
             });
         }
@@ -1086,6 +1744,7 @@
 
         async function savePortalFields() {
             if (!currentRecordId) return;
+            captureDetailsOpenState();
             const nameInput = document.getElementById('nameInput');
             const name = nameInput ? nameInput.value.trim() : fieldDisplay(currentRecord, 'Name', '');
             const statusInput = document.getElementById('statusValue');
@@ -1271,6 +1930,12 @@
                 confirmResolver = null;
                 this.classList.add('hidden');
                 resolve(false);
+            }
+        });
+
+        document.getElementById('editLeadModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeLeadEditModal();
             }
         });
 
