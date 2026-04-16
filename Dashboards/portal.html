@@ -8,6 +8,7 @@
     <title>Portal Dashboard</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <style>
         details > summary .chevron-open { display: none; }
@@ -132,6 +133,7 @@
         const leadToAdsetMap = new Map();
         const submitScreenSaveTimers = new Map();
         let currentLeadEditRecordId = null;
+        const adsetLeadPaginationState = new Map();
 
         function getURLParameter(name) {
             const urlParams = new URLSearchParams(window.location.search);
@@ -175,7 +177,9 @@
         }
 
         async function getBillingContactEmails(record) {
-            const contactIds = record.fields[CONFIG.billingContactsField];
+            const billingContactIds = Array.isArray(record.fields[CONFIG.billingContactsField]) ? record.fields[CONFIG.billingContactsField] : [];
+            const leadContactIds = Array.isArray(record.fields['Lead Contacts']) ? record.fields['Lead Contacts'] : [];
+            const contactIds = Array.from(new Set([...billingContactIds, ...leadContactIds]));
             if (!Array.isArray(contactIds) || contactIds.length === 0) return [];
             const emails = [];
             for (const contactId of contactIds) {
@@ -304,7 +308,7 @@
 
         function renderChevronToggle() {
             return `
-                <span class="text-gray-500">
+                <span class="text-gray-500 shrink-0">
                     <svg class="w-5 h-5 chevron-closed" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
@@ -956,19 +960,19 @@
             }
             return adsetValues.map((adsetId, index) => `
                 <details class="border border-gray-200 rounded-lg" data-location-adset-id="${adsetId}">
-                    <summary class="px-3 py-2 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
-                        <span id="location-summary-name-${adsetId}" class="text-sm font-medium text-gray-800">Loading location...</span>
+                    <summary class="px-3 py-2 cursor-pointer list-none flex items-center gap-2 hover:bg-gray-50">
+                        <span id="location-summary-name-${adsetId}" class="text-sm font-medium text-gray-800 truncate min-w-0 shrink">Loading location...</span>
+                        <span id="location-summary-stats-${adsetId}" class="text-xs text-gray-600 text-right leading-snug ml-auto max-w-[58%] sm:max-w-[65%]"></span>
                         ${renderChevronToggle()}
                     </summary>
                     <div class="px-3 pb-3 border-t border-gray-100">
-                        <div class="border border-gray-200 rounded-lg mt-2 p-3 bg-gray-50">
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 items-center">
-                                <div class="text-sm font-medium text-gray-700">Location Campaign Status</div>
-                                <div class="sm:col-span-2">
-                                    <div id="location-status-toggle-${adsetId}" class="text-sm text-gray-500">Loading status...</div>
-                                    <p class="mt-1 text-xs text-gray-500">Activate or pause this specific location</p>
-                                </div>
-                            </div>
+                        <div class="mt-2 flex items-center justify-end gap-2">
+                            <button type="button" onclick="exportLocationReport('${adsetId}')" class="inline-flex items-center justify-center p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors" title="Export location report">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </button>
+                            <div id="location-status-toggle-${adsetId}" class="text-sm text-gray-500">Loading status...</div>
                         </div>
                         <details class="border border-gray-200 rounded-lg mt-2" data-location-leads-section="${adsetId}">
                             <summary class="px-3 py-2 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
@@ -1054,7 +1058,20 @@
             return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${badgeColor}">${value}</span>`;
         }
 
-        function renderLeadsTable(leads) {
+        function renderLeadsPaginationControls(adsetId, page, hasPrev, hasNext, totalText) {
+            return `
+                <div class="flex items-center justify-between gap-3 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+                    <div class="text-xs text-gray-600">${totalText}</div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="changeLocationLeadsPage('${adsetId}', -1)" class="px-3 py-1.5 text-sm rounded-md border border-gray-300 ${hasPrev ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-400 cursor-not-allowed'}" ${hasPrev ? '' : 'disabled'}>Back</button>
+                        <span class="text-xs text-gray-600">Page ${page}</span>
+                        <button type="button" onclick="changeLocationLeadsPage('${adsetId}', 1)" class="px-3 py-1.5 text-sm rounded-md border border-gray-300 ${hasNext ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-400 cursor-not-allowed'}" ${hasNext ? '' : 'disabled'}>Next</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderLeadsTable(leads, pagination = null) {
             if (!leads.length) {
                 return '<p class="text-sm text-gray-500">No linked B2C leads found for this location.</p>';
             }
@@ -1094,8 +1111,14 @@
                 `;
             }).join('');
 
+            const controls = pagination
+                ? renderLeadsPaginationControls(pagination.adsetId, pagination.page, pagination.hasPrev, pagination.hasNext, pagination.totalText)
+                : '';
+
             return `
-                <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                <div class="space-y-2">
+                    ${controls}
+                    <div class="overflow-x-auto border border-gray-200 rounded-lg">
                     <table class="w-full bg-white">
                         <thead class="bg-gray-50 border-b border-gray-200">
                             <tr>
@@ -1115,6 +1138,8 @@
                         <tbody>${rows}</tbody>
                     </table>
                 </div>
+                    ${controls}
+                </div>
             `;
         }
 
@@ -1127,30 +1152,95 @@
             return [];
         }
 
-        async function fetchB2CLeadsByAdset(adsetId) {
-            const allLeads = [];
-            let offset = null;
+        async function fetchB2CLeadsByAdsetPage(adsetId, offsetToken = null) {
             const filterFormula = `FIND("${adsetId}", ARRAYJOIN({Adsets}))`;
 
-            do {
-                let url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.leadsTableName)}?filterByFormula=${encodeURIComponent(filterFormula)}`;
-                if (offset) {
-                    url += `&offset=${offset}`;
-                }
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch leads by adset (${response.status})`);
-                }
-                const data = await response.json();
-                allLeads.push(...(data.records || []));
-                offset = data.offset;
-            } while (offset);
-
-            return allLeads;
+            let url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.leadsTableName)}?pageSize=20&filterByFormula=${encodeURIComponent(filterFormula)}`;
+            if (offsetToken) {
+                url += `&offset=${offsetToken}`;
+            }
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch leads by adset (${response.status})`);
+            }
+            const data = await response.json();
+            return { records: data.records || [], nextOffset: data.offset || null };
         }
 
-        async function loadLocationAdsetAndLeads(adsetId) {
-            const summaryNameEl = document.getElementById(`location-summary-name-${adsetId}`);
+        async function fetchAllLeadsForAdset(adsetId) {
+            const adset = await fetchAdsetById(adsetId);
+            if (!adset) return [];
+
+            const leadIds = getLinkedB2CLeadIds(adset);
+            if (leadIds.length) {
+                const out = [];
+                for (const leadId of leadIds) {
+                    const lead = await fetchLeadById(leadId);
+                    if (lead) out.push(lead);
+                }
+                return out;
+            }
+
+            const all = [];
+            let offsetToken = null;
+            do {
+                const page = await fetchB2CLeadsByAdsetPage(adsetId, offsetToken);
+                all.push(...page.records);
+                offsetToken = page.nextOffset;
+            } while (offsetToken);
+            return all;
+        }
+
+        function formatLeadExportValue(value, key) {
+            if (value === null || value === undefined) return '';
+            if (Array.isArray(value)) return value.join(', ');
+            if (key === 'Created') return formatLeadCreated(value);
+            if (key === 'Phone') return formatLeadPhone(value);
+            if (key === 'Price') return formatLeadPrice(value);
+            return String(value);
+        }
+
+        async function exportLocationReport(adsetId) {
+            try {
+                const leads = await fetchAllLeadsForAdset(adsetId);
+                if (!leads.length) {
+                    alert('No leads found for this location.');
+                    return;
+                }
+
+                leads.sort((a, b) => new Date((b.fields || {})['Created'] || 0) - new Date((a.fields || {})['Created'] || 0));
+                const columns = ['Full Name', 'Stage', 'Status', 'Created', 'Phone', 'Email', 'Address', 'Price', 'Appt', 'Notes', 'Full Summary'];
+                const header = columns.slice();
+                const rows = leads.map((lead) => columns.map((col) => formatLeadExportValue((lead.fields || {})[col], col)));
+                const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+                ws['!cols'] = columns.map((c, idx) => {
+                    const maxLen = Math.max(c.length, ...rows.map((r) => String(r[idx] || '').length));
+                    return { wch: Math.min(Math.max(12, maxLen + 2), c === 'Full Summary' ? 80 : 50) };
+                });
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Leads');
+                const safeAdset = String(document.getElementById(`location-summary-name-${adsetId}`)?.textContent || adsetId).replace(/[^\w\-]+/g, '_');
+                XLSX.writeFile(wb, `${safeAdset}_leads_report.xlsx`);
+            } catch (err) {
+                alert(`Unable to export location report: ${err.message}`);
+            }
+        }
+
+        function getLeadPaginationStateForAdset(adsetId) {
+            if (!adsetLeadPaginationState.has(adsetId)) {
+                adsetLeadPaginationState.set(adsetId, {
+                    mode: null,
+                    ids: [],
+                    total: 0,
+                    page: 1,
+                    formulaOffsets: { 1: null },
+                    formulaHasNextByPage: {}
+                });
+            }
+            return adsetLeadPaginationState.get(adsetId);
+        }
+
+        async function loadLocationAdsetAndLeads(adsetId, targetPage = null) {
             const leadsEl = document.getElementById(`location-leads-${adsetId}`);
             if (!leadsEl) return;
 
@@ -1159,28 +1249,59 @@
             try {
                 const adset = await fetchAdsetById(adsetId);
                 if (!adset) {
-                    if (summaryNameEl) summaryNameEl.textContent = `Location (${adsetId})`;
+                    applyLocationSummaryFromAdset(adsetId, null);
                     leadsEl.innerHTML = '<p class="text-sm text-red-600">Unable to load this location.</p>';
                     return;
                 }
 
-                const adsetName = adset.fields['Adset Name'] || adset.fields['Name'] || `Location (${adsetId})`;
-                if (summaryNameEl) summaryNameEl.textContent = adsetName;
+                applyLocationSummaryFromAdset(adsetId, adset);
 
+                const state = getLeadPaginationStateForAdset(adsetId);
                 const leadIds = getLinkedB2CLeadIds(adset);
-                let leadRecords = [];
-
                 if (leadIds.length) {
-                    const total = leadIds.length;
-                    for (let i = 0; i < leadIds.length; i++) {
-                        const leadId = leadIds[i];
-                        leadsEl.innerHTML = `<p class="text-sm text-gray-600">Loading ${i + 1}/${total} leads...</p>`;
+                    state.mode = 'ids';
+                    state.ids = leadIds.slice();
+                    state.total = leadIds.length;
+                } else if (!state.mode) {
+                    state.mode = 'formula';
+                    state.ids = [];
+                    state.total = 0;
+                    state.formulaOffsets = { 1: null };
+                    state.formulaHasNextByPage = {};
+                }
+
+                const pageSize = 20;
+                let leadRecords = [];
+                let page = targetPage || state.page || 1;
+                if (page < 1) page = 1;
+
+                if (state.mode === 'ids') {
+                    const totalPages = Math.max(1, Math.ceil(state.total / pageSize));
+                    if (page > totalPages) page = totalPages;
+                    const start = (page - 1) * pageSize;
+                    const pageLeadIds = state.ids.slice(start, start + pageSize);
+                    for (let i = 0; i < pageLeadIds.length; i++) {
+                        const leadId = pageLeadIds[i];
+                        leadsEl.innerHTML = `<p class="text-sm text-gray-600">Loading ${i + 1}/${pageLeadIds.length} leads...</p>`;
                         const lead = await fetchLeadById(leadId);
                         if (lead) leadRecords.push(lead);
                     }
                 } else {
-                    // Fallback path when adset doesn't expose linked lead IDs directly.
-                    leadRecords = await fetchB2CLeadsByAdset(adsetId);
+                    const offsetToken = state.formulaOffsets[page] ?? null;
+                    const result = await fetchB2CLeadsByAdsetPage(adsetId, offsetToken);
+                    leadRecords = result.records || [];
+                    state.formulaHasNextByPage[page] = !!result.nextOffset;
+                    if (result.nextOffset) {
+                        state.formulaOffsets[page + 1] = result.nextOffset;
+                    }
+                    if (leadRecords.length === 0 && page > 1) {
+                        page = page - 1;
+                        const prevOffset = state.formulaOffsets[page] ?? null;
+                        const prevResult = await fetchB2CLeadsByAdsetPage(adsetId, prevOffset);
+                        leadRecords = prevResult.records || [];
+                        state.formulaHasNextByPage[page] = !!prevResult.nextOffset;
+                        if (prevResult.nextOffset) state.formulaOffsets[page + 1] = prevResult.nextOffset;
+                    }
                 }
 
                 leadRecords.sort((a, b) => new Date((b.fields || {})['Created'] || 0) - new Date((a.fields || {})['Created'] || 0));
@@ -1188,10 +1309,33 @@
                     loadedLeadsById.set(lead.id, lead);
                     leadToAdsetMap.set(lead.id, adsetId);
                 });
-                leadsEl.innerHTML = renderLeadsTable(leadRecords);
+                state.page = page;
+
+                const hasPrev = page > 1;
+                const hasNext = state.mode === 'ids'
+                    ? page < Math.max(1, Math.ceil(state.total / pageSize))
+                    : !!state.formulaHasNextByPage[page];
+                const totalText = state.mode === 'ids'
+                    ? `${state.total} total leads`
+                    : `${leadRecords.length} leads on this page`;
+
+                leadsEl.innerHTML = renderLeadsTable(leadRecords, {
+                    adsetId,
+                    page,
+                    hasPrev,
+                    hasNext,
+                    totalText
+                });
             } catch (err) {
                 leadsEl.innerHTML = `<p class="text-sm text-red-600">Unable to load linked leads: ${err.message}</p>`;
             }
+        }
+
+        async function changeLocationLeadsPage(adsetId, delta) {
+            const state = getLeadPaginationStateForAdset(adsetId);
+            const nextPage = (state.page || 1) + delta;
+            if (nextPage < 1) return;
+            await loadLocationAdsetAndLeads(adsetId, nextPage);
         }
 
         function parseApptToDatetime(apptStr) {
@@ -1452,7 +1596,8 @@
         async function refreshLeadTableForRecord(recordId) {
             const adsetId = leadToAdsetMap.get(recordId);
             if (!adsetId) return;
-            await loadLocationAdsetAndLeads(adsetId);
+            const state = getLeadPaginationStateForAdset(adsetId);
+            await loadLocationAdsetAndLeads(adsetId, state.page || 1);
         }
 
         async function autoSaveLeadModalIfDirty(recordId) {
@@ -1685,14 +1830,50 @@
             await loadLocationHeader(adsetId);
         }
 
+        function formatAdsetNumericStat(value) {
+            if (value === null || value === undefined || value === '') return null;
+            if (Array.isArray(value)) {
+                if (!value.length) return null;
+                return formatAdsetNumericStat(value[0]);
+            }
+            const n = Number(value);
+            if (Number.isFinite(n)) return Number.isInteger(n) ? String(n) : String(n);
+            const s = String(value).trim();
+            return s || null;
+        }
+
+        function formatLocationSummaryStatsLine(adsetRecord) {
+            const fields = adsetRecord && adsetRecord.fields ? adsetRecord.fields : {};
+            const ql = formatAdsetNumericStat(fields['Qualified Leads']);
+            const ltm = formatAdsetNumericStat(fields['Leads This Month']);
+            const cap = formatAdsetNumericStat(fields['Monthly Cap']);
+            const dash = '—';
+            const qlPart = ql !== null ? ql : dash;
+            const monthPart =
+                ltm !== null && cap !== null ? `${ltm}/${cap}` : ltm !== null ? `${ltm}/${dash}` : cap !== null ? `${dash}/${cap}` : `${dash}/${dash}`;
+            return `Qualified Leads: ${qlPart} | ${monthPart} leads this month`;
+        }
+
+        function applyLocationSummaryFromAdset(adsetId, adset) {
+            const summaryNameEl = document.getElementById(`location-summary-name-${adsetId}`);
+            const statsEl = document.getElementById(`location-summary-stats-${adsetId}`);
+            if (!adset || !adset.fields) {
+                if (summaryNameEl) summaryNameEl.textContent = `Location (${adsetId})`;
+                if (statsEl) statsEl.textContent = '';
+                return;
+            }
+            const adsetName = adset.fields['Adset Name'] || adset.fields['Name'] || `Location (${adsetId})`;
+            if (summaryNameEl) summaryNameEl.textContent = adsetName;
+            if (statsEl) statsEl.textContent = formatLocationSummaryStatsLine(adset);
+        }
+
         async function loadLocationHeader(adsetId) {
             const summaryNameEl = document.getElementById(`location-summary-name-${adsetId}`);
+            const statsEl = document.getElementById(`location-summary-stats-${adsetId}`);
             const statusHost = document.getElementById(`location-status-toggle-${adsetId}`);
-            if (!summaryNameEl && !statusHost) return;
+            if (!summaryNameEl && !statsEl && !statusHost) return;
             const adset = await fetchAdsetById(adsetId);
-            const adsetName = adset && adset.fields ? (adset.fields['Adset Name'] || adset.fields['Name']) : null;
-            const displayName = adsetName || `Location (${adsetId})`;
-            if (summaryNameEl) summaryNameEl.textContent = displayName;
+            applyLocationSummaryFromAdset(adsetId, adset);
             if (statusHost) {
                 const status = getLocationCampaignStatus(adset);
                 statusHost.innerHTML = renderLocationCampaignStatusToggle(adsetId, status);
