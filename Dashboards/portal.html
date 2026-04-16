@@ -1046,10 +1046,12 @@
 
         async function updateAdsetCampaignStatus(adsetId, nextStatus) {
             const url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.adsetsTableName)}/${adsetId}`;
-            const payloads = [
-                { fields: { 'Location Campaign Status': nextStatus } },
-                { fields: { 'Location Campaign Status': [nextStatus] } }
-            ];
+            const statusFields = ['Adset Status', 'Location Campaign Status', 'Status'];
+            const payloads = [];
+            statusFields.forEach((fieldName) => {
+                payloads.push({ fields: { [fieldName]: nextStatus } });
+                payloads.push({ fields: { [fieldName]: [nextStatus] } });
+            });
             let lastErrorMessage = '';
 
             for (const payload of payloads) {
@@ -1062,8 +1064,13 @@
 
                 let errText = '';
                 try {
-                    const errJson = await response.json();
-                    errText = errJson && errJson.error ? (errJson.error.message || errJson.error.type || '') : '';
+                    const rawText = await response.text();
+                    try {
+                        const errJson = rawText ? JSON.parse(rawText) : null;
+                        errText = errJson && errJson.error ? (errJson.error.message || errJson.error.type || '') : rawText;
+                    } catch (e) {
+                        errText = rawText || '';
+                    }
                 } catch (e) {
                     errText = '';
                 }
@@ -2008,7 +2015,11 @@
 
         function getLocationCampaignStatus(adsetRecord) {
             const fields = adsetRecord && adsetRecord.fields ? adsetRecord.fields : {};
-            const raw = fields['Location Campaign Status'];
+            const raw = fields['Adset Status'] !== undefined
+                ? fields['Adset Status']
+                : fields['Location Campaign Status'] !== undefined
+                ? fields['Location Campaign Status']
+                : fields['Status'];
             const value = Array.isArray(raw) ? raw[0] : raw;
             const normalized = String(value || '').toLowerCase();
             if (normalized === 'paused') return 'Paused';
