@@ -141,6 +141,7 @@
         let confirmResolver = null;
         let detailsOpenState = null;
         const zipMapInstances = new Map();
+        const zipGeocodeCache = new Map();
         const loadedLeadsById = new Map();
         const leadToAdsetMap = new Map();
         const submitScreenSaveTimers = new Map();
@@ -231,6 +232,24 @@
                 }
             }));
 
+            return allRecords;
+        }
+
+        async function fetchTableRecordsByIds(tableName, recordIds, chunkSize = 20) {
+            const uniqueIds = Array.from(new Set((recordIds || []).filter(Boolean)));
+            if (!uniqueIds.length) return [];
+            const chunks = chunkArray(uniqueIds, chunkSize);
+            const allRecords = [];
+            await Promise.all(chunks.map(async (idChunk) => {
+                const formula = `OR(${idChunk.map((id) => `RECORD_ID()='${id}'`).join(',')})`;
+                const url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(tableName)}?pageSize=100&filterByFormula=${encodeURIComponent(formula)}`;
+                const response = await fetchWithTimeout(url, {}, 25000);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch ${tableName} (${response.status})`);
+                }
+                const data = await response.json();
+                allRecords.push(...(data.records || []));
+            }));
             return allRecords;
         }
 
@@ -1915,6 +1934,39 @@
             return null;
         }
 
+        function extractLatLonFromUSZipRecord(zipRecord) {
+            const fields = zipRecord && zipRecord.fields ? zipRecord.fields : {};
+            const lat = Number(fields.Lat ?? fields.lat ?? fields.Latitude);
+            const lon = Number(fields.Long ?? fields.long ?? fields.Lng ?? fields.Lon ?? fields.Longitude);
+            if (Number.isFinite(lat) && Number.isFinite(lon)) return { lat, lon };
+            return null;
+        }
+
+        function normalizeZipMapInputs(zipInput) {
+            if (!zipInput || !zipInput.length) return [];
+            const byZip = new Map();
+            const consider = (zip, lat, lon) => {
+                if (!zip) return;
+                let latN = NaN;
+                let lonN = NaN;
+                if (lat != null && lat !== '') latN = Number(lat);
+                if (lon != null && lon !== '') lonN = Number(lon);
+                const hasCoords = Number.isFinite(latN) && Number.isFinite(lonN);
+                const prev = byZip.get(zip);
+                if (!prev || (hasCoords && !prev.hasCoords)) {
+                    byZip.set(zip, hasCoords ? { zip, lat: latN, lon: lonN, hasCoords: true } : { zip, hasCoords: false });
+                }
+            };
+            for (const item of zipInput) {
+                if (typeof item === 'string') consider(item, null, null);
+                else if (item && item.zip) consider(item.zip, item.lat, item.lon);
+            }
+            return Array.from(byZip.values()).map((row) => {
+                if (row.hasCoords) return { zip: row.zip, lat: row.lat, lon: row.lon };
+                return { zip: row.zip };
+            });
+        }
+
         function getAdsetJunctionIds(adsetRecord) {
             const fields = adsetRecord && adsetRecord.fields ? adsetRecord.fields : {};
             const keys = ['Adset Zip Tracking', 'Ad Set Zip Tracking'];
@@ -1936,22 +1988,42 @@
         }
 
         async function geocodeZip(zip) {
-            try {
-                const res = await fetch(`https://api.zippopotam.us/us/${encodeURIComponent(zip)}`);
-                if (!res.ok) return null;
-                const data = await res.json();
-                const place = data.places && data.places[0];
-                if (!place) return null;
-                const lat = Number(place.latitude);
-                const lon = Number(place.longitude);
-                if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
-                return { lat, lon };
-            } catch {
-                return null;
-            }
+            if (!zip) return null;
+            if (zipGeocodeCache.has(zip)) return zipGeocodeCache.get(zip);
+            const p = (async () => {
+                try {
+                    const res = await fetch(`https://api.zippopotam.us/us/${encodeURIComponent(zip)}`);
+                    if (!res.ok) return null;
+                    const data = await res.json();
+                    const place = data.places && data.places[0];
+                    if (!place) return null;
+                    const lat = Number(place.latitude);
+                    const lon = Number(place.longitude);
+                    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+                    return { lat, lon };
+                } catch {
+                    return null;
+                }
+            })();
+            zipGeocodeCache.set(zip, p);
+            return p;
         }
 
-        async function renderZipMap(containerId, zipCodes) {
+        async function geocodeZipsForMap(zipCodes, batchSize = 12) {
+            const unique = Array.from(new Set((zipCodes || []).filter(Boolean)));
+            const points = [];
+            for (let i = 0; i < unique.length; i += batchSize) {
+                const batch = unique.slice(i, i + batchSize);
+                const part = await Promise.all(batch.map(async (zip) => {
+                    const pt = await geocodeZip(zip);
+                    return pt ? { zip, lat: pt.lat, lon: pt.lon } : null;
+                }));
+                points.push(...part.filter(Boolean));
+            }
+            return points;
+        }
+
+        async function renderZipMap(containerId, zipInput) {
             const mapContainer = document.getElementById(containerId);
             if (!mapContainer) return;
             if (typeof L === 'undefined') {
@@ -1965,11 +2037,18 @@
                 zipMapInstances.delete(containerId);
             }
 
-            const points = [];
-            for (const zip of zipCodes) {
-                const point = await geocodeZip(zip);
-                if (point) points.push({ zip, ...point });
+            const rows = normalizeZipMapInputs(zipInput);
+            const fromTable = [];
+            const needGeocode = [];
+            for (const r of rows) {
+                if (r.lat != null && r.lon != null && Number.isFinite(r.lat) && Number.isFinite(r.lon)) {
+                    fromTable.push({ zip: r.zip, lat: r.lat, lon: r.lon });
+                } else {
+                    needGeocode.push(r.zip);
+                }
             }
+            const geoPoints = needGeocode.length ? await geocodeZipsForMap(needGeocode) : [];
+            const points = [...fromTable, ...geoPoints];
 
             if (!points.length) {
                 mapContainer.innerHTML = '<p class="text-sm text-gray-500">Unable to plot zip map for these zip codes.</p>';
@@ -2025,15 +2104,31 @@
                     return;
                 }
 
-                const zipCodes = [];
+                const junctionRecords = await fetchTableRecordsByIds(CONFIG.adsetZipTrackingTableName, junctionIds);
+                const junctionById = new Map(junctionRecords.map((r) => [r.id, r]));
+                const zipRecordIds = [];
                 for (const junctionId of junctionIds) {
-                    const junction = await fetchAdsetZipJunctionById(junctionId);
+                    const junction = junctionById.get(junctionId);
+                    if (!junction) continue;
+                    const zipRecordId = getJunctionZipId(junction);
+                    if (zipRecordId) zipRecordIds.push(zipRecordId);
+                }
+                const zipRecords = await fetchTableRecordsByIds(CONFIG.usZipsTableName, zipRecordIds);
+                const zipById = new Map(zipRecords.map((r) => [r.id, r]));
+                const zipCodes = [];
+                const zipMapRows = [];
+                for (const junctionId of junctionIds) {
+                    const junction = junctionById.get(junctionId);
                     if (!junction) continue;
                     const zipRecordId = getJunctionZipId(junction);
                     if (!zipRecordId) continue;
-                    const zipRecord = await fetchUSZipById(zipRecordId);
+                    const zipRecord = zipById.get(zipRecordId);
                     const zipCode = extractZipCodeFromUSZipRecord(zipRecord);
-                    if (zipCode) zipCodes.push(zipCode);
+                    if (zipCode) {
+                        zipCodes.push(zipCode);
+                        const ll = extractLatLonFromUSZipRecord(zipRecord);
+                        zipMapRows.push(ll ? { zip: zipCode, lat: ll.lat, lon: ll.lon } : { zip: zipCode });
+                    }
                 }
 
                 const uniqueZipCodes = Array.from(new Set(zipCodes)).sort((a, b) => a.localeCompare(b));
@@ -2050,7 +2145,7 @@
                         <div class="text-sm text-gray-700">${uniqueZipCodes.join(', ')}</div>
                     </div>
                 `;
-                await renderZipMap(mapId, uniqueZipCodes);
+                await renderZipMap(mapId, zipMapRows);
             } catch (err) {
                 zipEl.innerHTML = `<p class="text-sm text-red-600">Unable to load zip codes: ${err.message}</p>`;
             }
