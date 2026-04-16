@@ -1200,7 +1200,7 @@
         async function fetchB2CLeadsByAdsetPage(adsetId, offsetToken = null) {
             const filterFormula = `FIND("${adsetId}", ARRAYJOIN({Adsets}))`;
 
-            let url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.leadsTableName)}?pageSize=20&filterByFormula=${encodeURIComponent(filterFormula)}&sort[0][field]=${encodeURIComponent('Created')}&sort[0][direction]=desc`;
+            let url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.leadsTableName)}?pageSize=20&filterByFormula=${encodeURIComponent(filterFormula)}`;
             if (offsetToken) {
                 url += `&offset=${offsetToken}`;
             }
@@ -1276,6 +1276,7 @@
                 adsetLeadPaginationState.set(adsetId, {
                     mode: null,
                     ids: [],
+                    idsSignature: '',
                     total: 0,
                     page: 1,
                     formulaOffsets: { 1: null },
@@ -1303,9 +1304,32 @@
 
                 const state = getLeadPaginationStateForAdset(adsetId);
                 const leadIds = getLinkedB2CLeadIds(adset);
-                if (!state.mode) {
+                if (leadIds.length) {
+                    const signature = leadIds.join('|');
+                    const shouldReloadIds = state.mode !== 'ids' || state.idsSignature !== signature || !state.ids.length;
+                    state.mode = 'ids';
+                    if (shouldReloadIds) {
+                        const fetchedLeads = [];
+                        for (let i = 0; i < leadIds.length; i++) {
+                            leadsEl.innerHTML = `<p class="text-sm text-gray-600">Loading ${i + 1}/${leadIds.length} leads...</p>`;
+                            const lead = await fetchLeadById(leadIds[i]);
+                            if (lead) {
+                                loadedLeadsById.set(lead.id, lead);
+                                leadToAdsetMap.set(lead.id, adsetId);
+                                fetchedLeads.push(lead);
+                            }
+                        }
+                        fetchedLeads.sort((a, b) => new Date((b.fields || {})['Created'] || 0) - new Date((a.fields || {})['Created'] || 0));
+                        state.ids = fetchedLeads.map((lead) => lead.id);
+                        state.idsSignature = signature;
+                        state.total = state.ids.length;
+                    } else {
+                        state.total = state.ids.length;
+                    }
+                } else if (!state.mode || state.mode !== 'formula') {
                     state.mode = 'formula';
                     state.ids = [];
+                    state.idsSignature = '';
                     state.total = leadIds.length || 0;
                     state.formulaOffsets = { 1: null };
                     state.formulaHasNextByPage = {};
@@ -1318,20 +1342,30 @@
                 let page = targetPage || state.page || 1;
                 if (page < 1) page = 1;
 
-                const offsetToken = state.formulaOffsets[page] ?? null;
-                const result = await fetchB2CLeadsByAdsetPage(adsetId, offsetToken);
-                leadRecords = result.records || [];
-                state.formulaHasNextByPage[page] = !!result.nextOffset;
-                if (result.nextOffset) {
-                    state.formulaOffsets[page + 1] = result.nextOffset;
-                }
-                if (leadRecords.length === 0 && page > 1) {
-                    page = page - 1;
-                    const prevOffset = state.formulaOffsets[page] ?? null;
-                    const prevResult = await fetchB2CLeadsByAdsetPage(adsetId, prevOffset);
-                    leadRecords = prevResult.records || [];
-                    state.formulaHasNextByPage[page] = !!prevResult.nextOffset;
-                    if (prevResult.nextOffset) state.formulaOffsets[page + 1] = prevResult.nextOffset;
+                if (state.mode === 'ids') {
+                    const totalPages = Math.max(1, Math.ceil(state.total / pageSize));
+                    if (page > totalPages) page = totalPages;
+                    const start = (page - 1) * pageSize;
+                    const pageLeadIds = state.ids.slice(start, start + pageSize);
+                    leadRecords = pageLeadIds
+                        .map((id) => loadedLeadsById.get(id))
+                        .filter(Boolean);
+                } else {
+                    const offsetToken = state.formulaOffsets[page] ?? null;
+                    const result = await fetchB2CLeadsByAdsetPage(adsetId, offsetToken);
+                    leadRecords = result.records || [];
+                    state.formulaHasNextByPage[page] = !!result.nextOffset;
+                    if (result.nextOffset) {
+                        state.formulaOffsets[page + 1] = result.nextOffset;
+                    }
+                    if (leadRecords.length === 0 && page > 1) {
+                        page = page - 1;
+                        const prevOffset = state.formulaOffsets[page] ?? null;
+                        const prevResult = await fetchB2CLeadsByAdsetPage(adsetId, prevOffset);
+                        leadRecords = prevResult.records || [];
+                        state.formulaHasNextByPage[page] = !!prevResult.nextOffset;
+                        if (prevResult.nextOffset) state.formulaOffsets[page + 1] = prevResult.nextOffset;
+                    }
                 }
 
                 leadRecords.sort((a, b) => new Date((b.fields || {})['Created'] || 0) - new Date((a.fields || {})['Created'] || 0));
@@ -1342,7 +1376,9 @@
                 state.page = page;
 
                 const hasPrev = page > 1;
-                const hasNext = !!state.formulaHasNextByPage[page];
+                const hasNext = state.mode === 'ids'
+                    ? page < Math.max(1, Math.ceil(state.total / pageSize))
+                    : !!state.formulaHasNextByPage[page];
                 const totalText = state.total
                     ? `${state.total} total leads`
                     : `${leadRecords.length} leads on this page`;
