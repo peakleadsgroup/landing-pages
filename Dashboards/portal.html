@@ -130,6 +130,7 @@
         const zipMapInstances = new Map();
         const loadedLeadsById = new Map();
         const leadToAdsetMap = new Map();
+        const submitScreenSaveTimers = new Map();
 
         function getURLParameter(name) {
             const urlParams = new URLSearchParams(window.location.search);
@@ -543,8 +544,7 @@
                         <summary class="px-4 py-3 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
                             <span class="text-lg font-semibold text-gray-900 inline-flex items-center gap-2">
                                 <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                    <circle cx="12" cy="12" r="9" stroke-width="2"></circle>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v10m0-10c-1.5 0-2.5.8-2.5 1.8S10.5 10.6 12 10.6s2.5.8 2.5 1.8S13.5 14.2 12 14.2s-2.5.8-2.5 1.8S10.5 17.8 12 17.8"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                                 <span>Billing</span>
                             </span>
@@ -970,6 +970,20 @@
                                 ${renderChevronToggle()}
                             </summary>
                             <div id="location-contacts-${adsetId}" class="px-3 pb-3 border-t border-gray-100 pt-2 text-sm text-gray-600">Open to load contacts...</div>
+                        </details>
+                        <details class="border border-gray-200 rounded-lg mt-2" data-location-submit-screen-section="${adsetId}">
+                            <summary class="px-3 py-2 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
+                                <span class="text-sm font-medium text-gray-800">Submit Screen</span>
+                                ${renderChevronToggle()}
+                            </summary>
+                            <div id="location-submit-screen-${adsetId}" class="px-3 pb-3 border-t border-gray-100 pt-2 text-sm text-gray-600">Open to load submit screen settings...</div>
+                        </details>
+                        <details class="border border-gray-200 rounded-lg mt-2" data-location-settings-section="${adsetId}">
+                            <summary class="px-3 py-2 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
+                                <span class="text-sm font-medium text-gray-800">Settings</span>
+                                ${renderChevronToggle()}
+                            </summary>
+                            <div id="location-settings-${adsetId}" class="px-3 pb-3 border-t border-gray-100 pt-2 text-sm text-gray-600">Settings options coming soon.</div>
                         </details>
                     </div>
                 </details>
@@ -1429,6 +1443,10 @@
             document.getElementById('editLeadModal').classList.add('hidden');
         }
 
+        document.getElementById('editLeadModal').addEventListener('click', function(e) {
+            if (e.target === this) closeLeadEditModal();
+        });
+
         function extractZipCodeFromUSZipRecord(zipRecord) {
             const fields = zipRecord && zipRecord.fields ? zipRecord.fields : {};
             const candidates = ['Zip', 'ZIP', 'Zip Code', 'ZIP Code', 'Name'];
@@ -1575,6 +1593,197 @@
             return 'Contacts';
         }
 
+        function getSubmitScreenMode(adsetRecord) {
+            const raw = adsetRecord && adsetRecord.fields ? adsetRecord.fields['Submit Screen'] : null;
+            const values = Array.isArray(raw) ? raw : (raw ? [raw] : []);
+            const valid = ['Calendar', 'Phone', 'Text', 'Phone/Text', 'None'];
+            for (const v of values) {
+                if (valid.includes(v)) return v;
+            }
+            return 'None';
+        }
+
+        function submitScreenTimeOptions() {
+            const out = [];
+            for (let hour = 6; hour <= 21; hour++) {
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+                out.push(`${hour12}:00 ${ampm}`);
+            }
+            return out;
+        }
+
+        function renderDayTimeSelect(dayName, selectedValues, adsetId) {
+            const options = submitScreenTimeOptions();
+            return `
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">${dayName}</label>
+                    <select multiple data-submit-day="${dayName}" data-adset-id="${adsetId}" class="submit-screen-input w-full h-28 px-2 py-2 border border-gray-300 rounded-md text-sm">
+                        ${options.map((opt) => `<option value="${opt}" ${selectedValues.includes(opt) ? 'selected' : ''}>${opt}</option>`).join('')}
+                    </select>
+                </div>
+            `;
+        }
+
+        function applySubmitScreenModeUI(adsetId) {
+            const modeInput = document.getElementById(`submitScreenMode-${adsetId}`);
+            if (!modeInput) return;
+            const mode = modeInput.value || 'None';
+            const helperEl = document.getElementById(`submitScreenHelper-${adsetId}`);
+            const calendarEl = document.getElementById(`submitScreenCalendar-${adsetId}`);
+            const phoneEl = document.getElementById(`submitScreenPhone-${adsetId}`);
+            const textEl = document.getElementById(`submitScreenText-${adsetId}`);
+
+            if (helperEl) {
+                if (mode === 'Calendar') {
+                    helperEl.textContent = 'Leads will see a calendar to request an in home estimate appointment time after they submit their information';
+                } else if (mode === 'Phone') {
+                    helperEl.textContent = 'Leads will see a button that says "Call Now" after they submit a lead which gets routed to the phone number below';
+                } else if (mode === 'Text') {
+                    helperEl.textContent = 'Leads will see a button that says "Text Now" after they submit a lead which gets routed to the phone number below';
+                } else if (mode === 'Phone/Text') {
+                    helperEl.textContent = 'Leads will see options to call or text after they submit their information, using the numbers below';
+                } else {
+                    helperEl.textContent = 'Leads will see a message that says "we will reach out soon to schedule your free in home estimate" after submitting their information';
+                }
+            }
+
+            if (calendarEl) calendarEl.classList.toggle('hidden', mode !== 'Calendar');
+            if (phoneEl) phoneEl.classList.toggle('hidden', !(mode === 'Phone' || mode === 'Phone/Text'));
+            if (textEl) textEl.classList.toggle('hidden', !(mode === 'Text' || mode === 'Phone/Text'));
+
+            const buttons = document.querySelectorAll(`[data-submit-mode-btn][data-adset-id="${adsetId}"]`);
+            buttons.forEach((btn) => {
+                const btnMode = btn.getAttribute('data-submit-mode-btn');
+                const isActive = btnMode === mode;
+                btn.className = isActive
+                    ? 'px-3 py-1.5 text-sm font-semibold rounded-md bg-blue-600 text-white'
+                    : 'px-3 py-1.5 text-sm font-semibold rounded-md bg-white text-blue-700 border border-blue-300 hover:bg-blue-50';
+            });
+        }
+
+        function scheduleSubmitScreenSave(adsetId) {
+            const prev = submitScreenSaveTimers.get(adsetId);
+            if (prev) clearTimeout(prev);
+            const t = setTimeout(async () => {
+                submitScreenSaveTimers.delete(adsetId);
+                try {
+                    await saveSubmitScreenSettings(adsetId);
+                } catch (err) {
+                    alert(err.message);
+                }
+            }, 500);
+            submitScreenSaveTimers.set(adsetId, t);
+        }
+
+        async function saveSubmitScreenSettings(adsetId) {
+            const modeInput = document.getElementById(`submitScreenMode-${adsetId}`);
+            if (!modeInput) return;
+            const mode = modeInput.value || 'None';
+            const timezoneEl = document.getElementById(`submitTimezone-${adsetId}`);
+            const callEl = document.getElementById(`submitCall-${adsetId}`);
+            const textEl = document.getElementById(`submitText-${adsetId}`);
+
+            const fields = {
+                'Submit Screen': [mode],
+                'Timezone': timezoneEl ? timezoneEl.value : null,
+                'Call': callEl ? (callEl.value || '') : '',
+                'Text': textEl ? (textEl.value || '') : ''
+            };
+
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            days.forEach((day) => {
+                const sel = document.querySelector(`select[data-submit-day="${day}"][data-adset-id="${adsetId}"]`);
+                if (sel) {
+                    fields[day] = Array.from(sel.selectedOptions).map((o) => o.value);
+                }
+            });
+
+            const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.adsetsTableName)}/${adsetId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fields })
+            });
+            if (!response.ok) throw new Error('Failed to save submit screen settings');
+        }
+
+        function bindSubmitScreenEditor(adsetId) {
+            const modeButtons = document.querySelectorAll(`[data-submit-mode-btn][data-adset-id="${adsetId}"]`);
+            modeButtons.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const mode = btn.getAttribute('data-submit-mode-btn');
+                    const modeInput = document.getElementById(`submitScreenMode-${adsetId}`);
+                    if (!modeInput) return;
+                    modeInput.value = mode;
+                    applySubmitScreenModeUI(adsetId);
+                    scheduleSubmitScreenSave(adsetId);
+                });
+            });
+
+            const inputs = document.querySelectorAll(`.submit-screen-input[data-adset-id="${adsetId}"]`);
+            inputs.forEach((el) => {
+                const evt = el.tagName.toLowerCase() === 'select' ? 'change' : 'input';
+                el.addEventListener(evt, () => scheduleSubmitScreenSave(adsetId));
+            });
+        }
+
+        async function loadLocationSubmitScreen(adsetId) {
+            const host = document.getElementById(`location-submit-screen-${adsetId}`);
+            if (!host) return;
+            host.innerHTML = '<p class="text-sm text-gray-600">Loading submit screen settings...</p>';
+
+            try {
+                const adset = await fetchAdsetById(adsetId);
+                if (!adset) {
+                    host.innerHTML = '<p class="text-sm text-red-600">Unable to load submit screen settings.</p>';
+                    return;
+                }
+                const fields = adset.fields || {};
+                const mode = getSubmitScreenMode(adset);
+                const timezone = fields['Timezone'] || 'America/New_York';
+                const callValue = fields['Call'] || '';
+                const textValue = fields['Text'] || '';
+                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+                host.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex flex-wrap gap-2">
+                            ${['Calendar', 'Phone', 'Text', 'Phone/Text', 'None'].map((opt) => `<button type="button" data-adset-id="${adsetId}" data-submit-mode-btn="${opt}" class="px-3 py-1.5 text-sm font-semibold rounded-md bg-white text-blue-700 border border-blue-300 hover:bg-blue-50">${opt}</button>`).join('')}
+                        </div>
+                        <input type="hidden" id="submitScreenMode-${adsetId}" value="${mode}">
+                        <p id="submitScreenHelper-${adsetId}" class="text-xs text-gray-600"></p>
+
+                        <div id="submitScreenCalendar-${adsetId}" class="space-y-3 hidden">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
+                                <select id="submitTimezone-${adsetId}" data-adset-id="${adsetId}" class="submit-screen-input w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    ${['America/Chicago', 'America/New_York', 'America/Denver', 'America/Los_Angeles', 'America/Phoenix'].map((tz) => `<option value="${tz}" ${tz === timezone ? 'selected' : ''}>${tz}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                ${days.map((day) => renderDayTimeSelect(day, Array.isArray(fields[day]) ? fields[day] : [], adsetId)).join('')}
+                            </div>
+                        </div>
+
+                        <div id="submitScreenPhone-${adsetId}" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Call</label>
+                            <input id="submitCall-${adsetId}" data-adset-id="${adsetId}" class="submit-screen-input w-full px-3 py-2 border border-gray-300 rounded-md text-sm" value="${callValue}" placeholder="Enter call phone number">
+                        </div>
+
+                        <div id="submitScreenText-${adsetId}" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Text</label>
+                            <input id="submitText-${adsetId}" data-adset-id="${adsetId}" class="submit-screen-input w-full px-3 py-2 border border-gray-300 rounded-md text-sm" value="${textValue}" placeholder="Enter text phone number">
+                        </div>
+                    </div>
+                `;
+
+                applySubmitScreenModeUI(adsetId);
+                bindSubmitScreenEditor(adsetId);
+            } catch (err) {
+                host.innerHTML = `<p class="text-sm text-red-600">Unable to load submit screen settings: ${err.message}</p>`;
+            }
+        }
+
         async function patchAdsetContacts(adsetId, contactsFieldName, contactIds) {
             const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.adsetsTableName)}/${adsetId}`, {
                 method: 'PATCH',
@@ -1692,6 +1901,7 @@
                     const leadsSection = wrapper.querySelector(`details[data-location-leads-section="${adsetId}"]`);
                     const zipsSection = wrapper.querySelector(`details[data-location-zips-section="${adsetId}"]`);
                     const contactsSection = wrapper.querySelector(`details[data-location-contacts-section="${adsetId}"]`);
+                    const submitSection = wrapper.querySelector(`details[data-location-submit-screen-section="${adsetId}"]`);
 
                     if (leadsSection) {
                         leadsSection.addEventListener('toggle', function() {
@@ -1712,6 +1922,13 @@
                             if (!contactsSection.open || contactsSection.dataset.loaded === 'true') return;
                             contactsSection.dataset.loaded = 'true';
                             loadLocationContacts(adsetId);
+                        });
+                    }
+                    if (submitSection) {
+                        submitSection.addEventListener('toggle', function() {
+                            if (!submitSection.open || submitSection.dataset.loaded === 'true') return;
+                            submitSection.dataset.loaded = 'true';
+                            loadLocationSubmitScreen(adsetId);
                         });
                     }
                     wrapper.dataset.bound = 'true';
