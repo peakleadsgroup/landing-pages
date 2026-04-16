@@ -187,6 +187,40 @@
             return response.json();
         }
 
+        function chunkArray(items, size) {
+            const chunks = [];
+            for (let i = 0; i < items.length; i += size) {
+                chunks.push(items.slice(i, i + size));
+            }
+            return chunks;
+        }
+
+        async function fetchLeadsByIds(leadIds, onProgress) {
+            const uniqueIds = Array.from(new Set(leadIds || []));
+            if (!uniqueIds.length) return [];
+
+            const chunks = chunkArray(uniqueIds, 25);
+            let completed = 0;
+            const allRecords = [];
+
+            await Promise.all(chunks.map(async (idChunk) => {
+                const formula = `OR(${idChunk.map((id) => `RECORD_ID()='${id}'`).join(',')})`;
+                const url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.leadsTableName)}?pageSize=100&filterByFormula=${encodeURIComponent(formula)}`;
+                const response = await fetchWithTimeout(url, {}, 20000);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch linked leads (${response.status})`);
+                }
+                const data = await response.json();
+                allRecords.push(...(data.records || []));
+                completed += idChunk.length;
+                if (typeof onProgress === 'function') {
+                    onProgress(Math.min(completed, uniqueIds.length), uniqueIds.length);
+                }
+            }));
+
+            return allRecords;
+        }
+
         async function fetchAdsetZipJunctionById(junctionId) {
             const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.adsetZipTrackingTableName)}/${junctionId}`);
             if (!response.ok) return null;
@@ -1007,13 +1041,16 @@
                         ${renderChevronToggle()}
                     </summary>
                     <div class="px-3 pb-3 border-t border-gray-100">
-                        <div class="mt-2 flex items-center justify-end gap-2">
-                            <button type="button" onclick="exportLocationReport('${adsetId}')" class="inline-flex h-[42px] items-center justify-center gap-1.5 px-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors" title="Export location report">
-                                <span class="text-xs font-semibold">Export</span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                            </button>
+                        <div class="mt-2 flex items-start justify-end gap-3">
+                            <div class="flex flex-col items-center">
+                                <span class="text-[11px] uppercase tracking-wide text-transparent select-none">Location Status</span>
+                                <button type="button" onclick="exportLocationReport('${adsetId}')" class="inline-flex h-[42px] items-center justify-center gap-1.5 px-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors" title="Export location report">
+                                    <span class="text-xs font-semibold">Export</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                </button>
+                            </div>
                             <div class="flex flex-col items-center">
                                 <span class="text-[11px] uppercase tracking-wide text-gray-500 text-center">Location Status</span>
                                 <div id="location-status-toggle-${adsetId}" class="text-sm text-gray-500">Loading status...</div>
@@ -1309,16 +1346,14 @@
                     const shouldReloadIds = state.mode !== 'ids' || state.idsSignature !== signature || !state.ids.length;
                     state.mode = 'ids';
                     if (shouldReloadIds) {
-                        const fetchedLeads = [];
-                        for (let i = 0; i < leadIds.length; i++) {
-                            leadsEl.innerHTML = `<p class="text-sm text-gray-600">Loading ${i + 1}/${leadIds.length} leads...</p>`;
-                            const lead = await fetchLeadById(leadIds[i]);
-                            if (lead) {
-                                loadedLeadsById.set(lead.id, lead);
-                                leadToAdsetMap.set(lead.id, adsetId);
-                                fetchedLeads.push(lead);
-                            }
-                        }
+                        leadsEl.innerHTML = `<p class="text-sm text-gray-600">Loading 0/${leadIds.length} leads...</p>`;
+                        const fetchedLeads = await fetchLeadsByIds(leadIds, (loaded, total) => {
+                            leadsEl.innerHTML = `<p class="text-sm text-gray-600">Loading ${loaded}/${total} leads...</p>`;
+                        });
+                        fetchedLeads.forEach((lead) => {
+                            loadedLeadsById.set(lead.id, lead);
+                            leadToAdsetMap.set(lead.id, adsetId);
+                        });
                         fetchedLeads.sort((a, b) => new Date((b.fields || {})['Created'] || 0) - new Date((a.fields || {})['Created'] || 0));
                         state.ids = fetchedLeads.map((lead) => lead.id);
                         state.idsSignature = signature;
