@@ -150,10 +150,23 @@
             }
         }
 
-        async function fetchRecordById(recordId) {
+        function wait(ms) {
+            return new Promise((resolve) => setTimeout(resolve, ms));
+        }
+
+        async function fetchRecordById(recordId, attempt = 1) {
             const response = await fetchWithTimeout(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${recordId}`);
-            if (!response.ok) throw new Error(`Failed to fetch portal record: ${response.status}`);
-            return response.json();
+            if (response.ok) return response.json();
+
+            // Cloudflare 524 is transient; retry once before failing.
+            if (response.status === 524 && attempt < 2) {
+                await wait(1000);
+                return fetchRecordById(recordId, attempt + 1);
+            }
+
+            const err = new Error(`Failed to fetch portal record: ${response.status}`);
+            err.status = response.status;
+            throw err;
         }
 
         async function fetchContactById(contactId) {
@@ -243,9 +256,14 @@
                 currentRecordId = atid;
                 await initializeDashboard();
             } catch (err) {
-                const message = err && err.name === 'AbortError'
-                    ? 'Verification timed out. Please try again.'
-                    : (err && err.message ? err.message : 'Unable to verify this account.');
+                let message = 'Unable to verify this account.';
+                if (err && err.name === 'AbortError') {
+                    message = 'Verification timed out. Please try again.';
+                } else if (err && err.status === 524) {
+                    message = 'The server timed out while verifying this account (524). Please try again in a moment.';
+                } else if (err && err.message) {
+                    message = err.message;
+                }
                 showEmailGateError(message);
             } finally {
                 submitBtn.disabled = false;
