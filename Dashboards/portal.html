@@ -247,8 +247,21 @@
 
         async function getBillingContactEmails(record) {
             const billingContactIds = Array.isArray(record.fields[CONFIG.billingContactsField]) ? record.fields[CONFIG.billingContactsField] : [];
-            const leadContactIds = Array.isArray(record.fields['Lead Contacts']) ? record.fields['Lead Contacts'] : [];
-            const contactIds = Array.from(new Set([...billingContactIds, ...leadContactIds]));
+            const adsetIds = Array.isArray(record.fields.Adsets) ? record.fields.Adsets : [];
+            const adsetLeadContactIds = [];
+            if (adsetIds.length) {
+                const adsetResults = await Promise.allSettled(adsetIds.map((adsetId) => fetchAdsetById(adsetId)));
+                adsetResults.forEach((result) => {
+                    if (result.status !== 'fulfilled') return;
+                    const adset = result.value;
+                    const ids = Array.isArray(adset && adset.fields ? adset.fields['Lead Contacts'] : null)
+                        ? adset.fields['Lead Contacts']
+                        : [];
+                    adsetLeadContactIds.push(...ids);
+                });
+            }
+
+            const contactIds = Array.from(new Set([...billingContactIds, ...adsetLeadContactIds]));
             if (!Array.isArray(contactIds) || contactIds.length === 0) return [];
             const results = await Promise.allSettled(contactIds.map((contactId) => fetchContactById(contactId)));
             const emails = [];
