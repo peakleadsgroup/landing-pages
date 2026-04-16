@@ -113,7 +113,7 @@
             contactsTableName: 'Contacts',
             contactsLinkedField: 'Contacts',
             customersTableName: 'Customers',
-            adsetsTableName: 'Adsets',
+            adsetsTableName: 'tblee61crNCoSfurx',
             adsetZipTrackingTableName: 'Adset Zip Tracking',
             usZipsTableName: 'US Zips',
             leadsTableName: 'B2C Leads',
@@ -131,6 +131,7 @@
         const loadedLeadsById = new Map();
         const leadToAdsetMap = new Map();
         const submitScreenSaveTimers = new Map();
+        let currentLeadEditRecordId = null;
 
         function getURLParameter(name) {
             const urlParams = new URLSearchParams(window.location.search);
@@ -316,8 +317,7 @@
 
         async function fetchContactsForAccount(record) {
             const billingIds = Array.isArray(record.fields[CONFIG.billingContactsField]) ? record.fields[CONFIG.billingContactsField] : [];
-            const linkedIds = Array.isArray(record.fields[CONFIG.contactsLinkedField]) ? record.fields[CONFIG.contactsLinkedField] : [];
-            const contactIds = Array.from(new Set([ ...billingIds, ...linkedIds ]));
+            const contactIds = Array.from(new Set([...billingIds]));
             if (!contactIds.length) return [];
 
             const contacts = [];
@@ -781,9 +781,7 @@
             }
             const newContact = await createRes.json();
 
-            const existingContacts = Array.isArray(currentRecord.fields[CONFIG.contactsLinkedField]) ? currentRecord.fields[CONFIG.contactsLinkedField] : [];
             const existingBillingContacts = Array.isArray(currentRecord.fields[CONFIG.billingContactsField]) ? currentRecord.fields[CONFIG.billingContactsField] : [];
-            const updatedContacts = Array.from(new Set([...existingContacts, newContact.id]));
             const updatedBillingContacts = Array.from(new Set([...existingBillingContacts, newContact.id]));
 
             const linkRes = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${currentRecordId}`, {
@@ -791,7 +789,6 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     fields: {
-                        [CONFIG.contactsLinkedField]: updatedContacts,
                         [CONFIG.billingContactsField]: updatedBillingContacts
                     }
                 })
@@ -807,9 +804,7 @@
 
         async function removeBillingContact(contactId) {
             if (!currentRecordId || !contactId || !currentRecord) return;
-            const existingContacts = Array.isArray(currentRecord.fields[CONFIG.contactsLinkedField]) ? currentRecord.fields[CONFIG.contactsLinkedField] : [];
             const existingBillingContacts = Array.isArray(currentRecord.fields[CONFIG.billingContactsField]) ? currentRecord.fields[CONFIG.billingContactsField] : [];
-            const updatedContacts = existingContacts.filter((id) => id !== contactId);
             const updatedBillingContacts = existingBillingContacts.filter((id) => id !== contactId);
 
             const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${currentRecordId}`, {
@@ -817,7 +812,6 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     fields: {
-                        [CONFIG.contactsLinkedField]: updatedContacts,
                         [CONFIG.billingContactsField]: updatedBillingContacts
                     }
                 })
@@ -1261,6 +1255,7 @@
         function openLeadEditModal(recordId) {
             const record = loadedLeadsById.get(recordId);
             if (!record) return;
+            currentLeadEditRecordId = recordId;
             const modal = document.getElementById('editLeadModal');
             const content = document.getElementById('editLeadModalContent');
             const stageOptions = ['Uncontacted', 'Contacted', 'First Contact', 'Follow Up', '2nd Follow Up', 'Final Follow Up', 'No show', 'Appointment ran', 'Not Interested', 'Cancelled', 'Unresponsive', 'Close lost', 'Close won'];
@@ -1341,7 +1336,7 @@
             modal.classList.remove('hidden');
         }
 
-        async function saveLeadModalChanges(recordId) {
+        async function saveLeadModalChanges(recordId, options = {}) {
             const record = loadedLeadsById.get(recordId);
             if (!record) return;
             const stage = document.getElementById('leadEditStageField').value;
@@ -1377,7 +1372,9 @@
                 const updated = await response.json();
                 loadedLeadsById.set(recordId, updated);
                 await refreshLeadTableForRecord(recordId);
-                closeLeadEditModal();
+                if (!options.skipClose) {
+                    closeLeadEditModal();
+                }
             } catch (err) {
                 alert(`Error saving lead changes: ${err.message}`);
             }
@@ -1439,7 +1436,36 @@
             await loadLocationAdsetAndLeads(adsetId);
         }
 
-        function closeLeadEditModal() {
+        async function autoSaveLeadModalIfDirty(recordId) {
+            const record = loadedLeadsById.get(recordId);
+            if (!record) return;
+            const stageEl = document.getElementById('leadEditStageField');
+            const notesEl = document.getElementById('leadEditNotesField');
+            const apptDateEl = document.getElementById('leadEditApptDateField');
+            const apptTimeEl = document.getElementById('leadEditApptTimeField');
+            if (!stageEl || !notesEl || !apptDateEl || !apptTimeEl) return;
+
+            const newStage = stageEl.value || '';
+            const newNotes = notesEl.value || '';
+            const newAppt = (apptDateEl.value && apptTimeEl.value) ? formatAppointmentForAirtable(apptDateEl.value, apptTimeEl.value) : '';
+            const oldStage = record.fields['Stage'] || '';
+            const oldNotes = record.fields['Notes'] || '';
+            const oldAppt = record.fields['Appt'] || '';
+
+            if (newStage === oldStage && newNotes === oldNotes && newAppt === oldAppt) return;
+            await saveLeadModalChanges(recordId, { skipClose: true });
+        }
+
+        async function closeLeadEditModal() {
+            const recordId = currentLeadEditRecordId;
+            if (recordId) {
+                try {
+                    await autoSaveLeadModalIfDirty(recordId);
+                } catch (err) {
+                    alert(`Error auto-saving lead changes: ${err.message}`);
+                }
+            }
+            currentLeadEditRecordId = null;
             document.getElementById('editLeadModal').classList.add('hidden');
         }
 
@@ -1585,12 +1611,7 @@
         }
 
         function getAdsetContactsFieldName(adsetRecord) {
-            const fields = adsetRecord && adsetRecord.fields ? adsetRecord.fields : {};
-            const candidates = ['Contacts', 'Billing Contacts'];
-            for (const key of candidates) {
-                if (Array.isArray(fields[key])) return key;
-            }
-            return 'Contacts';
+            return 'Lead Contacts';
         }
 
         function getSubmitScreenMode(adsetRecord) {
