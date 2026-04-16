@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
+    <title>Portal Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div id="emailGate" class="min-h-screen flex items-center justify-center p-6">
+        <div class="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+            <div class="text-center mb-6">
+                <img src="https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Logo" class="h-10 w-auto mx-auto mb-4">
+                <h2 class="text-xl font-semibold text-gray-900 mb-2">Access Your Portal</h2>
+                <p class="text-gray-600 text-sm">Enter an email associated with this account.</p>
+            </div>
+            <form id="emailGateForm" onsubmit="return verifyEmail(event)" class="space-y-4">
+                <div>
+                    <label for="emailInput" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="emailInput" required placeholder="you@example.com" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div id="emailGateError" class="hidden text-sm text-red-600"></div>
+                <button type="submit" id="emailGateSubmit" class="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    Continue
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="dashboardContent" class="hidden min-h-screen p-6">
+        <div class="max-w-5xl mx-auto">
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <img src="https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Logo" class="h-10 w-auto">
+                        <h1 class="text-2xl font-bold text-gray-900">Portal Dashboard</h1>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="openBillingModal()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">Billing</button>
+                        <button onclick="openBillingContactsModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Billing Contacts</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="errorMessage" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 hidden">
+                <p class="text-sm text-red-800" id="errorText"></p>
+            </div>
+
+            <div id="loadingState" class="bg-white rounded-lg shadow-sm p-12 text-center hidden">
+                <svg class="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                <p class="text-gray-600">Loading portal...</p>
+            </div>
+
+            <div id="portalCard" class="hidden bg-white rounded-lg shadow-sm p-6 space-y-6"></div>
+        </div>
+    </div>
+
+    <div id="billingModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-3xl shadow-lg rounded-md bg-white">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">Billing Information</h3>
+                <button onclick="closeBillingModal()" class="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+            <div id="billingModalContent" class="max-h-[70vh] overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <div id="billingContactsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">Billing Contacts</h3>
+                <button onclick="closeBillingContactsModal()" class="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+            <div id="billingContactsModalContent" class="max-h-[70vh] overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            baseId: 'appmBb0lzqRK9dI8v',
+            tableName: 'tblH2nVfmGNG8pAjC',
+            contactsTableName: 'Contacts',
+            customersTableName: 'Customers',
+            adsetsTableName: 'Adsets',
+            billingContactsField: 'Billing Contacts'
+        };
+
+        let currentRecordId = null;
+        let currentRecord = null;
+
+        function getURLParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        async function fetchRecordById(recordId) {
+            const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${recordId}`);
+            if (!response.ok) throw new Error(`Failed to fetch portal record: ${response.status}`);
+            return response.json();
+        }
+
+        async function fetchContactById(contactId) {
+            const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.contactsTableName)}/${contactId}`);
+            if (!response.ok) return null;
+            return response.json();
+        }
+
+        async function getBillingContactEmails(record) {
+            const contactIds = record.fields[CONFIG.billingContactsField];
+            if (!Array.isArray(contactIds) || contactIds.length === 0) return [];
+            const emails = [];
+            for (const contactId of contactIds) {
+                const contact = await fetchContactById(contactId);
+                if (contact && contact.fields && contact.fields.Email) {
+                    emails.push(String(contact.fields.Email).trim().toLowerCase());
+                }
+            }
+            return emails;
+        }
+
+        async function verifyEmail(event) {
+            event.preventDefault();
+            const atid = getURLParameter('ATID');
+            if (!atid) {
+                showEmailGateError('Invalid link. No record identifier found.');
+                return false;
+            }
+
+            const emailInput = document.getElementById('emailInput');
+            const submitBtn = document.getElementById('emailGateSubmit');
+            const enteredEmail = (emailInput.value || '').trim().toLowerCase();
+            if (!enteredEmail) return false;
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Verifying...';
+            hideEmailGateError();
+
+            try {
+                const record = await fetchRecordById(atid);
+                const allowedEmails = await getBillingContactEmails(record);
+                if (!allowedEmails.length) {
+                    throw new Error('No billing contacts are linked to this account.');
+                }
+                if (!allowedEmails.includes(enteredEmail)) {
+                    throw new Error('This email is not associated with this account.');
+                }
+
+                document.getElementById('emailGate').classList.add('hidden');
+                document.getElementById('dashboardContent').classList.remove('hidden');
+                currentRecordId = atid;
+                await initializeDashboard();
+            } catch (err) {
+                showEmailGateError(err.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Continue';
+            }
+
+            return false;
+        }
+
+        function showEmailGateError(message) {
+            const errorEl = document.getElementById('emailGateError');
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+
+        function hideEmailGateError() {
+            document.getElementById('emailGateError').classList.add('hidden');
+        }
+
+        async function initializeDashboard() {
+            if (!currentRecordId) return;
+            setLoading(true);
+            hideError();
+            try {
+                currentRecord = await fetchRecordById(currentRecordId);
+                renderPortalCard(currentRecord);
+                document.querySelector('h1').textContent = `Portal Dashboard - ${currentRecord.fields.Name || 'Account'}`;
+                document.getElementById('portalCard').classList.remove('hidden');
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function setLoading(isLoading) {
+            const loading = document.getElementById('loadingState');
+            if (isLoading) {
+                loading.classList.remove('hidden');
+            } else {
+                loading.classList.add('hidden');
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('errorText').textContent = message;
+            document.getElementById('errorMessage').classList.remove('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').classList.add('hidden');
+        }
+
+        function fieldDisplay(record, fieldName, fallback = '—') {
+            const value = record.fields[fieldName];
+            if (value === null || value === undefined || value === '') return fallback;
+            if (Array.isArray(value)) return value.join(', ');
+            return String(value);
+        }
+
+        function moneyDisplay(value) {
+            const num = Number(value);
+            if (!Number.isFinite(num)) return '$0.00';
+            return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function createReadOnlyRow(label, value) {
+            return `
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 py-2">
+                    <div class="text-sm font-medium text-gray-700">${label}</div>
+                    <div class="sm:col-span-2 text-sm text-gray-900">${value}</div>
+                </div>
+            `;
+        }
+
+        function renderPortalCard(record) {
+            const container = document.getElementById('portalCard');
+            const modelValue = fieldDisplay(record, 'Model');
+            const nicheValue = record.fields.Niche;
+            const adsetValues = Array.isArray(record.fields.Adsets) ? record.fields.Adsets : [];
+
+            container.innerHTML = `
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-900 mb-2">Account</h2>
+                    ${createReadOnlyRow('Name', fieldDisplay(record, 'Name'))}
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 py-2">
+                        <label class="text-sm font-medium text-gray-700" for="statusSelect">Status</label>
+                        <div class="sm:col-span-2">
+                            <select id="statusSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                ${['Active', 'Paused', 'Setup', 'Closed'].map(opt => `<option value="${opt}" ${record.fields.Status === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 py-2">
+                        <label class="text-sm font-medium text-gray-700" for="chargingSelect">Charging</label>
+                        <div class="sm:col-span-2">
+                            <select id="chargingSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">-- No Change --</option>
+                                <option value="Pause" ${record.fields.Charging === 'Pause' ? 'selected' : ''}>Pause</option>
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500">Select "Pause" to flag this account for charging pause.</p>
+                        </div>
+                    </div>
+                    ${createReadOnlyRow('Model', modelValue)}
+                    ${createReadOnlyRow('Qualified Leads', fieldDisplay(record, 'Qualified Leads'))}
+                    ${createReadOnlyRow('Leads Charged', fieldDisplay(record, 'Leads Collected'))}
+                    ${createReadOnlyRow('Leads Owed', fieldDisplay(record, 'TBC Leads'))}
+                    ${createReadOnlyRow('Lead Price', moneyDisplay(record.fields['Lead Price']))}
+                    ${createReadOnlyRow('Charge Cadence', fieldDisplay(record, 'Charge Cadence'))}
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 py-2">
+                        <label class="text-sm font-medium text-gray-700" for="nicheSelect">Niche</label>
+                        <div class="sm:col-span-2">
+                            <select id="nicheSelect" multiple class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent h-28">
+                                ${['Bathrooms', 'Floor Coating', 'Windows'].map(opt => `<option value="${opt}" ${Array.isArray(nicheValue) && nicheValue.includes(opt) ? 'selected' : ''}>${opt}</option>`).join('')}
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 py-2">
+                        <div class="text-sm font-medium text-gray-700">Locations</div>
+                        <div class="sm:col-span-2 space-y-2" id="locationsContainer">
+                            ${renderLocationDropdowns(adsetValues)}
+                        </div>
+                    </div>
+                    <div class="pt-4">
+                        <button onclick="savePortalFields()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Save Changes</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderLocationDropdowns(adsetValues) {
+            if (!adsetValues.length) {
+                return '<p class="text-sm text-gray-500">No locations linked yet.</p>';
+            }
+            return adsetValues.map((adset, index) => `
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Location ${index + 1}</label>
+                    <select class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50" disabled>
+                        <option selected>${adset}</option>
+                    </select>
+                </div>
+            `).join('');
+        }
+
+        function getMultiSelectValues(selectEl) {
+            return Array.from(selectEl.selectedOptions).map(option => option.value);
+        }
+
+        async function savePortalFields() {
+            if (!currentRecordId) return;
+            const status = document.getElementById('statusSelect').value;
+            const charging = document.getElementById('chargingSelect').value;
+            const niche = getMultiSelectValues(document.getElementById('nicheSelect'));
+
+            const fields = {
+                Status: status,
+                Charging: charging || null,
+                Niche: niche
+            };
+
+            try {
+                const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${currentRecordId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fields })
+                });
+                if (!response.ok) throw new Error('Failed to save changes');
+                await initializeDashboard();
+                alert('Portal fields saved successfully.');
+            } catch (err) {
+                alert(`Error saving portal fields: ${err.message}`);
+            }
+        }
+
+        async function openBillingModal() {
+            const modal = document.getElementById('billingModal');
+            const content = document.getElementById('billingModalContent');
+            modal.classList.remove('hidden');
+            content.innerHTML = '<p class="text-gray-600">Loading billing info...</p>';
+
+            try {
+                if (!currentRecord) {
+                    currentRecord = await fetchRecordById(currentRecordId);
+                }
+                const customerIds = currentRecord.fields.Customers;
+                if (!Array.isArray(customerIds) || !customerIds.length) {
+                    content.innerHTML = '<p class="text-gray-600">No linked customers.</p>';
+                    return;
+                }
+
+                const customerCards = [];
+                for (const customerId of customerIds) {
+                    const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.customersTableName)}/${customerId}`);
+                    if (!response.ok) continue;
+                    const customer = await response.json();
+                    const fields = customer.fields || {};
+                    customerCards.push(`
+                        <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-2">${fields.Name || 'Customer'}</h4>
+                            <div class="text-sm text-gray-700 space-y-1">
+                                <p><strong>Email:</strong> ${fields.Email || '—'}</p>
+                                <p><strong>Phone:</strong> ${fields.Phone || '—'}</p>
+                                <p><strong>Address:</strong> ${fields.Address || '—'}</p>
+                            </div>
+                        </div>
+                    `);
+                }
+
+                content.innerHTML = customerCards.length ? customerCards.join('') : '<p class="text-gray-600">No readable customer records found.</p>';
+            } catch (err) {
+                content.innerHTML = `<p class="text-red-600">${err.message}</p>`;
+            }
+        }
+
+        function closeBillingModal() {
+            document.getElementById('billingModal').classList.add('hidden');
+        }
+
+        async function openBillingContactsModal() {
+            const modal = document.getElementById('billingContactsModal');
+            const content = document.getElementById('billingContactsModalContent');
+            modal.classList.remove('hidden');
+            content.innerHTML = '<p class="text-gray-600">Loading billing contacts...</p>';
+
+            try {
+                if (!currentRecord) {
+                    currentRecord = await fetchRecordById(currentRecordId);
+                }
+
+                const currentContactIds = Array.isArray(currentRecord.fields[CONFIG.billingContactsField])
+                    ? currentRecord.fields[CONFIG.billingContactsField]
+                    : [];
+
+                const allContacts = await fetchAllContacts();
+                const currentContacts = [];
+                for (const contactId of currentContactIds) {
+                    const contact = allContacts.find(c => c.id === contactId);
+                    if (contact) {
+                        currentContacts.push(contact);
+                    }
+                }
+
+                content.innerHTML = `
+                    <div class="mb-4">
+                        <h4 class="text-sm font-semibold text-gray-800 mb-2">Current Linked Contacts</h4>
+                        <div class="space-y-2">
+                            ${currentContacts.length ? currentContacts.map(contact => `<div class="text-sm text-gray-700">${contact.fields.Name || 'Unnamed'} - ${contact.fields.Email || 'No email'}</div>`).join('') : '<div class="text-sm text-gray-500">No contacts linked.</div>'}
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="billingContactsSelect">Edit Billing Contacts</label>
+                        <select id="billingContactsSelect" multiple class="w-full px-3 py-2 border border-gray-300 rounded-md h-48">
+                            ${allContacts.map(contact => {
+                                const isSelected = currentContactIds.includes(contact.id);
+                                const label = `${contact.fields.Name || 'Unnamed'} - ${contact.fields.Email || 'No email'}`;
+                                return `<option value="${contact.id}" ${isSelected ? 'selected' : ''}>${label}</option>`;
+                            }).join('')}
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple contacts.</p>
+                    </div>
+                    <button onclick="saveBillingContacts()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Save Contacts</button>
+                `;
+            } catch (err) {
+                content.innerHTML = `<p class="text-red-600">${err.message}</p>`;
+            }
+        }
+
+        function closeBillingContactsModal() {
+            document.getElementById('billingContactsModal').classList.add('hidden');
+        }
+
+        async function fetchAllContacts() {
+            const contacts = [];
+            let offset = null;
+
+            do {
+                let url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.contactsTableName)}`;
+                if (offset) url += `?offset=${offset}`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to fetch contacts list.');
+                const data = await response.json();
+                contacts.push(...(data.records || []));
+                offset = data.offset;
+            } while (offset);
+
+            return contacts;
+        }
+
+        async function saveBillingContacts() {
+            const selectEl = document.getElementById('billingContactsSelect');
+            if (!selectEl || !currentRecordId) return;
+            const selectedContactIds = getMultiSelectValues(selectEl);
+
+            try {
+                const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${currentRecordId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fields: {
+                            [CONFIG.billingContactsField]: selectedContactIds
+                        }
+                    })
+                });
+                if (!response.ok) throw new Error('Failed to save billing contacts');
+                currentRecord = await fetchRecordById(currentRecordId);
+                alert('Billing contacts updated.');
+                await openBillingContactsModal();
+            } catch (err) {
+                alert(`Error saving billing contacts: ${err.message}`);
+            }
+        }
+
+        document.getElementById('billingModal').addEventListener('click', function(e) {
+            if (e.target === this) closeBillingModal();
+        });
+
+        document.getElementById('billingContactsModal').addEventListener('click', function(e) {
+            if (e.target === this) closeBillingContactsModal();
+        });
+
+        (function init() {
+            const atid = getURLParameter('ATID');
+            if (!atid) {
+                showEmailGateError('Invalid link. Please add ?ATID=your_record_id to the URL.');
+            }
+        })();
+    </script>
+</body>
+</html>
