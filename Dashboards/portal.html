@@ -1673,7 +1673,7 @@
             if (currentStatus === 'Active' && nextStatus === 'Paused') {
                 const confirmed = await openConfirmModal(
                     'Are you sure you want to pause this location?',
-                    'This will only pause this one location, not all locations if you are running multiple',
+                    'If you are running multiple locations this will only pause this one - not every location.  If you want to pause every location go to the settings dropdown or pause each location individually',
                     'If you choose to pause this location, it can take multiple days to start producing leads again after being re-activated',
                     'Yes, pause this location'
                 );
