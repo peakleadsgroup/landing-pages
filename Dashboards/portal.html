@@ -464,7 +464,12 @@
                     </details>
                     <details class="border border-gray-200 rounded-lg mb-4">
                         <summary class="px-4 py-3 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
-                            <span class="text-lg font-semibold text-gray-900">Overview</span>
+                            <span class="text-lg font-semibold text-gray-900 inline-flex items-center gap-2">
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19V6m-6 13V10m12 9v-4m6 4V4"></path>
+                                </svg>
+                                <span>Overview</span>
+                            </span>
                             <span class="text-sm text-gray-500">Expand</span>
                         </summary>
                         <div class="px-4 pb-4 border-t border-gray-100">
@@ -483,7 +488,13 @@
                     </details>
                     <details class="border border-gray-200 rounded-lg mb-4" open>
                         <summary class="px-4 py-3 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
-                            <span class="text-lg font-semibold text-gray-900">Locations</span>
+                            <span class="text-lg font-semibold text-gray-900 inline-flex items-center gap-2">
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                <span>Locations & Leads</span>
+                            </span>
                             <span class="text-sm text-gray-500">Collapse</span>
                         </summary>
                         <div class="px-4 pb-4 border-t border-gray-100">
@@ -494,7 +505,12 @@
                     </details>
                     <details class="border border-gray-200 rounded-lg mb-4">
                         <summary class="px-4 py-3 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
-                            <span class="text-lg font-semibold text-gray-900">Billing</span>
+                            <span class="text-lg font-semibold text-gray-900 inline-flex items-center gap-2">
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v10m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                </svg>
+                                <span>Billing</span>
+                            </span>
                             <span class="text-sm text-gray-500">Expand</span>
                         </summary>
                         <div class="px-4 pb-4 border-t border-gray-100">
@@ -663,7 +679,7 @@
             return adsetValues.map((adsetId, index) => `
                 <details class="border border-gray-200 rounded-lg" data-location-adset-id="${adsetId}">
                     <summary class="px-3 py-2 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
-                        <span class="text-sm font-medium text-gray-800">Location ${index + 1}</span>
+                        <span id="location-summary-name-${adsetId}" class="text-sm font-medium text-gray-800">Loading location...</span>
                         <span class="text-xs text-gray-500">Expand</span>
                     </summary>
                     <div class="px-3 pb-3 border-t border-gray-100">
@@ -744,6 +760,11 @@
                 const notes = fields['Notes'] || '';
                 return `
                     <tr class="border-t border-gray-200 align-top">
+                        <td class="px-3 py-2 text-sm text-gray-500 whitespace-nowrap">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                        </td>
                         <td class="px-3 py-2 text-sm text-gray-900 whitespace-nowrap">${fullName}</td>
                         <td class="px-3 py-2 text-sm">${renderBadge(stage, 'stage')}</td>
                         <td class="px-3 py-2 text-sm">${renderBadge(status, 'status')}</td>
@@ -763,6 +784,7 @@
                     <table class="w-full bg-white">
                         <thead class="bg-gray-50 border-b border-gray-200">
                             <tr>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Edit</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Full Name</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Stage</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
@@ -792,6 +814,7 @@
 
         async function loadLocationAdsetAndLeads(adsetId) {
             const nameEl = document.getElementById(`location-adset-name-${adsetId}`);
+            const summaryNameEl = document.getElementById(`location-summary-name-${adsetId}`);
             const leadsEl = document.getElementById(`location-leads-${adsetId}`);
             if (!nameEl || !leadsEl) return;
 
@@ -799,12 +822,14 @@
             const adset = await fetchAdsetById(adsetId);
             if (!adset) {
                 nameEl.textContent = `Location (${adsetId})`;
+                if (summaryNameEl) summaryNameEl.textContent = `Location (${adsetId})`;
                 leadsEl.innerHTML = '<p class="text-sm text-red-600">Unable to load this location.</p>';
                 return;
             }
 
             const adsetName = adset.fields['Adset Name'] || adset.fields['Name'] || `Location (${adsetId})`;
             nameEl.textContent = adsetName;
+            if (summaryNameEl) summaryNameEl.textContent = adsetName;
 
             const leadIds = getLinkedB2CLeadIds(adset);
             if (!leadIds.length) {
@@ -827,12 +852,26 @@
             adsetValues.forEach((adsetId) => {
                 const wrapper = document.querySelector(`details[data-location-adset-id="${adsetId}"]`);
                 if (!wrapper) return;
+
+                loadLocationSummaryName(adsetId);
+
                 wrapper.addEventListener('toggle', function() {
                     if (!wrapper.open || wrapper.dataset.loaded === 'true') return;
                     wrapper.dataset.loaded = 'true';
                     loadLocationAdsetAndLeads(adsetId);
                 });
             });
+        }
+
+        async function loadLocationSummaryName(adsetId) {
+            const summaryNameEl = document.getElementById(`location-summary-name-${adsetId}`);
+            const nameEl = document.getElementById(`location-adset-name-${adsetId}`);
+            if (!summaryNameEl) return;
+            const adset = await fetchAdsetById(adsetId);
+            const adsetName = adset && adset.fields ? (adset.fields['Adset Name'] || adset.fields['Name']) : null;
+            const displayName = adsetName || `Location (${adsetId})`;
+            summaryNameEl.textContent = displayName;
+            if (nameEl) nameEl.textContent = displayName;
         }
 
         function getMultiSelectValues(selectEl) {
