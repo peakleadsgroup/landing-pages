@@ -15,6 +15,11 @@
         details[open] > summary .chevron-open { display: inline; }
         details[open] > summary .chevron-closed { display: none; }
         .zip-map { height: 260px; }
+        #portalCard > div { display: flex; flex-direction: column; }
+        #portalCard > div > details[data-section-id="locations-leads"] { order: 1; }
+        #portalCard > div > details[data-section-id="overview"] { order: 2; }
+        #portalCard > div > details[data-section-id="billing"] { order: 3; }
+        #portalCard > div > details[data-section-id="account-settings"] { order: 4; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -656,7 +661,7 @@
                             </div>
                         </div>
                     </details>
-                    <details class="border border-gray-200 rounded-lg mb-4" data-section-id="locations-leads">
+                    <details class="border border-gray-200 rounded-lg mb-4" data-section-id="locations-leads" open>
                         <summary class="px-4 py-3 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
                             <span class="text-lg font-semibold text-gray-900 inline-flex items-center gap-2">
                                 <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -1227,22 +1232,15 @@
                         ${renderChevronToggle()}
                     </summary>
                     <div class="px-3 pb-3 border-t border-gray-100">
-                        <div class="mt-2 flex items-start justify-end gap-3">
-                            <div class="flex flex-col items-center">
-                                <span class="text-[11px] uppercase tracking-wide text-transparent select-none">Location Status</span>
-                                <button type="button" onclick="exportLocationReport('${adsetId}')" class="inline-flex h-[42px] items-center justify-center gap-1.5 px-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors" title="Export location report">
-                                    <span class="text-xs font-semibold">Export</span>
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                            <div class="flex flex-col items-center">
-                                <span class="text-[11px] uppercase tracking-wide text-gray-500 text-center">Location Status</span>
-                                <div id="location-status-toggle-${adsetId}" class="text-sm text-gray-500">Loading status...</div>
-                            </div>
+                        <div class="mt-2 flex items-center justify-end">
+                            <button type="button" onclick="exportLocationReport('${adsetId}')" class="inline-flex h-[42px] items-center justify-center gap-1.5 px-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors" title="Export location report">
+                                <span class="text-xs font-semibold">Export</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </button>
                         </div>
-                        <details class="border border-gray-200 rounded-lg mt-2" data-location-leads-section="${adsetId}">
+                        <details class="border border-gray-200 rounded-lg mt-2" data-location-leads-section="${adsetId}" open>
                             <summary class="px-3 py-2 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
                                 <span class="text-sm font-medium text-gray-800">Leads</span>
                                 ${renderChevronToggle()}
