@@ -1225,7 +1225,7 @@
                 return '<p class="text-sm text-gray-500">No locations linked yet.</p>';
             }
             return adsetValues.map((adsetId, index) => `
-                <details class="border border-gray-200 rounded-lg" data-location-adset-id="${adsetId}">
+                <details class="border border-gray-200 rounded-lg" data-location-adset-id="${adsetId}" open>
                     <summary class="px-3 py-2 cursor-pointer list-none flex items-center gap-2 hover:bg-gray-50">
                         <span id="location-summary-name-${adsetId}" class="text-sm font-medium text-gray-800 truncate min-w-0 shrink">Loading location...</span>
                         <span id="location-summary-stats-${adsetId}" class="text-xs text-gray-600 text-right leading-snug ml-auto max-w-[58%] sm:max-w-[65%]"></span>
@@ -1421,7 +1421,7 @@
         async function fetchB2CLeadsByAdsetPage(adsetId, offsetToken = null) {
             const filterFormula = `FIND("${adsetId}", ARRAYJOIN({Adsets}))`;
 
-            let url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.leadsTableName)}?pageSize=20&filterByFormula=${encodeURIComponent(filterFormula)}`;
+            let url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.leadsTableName)}?pageSize=10&filterByFormula=${encodeURIComponent(filterFormula)}`;
             if (offsetToken) {
                 url += `&offset=${offsetToken}`;
             }
@@ -1556,7 +1556,7 @@
                     state.total = leadIds.length;
                 }
 
-                const pageSize = 20;
+                const pageSize = 10;
                 let leadRecords = [];
                 let page = targetPage || state.page || 1;
                 if (page < 1) page = 1;
@@ -2636,8 +2636,8 @@
 
                 loadLocationHeader(adsetId);
 
-                wrapper.addEventListener('toggle', function() {
-                    if (!wrapper.open || wrapper.dataset.bound === 'true') return;
+                const bindInnerSections = function() {
+                    if (wrapper.dataset.bound === 'true') return;
                     const leadsSection = wrapper.querySelector(`details[data-location-leads-section="${adsetId}"]`);
                     const zipsSection = wrapper.querySelector(`details[data-location-zips-section="${adsetId}"]`);
                     const contactsSection = wrapper.querySelector(`details[data-location-contacts-section="${adsetId}"]`);
@@ -2672,7 +2672,20 @@
                         });
                     }
                     wrapper.dataset.bound = 'true';
+                    if (leadsSection && leadsSection.open && leadsSection.dataset.loaded !== 'true') {
+                        leadsSection.dataset.loaded = 'true';
+                        loadLocationAdsetAndLeads(adsetId);
+                    }
+                };
+
+                wrapper.addEventListener('toggle', function() {
+                    if (!wrapper.open) return;
+                    bindInnerSections();
                 });
+
+                if (wrapper.open) {
+                    bindInnerSections();
+                }
             });
         }
 
