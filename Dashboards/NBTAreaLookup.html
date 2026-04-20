@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" />
+  <title>NBTAreaLookup</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #d1d5db;
+      --blue: #2563eb;
+      --blue-dark: #1d4ed8;
+      --ok: #166534;
+      --ok-bg: #dcfce7;
+      --warn: #92400e;
+      --warn-bg: #fef3c7;
+      --err: #991b1b;
+      --err-bg: #fee2e2;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 980px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      color: var(--blue);
+    }
+
+    p {
+      margin: 8px 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 14px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--blue);
+      color: white;
+    }
+
+    .btn:hover { background: var(--blue-dark); }
+    .btn:disabled { cursor: not-allowed; opacity: 0.6; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .pill.ok { background: var(--ok-bg); color: var(--ok); }
+    .pill.warn { background: var(--warn-bg); color: var(--warn); }
+    .pill.err { background: var(--err-bg); color: var(--err); }
+
+    .muted { color: var(--muted); font-size: 13px; }
+
+    .meta {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f3f4f6;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="card">
+      <h1>NBTAreaLookup</h1>
+      <p>Upload your NBT zip workbook, enrich each row with Airtable <strong># of Partners</strong>, then download the updated Excel.</p>
+      <p class="meta">Airtable source: base <code>appmBb0lzqRK9dI8v</code>, table <code>US Zip Codes</code> (<code>tblieaHIf6rDfFZFl</code>), fields <code>Zip</code> and <code># of Partners</code>.</p>
+
+      <div class="row">
+        <input id="fileInput" type="file" accept=".xlsx,.xls" />
+        <button id="processBtn" class="btn" disabled>Process File</button>
+        <button id="downloadBtn" class="btn" disabled>Download Enriched File</button>
+      </div>
+
+      <div class="row">
+        <span id="statusPill" class="pill warn">Waiting for file</span>
+        <span id="statusText" class="muted">Drop in your `NBT_Q2_Zips.xlsx` and click Process File.</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div id="summary" class="meta">No file loaded yet.</div>
+      <table id="previewTable" style="display:none;">
+        <thead>
+          <tr id="previewHead"></tr>
+        </thead>
+        <tbody id="previewBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+    const AIRTABLE_BASE_ID = "appmBb0lzqRK9dI8v";
+    const AIRTABLE_TABLE_ID = "tblieaHIf6rDfFZFl";
+    const ZIP_FIELD_NAME = "Zip";
+    const PARTNERS_FIELD_NAME = "# of Partners";
+
+    const fileInput = document.getElementById("fileInput");
+    const processBtn = document.getElementById("processBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const statusPill = document.getElementById("statusPill");
+    const statusText = document.getElementById("statusText");
+    const summary = document.getElementById("summary");
+    const previewTable = document.getElementById("previewTable");
+    const previewHead = document.getElementById("previewHead");
+    const previewBody = document.getElementById("previewBody");
+
+    let originalWorkbook = null;
+    let enrichedWorkbook = null;
+    let selectedFileName = "";
+    let zipToPartners = null;
+
+    function setStatus(kind, message) {
+      statusPill.className = "pill " + kind;
+      statusPill.textContent = kind === "ok" ? "Ready" : kind === "err" ? "Error" : "Working";
+      statusText.textContent = message;
+    }
+
+    function normalizeZip(value) {
+      if (value == null) return null;
+      const digits = String(value).replace(/\D/g, "");
+      if (!digits) return null;
+      return digits.length >= 5 ? digits.slice(0, 5) : digits.padStart(5, "0");
+    }
+
+    function findZipColumn(headers) {
+      const exactMatches = ["zip", "zipcode", "zip code", "postal", "postal code"];
+      let idx = -1;
+      for (let i = 0; i < headers.length; i++) {
+        const h = String(headers[i] ?? "").trim().toLowerCase();
+        if (exactMatches.includes(h)) return i;
+        if (h.includes("zip")) idx = i;
+      }
+      return idx;
+    }
+
+    async function fetchZipPartnerMap() {
+      if (zipToPartners) return zipToPartners;
+
+      const map = new Map();
+      let offset = null;
+      do {
+        const qs = new URLSearchParams();
+        qs.set("pageSize", "100");
+        qs.append("fields[]", ZIP_FIELD_NAME);
+        qs.append("fields[]", PARTNERS_FIELD_NAME);
+        if (offset) qs.set("offset", offset);
+
+        const url = `/api/airtable/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}?${qs.toString()}`;
+        const res = await fetch(url);
+        if (!res.ok) {
+          const body = await res.text();
+          throw new Error(`Airtable fetch failed (${res.status}): ${body.slice(0, 250)}`);
+        }
+
+        const data = await res.json();
+        const records = data.records || [];
+        for (const rec of records) {
+          const zip = normalizeZip(rec.fields?.[ZIP_FIELD_NAME]);
+          const partners = rec.fields?.[PARTNERS_FIELD_NAME];
+          if (zip) map.set(zip, Number.isFinite(Number(partners)) ? Number(partners) : (partners ?? ""));
+        }
+        offset = data.offset || null;
+      } while (offset);
+
+      zipToPartners = map;
+      return map;
+    }
+
+    function renderPreview(headers, rows, rowLimit = 10) {
+      previewHead.innerHTML = "";
+      previewBody.innerHTML = "";
+
+      headers.forEach((h) => {
+        const th = document.createElement("th");
+        th.textContent = h;
+        previewHead.appendChild(th);
+      });
+
+      rows.slice(0, rowLimit).forEach((r) => {
+        const tr = document.createElement("tr");
+        headers.forEach((_, idx) => {
+          const td = document.createElement("td");
+          td.textContent = r[idx] == null ? "" : String(r[idx]);
+          tr.appendChild(td);
+        });
+        previewBody.appendChild(tr);
+      });
+
+      previewTable.style.display = "table";
+    }
+
+    function cloneWorkbook(workbook) {
+      return XLSX.read(XLSX.write(workbook, { type: "array", bookType: "xlsx" }), { type: "array" });
+    }
+
+    fileInput.addEventListener("change", async () => {
+      const file = fileInput.files?.[0];
+      downloadBtn.disabled = true;
+      enrichedWorkbook = null;
+
+      if (!file) {
+        processBtn.disabled = true;
+        setStatus("warn", "Waiting for file.");
+        return;
+      }
+
+      selectedFileName = file.name;
+      try {
+        const data = await file.arrayBuffer();
+        originalWorkbook = XLSX.read(data, { type: "array" });
+        processBtn.disabled = false;
+        setStatus("ok", `Loaded ${file.name}. Click Process File.`);
+        summary.textContent = `Workbook loaded: ${file.name} | Sheets: ${originalWorkbook.SheetNames.join(", ")}`;
+      } catch (err) {
+        processBtn.disabled = true;
+        setStatus("err", "Could not read workbook. Make sure it is a valid .xlsx/.xls file.");
+        summary.textContent = String(err.message || err);
+      }
+    });
+
+    processBtn.addEventListener("click", async () => {
+      if (!originalWorkbook) return;
+      processBtn.disabled = true;
+      downloadBtn.disabled = true;
+
+      try {
+        setStatus("warn", "Loading zip partner data from Airtable...");
+        const partnerMap = await fetchZipPartnerMap();
+
+        setStatus("warn", "Applying # of Partners to workbook...");
+        const wb = cloneWorkbook(originalWorkbook);
+
+        let totalRows = 0;
+        let matchedRows = 0;
+        let unmatchedRows = 0;
+        let processedSheets = 0;
+        let previewHeaders = [];
+        let previewRows = [];
+
+        for (const sheetName of wb.SheetNames) {
+          const ws = wb.Sheets[sheetName];
+          const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+          if (!rows.length) continue;
+
+          const headers = rows[0].map((h) => String(h ?? "").trim());
+          const zipCol = findZipColumn(headers);
+          if (zipCol === -1) continue;
+
+          let partnersCol = headers.findIndex((h) => String(h).trim().toLowerCase() === PARTNERS_FIELD_NAME.toLowerCase());
+          if (partnersCol === -1) {
+            headers.push(PARTNERS_FIELD_NAME);
+            partnersCol = headers.length - 1;
+          }
+          rows[0] = headers;
+
+          for (let r = 1; r < rows.length; r++) {
+            const row = rows[r];
+            const zip = normalizeZip(row[zipCol]);
+            totalRows += 1;
+
+            const partners = zip ? partnerMap.get(zip) : undefined;
+            if (partners === undefined) {
+              row[partnersCol] = "";
+              unmatchedRows += 1;
+            } else {
+              row[partnersCol] = partners;
+              matchedRows += 1;
+            }
+          }
+
+          wb.Sheets[sheetName] = XLSX.utils.aoa_to_sheet(rows);
+          processedSheets += 1;
+
+          if (!previewHeaders.length) {
+            previewHeaders = headers;
+            previewRows = rows.slice(1);
+          }
+        }
+
+        if (processedSheets === 0) {
+          throw new Error("No sheet had a recognizable Zip column. Expected a header like Zip, Zip Code, or ZipCode.");
+        }
+
+        enrichedWorkbook = wb;
+        downloadBtn.disabled = false;
+        setStatus("ok", `Done. ${matchedRows} rows matched, ${unmatchedRows} unmatched.`);
+        summary.textContent = `Processed ${processedSheets} sheet(s) | Rows: ${totalRows} | Matched: ${matchedRows} | Unmatched: ${unmatchedRows}`;
+        renderPreview(previewHeaders, previewRows, 12);
+      } catch (err) {
+        setStatus("err", err.message || "Processing failed.");
+        summary.textContent = String(err.message || err);
+      } finally {
+        processBtn.disabled = false;
+      }
+    });
+
+    downloadBtn.addEventListener("click", () => {
+      if (!enrichedWorkbook) return;
+      const baseName = selectedFileName.replace(/\.(xlsx|xls)$/i, "");
+      const outName = `${baseName}_with_partners.xlsx`;
+      XLSX.writeFile(enrichedWorkbook, outName, { bookType: "xlsx" });
+    });
+  </script>
+</body>
+</html>
