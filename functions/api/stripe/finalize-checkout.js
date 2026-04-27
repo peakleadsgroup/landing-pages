@@ -1,7 +1,8 @@
 /**
  * POST /api/stripe/finalize-checkout
  * Body JSON: { "sessionId": "cs_…" }
- * Requires env: STRIPE_SECRET_KEY, AIRTABLE_API_KEY, AIRTABLE_CUSTOMER_TABLE_ID (tbl…)
+ * Requires env: STRIPE_SECRET_KEY, AIRTABLE_API_KEY
+ * Optional: AIRTABLE_CUSTOMER_TABLE_ID (defaults to Customer table in this repo)
  * Optional: AIRTABLE_CUSTOMER_NAME_FIELD (default "Name") — primary / display name on Customer table
  *
  * After return from Stripe Checkout: retrieves session, verifies paid + metadata,
@@ -16,6 +17,7 @@ import {
   stripeGet,
   F,
   B2B_LEADS_TABLE_ID,
+  DEFAULT_AIRTABLE_CUSTOMER_TABLE_ID,
 } from "./stripe-lib.js";
 
 function extractPaymentMethodId(paymentIntent) {
@@ -37,10 +39,8 @@ export async function onRequest(context) {
     return json({ error: "Method not allowed" }, 405, cors);
   }
 
-  const customerTableId = (context.env.AIRTABLE_CUSTOMER_TABLE_ID || "").trim();
-  if (!customerTableId) {
-    return json({ error: "AIRTABLE_CUSTOMER_TABLE_ID not configured (Customer table id tbl…)" }, 503, cors);
-  }
+  const customerTableId =
+    (context.env.AIRTABLE_CUSTOMER_TABLE_ID || "").trim() || DEFAULT_AIRTABLE_CUSTOMER_TABLE_ID;
 
   const nameField = (context.env.AIRTABLE_CUSTOMER_NAME_FIELD || "Name").trim() || "Name";
 

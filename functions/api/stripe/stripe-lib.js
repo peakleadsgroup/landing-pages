@@ -5,6 +5,9 @@
 export const AIRTABLE_BASE_ID = "appmBb0lzqRK9dI8v";
 export const B2B_LEADS_TABLE_ID = "tbldNpwtCN9y5Pkiy";
 
+/** B2B Leads → Customer (linked table). Override with env AIRTABLE_CUSTOMER_TABLE_ID if it ever changes. */
+export const DEFAULT_AIRTABLE_CUSTOMER_TABLE_ID = "tbl9xNF0tpXvzkvX7";
+
 export const F = {
   BUSINESS_NAME: "Business Name",
   LEADS_SOLD_UPFRONT: "Leads Sold Upfront",

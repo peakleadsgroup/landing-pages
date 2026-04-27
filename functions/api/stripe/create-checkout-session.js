@@ -3,6 +3,7 @@
  * Body JSON: { "recordId": "rec…" }
  * Requires env: STRIPE_SECRET_KEY, AIRTABLE_API_KEY
  * Optional: STRIPE_AGREEMENT_PATH (default "/agreement.html") — path only, origin from request
+ * Checkout is card-only (payment_method_types=card).
  *
  * Creates a Stripe Checkout Session for onboarding = Leads Sold Upfront × Price Per Lead (USD).
  * Lead must already be signed (Signer Name / Signed Date).
@@ -72,6 +73,7 @@ export async function onRequest(context) {
 
     const params = {
       mode: "payment",
+      "payment_method_types[0]": "card",
       "customer_creation": "always",
       "client_reference_id": recordId,
       "metadata[b2b_lead_id]": recordId,
