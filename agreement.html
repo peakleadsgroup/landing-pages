@@ -216,19 +216,23 @@
         #stripe-placeholder {
             display: none;
             max-width: 640px;
-            margin: 4rem auto;
-            padding: 3rem 2rem;
+            margin: 3rem auto;
+            padding: 2.5rem 2rem;
             text-align: center;
             background: white;
             border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-            border: 2px dashed #ced4da;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            border: 1px solid #dde3ea;
         }
 
         #stripe-placeholder.visible { display: block; }
 
         #stripe-placeholder h2 { margin-bottom: 0.75rem; color: #333; }
-        #stripe-placeholder p { color: #666; font-size: 1rem; }
+        #stripe-placeholder .stripe-lead { color: #666; font-size: 1rem; margin-bottom: 1.25rem; line-height: 1.55; }
+        #stripe-pay-message { min-height: 1.5rem; margin-bottom: 1rem; font-size: 0.95rem; color: #374151; }
+        #stripe-pay-message.stripe-pay-error { color: #991b1b; }
+        #stripe-pay-message.stripe-pay-success { color: #166534; font-weight: 600; }
+        #btn-stripe-checkout { margin-top: 0.25rem; }
 
         /* Modal */
         .modal-backdrop {
@@ -386,8 +390,10 @@
     <div id="state-error" class="state-error" style="display: none;"></div>
 
     <div id="stripe-placeholder" aria-live="polite">
-        <h2>Payment</h2>
-        <p>Stripe checkout will be embedded here after you sign the agreement. This area is a placeholder until your payment integration is ready.</p>
+        <h2>Onboarding payment</h2>
+        <p class="stripe-lead">Your agreement is signed. Pay the onboarding amount (same total as in the agreement) securely on Stripe’s checkout page.</p>
+        <div id="stripe-pay-message" role="status"></div>
+        <button type="button" class="btn-primary" id="btn-stripe-checkout">Pay with card (Stripe)</button>
     </div>
 
     <div id="agreement-root" style="display: none;">
@@ -475,6 +481,10 @@
 
     function looksLikeRecordId(s) {
         return typeof s === 'string' && /^rec[a-zA-Z0-9]{14,}$/.test(s.trim());
+    }
+
+    function looksLikeCheckoutSessionId(s) {
+        return typeof s === 'string' && /^cs_[a-zA-Z0-9_]+$/.test(s.trim());
     }
 
     /** Airtable long text may use <bold>…<bold> or </bold>; normalize to <strong>. */
@@ -589,6 +599,14 @@
             throw new Error(typeof msg === 'string' ? msg : 'Request failed ' + res.status);
         }
         return data;
+    }
+
+    async function fetchStripeJson(path, payload) {
+        return fetchJson(path, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload || {})
+        });
     }
 
     async function fetchPublicIp() {
@@ -762,6 +780,58 @@
         showEl('state-loading', false);
     }
 
+    /**
+     * After sign: show pay button, or if returning from Stripe (?session_id= / ?checkout=cancel) finalize or message.
+     */
+    async function handleSignedPageEntry() {
+        var msgEl = document.getElementById('stripe-pay-message');
+        var payBtn = document.getElementById('btn-stripe-checkout');
+        if (msgEl) {
+            msgEl.textContent = '';
+            msgEl.className = '';
+        }
+        var qs = new URLSearchParams(window.location.search);
+        var sessionId = qs.get('session_id');
+        var canceled = qs.get('checkout') === 'cancel';
+
+        if (sessionId && looksLikeCheckoutSessionId(sessionId)) {
+            if (payBtn) payBtn.style.display = 'none';
+            if (msgEl) {
+                msgEl.textContent = 'Saving your payment…';
+                msgEl.className = '';
+            }
+            try {
+                var out = await fetchStripeJson('/api/stripe/finalize-checkout', { sessionId: sessionId.trim() });
+                logA('stripe finalize ok', out);
+                if (msgEl) {
+                    msgEl.textContent = 'Payment saved. Thank you!';
+                    msgEl.className = 'stripe-pay-success';
+                }
+                var u = new URL(window.location.href);
+                u.searchParams.delete('session_id');
+                window.history.replaceState({}, '', u.pathname + u.search + u.hash);
+            } catch (fe) {
+                errA('stripe finalize failed', fe && fe.message, fe);
+                if (msgEl) {
+                    msgEl.textContent = (fe && fe.message) || 'Could not confirm payment. Try Pay with card again or contact support.';
+                    msgEl.className = 'stripe-pay-error';
+                }
+                if (payBtn) payBtn.style.display = '';
+            }
+        } else if (canceled) {
+            if (msgEl) {
+                msgEl.textContent = 'Checkout was canceled. You can pay when you’re ready.';
+                msgEl.className = '';
+            }
+            var u2 = new URL(window.location.href);
+            u2.searchParams.delete('checkout');
+            window.history.replaceState({}, '', u2.pathname + u2.search + u2.hash);
+            if (payBtn) payBtn.style.display = '';
+        } else if (payBtn) {
+            payBtn.style.display = '';
+        }
+    }
+
     async function load() {
         var rid = getRecordIdFromUrl().trim();
         var tLoad = performance.now();
@@ -804,6 +874,7 @@
                 logA('B2B Leads: already signed → show payment placeholder only');
                 state.b2bFields = fields;
                 showSignedUi();
+                await handleSignedPageEntry();
                 logA('load() done (signed path)', Math.round(performance.now() - tLoad) + 'ms');
                 return;
             }
@@ -899,12 +970,42 @@
             logA('sign: saved OK');
             closeModal();
             showSignedUi();
+            handleSignedPageEntry().catch(function (fe) {
+                errA('handleSignedPageEntry after sign', fe && fe.message, fe);
+            });
         } catch (e) {
             errA('sign: error', e && e.message, e);
             modalErr.textContent = e.message || 'Could not save signature. Try again.';
             modalErr.classList.add('visible');
         } finally {
             btn.disabled = false;
+        }
+    });
+
+    document.getElementById('btn-stripe-checkout').addEventListener('click', async function () {
+        var msgEl = document.getElementById('stripe-pay-message');
+        var payBtn = this;
+        if (!state.recordId) return;
+        if (msgEl) {
+            msgEl.textContent = '';
+            msgEl.className = '';
+        }
+        payBtn.disabled = true;
+        try {
+            logA('stripe: create checkout session');
+            var data = await fetchStripeJson('/api/stripe/create-checkout-session', { recordId: state.recordId });
+            if (data.url) {
+                window.location.href = data.url;
+                return;
+            }
+            throw new Error('No checkout URL returned');
+        } catch (e) {
+            errA('stripe checkout start failed', e && e.message, e);
+            if (msgEl) {
+                msgEl.textContent = (e && e.message) || 'Could not start checkout.';
+                msgEl.className = 'stripe-pay-error';
+            }
+            payBtn.disabled = false;
         }
     });
 
