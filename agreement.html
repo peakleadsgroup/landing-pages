@@ -215,7 +215,7 @@
 
         #stripe-placeholder {
             display: none;
-            max-width: 640px;
+            max-width: min(100%, 900px);
             margin: 3rem auto;
             padding: 2.5rem 2rem;
             text-align: center;
@@ -228,7 +228,26 @@
         #stripe-placeholder.visible { display: block; }
 
         #stripe-placeholder h2 { margin-bottom: 0.75rem; color: #333; }
-        #stripe-placeholder .stripe-lead { color: #666; font-size: 1rem; margin-bottom: 1.25rem; line-height: 1.55; }
+        #stripe-placeholder .stripe-lead { color: #666; font-size: 1rem; margin-bottom: 1.25rem; line-height: 1.55; max-width: 40rem; margin-left: auto; margin-right: auto; }
+
+        .stripe-cal-embed-wrap {
+            display: none;
+            margin-top: 1.5rem;
+            width: 100%;
+            text-align: left;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            background: #fafafa;
+            min-height: 620px;
+        }
+
+        .stripe-cal-embed-wrap iframe {
+            display: block;
+            width: 100%;
+            min-height: 650px;
+            border: 0;
+        }
         #stripe-pay-message { min-height: 1.5rem; margin-bottom: 1rem; font-size: 0.95rem; color: #374151; }
         #stripe-pay-message.stripe-pay-error { color: #991b1b; }
         #stripe-pay-message.stripe-pay-success { color: #166534; font-weight: 600; }
@@ -393,6 +412,14 @@
         <h2 id="stripe-panel-title">Payment</h2>
         <p class="stripe-lead" id="stripe-panel-lead"></p>
         <div id="stripe-pay-message" role="status"></div>
+        <div id="stripe-cal-embed-wrap" class="stripe-cal-embed-wrap" aria-hidden="true">
+            <iframe
+                id="stripe-cal-iframe"
+                title="Schedule kick-off call with your account manager"
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+            ></iframe>
+        </div>
         <button type="button" class="btn-primary" id="btn-stripe-checkout" style="display: none;">Try again</button>
     </div>
 
@@ -460,6 +487,8 @@
         var a = [LOG].concat(Array.prototype.slice.call(arguments));
         console.error.apply(console, a);
     }
+
+    var CAL_KICKOFF_EMBED_URL = 'https://cal.com/bennett-hair-mpzude/kick-off-call/embed';
 
     var F = {
         SERVICE_AGREEMENT_LINK: 'Service Agreement',
@@ -781,14 +810,25 @@
         showEl('state-loading', false);
     }
 
+    function hideStripeCalEmbed() {
+        var wrap = document.getElementById('stripe-cal-embed-wrap');
+        if (wrap) {
+            wrap.style.display = 'none';
+            wrap.setAttribute('aria-hidden', 'true');
+        }
+    }
+
     function setStripePaidCompleteUi() {
         var titleEl = document.getElementById('stripe-panel-title');
         var leadEl = document.getElementById('stripe-panel-lead');
         var msgEl = document.getElementById('stripe-pay-message');
         var payBtn = document.getElementById('btn-stripe-checkout');
-        if (titleEl) titleEl.textContent = 'All set';
+        var calWrap = document.getElementById('stripe-cal-embed-wrap');
+        var calFrame = document.getElementById('stripe-cal-iframe');
+        if (titleEl) titleEl.textContent = "You're all set!";
         if (leadEl) {
-            leadEl.textContent = 'Your agreement is signed and your onboarding payment is on file. Thank you!';
+            leadEl.textContent =
+                'Your agreement is signed and onboarding payment is completed. Now let\'s schedule the kick-off call with your account manager.';
             leadEl.style.display = '';
         }
         if (msgEl) {
@@ -796,6 +836,13 @@
             msgEl.className = '';
         }
         if (payBtn) payBtn.style.display = 'none';
+        if (calWrap && calFrame) {
+            if (!calFrame.getAttribute('src')) {
+                calFrame.setAttribute('src', CAL_KICKOFF_EMBED_URL);
+            }
+            calWrap.style.display = 'block';
+            calWrap.setAttribute('aria-hidden', 'false');
+        }
     }
 
     /**
@@ -809,6 +856,7 @@
             setStripePaidCompleteUi();
             return;
         }
+        hideStripeCalEmbed();
         var titleEl = document.getElementById('stripe-panel-title');
         var leadEl = document.getElementById('stripe-panel-lead');
         var msgEl = document.getElementById('stripe-pay-message');
@@ -863,6 +911,7 @@
         var fields = state.b2bFields || {};
 
         if (sessionId && looksLikeCheckoutSessionId(sessionId)) {
+            hideStripeCalEmbed();
             if (titleEl) titleEl.textContent = 'Payment';
             if (leadEl) leadEl.style.display = 'none';
             if (payBtn) payBtn.style.display = 'none';
