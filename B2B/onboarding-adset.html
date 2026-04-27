@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Adset Onboarding - Peak Leads Marketing Group</title>
+  <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      color: #333;
+      background: linear-gradient(rgba(255,255,255,0.88), rgba(255,255,255,0.88)), url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
+      background-size: cover;
+      background-position: center;
+      min-height: 100vh;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container { width: 100%; max-width: 920px; }
+    .header {
+      background: #fff;
+      border-radius: 10px 10px 0 0;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .logo { height: 50px; margin-bottom: 8px; }
+    .header h1 { font-size: 1.8rem; margin-bottom: 6px; }
+    .header p { color: #666; }
+    .card {
+      background: #fff;
+      border-radius: 0 0 10px 10px;
+      padding: 24px;
+      box-shadow: 0 12px 34px rgba(0,0,0,0.14);
+    }
+    .hidden { display: none !important; }
+    .loading, .error, .success {
+      text-align: center;
+      padding: 28px 16px;
+    }
+    .error h2 { color: #c62828; margin-bottom: 10px; }
+    .success h2 { color: #2e7d32; margin-bottom: 10px; }
+    .client-pill {
+      margin-top: 14px;
+      background: #eef5ff;
+      border: 1px solid #d8e8ff;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.95rem;
+    }
+    .step-title { font-size: 1.4rem; margin-bottom: 8px; }
+    .step-subtitle { color: #666; margin-bottom: 18px; }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; margin-bottom: 6px; font-weight: 600; }
+    .field input, .field select {
+      width: 100%;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 0.98rem;
+    }
+    .field input:focus, .field select:focus {
+      outline: none;
+      border-color: #4a6fa5;
+    }
+    .field .hint {
+      margin-top: 5px;
+      color: #6b7280;
+      font-size: 0.85rem;
+    }
+    .adset-block {
+      border: 2px solid #e5e7eb;
+      background: #f9fafb;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    .adset-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .adset-head h3 { font-size: 1.08rem; }
+    .btn {
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      padding: 10px 16px;
+      font-weight: 600;
+    }
+    .btn-primary { background: #4a6fa5; color: #fff; }
+    .btn-primary:hover { background: #3e5f8e; }
+    .btn-secondary { background: #6b7280; color: #fff; }
+    .btn-danger { background: #d32f2f; color: #fff; padding: 8px 12px; }
+    .actions {
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+    }
+    .actions .left, .actions .right { display: flex; gap: 10px; }
+    .status {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      display: none;
+    }
+    .status.info { display: block; background: #eef5ff; color: #204a87; }
+    .status.error { display: block; background: #fdecea; color: #7f1d1d; }
+    .status.ok { display: block; background: #e9f7ee; color: #1f5f39; }
+    .invalid { border-color: #d32f2f !important; background: #fff5f5; }
+    @media (max-width: 800px) {
+      .row { grid-template-columns: 1fr; }
+      body { padding: 12px; }
+      .actions { flex-direction: column; align-items: stretch; }
+      .actions .left, .actions .right { justify-content: stretch; }
+      .actions button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png" class="logo" alt="Peak Leads Marketing Group">
+      <h1>Client Adset Onboarding</h1>
+      <p>Create one adset per location and link all of them to your existing client record.</p>
+    </div>
+    <div class="card">
+      <div id="loadingScreen" class="loading">
+        <p>Loading client details...</p>
+      </div>
+
+      <div id="errorScreen" class="error hidden">
+        <h2>Unable to load onboarding</h2>
+        <p id="errorMessage"></p>
+      </div>
+
+      <div id="stepClient" class="hidden">
+        <h2 class="step-title">Step 1: Confirm Client</h2>
+        <p class="step-subtitle">We found your client record from the URL. Continue to set up adsets by location.</p>
+        <div id="clientSummary" class="client-pill"></div>
+        <div class="actions">
+          <div class="left"></div>
+          <div class="right">
+            <button class="btn btn-primary" type="button" id="continueBtn">Continue to Adsets</button>
+          </div>
+        </div>
+      </div>
+
+      <form id="stepAdsets" class="hidden">
+        <h2 class="step-title">Step 2: Add Location Adsets</h2>
+        <p class="step-subtitle">Each location row below creates one new Airtable <strong>Adset</strong> record linked to this client.</p>
+        <div id="adsetContainer"></div>
+        <button class="btn btn-secondary" type="button" id="addLocationBtn">+ Add Another Location</button>
+        <div id="submitStatus" class="status"></div>
+        <div class="actions">
+          <div class="left">
+            <button class="btn btn-secondary" type="button" id="backBtn">Back</button>
+          </div>
+          <div class="right">
+            <button class="btn btn-primary" type="submit" id="submitBtn">Create Adsets</button>
+          </div>
+        </div>
+      </form>
+
+      <div id="successScreen" class="success hidden">
+        <h2>Adsets Created</h2>
+        <p id="successMessage"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const AIRTABLE_BASE_ID = "appmBb0lzqRK9dI8v";
+    const CLIENT_TABLE_ID = "tblH2nVfmGNG8pAjC";
+    const ADSET_TABLE_ID = "tblee61crNCoSfurx";
+    const VALID_RECORD_ID = /^rec[a-zA-Z0-9]{14}$/;
+
+    let clientRecordId = "";
+    let clientRecord = null;
+    let isSubmitting = false;
+
+    function qs(name) { return document.querySelector(name); }
+    function qsa(name) { return Array.from(document.querySelectorAll(name)); }
+
+    function showError(message) {
+      qs("#loadingScreen").classList.add("hidden");
+      qs("#stepClient").classList.add("hidden");
+      qs("#stepAdsets").classList.add("hidden");
+      qs("#errorMessage").textContent = message;
+      qs("#errorScreen").classList.remove("hidden");
+    }
+
+    function setStatus(type, message) {
+      const el = qs("#submitStatus");
+      el.className = `status ${type}`;
+      el.textContent = message;
+    }
+
+    function getClientRecordIdFromUrl() {
+      const url = new URL(window.location.href);
+      const raw = url.searchParams.get("clientId")
+        || url.searchParams.get("recordId")
+        || url.searchParams.get("record")
+        || url.searchParams.get("id")
+        || "";
+      return raw.trim();
+    }
+
+    async function fetchClientRecord(recordId) {
+      const response = await fetch(`/api/airtable/v0/${AIRTABLE_BASE_ID}/${CLIENT_TABLE_ID}/${recordId}`);
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(`Client fetch failed (${response.status}): ${body || response.statusText}`);
+      }
+      return response.json();
+    }
+
+    function buildClientSummary(record) {
+      const f = record.fields || {};
+      const name = f["Name"] || "(No name)";
+      const niche = Array.isArray(f["Niche"]) ? f["Niche"].join(", ") : (f["Niche"] || "Not set");
+      const model = f["Model"] || "Not set";
+      const charging = f["Charging"] || "Not set";
+      return `
+        <div><strong>Client:</strong> ${name}</div>
+        <div><strong>Record ID:</strong> ${record.id}</div>
+        <div><strong>Niche:</strong> ${niche}</div>
+        <div><strong>Model:</strong> ${model}</div>
+        <div><strong>Charging:</strong> ${charging}</div>
+      `;
+    }
+
+    function addAdsetRow(defaults = {}) {
+      const container = qs("#adsetContainer");
+      const index = container.children.length + 1;
+      const block = document.createElement("div");
+      block.className = "adset-block";
+      block.innerHTML = `
+        <div class="adset-head">
+          <h3>Location ${index}</h3>
+          <button type="button" class="btn btn-danger removeBtn" ${index === 1 ? "style='display:none'" : ""}>Remove</button>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Adset Name *</label>
+            <input type="text" data-field="Adset Name" value="${defaults.adsetName || ""}" placeholder="Example: Charlotte - Bathroom" required />
+          </div>
+          <div class="field">
+            <label>Adset Status *</label>
+            <input type="text" data-field="Adset Status" value="${defaults.adsetStatus || "Active"}" placeholder="Example: Active" required />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Timezone</label>
+            <input type="text" data-field="Timezone" value="${defaults.timezone || ""}" placeholder="Example: EST" />
+          </div>
+          <div class="field">
+            <label>CRM Webhook</label>
+            <input type="url" data-field="CRM Webhook" value="${defaults.crmWebhook || ""}" placeholder="https://..." />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Availability API URL</label>
+            <input type="url" data-field="Availability API URL" value="${defaults.availabilityApi || ""}" placeholder="https://..." />
+          </div>
+          <div class="field">
+            <label>Meta Pixel</label>
+            <input type="text" data-field="Meta Pixel" value="${defaults.metaPixel || ""}" placeholder="Pixel ID" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Call</label>
+            <input type="text" data-field="Call" value="${defaults.call || ""}" placeholder="Phone number" />
+          </div>
+          <div class="field">
+            <label>Text</label>
+            <input type="text" data-field="Text" value="${defaults.text || ""}" placeholder="Phone number" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Daily Cap</label>
+            <input type="number" min="0" step="1" data-field="Daily Cap" value="${defaults.dailyCap || ""}" />
+          </div>
+          <div class="field">
+            <label>Weekly Cap</label>
+            <input type="number" min="0" step="1" data-field="Weekly Cap" value="${defaults.weeklyCap || ""}" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Monthly Cap</label>
+            <input type="number" min="0" step="1" data-field="Monthly Cap" value="${defaults.monthlyCap || ""}" />
+          </div>
+          <div class="field">
+            <label>Total Cap</label>
+            <input type="number" min="0" step="1" data-field="Total Cap" value="${defaults.totalCap || ""}" />
+          </div>
+        </div>
+      `;
+
+      block.querySelector(".removeBtn").addEventListener("click", () => {
+        block.remove();
+        refreshRowTitles();
+      });
+      container.appendChild(block);
+      refreshRowTitles();
+    }
+
+    function refreshRowTitles() {
+      qsa(".adset-block").forEach((block, idx) => {
+        const title = block.querySelector(".adset-head h3");
+        title.textContent = `Location ${idx + 1}`;
+        const removeBtn = block.querySelector(".removeBtn");
+        removeBtn.style.display = idx === 0 ? "none" : "inline-block";
+      });
+    }
+
+    function parseNumberOrNull(value) {
+      if (value === "" || value === null || typeof value === "undefined") return null;
+      const n = Number(value);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function collectAdsetRows() {
+      const rows = qsa(".adset-block");
+      const payloads = [];
+      let invalid = false;
+
+      rows.forEach((row) => {
+        const fields = {};
+        row.querySelectorAll("input[data-field]").forEach((input) => input.classList.remove("invalid"));
+
+        const adsetNameInput = row.querySelector('input[data-field="Adset Name"]');
+        const adsetStatusInput = row.querySelector('input[data-field="Adset Status"]');
+        if (!adsetNameInput.value.trim()) { adsetNameInput.classList.add("invalid"); invalid = true; }
+        if (!adsetStatusInput.value.trim()) { adsetStatusInput.classList.add("invalid"); invalid = true; }
+
+        row.querySelectorAll("input[data-field]").forEach((input) => {
+          const fieldName = input.getAttribute("data-field");
+          const raw = input.value.trim();
+          if (!raw) return;
+
+          if (["Daily Cap", "Weekly Cap", "Monthly Cap", "Total Cap"].includes(fieldName)) {
+            const n = parseNumberOrNull(raw);
+            if (n === null || n < 0) {
+              input.classList.add("invalid");
+              invalid = true;
+              return;
+            }
+            fields[fieldName] = n;
+            return;
+          }
+          fields[fieldName] = raw;
+        });
+
+        fields["Client"] = [clientRecordId];
+        payloads.push({ fields });
+      });
+
+      if (rows.length === 0) invalid = true;
+      return { invalid, payloads };
+    }
+
+    async function createAdset(payload) {
+      const response = await fetch(`/api/airtable/v0/${AIRTABLE_BASE_ID}/${ADSET_TABLE_ID}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(`Adset create failed (${response.status}): ${body || response.statusText}`);
+      }
+      return response.json();
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      if (isSubmitting) return;
+
+      const { invalid, payloads } = collectAdsetRows();
+      if (invalid) {
+        setStatus("error", "Please complete required fields (Adset Name and Adset Status) and fix highlighted values.");
+        return;
+      }
+
+      isSubmitting = true;
+      qs("#submitBtn").disabled = true;
+      setStatus("info", `Creating ${payloads.length} adset record(s)...`);
+
+      const createdNames = [];
+      try {
+        for (let i = 0; i < payloads.length; i += 1) {
+          const res = await createAdset(payloads[i]);
+          createdNames.push(res.fields["Adset Name"] || `Adset ${i + 1}`);
+        }
+        qs("#stepAdsets").classList.add("hidden");
+        qs("#successMessage").textContent = `Created ${createdNames.length} adset(s): ${createdNames.join(", ")}`;
+        qs("#successScreen").classList.remove("hidden");
+      } catch (error) {
+        setStatus("error", error.message || "Failed while creating adsets. Please fix and retry.");
+      } finally {
+        isSubmitting = false;
+        qs("#submitBtn").disabled = false;
+      }
+    }
+
+    async function initialize() {
+      try {
+        clientRecordId = getClientRecordIdFromUrl();
+        if (!clientRecordId) {
+          throw new Error("Missing client record ID in URL. Use ?clientId=recXXXXXXXXXXXXXX");
+        }
+        if (!VALID_RECORD_ID.test(clientRecordId)) {
+          throw new Error("Invalid client record ID format. Expected Airtable record ID like recXXXXXXXXXXXXXX");
+        }
+
+        clientRecord = await fetchClientRecord(clientRecordId);
+        qs("#clientSummary").innerHTML = buildClientSummary(clientRecord);
+        qs("#loadingScreen").classList.add("hidden");
+        qs("#stepClient").classList.remove("hidden");
+      } catch (error) {
+        showError(error.message || "Unable to initialize onboarding.");
+      }
+    }
+
+    qs("#continueBtn").addEventListener("click", () => {
+      qs("#stepClient").classList.add("hidden");
+      qs("#stepAdsets").classList.remove("hidden");
+      if (qs("#adsetContainer").children.length === 0) addAdsetRow();
+    });
+    qs("#addLocationBtn").addEventListener("click", () => addAdsetRow());
+    qs("#backBtn").addEventListener("click", () => {
+      qs("#stepAdsets").classList.add("hidden");
+      qs("#stepClient").classList.remove("hidden");
+    });
+    qs("#stepAdsets").addEventListener("submit", handleSubmit);
+
+    initialize();
+  </script>
+</body>
+</html>
