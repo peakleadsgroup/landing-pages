@@ -390,10 +390,10 @@
     <div id="state-error" class="state-error" style="display: none;"></div>
 
     <div id="stripe-placeholder" aria-live="polite">
-        <h2>Onboarding payment</h2>
-        <p class="stripe-lead">Your agreement is signed. Pay the onboarding amount (same total as in the agreement) securely on Stripe’s checkout page.</p>
+        <h2 id="stripe-panel-title">Payment</h2>
+        <p class="stripe-lead" id="stripe-panel-lead"></p>
         <div id="stripe-pay-message" role="status"></div>
-        <button type="button" class="btn-primary" id="btn-stripe-checkout">Pay with card (Stripe)</button>
+        <button type="button" class="btn-primary" id="btn-stripe-checkout" style="display: none;">Try again</button>
     </div>
 
     <div id="agreement-root" style="display: none;">
@@ -469,6 +469,7 @@
         SIGNER_NAME: 'Signer Name',
         SIGNER_IP: 'Signer IP',
         SIGNED_DATE: 'Signed Date',
+        CUSTOMER_LINK: 'Customer',
         SA_TITLE: 'Title',
         SA_TEXT: 'Text',
         SA_REQUIRED: 'Required'
@@ -780,21 +781,90 @@
         showEl('state-loading', false);
     }
 
-    /**
-     * After sign: show pay button, or if returning from Stripe (?session_id= / ?checkout=cancel) finalize or message.
-     */
-    async function handleSignedPageEntry() {
+    function setStripePaidCompleteUi() {
+        var titleEl = document.getElementById('stripe-panel-title');
+        var leadEl = document.getElementById('stripe-panel-lead');
         var msgEl = document.getElementById('stripe-pay-message');
         var payBtn = document.getElementById('btn-stripe-checkout');
+        if (titleEl) titleEl.textContent = 'All set';
+        if (leadEl) {
+            leadEl.textContent = 'Your agreement is signed and your onboarding payment is on file. Thank you!';
+            leadEl.style.display = '';
+        }
         if (msgEl) {
             msgEl.textContent = '';
             msgEl.className = '';
         }
+        if (payBtn) payBtn.style.display = 'none';
+    }
+
+    /**
+     * If this lead has no Customer link yet, create a Checkout Session and redirect to Stripe.
+     * If Customer is already linked, show completion copy only.
+     */
+    async function tryAutoStartStripeCheckout(leadFields) {
+        var fields = leadFields || {};
+        var links = fields[F.CUSTOMER_LINK];
+        if (Array.isArray(links) && links.length > 0) {
+            setStripePaidCompleteUi();
+            return;
+        }
+        var titleEl = document.getElementById('stripe-panel-title');
+        var leadEl = document.getElementById('stripe-panel-lead');
+        var msgEl = document.getElementById('stripe-pay-message');
+        var payBtn = document.getElementById('btn-stripe-checkout');
+        if (titleEl) titleEl.textContent = 'Secure checkout';
+        if (leadEl) {
+            leadEl.textContent = 'Taking you to Stripe to complete payment…';
+            leadEl.style.display = '';
+        }
+        if (msgEl) {
+            msgEl.textContent = '';
+            msgEl.className = '';
+        }
+        if (payBtn) payBtn.style.display = 'none';
+        try {
+            logA('stripe: create checkout session (auto)');
+            var data = await fetchStripeJson('/api/stripe/create-checkout-session', { recordId: state.recordId });
+            if (data.url) {
+                window.location.href = data.url;
+                return;
+            }
+            throw new Error('No checkout URL returned');
+        } catch (e) {
+            errA('stripe checkout start failed', e && e.message, e);
+            if (titleEl) titleEl.textContent = 'Could not start checkout';
+            if (leadEl) {
+                leadEl.textContent = 'You can try again, or contact support if this keeps happening.';
+                leadEl.style.display = '';
+            }
+            if (msgEl) {
+                msgEl.textContent = (e && e.message) || 'Error';
+                msgEl.className = 'stripe-pay-error';
+            }
+            if (payBtn) {
+                payBtn.style.display = '';
+                payBtn.textContent = 'Try again';
+            }
+        }
+    }
+
+    /**
+     * Signed lead: finalize if ?session_id=, else strip cancel flag, then auto-redirect to Stripe if still unpaid.
+     */
+    async function handleSignedPageEntry() {
+        var msgEl = document.getElementById('stripe-pay-message');
+        var payBtn = document.getElementById('btn-stripe-checkout');
+        var titleEl = document.getElementById('stripe-panel-title');
+        var leadEl = document.getElementById('stripe-panel-lead');
         var qs = new URLSearchParams(window.location.search);
         var sessionId = qs.get('session_id');
         var canceled = qs.get('checkout') === 'cancel';
+        var fields = state.b2bFields || {};
 
         if (sessionId && looksLikeCheckoutSessionId(sessionId)) {
+            if (titleEl) titleEl.textContent = 'Payment';
+            if (leadEl) leadEl.style.display = 'none';
             if (payBtn) payBtn.style.display = 'none';
             if (msgEl) {
                 msgEl.textContent = 'Saving your payment…';
@@ -803,33 +873,35 @@
             try {
                 var out = await fetchStripeJson('/api/stripe/finalize-checkout', { sessionId: sessionId.trim() });
                 logA('stripe finalize ok', out);
-                if (msgEl) {
-                    msgEl.textContent = 'Payment saved. Thank you!';
-                    msgEl.className = 'stripe-pay-success';
-                }
                 var u = new URL(window.location.href);
                 u.searchParams.delete('session_id');
-                window.history.replaceState({}, '', u.pathname + u.search + u.hash);
+                window.location.replace(u.pathname + u.search + u.hash);
+                return;
             } catch (fe) {
                 errA('stripe finalize failed', fe && fe.message, fe);
                 if (msgEl) {
-                    msgEl.textContent = (fe && fe.message) || 'Could not confirm payment. Try Pay with card again or contact support.';
+                    msgEl.textContent = (fe && fe.message) || 'Could not confirm payment.';
                     msgEl.className = 'stripe-pay-error';
                 }
-                if (payBtn) payBtn.style.display = '';
+                if (leadEl) {
+                    leadEl.textContent = 'Try again below, or contact support.';
+                    leadEl.style.display = '';
+                }
+                if (payBtn) {
+                    payBtn.style.display = '';
+                    payBtn.textContent = 'Try again';
+                }
             }
-        } else if (canceled) {
-            if (msgEl) {
-                msgEl.textContent = 'Checkout was canceled. You can pay when you’re ready.';
-                msgEl.className = '';
-            }
+            return;
+        }
+
+        if (canceled) {
             var u2 = new URL(window.location.href);
             u2.searchParams.delete('checkout');
             window.history.replaceState({}, '', u2.pathname + u2.search + u2.hash);
-            if (payBtn) payBtn.style.display = '';
-        } else if (payBtn) {
-            payBtn.style.display = '';
         }
+
+        await tryAutoStartStripeCheckout(fields);
     }
 
     async function load() {
@@ -968,11 +1040,17 @@
             });
 
             logA('sign: saved OK');
+            state.b2bFields = state.b2bFields || {};
+            state.b2bFields[F.SIGNER_NAME] = name;
+            state.b2bFields[F.SIGNED_DATE] = signedIso;
+            state.b2bFields[F.SIGNER_IP] = ip || '(not available)';
             closeModal();
             showSignedUi();
-            handleSignedPageEntry().catch(function (fe) {
-                errA('handleSignedPageEntry after sign', fe && fe.message, fe);
-            });
+            try {
+                await tryAutoStartStripeCheckout(state.b2bFields);
+            } catch (fe) {
+                errA('tryAutoStartStripeCheckout after sign', fe && fe.message, fe);
+            }
         } catch (e) {
             errA('sign: error', e && e.message, e);
             modalErr.textContent = e.message || 'Could not save signature. Try again.';
@@ -983,29 +1061,12 @@
     });
 
     document.getElementById('btn-stripe-checkout').addEventListener('click', async function () {
-        var msgEl = document.getElementById('stripe-pay-message');
-        var payBtn = this;
         if (!state.recordId) return;
-        if (msgEl) {
-            msgEl.textContent = '';
-            msgEl.className = '';
-        }
-        payBtn.disabled = true;
+        this.disabled = true;
         try {
-            logA('stripe: create checkout session');
-            var data = await fetchStripeJson('/api/stripe/create-checkout-session', { recordId: state.recordId });
-            if (data.url) {
-                window.location.href = data.url;
-                return;
-            }
-            throw new Error('No checkout URL returned');
-        } catch (e) {
-            errA('stripe checkout start failed', e && e.message, e);
-            if (msgEl) {
-                msgEl.textContent = (e && e.message) || 'Could not start checkout.';
-                msgEl.className = 'stripe-pay-error';
-            }
-            payBtn.disabled = false;
+            await tryAutoStartStripeCheckout(state.b2bFields || {});
+        } finally {
+            this.disabled = false;
         }
     });
 
