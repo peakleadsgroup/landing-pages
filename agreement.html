@@ -236,16 +236,24 @@
             width: 100%;
             text-align: left;
             border-radius: 12px;
-            overflow: hidden;
+            /* overflow:hidden breaks touch delivery to the Cal iframe on many mobile browsers */
+            overflow: visible;
             border: 1px solid #e5e7eb;
-            background: #fafafa;
+            background: #fff;
+            color-scheme: light;
             min-height: 620px;
+            position: relative;
+            z-index: 1;
         }
 
         .stripe-cal-inline-host {
             width: 100%;
             min-height: 620px;
-            overflow: auto;
+            color-scheme: light;
+            /* Avoid a parent scroll layer competing with the iframe for taps (iOS / Chrome mobile) */
+            overflow: visible;
+            touch-action: auto;
+            position: relative;
         }
 
         .stripe-cal-embed-wrap .cal-inline-container iframe,
@@ -404,6 +412,13 @@
             .section { padding: 1.35rem 1.15rem 1.5rem; }
             .section-title { font-size: 1.3rem; flex-direction: column; align-items: flex-start; }
             .section-number { margin-bottom: 1rem; margin-right: 0; }
+
+            /* Sticky header sits above scrolled content and can eat taps meant for the embed below */
+            body.agreement-cal-embed-active .header {
+                position: relative;
+                top: auto;
+                z-index: 0;
+            }
         }
     </style>
 </head>
@@ -552,10 +567,18 @@
             Cal('init', CAL_INLINE_NS, { origin: 'https://app.cal.com' });
             Cal.ns[CAL_INLINE_NS]('inline', {
                 elementOrSelector: '#stripe-cal-inline-host',
-                config: { layout: 'month_view', useSlotsViewOnSmallScreen: 'true' },
+                config: {
+                    layout: 'month_view',
+                    useSlotsViewOnSmallScreen: 'true',
+                    theme: 'light'
+                },
                 calLink: CAL_KICKOFF_CAL_LINK
             });
-            Cal.ns[CAL_INLINE_NS]('ui', { hideEventTypeDetails: false, layout: 'month_view' });
+            Cal.ns[CAL_INLINE_NS]('ui', {
+                theme: 'light',
+                hideEventTypeDetails: false,
+                layout: 'month_view'
+            });
             logA('cal: inline embed requested');
         } catch (e) {
             errA('cal inline mount failed', e && e.message, e);
@@ -876,6 +899,7 @@
     }
 
     function showUnsignedUi() {
+        document.body.classList.remove('agreement-cal-embed-active');
         var sp = document.getElementById('stripe-placeholder');
         if (sp) {
             sp.classList.remove('visible');
@@ -886,6 +910,7 @@
     }
 
     function hideStripeCalEmbed() {
+        document.body.classList.remove('agreement-cal-embed-active');
         var wrap = document.getElementById('stripe-cal-embed-wrap');
         if (wrap) {
             wrap.style.display = 'none';
@@ -914,6 +939,7 @@
             mountCalKickoffInline();
             calWrap.style.display = 'block';
             calWrap.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('agreement-cal-embed-active');
         }
     }
 
@@ -1042,6 +1068,7 @@
         showEl('state-loading', true);
         setError('');
         showEl('agreement-root', false);
+        document.body.classList.remove('agreement-cal-embed-active');
         var sp0 = document.getElementById('stripe-placeholder');
         if (sp0) sp0.classList.remove('visible');
 
