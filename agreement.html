@@ -242,11 +242,23 @@
             min-height: 620px;
         }
 
+        .stripe-cal-inline-host {
+            width: 100%;
+            min-height: 620px;
+            overflow: auto;
+        }
+
+        .stripe-cal-embed-wrap .cal-inline-container iframe,
         .stripe-cal-embed-wrap iframe {
             display: block;
             width: 100%;
-            min-height: 650px;
+            min-height: 600px;
             border: 0;
+        }
+
+        .stripe-cal-fallback a {
+            color: #4a6fa5;
+            font-weight: 600;
         }
         #stripe-pay-message { min-height: 1.5rem; margin-bottom: 1rem; font-size: 0.95rem; color: #374151; }
         #stripe-pay-message.stripe-pay-error { color: #991b1b; }
@@ -413,12 +425,16 @@
         <p class="stripe-lead" id="stripe-panel-lead"></p>
         <div id="stripe-pay-message" role="status"></div>
         <div id="stripe-cal-embed-wrap" class="stripe-cal-embed-wrap" aria-hidden="true">
-            <iframe
-                id="stripe-cal-iframe"
-                title="Schedule kick-off call with your account manager"
-                loading="lazy"
-                referrerpolicy="no-referrer-when-downgrade"
-            ></iframe>
+            <div
+                id="stripe-cal-inline-host"
+                class="stripe-cal-inline-host"
+                role="region"
+                aria-label="Schedule kick-off call with your account manager"
+            ></div>
+            <p id="stripe-cal-fallback" class="stripe-cal-fallback" style="display: none; margin: 0; padding: 0.75rem 0 0; text-align: center; font-size: 0.95rem; color: #4b5563;">
+                If the calendar does not appear,
+                <a href="https://cal.com/bennett-hair-mpzude/kick-off-call" target="_blank" rel="noopener noreferrer">open the scheduler in a new tab</a>.
+            </p>
         </div>
         <button type="button" class="btn-primary" id="btn-stripe-checkout" style="display: none;">Try again</button>
     </div>
@@ -488,7 +504,66 @@
         console.error.apply(console, a);
     }
 
-    var CAL_KICKOFF_EMBED_URL = 'https://cal.com/bennett-hair-mpzude/kick-off-call/embed';
+    /** Cal.com inline embed — calLink path only; init uses namespaced API per Cal snippet. */
+    var CAL_INLINE_NS = 'kick-off-call';
+    var CAL_KICKOFF_CAL_LINK = 'bennett-hair-mpzude/kick-off-call';
+
+    function ensureCalEmbedStub() {
+        if (window.Cal) return;
+        (function (C, A, L) {
+            var p = function (a, ar) { a.q.push(ar); };
+            var d = C.document;
+            C.Cal = C.Cal || function () {
+                var cal = C.Cal;
+                var ar = arguments;
+                if (!cal.loaded) {
+                    cal.ns = {};
+                    cal.q = cal.q || [];
+                    d.head.appendChild(d.createElement('script')).src = A;
+                    cal.loaded = true;
+                }
+                if (ar[0] === L) {
+                    var api = function () { p(api, arguments); };
+                    var namespace = ar[1];
+                    api.q = api.q || [];
+                    if (typeof namespace === 'string') {
+                        cal.ns[namespace] = cal.ns[namespace] || api;
+                        p(cal.ns[namespace], ar);
+                        p(cal, ['initNamespace', namespace]);
+                    } else {
+                        p(cal, ar);
+                    }
+                    return;
+                }
+                p(cal, ar);
+            };
+        })(window, 'https://app.cal.com/embed/embed.js', 'init');
+    }
+
+    var calKickoffMountStarted = false;
+
+    function mountCalKickoffInline() {
+        if (calKickoffMountStarted) return;
+        var host = document.getElementById('stripe-cal-inline-host');
+        if (!host) return;
+        calKickoffMountStarted = true;
+        ensureCalEmbedStub();
+        try {
+            Cal('init', CAL_INLINE_NS, { origin: 'https://app.cal.com' });
+            Cal.ns[CAL_INLINE_NS]('inline', {
+                elementOrSelector: '#stripe-cal-inline-host',
+                config: { layout: 'month_view', useSlotsViewOnSmallScreen: 'true' },
+                calLink: CAL_KICKOFF_CAL_LINK
+            });
+            Cal.ns[CAL_INLINE_NS]('ui', { hideEventTypeDetails: false, layout: 'month_view' });
+            logA('cal: inline embed requested');
+        } catch (e) {
+            errA('cal inline mount failed', e && e.message, e);
+            calKickoffMountStarted = false;
+            var fb = document.getElementById('stripe-cal-fallback');
+            if (fb) fb.style.display = 'block';
+        }
+    }
 
     var F = {
         SERVICE_AGREEMENT_LINK: 'Service Agreement',
@@ -824,7 +899,6 @@
         var msgEl = document.getElementById('stripe-pay-message');
         var payBtn = document.getElementById('btn-stripe-checkout');
         var calWrap = document.getElementById('stripe-cal-embed-wrap');
-        var calFrame = document.getElementById('stripe-cal-iframe');
         if (titleEl) titleEl.textContent = "You're all set!";
         if (leadEl) {
             leadEl.textContent =
@@ -836,10 +910,8 @@
             msgEl.className = '';
         }
         if (payBtn) payBtn.style.display = 'none';
-        if (calWrap && calFrame) {
-            if (!calFrame.getAttribute('src')) {
-                calFrame.setAttribute('src', CAL_KICKOFF_EMBED_URL);
-            }
+        if (calWrap) {
+            mountCalKickoffInline();
             calWrap.style.display = 'block';
             calWrap.setAttribute('aria-hidden', 'false');
         }
