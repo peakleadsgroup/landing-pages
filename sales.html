@@ -10,17 +10,25 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         th.sortable { cursor: pointer; user-select: none; }
         .sticky-filters { position: sticky; top: 0; z-index: 20; background: #f9fafb; }
-        select[multiple].niche-multi { min-height: 7.5rem; }
         details.lead-disclosure > summary { list-style: none; cursor: pointer; }
         details.lead-disclosure > summary::-webkit-details-marker { display: none; }
         details.lead-disclosure[open] > summary { border-bottom: 1px solid #e5e7eb; }
+        tr.lead-row { cursor: pointer; }
+        tr.lead-row:hover { background-color: #f9fafb; }
+        body.lead-modal-open { overflow: hidden; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
     <div class="max-w-[96rem] mx-auto p-4 md:p-6">
         <div class="bg-white rounded-xl shadow-sm border border-gray-200">
             <div class="p-4 md:p-5 space-y-4">
-                <details id="allLeadsDetails" class="lead-disclosure border border-gray-200 rounded-lg bg-white shadow-sm" open>
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600">
+                    <span id="statusText">Expand All Leads or Discovery Calls to load data.</span>
+                    <span id="resultCount"></span>
+                </div>
+                <div id="errorBox" class="hidden rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"></div>
+
+                <details id="allLeadsDetails" class="lead-disclosure border border-gray-200 rounded-lg bg-white shadow-sm">
                     <summary id="allLeadsSummary" class="px-4 py-3 text-base font-semibold text-gray-900 bg-gray-50 rounded-t-lg hover:bg-gray-100 flex items-center justify-between gap-2">
                         <span>All Leads</span>
                         <span class="flex items-center gap-3 shrink-0">
@@ -28,13 +36,6 @@
                             <button id="clearFiltersBtn" type="button" class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline px-1 py-0.5 rounded">Clear filters</button>
                         </span>
                     </summary>
-
-                    <div class="px-5 py-3 text-sm text-gray-600 flex flex-wrap gap-4 border-t border-gray-200 bg-white">
-                        <span id="statusText">Loading...</span>
-                        <span id="resultCount"></span>
-                    </div>
-
-                    <div id="errorBox" class="hidden mx-5 mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"></div>
 
                     <div class="overflow-auto max-h-[70vh] border-t border-gray-200">
                         <table class="min-w-full text-sm">
@@ -53,11 +54,16 @@
                                         <input data-filter="businessName" type="text" placeholder="Filter..." class="w-full rounded border border-gray-300 px-2 py-1">
                                     </th>
                                     <th class="p-2 text-xs text-gray-400">—</th>
-                                    <th class="p-2 align-top min-w-[10rem]">
-                                        <label for="nicheMulti" class="sr-only">Filter by niche</label>
-                                        <select id="nicheMulti" multiple class="niche-multi w-full rounded border border-gray-300 px-1 py-1 text-xs" title="Hold Ctrl (Windows) or Cmd (Mac) to select multiple">
-                                        </select>
-                                        <p class="text-[10px] text-gray-500 mt-1 leading-tight">Ctrl/Cmd+click for multiple. Empty = all niches.</p>
+                                    <th class="p-2 align-top min-w-[11rem] relative">
+                                        <div class="relative niche-dropdown-wrap" id="nicheDropdownWrap">
+                                            <button type="button" id="nicheDropdownBtn" class="niche-dd-btn w-full text-left rounded border border-gray-300 bg-white px-2 py-1.5 text-xs flex items-center justify-between gap-1 hover:bg-gray-50">
+                                                <span id="nicheDropdownLabel" class="truncate">All niches</span>
+                                                <span class="text-gray-400 shrink-0 text-[10px]" aria-hidden="true">▾</span>
+                                            </button>
+                                            <div id="nicheDropdownPanel" class="hidden absolute left-0 top-full z-40 mt-1 w-56 max-h-52 overflow-y-auto rounded-lg border border-gray-200 bg-white py-2 shadow-lg">
+                                                <div id="nicheCheckboxList" class="px-2 space-y-1"></div>
+                                            </div>
+                                        </div>
                                     </th>
                                     <th class="p-2">
                                         <select data-filter="source" class="w-full rounded border border-gray-300 px-2 py-1">
@@ -90,9 +96,69 @@
                         <span class="text-sm font-normal text-gray-500" id="discoveryCallsSummaryMeta"></span>
                     </summary>
                     <div id="discoveryCallsContainer" class="p-4 space-y-2 border-t border-gray-200 bg-white text-sm">
-                        <p class="text-gray-500 text-sm">Loading…</p>
+                        <p class="text-gray-500 text-sm py-1">Open this section to load discovery leads.</p>
                     </div>
                 </details>
+            </div>
+        </div>
+    </div>
+
+    <div id="leadEditModal" class="fixed inset-0 z-[100] hidden" role="dialog" aria-modal="true" aria-labelledby="leadEditModalTitle">
+        <div id="leadEditModalBackdrop" class="absolute inset-0 bg-black/45"></div>
+        <div class="absolute inset-x-3 top-6 bottom-6 md:inset-auto md:left-1/2 md:top-12 md:-translate-x-1/2 md:w-full md:max-w-lg md:max-h-[calc(100vh-6rem)] md:bottom-auto flex flex-col bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-200 flex items-start justify-between gap-3 shrink-0">
+                <div class="min-w-0">
+                    <h2 id="leadEditModalTitle" class="text-lg font-semibold text-gray-900 truncate">Lead</h2>
+                    <p class="text-xs text-gray-500 mt-0.5 font-mono truncate" id="leadEditModalRecordId"></p>
+                </div>
+                <button type="button" id="leadEditModalClose" class="shrink-0 rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-800" aria-label="Close">✕</button>
+            </div>
+            <div id="leadEditModalError" class="hidden mx-5 mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"></div>
+            <form id="leadEditForm" class="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-3">
+                <div>
+                    <label for="leadFieldCreated" class="block text-xs font-semibold text-gray-600 mb-1">Created</label>
+                    <input type="datetime-local" id="leadFieldCreated" name="created" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="leadFieldSource" class="block text-xs font-semibold text-gray-600 mb-1">Source</label>
+                    <input type="text" id="leadFieldSource" name="source" autocomplete="off" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="leadFieldLocation" class="block text-xs font-semibold text-gray-600 mb-1">Location</label>
+                    <input type="text" id="leadFieldLocation" name="location" autocomplete="off" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="leadFieldStatus" class="block text-xs font-semibold text-gray-600 mb-1">Status</label>
+                    <input type="text" id="leadFieldStatus" name="status" autocomplete="off" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="leadFieldPhone" class="block text-xs font-semibold text-gray-600 mb-1">Phone Number</label>
+                    <input type="tel" id="leadFieldPhone" name="phone" autocomplete="off" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="leadFieldWebsite" class="block text-xs font-semibold text-gray-600 mb-1">Website</label>
+                    <input type="url" id="leadFieldWebsite" name="website" autocomplete="off" placeholder="https://" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="leadFieldContactName" class="block text-xs font-semibold text-gray-600 mb-1">Contact Name</label>
+                    <input type="text" id="leadFieldContactName" name="contactName" autocomplete="off" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="leadFieldContactEmail" class="block text-xs font-semibold text-gray-600 mb-1">Contact Email</label>
+                    <input type="email" id="leadFieldContactEmail" name="contactEmail" autocomplete="off" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="leadFieldNotes" class="block text-xs font-semibold text-gray-600 mb-1">Notes</label>
+                    <textarea id="leadFieldNotes" name="notes" rows="5" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"></textarea>
+                </div>
+                <div>
+                    <span class="block text-xs font-semibold text-gray-600 mb-1">Niche(s)</span>
+                    <div id="leadFieldNiches" class="max-h-40 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 px-2 py-2 space-y-1.5 text-sm"></div>
+                </div>
+            </form>
+            <div class="shrink-0 px-5 py-3 border-t border-gray-200 bg-gray-50 flex justify-end gap-2">
+                <button type="button" id="leadEditCancel" class="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-100">Cancel</button>
+                <button type="submit" form="leadEditForm" id="leadEditSave" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">Save changes</button>
             </div>
         </div>
     </div>
@@ -103,6 +169,52 @@
             tableId: "tbldNpwtCN9y5Pkiy",
             pageSize: 100
         };
+
+        /** Known Niche(s) options from schema; merged with values present in loaded data. */
+        const SCHEMA_NICHE_OPTIONS = [
+            "Bathroom remodeling",
+            "Sprinkler & irrigation",
+            "Concrete polishing",
+            "Fencing",
+            "Line striping",
+            "Commercial roof coating",
+            "Patios",
+            "Basement & attic finishing",
+            "EV charging",
+            "Decks",
+            "Custom closets",
+            "Restoration",
+            "Foundation repair",
+            "Pools",
+            "Hardwood flooring",
+            "Kitchen remodeling"
+        ];
+
+        /** Discovery Calls subsection order (must match Airtable single-select option text). */
+        const DISCOVERY_STATUS_ORDER = [
+            "Upcoming",
+            "Agreement Pending",
+            "No Show",
+            "Close Won",
+            "Close Lost",
+            "Unqualified"
+        ];
+        const DISCOVERY_STATUS_ORDER_INDEX = new Map(
+            DISCOVERY_STATUS_ORDER.map((label, i) => [label.toLowerCase(), i])
+        );
+
+        function sortDiscoveryStatusKeys(keys) {
+            return [...keys].sort((a, b) => {
+                const ia = DISCOVERY_STATUS_ORDER_INDEX.has(a.toLowerCase())
+                    ? DISCOVERY_STATUS_ORDER_INDEX.get(a.toLowerCase())
+                    : 1000;
+                const ib = DISCOVERY_STATUS_ORDER_INDEX.has(b.toLowerCase())
+                    ? DISCOVERY_STATUS_ORDER_INDEX.get(b.toLowerCase())
+                    : 1000;
+                if (ia !== ib) return ia - ib;
+                return a.localeCompare(b);
+            });
+        }
 
         const state = {
             allRows: [],
@@ -116,20 +228,48 @@
                 status: "",
                 discoveryStatus: ""
             },
-            /** Individual niche tags selected in multi-select; empty = no niche filter */
-            selectedNiches: []
+            /** Individual niche tags selected in checkbox dropdown; empty = no niche filter */
+            selectedNiches: [],
+            dataLoaded: false,
+            loadPromise: null,
+            nichePanelOpen: false
         };
 
         const els = {
             clearFiltersBtn: document.getElementById("clearFiltersBtn"),
-            nicheMulti: document.getElementById("nicheMulti"),
             tableBody: document.getElementById("tableBody"),
             statusText: document.getElementById("statusText"),
             resultCount: document.getElementById("resultCount"),
             errorBox: document.getElementById("errorBox"),
             discoveryCallsContainer: document.getElementById("discoveryCallsContainer"),
             allLeadsSummaryMeta: document.getElementById("allLeadsSummaryMeta"),
-            discoveryCallsSummaryMeta: document.getElementById("discoveryCallsSummaryMeta")
+            discoveryCallsSummaryMeta: document.getElementById("discoveryCallsSummaryMeta"),
+            allLeadsDetails: document.getElementById("allLeadsDetails"),
+            discoveryCallsDetails: document.getElementById("discoveryCallsDetails"),
+            nicheDropdownWrap: document.getElementById("nicheDropdownWrap"),
+            nicheDropdownBtn: document.getElementById("nicheDropdownBtn"),
+            nicheDropdownPanel: document.getElementById("nicheDropdownPanel"),
+            nicheDropdownLabel: document.getElementById("nicheDropdownLabel"),
+            nicheCheckboxList: document.getElementById("nicheCheckboxList"),
+            leadEditModal: document.getElementById("leadEditModal"),
+            leadEditModalBackdrop: document.getElementById("leadEditModalBackdrop"),
+            leadEditModalClose: document.getElementById("leadEditModalClose"),
+            leadEditModalError: document.getElementById("leadEditModalError"),
+            leadEditForm: document.getElementById("leadEditForm"),
+            leadEditCancel: document.getElementById("leadEditCancel"),
+            leadEditSave: document.getElementById("leadEditSave"),
+            leadEditModalTitle: document.getElementById("leadEditModalTitle"),
+            leadEditModalRecordId: document.getElementById("leadEditModalRecordId"),
+            leadFieldCreated: document.getElementById("leadFieldCreated"),
+            leadFieldSource: document.getElementById("leadFieldSource"),
+            leadFieldLocation: document.getElementById("leadFieldLocation"),
+            leadFieldStatus: document.getElementById("leadFieldStatus"),
+            leadFieldPhone: document.getElementById("leadFieldPhone"),
+            leadFieldWebsite: document.getElementById("leadFieldWebsite"),
+            leadFieldContactName: document.getElementById("leadFieldContactName"),
+            leadFieldContactEmail: document.getElementById("leadFieldContactEmail"),
+            leadFieldNotes: document.getElementById("leadFieldNotes"),
+            leadFieldNiches: document.getElementById("leadFieldNiches")
         };
 
         function safeText(v) {
@@ -137,7 +277,12 @@
         }
 
         function asList(v) {
-            if (Array.isArray(v)) return v.map((x) => safeText(x)).filter(Boolean);
+            if (Array.isArray(v)) {
+                return v.map((x) => {
+                    if (x && typeof x === "object" && x.name != null) return safeText(x.name);
+                    return safeText(x);
+                }).filter(Boolean);
+            }
             if (!v) return [];
             return [safeText(v)].filter(Boolean);
         }
@@ -158,7 +303,12 @@
                 source: safeText(fields["Source"]),
                 location: safeText(fields["Location"]),
                 status: safeText(fields["Status"]),
-                discoveryStatus: safeText(fields["Discovery Status"])
+                discoveryStatus: safeText(fields["Discovery Status"]),
+                phoneNumber: safeText(fields["Phone Number"]),
+                website: safeText(fields["Website"]),
+                contactName: safeText(fields["Contact Name"]),
+                contactEmail: safeText(fields["Contact Email"]),
+                notes: fields["Notes"] == null ? "" : String(fields["Notes"])
             };
         }
 
@@ -167,6 +317,169 @@
             const d = new Date(isoValue);
             if (Number.isNaN(d.getTime())) return "—";
             return d.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        function toDatetimeLocalValue(isoOrText) {
+            const d = new Date(isoOrText);
+            if (Number.isNaN(d.getTime())) return "";
+            const pad = (n) => String(n).padStart(2, "0");
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+
+        function fromDatetimeLocalToIso(value) {
+            if (!value || !String(value).trim()) return null;
+            const d = new Date(value);
+            if (Number.isNaN(d.getTime())) return null;
+            return d.toISOString();
+        }
+
+        function getAllNicheOptionStrings() {
+            const set = new Set(SCHEMA_NICHE_OPTIONS);
+            if (state.dataLoaded) {
+                state.allRows.forEach((r) => {
+                    (r.nicheTags || []).forEach((t) => set.add(t));
+                });
+            }
+            return [...set].sort((a, b) => a.localeCompare(b));
+        }
+
+        function buildLeadModalNicheCheckboxes(selectedTags) {
+            const sel = new Set(selectedTags || []);
+            const opts = getAllNicheOptionStrings();
+            return opts.map((tag, idx) => {
+                const esc = escapeHtml(tag);
+                const id = `lead-niche-cb-${idx}`;
+                const checked = sel.has(tag) ? " checked" : "";
+                return `<label for="${id}" class="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 hover:bg-white">
+                    <input type="checkbox" id="${id}" class="lead-niche-cb rounded border-gray-300 text-blue-600" value="${esc}"${checked}>
+                    <span class="text-xs">${esc}</span>
+                </label>`;
+            }).join("");
+        }
+
+        function getRowById(recordId) {
+            return state.allRows.find((r) => r.id === recordId);
+        }
+
+        function hideLeadModalError() {
+            if (els.leadEditModalError) {
+                els.leadEditModalError.textContent = "";
+                els.leadEditModalError.classList.add("hidden");
+            }
+        }
+
+        function showLeadModalError(message) {
+            if (!els.leadEditModalError) return;
+            els.leadEditModalError.textContent = message;
+            els.leadEditModalError.classList.remove("hidden");
+        }
+
+        function closeLeadEditor() {
+            if (!els.leadEditModal) return;
+            els.leadEditModal.classList.add("hidden");
+            document.body.classList.remove("lead-modal-open");
+            hideLeadModalError();
+        }
+
+        function openLeadEditor(recordId) {
+            if (!state.dataLoaded || !recordId) return;
+            const row = getRowById(recordId);
+            if (!row) return;
+
+            hideLeadModalError();
+            if (els.leadEditModalTitle) els.leadEditModalTitle.textContent = row.businessName || "Lead";
+            if (els.leadEditModalRecordId) els.leadEditModalRecordId.textContent = row.id;
+
+            if (els.leadFieldCreated) els.leadFieldCreated.value = toDatetimeLocalValue(row.created);
+            if (els.leadFieldSource) els.leadFieldSource.value = row.source || "";
+            if (els.leadFieldLocation) els.leadFieldLocation.value = row.location || "";
+            if (els.leadFieldStatus) els.leadFieldStatus.value = row.status || "";
+            if (els.leadFieldPhone) els.leadFieldPhone.value = row.phoneNumber || "";
+            if (els.leadFieldWebsite) els.leadFieldWebsite.value = row.website || "";
+            if (els.leadFieldContactName) els.leadFieldContactName.value = row.contactName || "";
+            if (els.leadFieldContactEmail) els.leadFieldContactEmail.value = row.contactEmail || "";
+            if (els.leadFieldNotes) els.leadFieldNotes.value = row.notes || "";
+            if (els.leadFieldNiches) els.leadFieldNiches.innerHTML = buildLeadModalNicheCheckboxes(row.nicheTags);
+
+            els.leadEditModal.dataset.recordId = recordId;
+            els.leadEditModal.classList.remove("hidden");
+            document.body.classList.add("lead-modal-open");
+            if (els.leadFieldCreated) els.leadFieldCreated.focus();
+        }
+
+        async function patchLeadRecord(recordId, fields) {
+            const url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableId)}/${recordId}`;
+            const response = await fetch(url, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ fields })
+            });
+            const raw = await response.text();
+            let data = {};
+            try {
+                data = raw ? JSON.parse(raw) : {};
+            } catch {
+                data = {};
+            }
+            if (!response.ok) {
+                const msg = (data && data.error && data.error.message) || raw || `${response.status} ${response.statusText}`;
+                throw new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
+            }
+            return data;
+        }
+
+        async function submitLeadEditor() {
+            const recordId = els.leadEditModal && els.leadEditModal.dataset.recordId;
+            if (!recordId || !els.leadEditSave) return;
+
+            hideLeadModalError();
+            els.leadEditSave.disabled = true;
+
+            const niches = els.leadFieldNiches
+                ? [...els.leadFieldNiches.querySelectorAll("input.lead-niche-cb:checked")].map((cb) => cb.value).filter(Boolean)
+                : [];
+
+            const fields = {
+                Source: els.leadFieldSource ? els.leadFieldSource.value.trim() : "",
+                Location: els.leadFieldLocation ? els.leadFieldLocation.value.trim() : "",
+                Status: els.leadFieldStatus ? els.leadFieldStatus.value.trim() : "",
+                "Phone Number": els.leadFieldPhone ? els.leadFieldPhone.value.replace(/\D/g, "") : "",
+                Website: els.leadFieldWebsite ? els.leadFieldWebsite.value.trim() : "",
+                "Contact Name": els.leadFieldContactName ? els.leadFieldContactName.value.trim() : "",
+                "Contact Email": els.leadFieldContactEmail ? els.leadFieldContactEmail.value.trim() : "",
+                Notes: els.leadFieldNotes ? els.leadFieldNotes.value : "",
+                "Niche(s)": niches
+            };
+
+            const createdIso = els.leadFieldCreated && els.leadFieldCreated.value
+                ? fromDatetimeLocalToIso(els.leadFieldCreated.value)
+                : null;
+            if (createdIso) fields.Created = createdIso;
+
+            try {
+                const updated = await patchLeadRecord(recordId, fields);
+                const normalized = normalizeRecord(updated.id ? updated : { id: recordId, fields: updated.fields || {} });
+                const idx = state.allRows.findIndex((r) => r.id === recordId);
+                if (idx >= 0) state.allRows[idx] = normalized;
+                else state.allRows.push(normalized);
+
+                updateSelectOptions(state.allRows);
+                applyFiltersAndSort();
+                closeLeadEditor();
+            } catch (err) {
+                showLeadModalError(err.message || "Save failed.");
+            } finally {
+                els.leadEditSave.disabled = false;
+            }
         }
 
         function escapeHtml(str) {
@@ -201,7 +514,7 @@
                     ? `<td class="p-3">${escapeHtml(row.discoveryStatus || "—")}</td>`
                     : "";
                 return `
-                <tr class="hover:bg-gray-50 align-top">
+                <tr class="lead-row align-top" data-record-id="${escapeHtml(row.id)}" title="Click to view or edit">
                     <td class="p-3 font-medium text-gray-900">${escapeHtml(row.businessName || "—")}</td>
                     <td class="p-3 whitespace-nowrap">${escapeHtml(formatCreated(row.created))}</td>
                     <td class="p-3">${escapeHtml(row.niches || "—")}</td>
@@ -215,13 +528,15 @@
 
         function updateDisclosureSummaries() {
             if (els.allLeadsSummaryMeta) {
-                els.allLeadsSummaryMeta.textContent = `${state.filteredRows.length} shown · ${state.allRows.length} total`;
+                els.allLeadsSummaryMeta.textContent = state.dataLoaded
+                    ? `${state.filteredRows.length} shown · ${state.allRows.length} total`
+                    : "";
             }
         }
 
         function renderDiscoveryCalls() {
             const container = els.discoveryCallsContainer;
-            if (!container) return;
+            if (!container || !state.dataLoaded) return;
 
             const withDisc = state.allRows.filter((r) => safeText(r.discoveryStatus));
             if (els.discoveryCallsSummaryMeta) {
@@ -242,7 +557,7 @@
                 groups.get(k).push(row);
             }
 
-            const statuses = [...groups.keys()].sort((a, b) => a.localeCompare(b));
+            const statuses = sortDiscoveryStatusKeys(groups.keys());
 
             const subHead = `
                 <thead class="bg-gray-50 border-b border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
@@ -300,25 +615,46 @@
             return rows;
         }
 
-        function readSelectedNichesFromDom() {
-            const sel = els.nicheMulti;
-            if (!sel) return [];
-            return [...sel.selectedOptions].map((o) => o.value).filter(Boolean);
+        function syncNichesFromCheckboxList() {
+            if (!els.nicheCheckboxList) return [];
+            return [...els.nicheCheckboxList.querySelectorAll("input.niche-cb:checked")]
+                .map((input) => safeText(input.value))
+                .filter(Boolean);
         }
 
-        function updateNicheMultiOptions(rows) {
-            const selected = new Set(readSelectedNichesFromDom());
+        function updateNicheDropdownLabel() {
+            if (!els.nicheDropdownLabel) return;
+            const n = state.selectedNiches.length;
+            if (n === 0) els.nicheDropdownLabel.textContent = "All niches";
+            else if (n === 1) els.nicheDropdownLabel.textContent = state.selectedNiches[0];
+            else els.nicheDropdownLabel.textContent = `${n} niches selected`;
+        }
+
+        function setNichePanelOpen(open) {
+            state.nichePanelOpen = !!open;
+            if (els.nicheDropdownPanel) els.nicheDropdownPanel.classList.toggle("hidden", !open);
+            if (els.nicheDropdownBtn) els.nicheDropdownBtn.setAttribute("aria-expanded", open ? "true" : "false");
+        }
+
+        function updateNicheCheckboxOptions(rows) {
+            if (!els.nicheCheckboxList) return;
+            const selected = new Set(state.selectedNiches);
             const tags = new Set();
             rows.forEach((row) => {
                 (row.nicheTags || []).forEach((t) => tags.add(t));
             });
             const sorted = [...tags].sort((a, b) => a.localeCompare(b));
-            els.nicheMulti.innerHTML = sorted.map((v) => {
-                const esc = escapeHtml(v);
-                const sel = selected.has(v) ? " selected" : "";
-                return `<option value="${esc}"${sel}>${esc}</option>`;
+            els.nicheCheckboxList.innerHTML = sorted.map((tag, idx) => {
+                const esc = escapeHtml(tag);
+                const id = `niche-cb-${idx}`;
+                const checked = selected.has(tag) ? " checked" : "";
+                return `<label for="${id}" class="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 hover:bg-gray-50 text-xs">
+                    <input type="checkbox" id="${id}" class="niche-cb rounded border-gray-300 text-blue-600" value="${esc}"${checked}>
+                    <span class="truncate">${esc}</span>
+                </label>`;
             }).join("");
-            state.selectedNiches = readSelectedNichesFromDom();
+            state.selectedNiches = syncNichesFromCheckboxList();
+            updateNicheDropdownLabel();
         }
 
         function updateSelectOptions(rows) {
@@ -335,10 +671,19 @@
                 element.value = previous;
             });
 
-            updateNicheMultiOptions(rows);
+            updateNicheCheckboxOptions(rows);
         }
 
         function applyFiltersAndSort() {
+            if (!state.dataLoaded) {
+                state.filteredRows = [];
+                updateDisclosureSummaries();
+                if (els.resultCount) els.resultCount.textContent = "";
+                renderTable();
+                renderSortIndicators();
+                return;
+            }
+
             const nicheFilter = state.selectedNiches;
 
             const filtered = state.allRows.filter((row) => {
@@ -363,7 +708,7 @@
             renderSortIndicators();
             updateDisclosureSummaries();
             renderDiscoveryCalls();
-            els.resultCount.textContent = `${filtered.length} of ${state.allRows.length} leads shown`;
+            if (els.resultCount) els.resultCount.textContent = `${filtered.length} of ${state.allRows.length} leads shown`;
         }
 
         function renderSortIndicators() {
@@ -373,6 +718,10 @@
         }
 
         function renderTable() {
+            if (!state.dataLoaded) {
+                els.tableBody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-gray-500">Expand All Leads to load records from Airtable.</td></tr>';
+                return;
+            }
             if (!state.filteredRows.length) {
                 els.tableBody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-gray-500">No leads match current filters.</td></tr>';
                 return;
@@ -393,22 +742,43 @@
 
         async function loadData() {
             hideError();
-            els.statusText.textContent = "Loading leads from Airtable...";
+            els.statusText.textContent = "Loading leads from Airtable…";
+            els.tableBody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-gray-500">Loading…</td></tr>';
             try {
                 const raw = await fetchAllB2BLeads();
                 state.allRows = raw.map(normalizeRecord);
+                state.dataLoaded = true;
                 updateSelectOptions(state.allRows);
                 applyFiltersAndSort();
                 els.statusText.textContent = "Loaded successfully";
             } catch (error) {
+                state.dataLoaded = false;
+                state.allRows = [];
                 showError(error.message || "Failed to load Airtable data.");
-                els.statusText.textContent = "Load failed";
-                els.resultCount.textContent = "";
+                els.statusText.textContent = "Load failed — fix the error and expand a section again to retry.";
+                if (els.resultCount) els.resultCount.textContent = "";
                 if (els.discoveryCallsContainer) {
                     els.discoveryCallsContainer.innerHTML = '<p class="text-gray-500 py-2">Could not load discovery data.</p>';
                 }
                 if (els.discoveryCallsSummaryMeta) els.discoveryCallsSummaryMeta.textContent = "";
+                renderTable();
+                updateDisclosureSummaries();
             }
+        }
+
+        async function ensureLeadsLoaded() {
+            if (state.dataLoaded) {
+                applyFiltersAndSort();
+                return;
+            }
+            if (state.loadPromise) {
+                await state.loadPromise;
+                return;
+            }
+            state.loadPromise = loadData().finally(() => {
+                state.loadPromise = null;
+            });
+            await state.loadPromise;
         }
 
         function wireEvents() {
@@ -425,9 +795,11 @@
                 state.selectedNiches = [];
 
                 document.querySelectorAll("[data-filter]").forEach((input) => { input.value = ""; });
-                if (els.nicheMulti) {
-                    [...els.nicheMulti.options].forEach((opt) => { opt.selected = false; });
+                if (els.nicheCheckboxList) {
+                    els.nicheCheckboxList.querySelectorAll("input.niche-cb").forEach((cb) => { cb.checked = false; });
                 }
+                state.selectedNiches = [];
+                updateNicheDropdownLabel();
                 applyFiltersAndSort();
             });
 
@@ -444,10 +816,36 @@
                 });
             });
 
-            if (els.nicheMulti) {
-                els.nicheMulti.addEventListener("change", () => {
-                    state.selectedNiches = readSelectedNichesFromDom();
+            if (els.nicheDropdownBtn && els.nicheDropdownPanel) {
+                els.nicheDropdownBtn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const willOpen = els.nicheDropdownPanel.classList.contains("hidden");
+                    setNichePanelOpen(willOpen);
+                });
+            }
+
+            if (els.nicheCheckboxList) {
+                els.nicheCheckboxList.addEventListener("change", () => {
+                    state.selectedNiches = syncNichesFromCheckboxList();
+                    updateNicheDropdownLabel();
                     applyFiltersAndSort();
+                });
+            }
+
+            document.addEventListener("mousedown", (e) => {
+                if (!state.nichePanelOpen || !els.nicheDropdownWrap) return;
+                if (!els.nicheDropdownWrap.contains(e.target)) setNichePanelOpen(false);
+            });
+
+            if (els.allLeadsDetails) {
+                els.allLeadsDetails.addEventListener("toggle", () => {
+                    if (els.allLeadsDetails.open) void ensureLeadsLoaded();
+                });
+            }
+            if (els.discoveryCallsDetails) {
+                els.discoveryCallsDetails.addEventListener("toggle", () => {
+                    if (els.discoveryCallsDetails.open) void ensureLeadsLoaded();
                 });
             }
 
@@ -467,7 +865,7 @@
         }
 
         wireEvents();
-        loadData();
+        applyFiltersAndSort();
     </script>
 </body>
 </html>
