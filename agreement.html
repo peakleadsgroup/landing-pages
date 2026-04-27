@@ -15,6 +15,7 @@
             line-height: 1.6;
             color: #333;
             overflow-x: hidden;
+            background: #e8ecf1;
         }
 
         .header {
@@ -38,12 +39,8 @@
         .logo { height: 60px; }
 
         .hero {
-            background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.55)),
-                url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            min-height: 40vh;
+            background: linear-gradient(145deg, #2f4a6e 0%, #4a6fa5 42%, #3d5d8a 100%);
+            min-height: 36vh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -69,25 +66,7 @@
             text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
         }
 
-        .intro-section {
-            padding: 5rem 2rem;
-            background: linear-gradient(rgba(255,255,255,0.88), rgba(255,255,255,0.88)),
-                url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-        }
-
-        .intro-container { max-width: 1000px; margin: 0 auto; }
-
-        .intro {
-            background: white;
-            padding: 2.5rem;
-            border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-        }
-
-        .intro p, .section .agreement-body {
+        .section .agreement-body {
             font-size: 1.05rem;
             line-height: 1.8;
             color: #333;
@@ -102,30 +81,41 @@
         }
         .section .agreement-body li { margin: 0.35rem 0; }
 
-        .agreement-section { padding: 5rem 2rem; background: #f8f9fa; }
-        .agreement-section-alt {
-            padding: 5rem 2rem;
-            background: linear-gradient(rgba(255,255,255,0.88), rgba(255,255,255,0.88)),
-                url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+        .agreement-document {
+            padding: 1.75rem 1.25rem 2.5rem;
         }
 
-        .agreement-container { max-width: 1000px; margin: 0 auto; }
+        @media (min-width: 640px) {
+            .agreement-document { padding: 2rem 2rem 3rem; }
+        }
+
+        .agreement-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #dde3ea;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+        }
 
         .section {
-            background: white;
-            margin-bottom: 2rem;
-            padding: 2.5rem;
-            border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-            transition: transform 0.3s, box-shadow 0.3s;
+            background: #fff;
+            margin: 0;
+            padding: 1.75rem 1.5rem 2rem;
+            border-radius: 0;
+            box-shadow: none;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+            padding-bottom: 2rem;
         }
 
         .section:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+            transform: none;
+            box-shadow: none;
         }
 
         .section-title {
@@ -175,8 +165,8 @@
 
         .sign-bar {
             max-width: 1000px;
-            margin: 0 auto 4rem;
-            padding: 0 2rem;
+            margin: 0 auto 3rem;
+            padding: 1.5rem 1.25rem 0;
             text-align: center;
         }
 
@@ -255,70 +245,128 @@
         .modal-backdrop.open { display: flex; }
 
         .modal {
-            background: white;
-            border-radius: 12px;
-            max-width: 440px;
+            background: #fff;
+            border-radius: 14px;
+            max-width: 420px;
             width: 100%;
-            padding: 1.75rem;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            padding: 0;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            overflow: hidden;
         }
 
-        .modal h3 { margin-bottom: 1rem; font-size: 1.25rem; color: #222; }
+        .modal-body {
+            padding: 1.5rem 1.5rem 1.25rem;
+        }
 
-        .modal label { display: block; font-size: 0.85rem; font-weight: 600; color: #555; margin-bottom: 0.35rem; }
+        .modal h3 {
+            margin: 0 0 1.25rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            letter-spacing: -0.02em;
+        }
+
+        .modal .field-label {
+            display: block;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 0.4rem;
+        }
 
         .modal input[type="text"] {
             width: 100%;
-            padding: 0.65rem 0.85rem;
-            border: 1px solid #ced4da;
-            border-radius: 8px;
+            padding: 0.7rem 0.9rem;
+            border: 1px solid #d1d5db;
+            border-radius: 9px;
             font-size: 1rem;
-            margin-bottom: 1rem;
+            margin-bottom: 1.125rem;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .modal input[type="text"]:focus {
+            outline: none;
+            border-color: #4a6fa5;
+            box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.2);
         }
 
         .modal .check-row {
             display: flex;
             align-items: flex-start;
-            gap: 0.6rem;
-            margin-bottom: 1.25rem;
-            font-size: 0.95rem;
-            color: #444;
+            gap: 0.65rem;
+            margin: 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #374151;
         }
 
-        .modal .check-row input { margin-top: 0.2rem; flex-shrink: 0; }
+        .modal .check-row input {
+            margin-top: 0.15rem;
+            flex-shrink: 0;
+            width: 1.05rem;
+            height: 1.05rem;
+            accent-color: #4a6fa5;
+        }
 
-        .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; }
-
-        .btn-secondary {
-            background: #e9ecef;
-            color: #333;
-            border: none;
-            padding: 0.65rem 1.25rem;
-            border-radius: 8px;
-            font-weight: 600;
+        .modal .check-row label {
+            margin: 0;
+            font-weight: 400;
             cursor: pointer;
         }
 
-        .btn-secondary:hover { background: #dee2e6; }
+        .modal-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem 1.5rem 1.35rem;
+            margin: 0;
+            background: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .modal-actions .btn-primary,
+        .modal-actions .btn-secondary {
+            min-width: 7.5rem;
+            padding: 0.65rem 1.35rem;
+            font-size: 0.95rem;
+            border-radius: 9px;
+        }
+
+        .btn-secondary {
+            background: #fff;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .btn-secondary:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
 
         .modal-error {
             display: none;
-            margin-bottom: 1rem;
+            margin: 0 0 1rem;
             padding: 0.65rem 0.85rem;
-            background: #f8d7da;
-            color: #842029;
-            border-radius: 8px;
-            font-size: 0.9rem;
+            background: #fef2f2;
+            color: #991b1b;
+            border-radius: 9px;
+            font-size: 0.875rem;
+            border: 1px solid #fecaca;
         }
 
         .modal-error.visible { display: block; }
 
         @media (max-width: 768px) {
-            .hero { min-height: 30vh; background-attachment: scroll; }
-            .intro-section, .agreement-section-alt { background-attachment: scroll; }
+            .hero { min-height: 28vh; }
             .hero-content h1 { font-size: 2rem; }
             .hero-content .subtitle { font-size: 1.1rem; }
-            .section { padding: 1.5rem; }
+            .section { padding: 1.35rem 1.15rem 1.5rem; }
             .section-title { font-size: 1.3rem; flex-direction: column; align-items: flex-start; }
             .section-number { margin-bottom: 1rem; margin-right: 0; }
         }
@@ -369,17 +417,19 @@
 
     <div id="sign-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="sign-modal-title">
         <div class="modal">
-            <h3 id="sign-modal-title">Sign this agreement</h3>
-            <div id="sign-modal-error" class="modal-error"></div>
-            <label for="signer-name-input">Your full name</label>
-            <input type="text" id="signer-name-input" autocomplete="name" placeholder="Type your legal name">
-            <div class="check-row">
-                <input type="checkbox" id="signer-consent-check">
-                <label for="signer-consent-check" style="margin:0;font-weight:400;">I agree to sign this document electronically and understand that my electronic signature has the same legal effect as a handwritten signature.</label>
+            <div class="modal-body">
+                <h3 id="sign-modal-title">Sign this agreement</h3>
+                <div id="sign-modal-error" class="modal-error" role="alert"></div>
+                <label class="field-label" for="signer-name-input">Your full name</label>
+                <input type="text" id="signer-name-input" autocomplete="name" placeholder="Legal name as it should appear on the agreement">
+                <div class="check-row">
+                    <input type="checkbox" id="signer-consent-check">
+                    <label for="signer-consent-check">I agree to sign this document electronically and understand that my electronic signature has the same legal effect as a handwritten signature.</label>
+                </div>
             </div>
             <div class="modal-actions">
                 <button type="button" class="btn-secondary" id="btn-sign-cancel">Cancel</button>
-                <button type="button" class="btn-primary" id="btn-sign-submit" style="padding: 0.65rem 1.5rem;">Sign</button>
+                <button type="button" class="btn-primary" id="btn-sign-submit">Sign</button>
             </div>
         </div>
     </div>
@@ -390,6 +440,20 @@
     var TABLE_B2B_LEADS = 'tbldNpwtCN9y5Pkiy';
     var TABLE_SERVICE_AGREEMENT = 'tbl3UmqfqgPfaXtil';
     var BASE = '/api/airtable/v0/' + AIRTABLE_BASE_ID;
+
+    var LOG = '[agreement]';
+    function logA() {
+        var a = [LOG].concat(Array.prototype.slice.call(arguments));
+        console.log.apply(console, a);
+    }
+    function warnA() {
+        var a = [LOG].concat(Array.prototype.slice.call(arguments));
+        console.warn.apply(console, a);
+    }
+    function errA() {
+        var a = [LOG].concat(Array.prototype.slice.call(arguments));
+        console.error.apply(console, a);
+    }
 
     var F = {
         SERVICE_AGREEMENT_LINK: 'Service Agreement',
@@ -443,6 +507,10 @@
         Object.keys(map).forEach(function (key) {
             h = h.split(key).join(map[key]);
         });
+        /* Template often has $[PPL] while values are already currency ($99.00) → collapse $$… */
+        while (h.indexOf('$$') !== -1) {
+            h = h.replace(/\$\$/g, '$');
+        }
         return h;
     }
 
@@ -453,11 +521,32 @@
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
     }
 
+    /**
+     * B2B Leads fields used for money/count placeholders:
+     * - "Leads Sold Upfront" → [ONBOARDINGNUMBER] and (× Price Per Lead) → [ONBOARDINGAMOUNT]
+     * - "Price Per Lead" → [PPL] and used in [ONBOARDINGAMOUNT]
+     * Lookup/rollup fields often arrive as [n] or { value: n }; plain number/currency fields are numbers.
+     */
     function readNumber(val) {
         if (val == null || val === '') return null;
         if (typeof val === 'number') return isFinite(val) ? val : null;
-        var n = parseFloat(String(val).replace(/[^0-9.-]/g, ''));
-        return isFinite(n) ? n : null;
+        if (typeof val === 'string') {
+            var n = parseFloat(String(val).replace(/[^0-9.-]/g, ''));
+            return isFinite(n) ? n : null;
+        }
+        if (Array.isArray(val)) {
+            for (var i = 0; i < val.length; i++) {
+                var x = readNumber(val[i]);
+                if (x != null) return x;
+            }
+            return null;
+        }
+        if (typeof val === 'object') {
+            if (typeof val.value === 'number' && isFinite(val.value)) return val.value;
+            if (typeof val.amount === 'number' && isFinite(val.amount)) return val.amount;
+        }
+        var n2 = parseFloat(String(val).replace(/[^0-9.-]/g, ''));
+        return isFinite(n2) ? n2 : null;
     }
 
     function isSigned(fields) {
@@ -468,17 +557,35 @@
         return false;
     }
 
+    function shortUrl(u) {
+        if (!u || u.length <= 160) return u;
+        return u.slice(0, 160) + '…';
+    }
+
     async function fetchJson(url, options) {
-        var res = await fetch(url, options);
+        var method = (options && options.method) || 'GET';
+        var t0 = performance.now();
+        logA('fetch →', method, shortUrl(url));
+        var res;
+        try {
+            res = await fetch(url, options);
+        } catch (netErr) {
+            errA('fetch network failure', netErr && (netErr.message || String(netErr)));
+            throw netErr;
+        }
+        var ms = Math.round(performance.now() - t0);
+        logA('fetch ←', res.status, res.ok, ms + 'ms');
         var text = await res.text();
         var data;
         try {
             data = text ? JSON.parse(text) : {};
         } catch (e) {
+            errA('invalid JSON body', 'status=', res.status, 'len=', text ? text.length : 0, text ? shortUrl(text) : '');
             throw new Error('Invalid response from server (' + res.status + ')');
         }
         if (!res.ok) {
             var msg = (data && (data.error || data.message)) || text || res.statusText;
+            errA('fetch HTTP error', res.status, typeof msg === 'string' ? shortUrl(msg) : msg);
             throw new Error(typeof msg === 'string' ? msg : 'Request failed ' + res.status);
         }
         return data;
@@ -496,7 +603,11 @@
     }
 
     async function fetchServiceAgreementRecords(orderedIds) {
-        if (!orderedIds || !orderedIds.length) return [];
+        if (!orderedIds || !orderedIds.length) {
+            logA('Service Agreement: no linked record IDs');
+            return [];
+        }
+        logA('Service Agreement: loading', orderedIds.length, 'linked id(s)', orderedIds);
         var chunks = [];
         for (var c = 0; c < orderedIds.length; c += 100) {
             chunks.push(orderedIds.slice(c, c + 100));
@@ -507,12 +618,17 @@
             var params = new URLSearchParams();
             ids.forEach(function (id) { params.append('records[]', id); });
             var url = BASE + '/' + encodeURIComponent(TABLE_SERVICE_AGREEMENT) + '?' + params.toString();
+            logA('Service Agreement chunk', i + 1, '/', chunks.length, 'ids=', ids.length);
             var data = await fetchJson(url);
             (data.records || []).forEach(function (rec) {
                 byId[rec.id] = rec;
             });
         }
-        return orderedIds.map(function (id) { return byId[id]; }).filter(Boolean);
+        var ordered = orderedIds.map(function (id) { return byId[id]; }).filter(Boolean);
+        if (ordered.length !== orderedIds.length) {
+            warnA('Service Agreement: expected', orderedIds.length, 'records, got', ordered.length, '(missing ids?)');
+        }
+        return ordered;
     }
 
     function el(tag, cls, html) {
@@ -563,26 +679,12 @@
         mount.innerHTML = '';
         var vars = buildVars(state.b2bFields || {});
         var sections = state.sections;
-        var useAltBand = true;
-        var currentWrap = null;
-
-        function ensureWrap() {
-            if (!currentWrap) {
-                currentWrap = el('section', useAltBand ? 'agreement-section-alt' : 'agreement-section');
-                var inner = el('div', 'agreement-container');
-                currentWrap.appendChild(inner);
-                mount.appendChild(currentWrap);
-                return inner;
-            }
-            return currentWrap.querySelector('.agreement-container');
-        }
+        var docWrap = el('section', 'agreement-document');
+        var container = el('div', 'agreement-container');
+        docWrap.appendChild(container);
+        mount.appendChild(docWrap);
 
         for (var i = 0; i < sections.length; i++) {
-            if (i % 3 === 0) {
-                currentWrap = null;
-                useAltBand = !useAltBand;
-            }
-            var container = ensureWrap();
             var rec = sections[i];
             var fld = rec.fields || {};
             var title = fld[F.SA_TITLE] != null && String(fld[F.SA_TITLE]).trim() !== ''
@@ -662,6 +764,18 @@
 
     async function load() {
         var rid = getRecordIdFromUrl().trim();
+        var tLoad = performance.now();
+        logA('load() start', {
+            href: window.location.href,
+            protocol: window.location.protocol,
+            recordId: rid || '(empty)',
+            validRecordId: looksLikeRecordId(rid),
+            apiBase: BASE
+        });
+        if (window.location.protocol === 'file:') {
+            warnA('Page opened as file:// — fetches to /api/airtable will fail. Use your deployed site or a local server.');
+        }
+
         showEl('state-loading', true);
         setError('');
         showEl('agreement-root', false);
@@ -669,6 +783,7 @@
         if (sp0) sp0.classList.remove('visible');
 
         if (!looksLikeRecordId(rid)) {
+            logA('load() stop: invalid or missing recordID');
             showEl('state-loading', false);
             setError('Missing or invalid recordID. Open this page with ?recordID=recXXXXXXXX in the URL.');
             return;
@@ -678,17 +793,24 @@
 
         try {
             var leadUrl = BASE + '/' + encodeURIComponent(TABLE_B2B_LEADS) + '/' + encodeURIComponent(rid);
+            logA('B2B Leads: GET record', rid);
             var leadData = await fetchJson(leadUrl);
             var fields = leadData.fields || {};
+            var fieldKeys = Object.keys(fields);
+            logA('B2B Leads: fields received', fieldKeys.length, 'keys', fieldKeys.slice(0, 25));
+            logA('B2B Leads: link field', F.SERVICE_AGREEMENT_LINK, '=', fields[F.SERVICE_AGREEMENT_LINK]);
 
             if (isSigned(fields)) {
+                logA('B2B Leads: already signed → show payment placeholder only');
                 state.b2bFields = fields;
                 showSignedUi();
+                logA('load() done (signed path)', Math.round(performance.now() - tLoad) + 'ms');
                 return;
             }
 
             var linkIds = fields[F.SERVICE_AGREEMENT_LINK];
             if (!Array.isArray(linkIds) || linkIds.length === 0) {
+                logA('B2B Leads: no Service Agreement links (empty or wrong field name / type)');
                 showEl('state-loading', false);
                 setError('No Service Agreement sections are linked to this lead yet.');
                 return;
@@ -696,14 +818,17 @@
 
             var saRecords = await fetchServiceAgreementRecords(linkIds);
             if (saRecords.length !== linkIds.length) {
-                console.warn('Some Service Agreement records could not be loaded.');
+                warnA('Some Service Agreement records could not be loaded.');
             }
 
             state.b2bFields = fields;
             state.sections = saRecords;
+            logA('render: sections=', saRecords.length);
             renderAgreement();
             showUnsignedUi();
+            logA('load() done (agreement UI)', Math.round(performance.now() - tLoad) + 'ms');
         } catch (e) {
+            errA('load() error', e && e.message, e);
             showEl('state-loading', false);
             setError(e.message || 'Could not load agreement.');
         }
@@ -752,7 +877,9 @@
         btn.disabled = true;
 
         try {
+            logA('sign: fetching public IP…');
             var ip = await fetchPublicIp();
+            logA('sign: IP', ip || '(not available)');
             var signedIso = new Date().toISOString();
             var patchUrl = BASE + '/' + encodeURIComponent(TABLE_B2B_LEADS) + '/' + encodeURIComponent(state.recordId);
             var body = {
@@ -762,15 +889,18 @@
             body.fields[F.SIGNER_IP] = ip || '(not available)';
             body.fields[F.SIGNED_DATE] = signedIso;
 
+            logA('sign: PATCH B2B lead', state.recordId);
             await fetchJson(patchUrl, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
 
+            logA('sign: saved OK');
             closeModal();
             showSignedUi();
         } catch (e) {
+            errA('sign: error', e && e.message, e);
             modalErr.textContent = e.message || 'Could not save signature. Try again.';
             modalErr.classList.add('visible');
         } finally {
@@ -778,7 +908,12 @@
         }
     });
 
-    load();
+    logA('script ready');
+    load().catch(function (e) {
+        errA('load() unhandled rejection', e && e.message, e);
+        showEl('state-loading', false);
+        setError(e.message || 'Could not load agreement.');
+    });
 })();
     </script>
 </body>
