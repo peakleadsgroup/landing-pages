@@ -4,23 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>Adset Onboarding - Peak Leads Marketing Group</title>
+  <title>Campaign Onboarding - Peak Leads Marketing Group</title>
   <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: Arial, sans-serif;
       color: #333;
-      background: linear-gradient(rgba(255,255,255,0.88), rgba(255,255,255,0.88)), url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
+      background: linear-gradient(rgba(255,255,255,0.88), rgba(255,255,255,0.88)), url("https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true");
       background-size: cover;
       background-position: center;
       min-height: 100vh;
-      padding: 24px;
       display: flex;
       justify-content: center;
       align-items: center;
+      padding: 20px;
     }
-    .container { width: 100%; max-width: 920px; }
+    .container { width: 100%; max-width: 760px; }
     .header {
       background: #fff;
       border-radius: 10px 10px 0 0;
@@ -28,91 +28,79 @@
       text-align: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
-    .logo { height: 50px; margin-bottom: 8px; }
+    .header img { height: 50px; margin-bottom: 10px; }
     .header h1 { font-size: 1.8rem; margin-bottom: 6px; }
     .header p { color: #666; }
     .card {
       background: #fff;
       border-radius: 0 0 10px 10px;
-      padding: 24px;
       box-shadow: 0 12px 34px rgba(0,0,0,0.14);
+      padding: 24px;
     }
     .hidden { display: none !important; }
-    .loading, .error, .success {
-      text-align: center;
-      padding: 28px 16px;
-    }
+    .loading, .error, .success { text-align: center; padding: 28px 12px; }
     .error h2 { color: #c62828; margin-bottom: 10px; }
     .success h2 { color: #2e7d32; margin-bottom: 10px; }
-    .client-pill {
-      margin-top: 14px;
-      background: #eef5ff;
-      border: 1px solid #d8e8ff;
-      border-radius: 8px;
-      padding: 12px;
-      font-size: 0.95rem;
+    .progress {
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+      color: #4a6fa5;
+      font-weight: 600;
     }
     .step-title { font-size: 1.4rem; margin-bottom: 8px; }
     .step-subtitle { color: #666; margin-bottom: 18px; }
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    .field { margin-bottom: 12px; }
-    .field label { display: block; margin-bottom: 6px; font-weight: 600; }
-    .field input, .field select {
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-weight: 600; margin-bottom: 6px; }
+    .field input, .field select, .field textarea {
       width: 100%;
       border: 2px solid #e5e7eb;
       border-radius: 8px;
       padding: 10px;
       font-size: 0.98rem;
     }
-    .field input:focus, .field select:focus {
+    .field input:focus, .field select:focus, .field textarea:focus {
       outline: none;
       border-color: #4a6fa5;
     }
-    .field .hint {
-      margin-top: 5px;
-      color: #6b7280;
-      font-size: 0.85rem;
-    }
-    .adset-block {
+    .field textarea { min-height: 120px; resize: vertical; }
+    .radio-group { display: grid; gap: 8px; margin-top: 6px; }
+    .radio-item {
       border: 2px solid #e5e7eb;
-      background: #f9fafb;
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 14px;
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .adset-head {
+    .radio-item input { width: auto; }
+    .inline-note {
+      margin-top: 8px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #eef5ff;
+      border: 1px solid #d8e8ff;
+      color: #204a87;
+      font-size: 0.93rem;
+    }
+    .invalid { border-color: #d32f2f !important; background: #fff5f5; }
+    .actions {
+      margin-top: 20px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
+      gap: 10px;
     }
-    .adset-head h3 { font-size: 1.08rem; }
     .btn {
       border: none;
       border-radius: 8px;
-      cursor: pointer;
       padding: 10px 16px;
+      cursor: pointer;
       font-weight: 600;
     }
     .btn-primary { background: #4a6fa5; color: #fff; }
     .btn-primary:hover { background: #3e5f8e; }
     .btn-secondary { background: #6b7280; color: #fff; }
-    .btn-danger { background: #d32f2f; color: #fff; padding: 8px 12px; }
-    .actions {
-      display: flex;
-      gap: 10px;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 16px;
-    }
-    .actions .left, .actions .right { display: flex; gap: 10px; }
     .status {
-      margin-top: 12px;
+      margin-top: 14px;
       padding: 10px 12px;
       border-radius: 8px;
       font-size: 0.92rem;
@@ -121,12 +109,9 @@
     .status.info { display: block; background: #eef5ff; color: #204a87; }
     .status.error { display: block; background: #fdecea; color: #7f1d1d; }
     .status.ok { display: block; background: #e9f7ee; color: #1f5f39; }
-    .invalid { border-color: #d32f2f !important; background: #fff5f5; }
-    @media (max-width: 800px) {
-      .row { grid-template-columns: 1fr; }
+    @media (max-width: 760px) {
       body { padding: 12px; }
-      .actions { flex-direction: column; align-items: stretch; }
-      .actions .left, .actions .right { justify-content: stretch; }
+      .actions { flex-direction: column; }
       .actions button { width: 100%; }
     }
   </style>
@@ -134,51 +119,172 @@
 <body>
   <div class="container">
     <div class="header">
-      <img src="https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png" class="logo" alt="Peak Leads Marketing Group">
-      <h1>Client Adset Onboarding</h1>
-      <p>Create one adset per location and link all of them to your existing client record.</p>
+      <img src="https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Marketing Group" />
+      <h1>Campaign Onboarding</h1>
+      <p>Set your campaign preferences in 4 quick steps.</p>
     </div>
     <div class="card">
-      <div id="loadingScreen" class="loading">
-        <p>Loading client details...</p>
-      </div>
+      <div id="loadingScreen" class="loading">Loading your client record...</div>
 
       <div id="errorScreen" class="error hidden">
         <h2>Unable to load onboarding</h2>
         <p id="errorMessage"></p>
       </div>
 
-      <div id="stepClient" class="hidden">
-        <h2 class="step-title">Step 1: Confirm Client</h2>
-        <p class="step-subtitle">We found your client record from the URL. Continue to set up adsets by location.</p>
-        <div id="clientSummary" class="client-pill"></div>
-        <div class="actions">
-          <div class="left"></div>
-          <div class="right">
-            <button class="btn btn-primary" type="button" id="continueBtn">Continue to Adsets</button>
-          </div>
-        </div>
-      </div>
+      <form id="wizardForm" class="hidden">
+        <div class="progress" id="progressText">Page 1 of 4</div>
 
-      <form id="stepAdsets" class="hidden">
-        <h2 class="step-title">Step 2: Add Location Adsets</h2>
-        <p class="step-subtitle">Each location row below creates one new Airtable <strong>Adset</strong> record linked to this client.</p>
-        <div id="adsetContainer"></div>
-        <button class="btn btn-secondary" type="button" id="addLocationBtn">+ Add Another Location</button>
-        <div id="submitStatus" class="status"></div>
+        <!-- Page 1 -->
+        <section class="step" data-step="1">
+          <h2 class="step-title">Page 1: Business + CRM</h2>
+          <p class="step-subtitle">Update business details and CRM preferences.</p>
+
+          <div class="field">
+            <label for="businessName">Business Name</label>
+            <input type="text" id="businessName" />
+          </div>
+
+          <div class="field">
+            <label for="websiteUrl">Website URL</label>
+            <input type="url" id="websiteUrl" placeholder="https://example.com" />
+          </div>
+
+          <div class="field">
+            <label>Would you like us to integrate with your CRM system?</label>
+            <div class="radio-group">
+              <label class="radio-item"><input type="radio" name="crmIntegration" value="Yes" /> Yes</label>
+              <label class="radio-item"><input type="radio" name="crmIntegration" value="No" /> No</label>
+            </div>
+          </div>
+
+          <div class="field hidden" id="crmNameWrap">
+            <label for="crmName">CRM Name</label>
+            <input type="text" id="crmName" />
+          </div>
+        </section>
+
+        <!-- Page 2 -->
+        <section class="step hidden" data-step="2">
+          <h2 class="step-title">Page 2: Lead Cap</h2>
+          <p class="step-subtitle">Tell us if and how you want lead caps set.</p>
+
+          <div class="field">
+            <label>Do you want to set a cap to the number of leads we send?</label>
+            <div class="radio-group">
+              <label class="radio-item"><input type="radio" name="leadCapEnabled" value="Yes" /> Yes</label>
+              <label class="radio-item"><input type="radio" name="leadCapEnabled" value="No" /> No</label>
+            </div>
+          </div>
+
+          <div class="field hidden" id="leadCapTypeWrap">
+            <label>What kind of lead cap would you like to set?</label>
+            <div class="radio-group">
+              <label class="radio-item"><input type="radio" name="leadCapType" value="Monthly" /> Monthly</label>
+              <label class="radio-item"><input type="radio" name="leadCapType" value="Weekly" /> Weekly</label>
+              <label class="radio-item"><input type="radio" name="leadCapType" value="Daily" /> Daily</label>
+              <label class="radio-item"><input type="radio" name="leadCapType" value="Total" /> Total</label>
+            </div>
+          </div>
+
+          <div class="field hidden" id="leadCapNumberWrap">
+            <label for="leadCapNumber" id="leadCapNumberLabel">Lead cap #</label>
+            <input type="number" min="0" step="1" id="leadCapNumber" />
+          </div>
+        </section>
+
+        <!-- Page 3 -->
+        <section class="step hidden" data-step="3">
+          <h2 class="step-title">Page 3: Targeting</h2>
+          <p class="step-subtitle">Choose how your ads should target prospects.</p>
+
+          <div class="field">
+            <label>How would you like us to target for your ad campaign?</label>
+            <div class="radio-group">
+              <label class="radio-item"><input type="radio" name="targeting" value="Zip Codes" /> Zip Codes</label>
+              <label class="radio-item"><input type="radio" name="targeting" value="Radius" /> Radius Around Address</label>
+            </div>
+          </div>
+
+          <div id="zipFlow" class="hidden">
+            <div class="field">
+              <label>How would you like to give us the zip codes?</label>
+              <div class="radio-group">
+                <label class="radio-item"><input type="radio" name="zipMode" value="Email" /> Email</label>
+                <label class="radio-item"><input type="radio" name="zipMode" value="CopyPaste" /> Copy and Paste Now</label>
+              </div>
+            </div>
+
+            <div class="inline-note hidden" id="zipEmailNote">
+              Please email the zip code list to <strong>admin@peakleadsgroup.com</strong>.
+            </div>
+
+            <div class="field hidden" id="zipCodesWrap">
+              <label for="zipCodes">Zip Codes</label>
+              <textarea id="zipCodes" placeholder="Paste zip codes here (comma or line separated)"></textarea>
+            </div>
+          </div>
+
+          <div id="radiusFlow" class="hidden">
+            <div class="field">
+              <label for="radiusAddress">Address</label>
+              <input type="text" id="radiusAddress" placeholder="Start typing an address..." autocomplete="street-address" />
+            </div>
+            <div class="field">
+              <label for="radiusMiles">Radius Miles</label>
+              <input type="number" min="0" step="1" id="radiusMiles" />
+            </div>
+          </div>
+        </section>
+
+        <!-- Page 4 -->
+        <section class="step hidden" data-step="4">
+          <h2 class="step-title">Page 4: Post Submit Screen</h2>
+          <p class="step-subtitle">Choose what leads see after they submit.</p>
+
+          <div class="field">
+            <label>Post-submit option</label>
+            <div class="radio-group">
+              <label class="radio-item"><input type="radio" name="postSubmitScreen" value="Calendar" /> Calendar</label>
+              <label class="radio-item"><input type="radio" name="postSubmitScreen" value="Phone" /> Phone</label>
+              <label class="radio-item"><input type="radio" name="postSubmitScreen" value="Text" /> Text</label>
+              <label class="radio-item"><input type="radio" name="postSubmitScreen" value="Phone/Text" /> Phone/Text</label>
+              <label class="radio-item"><input type="radio" name="postSubmitScreen" value="Redirect" /> Redirect</label>
+              <label class="radio-item"><input type="radio" name="postSubmitScreen" value="None" /> None</label>
+            </div>
+          </div>
+
+          <div class="field hidden" id="calendarWrap">
+            <label for="calendarAvailability">What days/times would you like to show?</label>
+            <textarea id="calendarAvailability"></textarea>
+          </div>
+
+          <div class="field hidden" id="phoneWrap">
+            <label for="phoneField">Phone</label>
+            <input type="text" id="phoneField" />
+          </div>
+
+          <div class="field hidden" id="textWrap">
+            <label for="textField">Text</label>
+            <input type="text" id="textField" />
+          </div>
+
+          <div class="field hidden" id="redirectWrap">
+            <label for="redirectField">Redirect</label>
+            <input type="url" id="redirectField" placeholder="https://..." />
+          </div>
+        </section>
+
+        <div id="statusBox" class="status"></div>
         <div class="actions">
-          <div class="left">
-            <button class="btn btn-secondary" type="button" id="backBtn">Back</button>
-          </div>
-          <div class="right">
-            <button class="btn btn-primary" type="submit" id="submitBtn">Create Adsets</button>
-          </div>
+          <button type="button" class="btn btn-secondary" id="backBtn">Back</button>
+          <button type="button" class="btn btn-primary" id="nextBtn">Next</button>
+          <button type="submit" class="btn btn-primary hidden" id="submitBtn">Submit Onboarding</button>
         </div>
       </form>
 
       <div id="successScreen" class="success hidden">
-        <h2>Adsets Created</h2>
-        <p id="successMessage"></p>
+        <h2>Onboarding Saved</h2>
+        <p id="successText"></p>
       </div>
     </div>
   </div>
@@ -187,278 +293,308 @@
     const AIRTABLE_BASE_ID = "appmBb0lzqRK9dI8v";
     const CLIENT_TABLE_ID = "tblH2nVfmGNG8pAjC";
     const ADSET_TABLE_ID = "tblee61crNCoSfurx";
-    const VALID_RECORD_ID = /^rec[a-zA-Z0-9]{14}$/;
+    const RECORD_ID_REGEX = /^rec[a-zA-Z0-9]{14}$/;
 
+    let currentStep = 1;
     let clientRecordId = "";
     let clientRecord = null;
     let isSubmitting = false;
 
-    function qs(name) { return document.querySelector(name); }
-    function qsa(name) { return Array.from(document.querySelectorAll(name)); }
+    function qs(sel) { return document.querySelector(sel); }
+    function qsa(sel) { return Array.from(document.querySelectorAll(sel)); }
+    function selectedValue(name) {
+      const checked = document.querySelector(`input[name="${name}"]:checked`);
+      return checked ? checked.value : "";
+    }
 
     function showError(message) {
       qs("#loadingScreen").classList.add("hidden");
-      qs("#stepClient").classList.add("hidden");
-      qs("#stepAdsets").classList.add("hidden");
+      qs("#wizardForm").classList.add("hidden");
       qs("#errorMessage").textContent = message;
       qs("#errorScreen").classList.remove("hidden");
     }
 
     function setStatus(type, message) {
-      const el = qs("#submitStatus");
-      el.className = `status ${type}`;
-      el.textContent = message;
+      const box = qs("#statusBox");
+      box.className = `status ${type}`;
+      box.textContent = message;
     }
 
-    function getClientRecordIdFromUrl() {
-      const url = new URL(window.location.href);
-      const raw = url.searchParams.get("clientId")
-        || url.searchParams.get("recordId")
-        || url.searchParams.get("record")
-        || url.searchParams.get("id")
-        || "";
-      return raw.trim();
+    function clearStatus() {
+      const box = qs("#statusBox");
+      box.className = "status";
+      box.textContent = "";
+    }
+
+    function setVisible(el, visible) {
+      if (!el) return;
+      if (visible) el.classList.remove("hidden");
+      else el.classList.add("hidden");
+    }
+
+    function clearInvalid() {
+      qsa(".invalid").forEach((el) => el.classList.remove("invalid"));
+    }
+
+    function updateProgressAndButtons() {
+      qs("#progressText").textContent = `Page ${currentStep} of 4`;
+      qsa(".step").forEach((step) => setVisible(step, Number(step.dataset.step) === currentStep));
+      qs("#backBtn").disabled = currentStep === 1;
+      setVisible(qs("#nextBtn"), currentStep < 4);
+      setVisible(qs("#submitBtn"), currentStep === 4);
+    }
+
+    function updateConditionalUI() {
+      const crmYes = selectedValue("crmIntegration") === "Yes";
+      setVisible(qs("#crmNameWrap"), crmYes);
+
+      const leadCapEnabled = selectedValue("leadCapEnabled");
+      const capType = selectedValue("leadCapType");
+      setVisible(qs("#leadCapTypeWrap"), leadCapEnabled === "Yes");
+      setVisible(qs("#leadCapNumberWrap"), leadCapEnabled === "Yes" && !!capType);
+      if (capType) qs("#leadCapNumberLabel").textContent = `${capType} cap`;
+
+      const targeting = selectedValue("targeting");
+      const zipMode = selectedValue("zipMode");
+      setVisible(qs("#zipFlow"), targeting === "Zip Codes");
+      setVisible(qs("#radiusFlow"), targeting === "Radius");
+      setVisible(qs("#zipEmailNote"), targeting === "Zip Codes" && zipMode === "Email");
+      setVisible(qs("#zipCodesWrap"), targeting === "Zip Codes" && zipMode === "CopyPaste");
+
+      const post = selectedValue("postSubmitScreen");
+      setVisible(qs("#calendarWrap"), post === "Calendar");
+      setVisible(qs("#phoneWrap"), post === "Phone" || post === "Phone/Text");
+      setVisible(qs("#textWrap"), post === "Text" || post === "Phone/Text");
+      setVisible(qs("#redirectWrap"), post === "Redirect");
+    }
+
+    function getClientIdFromUrl() {
+      const u = new URL(window.location.href);
+      return (u.searchParams.get("clientId")
+        || u.searchParams.get("recordId")
+        || u.searchParams.get("record")
+        || u.searchParams.get("id")
+        || "").trim();
     }
 
     async function fetchClientRecord(recordId) {
-      const response = await fetch(`/api/airtable/v0/${AIRTABLE_BASE_ID}/${CLIENT_TABLE_ID}/${recordId}`);
-      if (!response.ok) {
-        const body = await response.text();
-        throw new Error(`Client fetch failed (${response.status}): ${body || response.statusText}`);
+      const res = await fetch(`/api/airtable/v0/${AIRTABLE_BASE_ID}/${CLIENT_TABLE_ID}/${recordId}`);
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(`Client fetch failed (${res.status}): ${body || res.statusText}`);
       }
-      return response.json();
+      return res.json();
     }
 
-    function buildClientSummary(record) {
-      const f = record.fields || {};
-      const name = f["Name"] || "(No name)";
-      const niche = Array.isArray(f["Niche"]) ? f["Niche"].join(", ") : (f["Niche"] || "Not set");
-      const model = f["Model"] || "Not set";
-      const charging = f["Charging"] || "Not set";
-      return `
-        <div><strong>Client:</strong> ${name}</div>
-        <div><strong>Record ID:</strong> ${record.id}</div>
-        <div><strong>Niche:</strong> ${niche}</div>
-        <div><strong>Model:</strong> ${model}</div>
-        <div><strong>Charging:</strong> ${charging}</div>
-      `;
-    }
-
-    function addAdsetRow(defaults = {}) {
-      const container = qs("#adsetContainer");
-      const index = container.children.length + 1;
-      const block = document.createElement("div");
-      block.className = "adset-block";
-      block.innerHTML = `
-        <div class="adset-head">
-          <h3>Location ${index}</h3>
-          <button type="button" class="btn btn-danger removeBtn" ${index === 1 ? "style='display:none'" : ""}>Remove</button>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label>Adset Name *</label>
-            <input type="text" data-field="Adset Name" value="${defaults.adsetName || ""}" placeholder="Example: Charlotte - Bathroom" required />
-          </div>
-          <div class="field">
-            <label>Adset Status *</label>
-            <input type="text" data-field="Adset Status" value="${defaults.adsetStatus || "Active"}" placeholder="Example: Active" required />
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label>Timezone</label>
-            <input type="text" data-field="Timezone" value="${defaults.timezone || ""}" placeholder="Example: EST" />
-          </div>
-          <div class="field">
-            <label>CRM Webhook</label>
-            <input type="url" data-field="CRM Webhook" value="${defaults.crmWebhook || ""}" placeholder="https://..." />
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label>Availability API URL</label>
-            <input type="url" data-field="Availability API URL" value="${defaults.availabilityApi || ""}" placeholder="https://..." />
-          </div>
-          <div class="field">
-            <label>Meta Pixel</label>
-            <input type="text" data-field="Meta Pixel" value="${defaults.metaPixel || ""}" placeholder="Pixel ID" />
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label>Call</label>
-            <input type="text" data-field="Call" value="${defaults.call || ""}" placeholder="Phone number" />
-          </div>
-          <div class="field">
-            <label>Text</label>
-            <input type="text" data-field="Text" value="${defaults.text || ""}" placeholder="Phone number" />
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label>Daily Cap</label>
-            <input type="number" min="0" step="1" data-field="Daily Cap" value="${defaults.dailyCap || ""}" />
-          </div>
-          <div class="field">
-            <label>Weekly Cap</label>
-            <input type="number" min="0" step="1" data-field="Weekly Cap" value="${defaults.weeklyCap || ""}" />
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label>Monthly Cap</label>
-            <input type="number" min="0" step="1" data-field="Monthly Cap" value="${defaults.monthlyCap || ""}" />
-          </div>
-          <div class="field">
-            <label>Total Cap</label>
-            <input type="number" min="0" step="1" data-field="Total Cap" value="${defaults.totalCap || ""}" />
-          </div>
-        </div>
-      `;
-
-      block.querySelector(".removeBtn").addEventListener("click", () => {
-        block.remove();
-        refreshRowTitles();
+    async function updateClientRecord(recordId, fields) {
+      const res = await fetch(`/api/airtable/v0/${AIRTABLE_BASE_ID}/${CLIENT_TABLE_ID}/${recordId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fields })
       });
-      container.appendChild(block);
-      refreshRowTitles();
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(`Client update failed (${res.status}): ${body || res.statusText}`);
+      }
+      return res.json();
     }
 
-    function refreshRowTitles() {
-      qsa(".adset-block").forEach((block, idx) => {
-        const title = block.querySelector(".adset-head h3");
-        title.textContent = `Location ${idx + 1}`;
-        const removeBtn = block.querySelector(".removeBtn");
-        removeBtn.style.display = idx === 0 ? "none" : "inline-block";
-      });
-    }
-
-    function parseNumberOrNull(value) {
-      if (value === "" || value === null || typeof value === "undefined") return null;
-      const n = Number(value);
-      return Number.isFinite(n) ? n : null;
-    }
-
-    function collectAdsetRows() {
-      const rows = qsa(".adset-block");
-      const payloads = [];
-      let invalid = false;
-
-      rows.forEach((row) => {
-        const fields = {};
-        row.querySelectorAll("input[data-field]").forEach((input) => input.classList.remove("invalid"));
-
-        const adsetNameInput = row.querySelector('input[data-field="Adset Name"]');
-        const adsetStatusInput = row.querySelector('input[data-field="Adset Status"]');
-        if (!adsetNameInput.value.trim()) { adsetNameInput.classList.add("invalid"); invalid = true; }
-        if (!adsetStatusInput.value.trim()) { adsetStatusInput.classList.add("invalid"); invalid = true; }
-
-        row.querySelectorAll("input[data-field]").forEach((input) => {
-          const fieldName = input.getAttribute("data-field");
-          const raw = input.value.trim();
-          if (!raw) return;
-
-          if (["Daily Cap", "Weekly Cap", "Monthly Cap", "Total Cap"].includes(fieldName)) {
-            const n = parseNumberOrNull(raw);
-            if (n === null || n < 0) {
-              input.classList.add("invalid");
-              invalid = true;
-              return;
-            }
-            fields[fieldName] = n;
-            return;
-          }
-          fields[fieldName] = raw;
-        });
-
-        fields["Client"] = [clientRecordId];
-        payloads.push({ fields });
-      });
-
-      if (rows.length === 0) invalid = true;
-      return { invalid, payloads };
-    }
-
-    async function createAdset(payload) {
-      const response = await fetch(`/api/airtable/v0/${AIRTABLE_BASE_ID}/${ADSET_TABLE_ID}`, {
+    async function createAdset(fields) {
+      const res = await fetch(`/api/airtable/v0/${AIRTABLE_BASE_ID}/${ADSET_TABLE_ID}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ fields })
       });
-      if (!response.ok) {
-        const body = await response.text();
-        throw new Error(`Adset create failed (${response.status}): ${body || response.statusText}`);
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(`Adset create failed (${res.status}): ${body || res.statusText}`);
       }
-      return response.json();
+      return res.json();
+    }
+
+    function markInvalid(el) {
+      if (el) el.classList.add("invalid");
+    }
+
+    function validateStep(step) {
+      clearInvalid();
+      let ok = true;
+
+      if (step === 1) {
+        const business = qs("#businessName");
+        const website = qs("#websiteUrl");
+        const crm = selectedValue("crmIntegration");
+        if (!business.value.trim()) { markInvalid(business); ok = false; }
+        if (!website.value.trim()) { markInvalid(website); ok = false; }
+        if (!crm) ok = false;
+        if (crm === "Yes" && !qs("#crmName").value.trim()) {
+          markInvalid(qs("#crmName"));
+          ok = false;
+        }
+      }
+
+      if (step === 2) {
+        const capEnabled = selectedValue("leadCapEnabled");
+        if (!capEnabled) ok = false;
+        if (capEnabled === "Yes") {
+          const capType = selectedValue("leadCapType");
+          const capNum = qs("#leadCapNumber");
+          if (!capType) ok = false;
+          if (!capNum.value.trim()) { markInvalid(capNum); ok = false; }
+        }
+      }
+
+      if (step === 3) {
+        const targeting = selectedValue("targeting");
+        if (!targeting) ok = false;
+        if (targeting === "Zip Codes") {
+          const mode = selectedValue("zipMode");
+          if (!mode) ok = false;
+          if (mode === "CopyPaste" && !qs("#zipCodes").value.trim()) {
+            markInvalid(qs("#zipCodes"));
+            ok = false;
+          }
+        }
+        if (targeting === "Radius") {
+          const addr = qs("#radiusAddress");
+          const miles = qs("#radiusMiles");
+          if (!addr.value.trim()) { markInvalid(addr); ok = false; }
+          if (!miles.value.trim()) { markInvalid(miles); ok = false; }
+        }
+      }
+
+      if (step === 4) {
+        const post = selectedValue("postSubmitScreen");
+        if (!post) ok = false;
+        if (post === "Calendar" && !qs("#calendarAvailability").value.trim()) {
+          markInvalid(qs("#calendarAvailability"));
+          ok = false;
+        }
+        if ((post === "Phone" || post === "Phone/Text") && !qs("#phoneField").value.trim()) {
+          markInvalid(qs("#phoneField"));
+          ok = false;
+        }
+        if ((post === "Text" || post === "Phone/Text") && !qs("#textField").value.trim()) {
+          markInvalid(qs("#textField"));
+          ok = false;
+        }
+        if (post === "Redirect" && !qs("#redirectField").value.trim()) {
+          markInvalid(qs("#redirectField"));
+          ok = false;
+        }
+      }
+
+      if (!ok) setStatus("error", "Please complete required fields before continuing.");
+      else clearStatus();
+      return ok;
+    }
+
+    function buildPayloads() {
+      const crmIntegration = selectedValue("crmIntegration") === "Yes";
+      const leadCapEnabled = selectedValue("leadCapEnabled");
+      const leadCapType = selectedValue("leadCapType");
+      const targeting = selectedValue("targeting");
+      const zipMode = selectedValue("zipMode");
+      const post = selectedValue("postSubmitScreen");
+      const now = new Date().toISOString().slice(0, 10);
+      const clientName = (qs("#businessName").value.trim() || clientRecord?.fields?.Name || "Client").slice(0, 70);
+
+      const clientFields = {
+        "Name": qs("#businessName").value.trim(),
+        "Website": qs("#websiteUrl").value.trim(),
+        "CRM Integration?": crmIntegration,
+        "CRM Name": crmIntegration ? qs("#crmName").value.trim() : ""
+      };
+
+      const adsetFields = {
+        "Adset Name": `${clientName} - ${now}`,
+        "Client": [clientRecordId],
+        "Lead Cap": leadCapEnabled === "No" ? "None" : leadCapType,
+        "Lead Cap #": leadCapEnabled === "Yes" ? Number(qs("#leadCapNumber").value) : null,
+        "Targeting": targeting,
+        "Radius Address": targeting === "Radius" ? qs("#radiusAddress").value.trim() : "",
+        "Radius Miles": targeting === "Radius" ? Number(qs("#radiusMiles").value) : null,
+        "Zip Codes": targeting === "Zip Codes" && zipMode === "CopyPaste" ? qs("#zipCodes").value.trim() : "",
+        "Post-Submit Screen": post,
+        "Calendar Availability": post === "Calendar" ? qs("#calendarAvailability").value.trim() : "",
+        "Phone": (post === "Phone" || post === "Phone/Text") ? qs("#phoneField").value.trim() : "",
+        "Text": (post === "Text" || post === "Phone/Text") ? qs("#textField").value.trim() : "",
+        "Redirect": post === "Redirect" ? qs("#redirectField").value.trim() : ""
+      };
+
+      return { clientFields, adsetFields };
     }
 
     async function handleSubmit(e) {
       e.preventDefault();
       if (isSubmitting) return;
-
-      const { invalid, payloads } = collectAdsetRows();
-      if (invalid) {
-        setStatus("error", "Please complete required fields (Adset Name and Adset Status) and fix highlighted values.");
-        return;
-      }
+      if (!validateStep(4)) return;
 
       isSubmitting = true;
       qs("#submitBtn").disabled = true;
-      setStatus("info", `Creating ${payloads.length} adset record(s)...`);
+      setStatus("info", "Saving onboarding...");
 
-      const createdNames = [];
       try {
-        for (let i = 0; i < payloads.length; i += 1) {
-          const res = await createAdset(payloads[i]);
-          createdNames.push(res.fields["Adset Name"] || `Adset ${i + 1}`);
-        }
-        qs("#stepAdsets").classList.add("hidden");
-        qs("#successMessage").textContent = `Created ${createdNames.length} adset(s): ${createdNames.join(", ")}`;
+        const { clientFields, adsetFields } = buildPayloads();
+        await updateClientRecord(clientRecordId, clientFields);
+        const adset = await createAdset(adsetFields);
+
+        qs("#wizardForm").classList.add("hidden");
+        qs("#successText").textContent = `Saved successfully. New adset created: ${adset.fields["Adset Name"] || adset.id}.`;
         qs("#successScreen").classList.remove("hidden");
-      } catch (error) {
-        setStatus("error", error.message || "Failed while creating adsets. Please fix and retry.");
+      } catch (err) {
+        setStatus("error", err.message || "Failed to save onboarding.");
       } finally {
         isSubmitting = false;
         qs("#submitBtn").disabled = false;
       }
     }
 
-    async function initialize() {
-      try {
-        clientRecordId = getClientRecordIdFromUrl();
-        if (!clientRecordId) {
-          throw new Error("Missing client record ID in URL. Use ?clientId=recXXXXXXXXXXXXXX");
-        }
-        if (!VALID_RECORD_ID.test(clientRecordId)) {
-          throw new Error("Invalid client record ID format. Expected Airtable record ID like recXXXXXXXXXXXXXX");
-        }
-
-        clientRecord = await fetchClientRecord(clientRecordId);
-        qs("#clientSummary").innerHTML = buildClientSummary(clientRecord);
-        qs("#loadingScreen").classList.add("hidden");
-        qs("#stepClient").classList.remove("hidden");
-      } catch (error) {
-        showError(error.message || "Unable to initialize onboarding.");
-      }
+    function bindEvents() {
+      qsa('input[type="radio"]').forEach((radio) => {
+        radio.addEventListener("change", updateConditionalUI);
+      });
+      qs("#nextBtn").addEventListener("click", () => {
+        if (!validateStep(currentStep)) return;
+        if (currentStep < 4) currentStep += 1;
+        updateProgressAndButtons();
+        updateConditionalUI();
+      });
+      qs("#backBtn").addEventListener("click", () => {
+        clearStatus();
+        if (currentStep > 1) currentStep -= 1;
+        updateProgressAndButtons();
+        updateConditionalUI();
+      });
+      qs("#wizardForm").addEventListener("submit", handleSubmit);
     }
 
-    qs("#continueBtn").addEventListener("click", () => {
-      qs("#stepClient").classList.add("hidden");
-      qs("#stepAdsets").classList.remove("hidden");
-      if (qs("#adsetContainer").children.length === 0) addAdsetRow();
-    });
-    qs("#addLocationBtn").addEventListener("click", () => addAdsetRow());
-    qs("#backBtn").addEventListener("click", () => {
-      qs("#stepAdsets").classList.add("hidden");
-      qs("#stepClient").classList.remove("hidden");
-    });
-    qs("#stepAdsets").addEventListener("submit", handleSubmit);
+    async function initialize() {
+      bindEvents();
+      try {
+        clientRecordId = getClientIdFromUrl();
+        if (!clientRecordId) throw new Error("Missing client record ID in URL. Use ?clientId=recXXXXXXXXXXXXXX");
+        if (!RECORD_ID_REGEX.test(clientRecordId)) throw new Error("Invalid client record ID format.");
+
+        clientRecord = await fetchClientRecord(clientRecordId);
+        const fields = clientRecord.fields || {};
+        qs("#businessName").value = fields["Name"] || "";
+        qs("#websiteUrl").value = fields["Website"] || "";
+        const crmIntegration = fields["CRM Integration?"] === true ? "Yes" : (fields["CRM Integration?"] === false ? "No" : "");
+        if (crmIntegration) {
+          const node = document.querySelector(`input[name="crmIntegration"][value="${crmIntegration}"]`);
+          if (node) node.checked = true;
+        }
+        qs("#crmName").value = fields["CRM Name"] || "";
+
+        qs("#loadingScreen").classList.add("hidden");
+        qs("#wizardForm").classList.remove("hidden");
+        updateProgressAndButtons();
+        updateConditionalUI();
+      } catch (err) {
+        showError(err.message || "Could not initialize onboarding.");
+      }
+    }
 
     initialize();
   </script>

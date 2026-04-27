@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>B2B Sales Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        th.sortable { cursor: pointer; user-select: none; }
+        .sticky-filters { position: sticky; top: 0; z-index: 20; background: #f9fafb; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+    <div class="max-w-[96rem] mx-auto p-4 md:p-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="p-5 border-b border-gray-200 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold">B2B Sales Dashboard</h1>
+                    <p class="text-sm text-gray-600 mt-1">All B2B leads from Airtable table <code>tbldNpwtCN9y5Pkiy</code>.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button id="refreshBtn" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">Refresh</button>
+                    <button id="clearFiltersBtn" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200">Clear Filters</button>
+                </div>
+            </div>
+
+            <div class="p-5 border-b border-gray-200 bg-gray-50">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="md:col-span-2">
+                        <label for="globalSearch" class="block text-xs font-semibold text-gray-600 mb-1">Global Search</label>
+                        <input id="globalSearch" type="text" placeholder="Search any visible field..." class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label for="createdFrom" class="block text-xs font-semibold text-gray-600 mb-1">Created Date Range</label>
+                        <div class="flex gap-2">
+                            <input id="createdFrom" type="date" class="w-full rounded-lg border border-gray-300 px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <input id="createdTo" type="date" class="w-full rounded-lg border border-gray-300 px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-5 py-3 text-sm text-gray-600 flex flex-wrap gap-4 border-b border-gray-200">
+                <span id="statusText">Loading...</span>
+                <span id="resultCount"></span>
+            </div>
+
+            <div id="errorBox" class="hidden m-5 mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"></div>
+
+            <div class="overflow-auto max-h-[70vh]">
+                <table class="min-w-full text-sm">
+                    <thead class="sticky-filters border-b border-gray-200">
+                        <tr class="text-left">
+                            <th class="p-3 font-semibold sortable" data-sort-key="businessName">Business Name <span id="sort-businessName"></span></th>
+                            <th class="p-3 font-semibold sortable" data-sort-key="createdTs">Created <span id="sort-createdTs"></span></th>
+                            <th class="p-3 font-semibold sortable" data-sort-key="niches">Niche(s) <span id="sort-niches"></span></th>
+                            <th class="p-3 font-semibold sortable" data-sort-key="source">Source <span id="sort-source"></span></th>
+                            <th class="p-3 font-semibold sortable" data-sort-key="location">Location <span id="sort-location"></span></th>
+                            <th class="p-3 font-semibold sortable" data-sort-key="status">Status <span id="sort-status"></span></th>
+                            <th class="p-3 font-semibold sortable" data-sort-key="discoveryStatus">Discovery Status <span id="sort-discoveryStatus"></span></th>
+                            <th class="p-3 font-semibold sortable" data-sort-key="notes">Notes <span id="sort-notes"></span></th>
+                        </tr>
+                        <tr class="border-t border-gray-200">
+                            <th class="p-2">
+                                <input data-filter="businessName" type="text" placeholder="Filter..." class="w-full rounded border border-gray-300 px-2 py-1">
+                            </th>
+                            <th class="p-2 text-xs text-gray-500">Use date range above</th>
+                            <th class="p-2">
+                                <select data-filter="niches" class="w-full rounded border border-gray-300 px-2 py-1">
+                                    <option value="">All</option>
+                                </select>
+                            </th>
+                            <th class="p-2">
+                                <select data-filter="source" class="w-full rounded border border-gray-300 px-2 py-1">
+                                    <option value="">All</option>
+                                </select>
+                            </th>
+                            <th class="p-2">
+                                <input data-filter="location" type="text" placeholder="Filter..." class="w-full rounded border border-gray-300 px-2 py-1">
+                            </th>
+                            <th class="p-2">
+                                <select data-filter="status" class="w-full rounded border border-gray-300 px-2 py-1">
+                                    <option value="">All</option>
+                                </select>
+                            </th>
+                            <th class="p-2">
+                                <select data-filter="discoveryStatus" class="w-full rounded border border-gray-300 px-2 py-1">
+                                    <option value="">All</option>
+                                </select>
+                            </th>
+                            <th class="p-2">
+                                <input data-filter="notes" type="text" placeholder="Filter..." class="w-full rounded border border-gray-300 px-2 py-1">
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            baseId: "appmBb0lzqRK9dI8v",
+            tableId: "tbldNpwtCN9y5Pkiy",
+            pageSize: 100
+        };
+
+        const state = {
+            allRows: [],
+            filteredRows: [],
+            sortKey: "createdTs",
+            sortDir: "desc",
+            filters: {
+                businessName: "",
+                niches: "",
+                source: "",
+                location: "",
+                status: "",
+                discoveryStatus: "",
+                notes: ""
+            },
+            globalSearch: "",
+            createdFrom: "",
+            createdTo: ""
+        };
+
+        const els = {
+            refreshBtn: document.getElementById("refreshBtn"),
+            clearFiltersBtn: document.getElementById("clearFiltersBtn"),
+            tableBody: document.getElementById("tableBody"),
+            statusText: document.getElementById("statusText"),
+            resultCount: document.getElementById("resultCount"),
+            errorBox: document.getElementById("errorBox"),
+            globalSearch: document.getElementById("globalSearch"),
+            createdFrom: document.getElementById("createdFrom"),
+            createdTo: document.getElementById("createdTo")
+        };
+
+        function safeText(v) {
+            return (v == null ? "" : String(v)).trim();
+        }
+
+        function asList(v) {
+            if (Array.isArray(v)) return v.map((x) => safeText(x)).filter(Boolean);
+            if (!v) return [];
+            return [safeText(v)].filter(Boolean);
+        }
+
+        function normalizeRecord(record) {
+            const fields = record.fields || {};
+            const niches = asList(fields["Niche(s)"]);
+            const createdRaw = fields["Created"] || record.createdTime || "";
+            const createdTs = new Date(createdRaw).getTime();
+
+            return {
+                id: record.id,
+                businessName: safeText(fields["Business Name"]),
+                created: safeText(createdRaw),
+                createdTs: Number.isFinite(createdTs) ? createdTs : 0,
+                niches: niches.join(", "),
+                source: safeText(fields["Source"]),
+                location: safeText(fields["Location"]),
+                status: safeText(fields["Status"]),
+                discoveryStatus: safeText(fields["Discovery Status"]),
+                notes: safeText(fields["Notes"])
+            };
+        }
+
+        function formatCreated(isoValue) {
+            if (!isoValue) return "—";
+            const d = new Date(isoValue);
+            if (Number.isNaN(d.getTime())) return "—";
+            return d.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+        }
+
+        function toDateOnlyTs(value) {
+            if (!value) return null;
+            const d = new Date(value + "T00:00:00");
+            const ts = d.getTime();
+            return Number.isFinite(ts) ? ts : null;
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        async function fetchAllB2BLeads() {
+            const rows = [];
+            let offset = "";
+
+            do {
+                const qp = new URLSearchParams({
+                    pageSize: String(CONFIG.pageSize)
+                });
+                if (offset) qp.set("offset", offset);
+                const url = `/api/airtable/v0/${CONFIG.baseId}/${CONFIG.tableId}?` + qp.toString();
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(`Airtable fetch failed (${response.status}): ${text || response.statusText}`);
+                }
+                const data = await response.json();
+                rows.push(...(data.records || []));
+                offset = data.offset || "";
+            } while (offset);
+
+            return rows;
+        }
+
+        function updateSelectOptions(rows) {
+            const optionTargets = [
+                { key: "niches", element: document.querySelector('select[data-filter="niches"]') },
+                { key: "source", element: document.querySelector('select[data-filter="source"]') },
+                { key: "status", element: document.querySelector('select[data-filter="status"]') },
+                { key: "discoveryStatus", element: document.querySelector('select[data-filter="discoveryStatus"]') }
+            ];
+
+            optionTargets.forEach(({ key, element }) => {
+                const previous = state.filters[key] || "";
+                const values = [...new Set(rows.map((row) => row[key]).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+                element.innerHTML = '<option value="">All</option>' + values.map((v) => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+                element.value = previous;
+            });
+        }
+
+        function applyFiltersAndSort() {
+            const fromTs = toDateOnlyTs(state.createdFrom);
+            const toTsStart = toDateOnlyTs(state.createdTo);
+            const toTs = toTsStart == null ? null : toTsStart + (24 * 60 * 60 * 1000) - 1;
+
+            const q = state.globalSearch.toLowerCase();
+
+            const filtered = state.allRows.filter((row) => {
+                if (state.filters.businessName && !row.businessName.toLowerCase().includes(state.filters.businessName.toLowerCase())) return false;
+                if (state.filters.niches && row.niches !== state.filters.niches) return false;
+                if (state.filters.source && row.source !== state.filters.source) return false;
+                if (state.filters.location && !row.location.toLowerCase().includes(state.filters.location.toLowerCase())) return false;
+                if (state.filters.status && row.status !== state.filters.status) return false;
+                if (state.filters.discoveryStatus && row.discoveryStatus !== state.filters.discoveryStatus) return false;
+                if (state.filters.notes && !row.notes.toLowerCase().includes(state.filters.notes.toLowerCase())) return false;
+
+                if (fromTs != null && row.createdTs < fromTs) return false;
+                if (toTs != null && row.createdTs > toTs) return false;
+
+                if (q) {
+                    const haystack = [
+                        row.businessName,
+                        row.created,
+                        row.niches,
+                        row.source,
+                        row.location,
+                        row.status,
+                        row.discoveryStatus,
+                        row.notes
+                    ].join(" ").toLowerCase();
+                    if (!haystack.includes(q)) return false;
+                }
+
+                return true;
+            });
+
+            filtered.sort((a, b) => {
+                const key = state.sortKey;
+                const av = a[key] == null ? "" : a[key];
+                const bv = b[key] == null ? "" : b[key];
+
+                let cmp = 0;
+                if (typeof av === "number" && typeof bv === "number") {
+                    cmp = av - bv;
+                } else {
+                    cmp = String(av).localeCompare(String(bv), undefined, { sensitivity: "base" });
+                }
+                return state.sortDir === "asc" ? cmp : -cmp;
+            });
+
+            state.filteredRows = filtered;
+            renderTable();
+            renderSortIndicators();
+            els.resultCount.textContent = `${filtered.length} of ${state.allRows.length} leads shown`;
+        }
+
+        function renderSortIndicators() {
+            document.querySelectorAll("[id^='sort-']").forEach((el) => { el.textContent = ""; });
+            const active = document.getElementById(`sort-${state.sortKey}`);
+            if (active) active.textContent = state.sortDir === "asc" ? "▲" : "▼";
+        }
+
+        function renderTable() {
+            if (!state.filteredRows.length) {
+                els.tableBody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-gray-500">No leads match current filters.</td></tr>';
+                return;
+            }
+
+            els.tableBody.innerHTML = state.filteredRows.map((row) => `
+                <tr class="hover:bg-gray-50 align-top">
+                    <td class="p-3 font-medium text-gray-900">${escapeHtml(row.businessName || "—")}</td>
+                    <td class="p-3 whitespace-nowrap">${escapeHtml(formatCreated(row.created))}</td>
+                    <td class="p-3">${escapeHtml(row.niches || "—")}</td>
+                    <td class="p-3">${escapeHtml(row.source || "—")}</td>
+                    <td class="p-3">${escapeHtml(row.location || "—")}</td>
+                    <td class="p-3">${escapeHtml(row.status || "—")}</td>
+                    <td class="p-3">${escapeHtml(row.discoveryStatus || "—")}</td>
+                    <td class="p-3 max-w-[28rem] whitespace-pre-wrap break-words">${escapeHtml(row.notes || "—")}</td>
+                </tr>
+            `).join("");
+        }
+
+        function showError(message) {
+            els.errorBox.textContent = message;
+            els.errorBox.classList.remove("hidden");
+        }
+
+        function hideError() {
+            els.errorBox.classList.add("hidden");
+            els.errorBox.textContent = "";
+        }
+
+        async function loadData() {
+            hideError();
+            els.statusText.textContent = "Loading leads from Airtable...";
+            els.refreshBtn.disabled = true;
+            try {
+                const raw = await fetchAllB2BLeads();
+                state.allRows = raw.map(normalizeRecord);
+                updateSelectOptions(state.allRows);
+                applyFiltersAndSort();
+                els.statusText.textContent = "Loaded successfully";
+            } catch (error) {
+                showError(error.message || "Failed to load Airtable data.");
+                els.statusText.textContent = "Load failed";
+                els.resultCount.textContent = "";
+            } finally {
+                els.refreshBtn.disabled = false;
+            }
+        }
+
+        function wireEvents() {
+            els.refreshBtn.addEventListener("click", loadData);
+
+            els.clearFiltersBtn.addEventListener("click", () => {
+                state.filters = {
+                    businessName: "",
+                    niches: "",
+                    source: "",
+                    location: "",
+                    status: "",
+                    discoveryStatus: "",
+                    notes: ""
+                };
+                state.globalSearch = "";
+                state.createdFrom = "";
+                state.createdTo = "";
+
+                document.querySelectorAll("[data-filter]").forEach((input) => { input.value = ""; });
+                els.globalSearch.value = "";
+                els.createdFrom.value = "";
+                els.createdTo.value = "";
+                applyFiltersAndSort();
+            });
+
+            document.querySelectorAll("[data-filter]").forEach((input) => {
+                input.addEventListener("input", () => {
+                    const key = input.getAttribute("data-filter");
+                    state.filters[key] = input.value || "";
+                    applyFiltersAndSort();
+                });
+                input.addEventListener("change", () => {
+                    const key = input.getAttribute("data-filter");
+                    state.filters[key] = input.value || "";
+                    applyFiltersAndSort();
+                });
+            });
+
+            els.globalSearch.addEventListener("input", () => {
+                state.globalSearch = els.globalSearch.value || "";
+                applyFiltersAndSort();
+            });
+
+            els.createdFrom.addEventListener("change", () => {
+                state.createdFrom = els.createdFrom.value || "";
+                applyFiltersAndSort();
+            });
+
+            els.createdTo.addEventListener("change", () => {
+                state.createdTo = els.createdTo.value || "";
+                applyFiltersAndSort();
+            });
+
+            document.querySelectorAll("th.sortable").forEach((th) => {
+                th.addEventListener("click", () => {
+                    const key = th.getAttribute("data-sort-key");
+                    if (!key) return;
+                    if (state.sortKey === key) {
+                        state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+                    } else {
+                        state.sortKey = key;
+                        state.sortDir = key === "createdTs" ? "desc" : "asc";
+                    }
+                    applyFiltersAndSort();
+                });
+            });
+        }
+
+        wireEvents();
+        loadData();
+    </script>
+</body>
+</html>
