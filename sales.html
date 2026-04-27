@@ -44,14 +44,14 @@
             <div class="p-4 md:p-5 space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-3 gap-y-2 text-sm text-gray-600">
                     <div class="flex flex-wrap items-center gap-x-4 gap-y-1 min-w-0">
-                        <span id="statusText">Expand All Leads or Discovery Calls to load data.</span>
+                        <span id="statusText">Loading leads from Airtable…</span>
                         <span id="resultCount"></span>
                     </div>
                     <button type="button" id="createLeadBtn" class="shrink-0 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Create Lead</button>
                 </div>
                 <div id="errorBox" class="hidden rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"></div>
 
-                <details id="allLeadsDetails" class="lead-disclosure border border-gray-200 rounded-lg bg-white shadow-sm">
+                <details id="allLeadsDetails" class="lead-disclosure border border-gray-200 rounded-lg bg-white shadow-sm" open>
                     <summary id="allLeadsSummary" class="px-4 py-3 text-base font-semibold text-gray-900 bg-gray-50 rounded-t-lg hover:bg-gray-100 flex items-center justify-between gap-2">
                         <span>All Leads</span>
                         <span class="flex items-center gap-3 shrink-0">
@@ -128,7 +128,7 @@
                         <span class="text-sm font-normal text-gray-500" id="discoveryCallsSummaryMeta"></span>
                     </summary>
                     <div id="discoveryCallsContainer" class="p-4 space-y-2 border-t border-gray-200 bg-white text-sm">
-                        <p class="text-gray-500 text-sm py-1">Open this section to load discovery leads.</p>
+                        <p class="text-gray-500 text-sm py-1">Open to see leads grouped by discovery status.</p>
                     </div>
                 </details>
             </div>
@@ -146,26 +146,31 @@
                 <button type="button" id="leadEditModalClose" class="shrink-0 rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-800" aria-label="Close">✕</button>
             </div>
             <div id="leadEditModalError" class="hidden mx-5 mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"></div>
-            <form id="leadEditForm" class="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-3">
+            <form id="leadEditForm" class="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-3" novalidate>
                 <div>
-                    <label for="leadFieldBusinessName" class="block text-xs font-semibold text-gray-600 mb-1">Business Name <span class="text-red-600">*</span></label>
-                    <input type="text" id="leadFieldBusinessName" name="businessName" required autocomplete="organization" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <label for="leadFieldBusinessName" class="block text-xs font-semibold text-gray-600 mb-1">Business Name</label>
+                    <input type="text" id="leadFieldBusinessName" name="businessName" autocomplete="organization" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
-                    <label for="leadFieldCreated" class="block text-xs font-semibold text-gray-600 mb-1">Created</label>
-                    <input type="datetime-local" id="leadFieldCreated" name="created" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <span class="block text-xs font-semibold text-gray-600 mb-1">Created</span>
+                    <div id="leadFieldCreatedDisplay" class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900" aria-live="polite"></div>
+                    <p class="mt-1 text-[11px] text-gray-500">Set by Airtable. Cannot be changed here.</p>
                 </div>
                 <div>
                     <label for="leadFieldSource" class="block text-xs font-semibold text-gray-600 mb-1">Source</label>
-                    <input type="text" id="leadFieldSource" name="source" autocomplete="off" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select id="leadFieldSource" name="source" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
                 </div>
                 <div>
                     <label for="leadFieldLocation" class="block text-xs font-semibold text-gray-600 mb-1">Location</label>
-                    <input type="text" id="leadFieldLocation" name="location" autocomplete="off" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select id="leadFieldLocation" name="location" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
                 </div>
                 <div>
                     <label for="leadFieldStatus" class="block text-xs font-semibold text-gray-600 mb-1">Status</label>
-                    <input type="text" id="leadFieldStatus" name="status" autocomplete="off" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select id="leadFieldStatus" name="status" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+                </div>
+                <div>
+                    <label for="leadFieldDiscoveryStatus" class="block text-xs font-semibold text-gray-600 mb-1">Discovery Status</label>
+                    <select id="leadFieldDiscoveryStatus" name="discoveryStatus" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
                 </div>
                 <div>
                     <label for="leadFieldPhone" class="block text-xs font-semibold text-gray-600 mb-1">Phone Number</label>
@@ -192,9 +197,9 @@
                     <div id="leadFieldNiches" class="max-h-40 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 px-2 py-2 space-y-1.5 text-sm"></div>
                 </div>
             </form>
-            <div class="shrink-0 px-5 py-3 border-t border-gray-200 bg-gray-50 flex justify-end gap-2">
-                <button type="button" id="leadEditCancel" class="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-100">Cancel</button>
-                <button type="submit" form="leadEditForm" id="leadEditSave" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">Save</button>
+            <div class="shrink-0 px-5 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-between gap-3">
+                <button type="button" id="leadEditCancel" class="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-100">Close</button>
+                <span id="leadSaveStatus" class="text-sm text-gray-500 text-right min-w-0" aria-live="polite"></span>
             </div>
         </div>
     </div>
@@ -268,7 +273,11 @@
             selectedNiches: [],
             dataLoaded: false,
             loadPromise: null,
-            nichePanelOpen: false
+            nichePanelOpen: false,
+            leadAutosaveTimer: null,
+            leadModalHydrating: false,
+            leadSaveInFlight: false,
+            leadAutosavePending: false
         };
 
         const els = {
@@ -294,14 +303,15 @@
             leadEditModalError: document.getElementById("leadEditModalError"),
             leadEditForm: document.getElementById("leadEditForm"),
             leadEditCancel: document.getElementById("leadEditCancel"),
-            leadEditSave: document.getElementById("leadEditSave"),
+            leadSaveStatus: document.getElementById("leadSaveStatus"),
             leadEditModalTitle: document.getElementById("leadEditModalTitle"),
             leadEditModalRecordId: document.getElementById("leadEditModalRecordId"),
             leadFieldBusinessName: document.getElementById("leadFieldBusinessName"),
-            leadFieldCreated: document.getElementById("leadFieldCreated"),
+            leadFieldCreatedDisplay: document.getElementById("leadFieldCreatedDisplay"),
             leadFieldSource: document.getElementById("leadFieldSource"),
             leadFieldLocation: document.getElementById("leadFieldLocation"),
             leadFieldStatus: document.getElementById("leadFieldStatus"),
+            leadFieldDiscoveryStatus: document.getElementById("leadFieldDiscoveryStatus"),
             leadFieldPhone: document.getElementById("leadFieldPhone"),
             leadFieldWebsite: document.getElementById("leadFieldWebsite"),
             leadFieldContactName: document.getElementById("leadFieldContactName"),
@@ -366,20 +376,6 @@
                 .replace(/'/g, "&#39;");
         }
 
-        function toDatetimeLocalValue(isoOrText) {
-            const d = new Date(isoOrText);
-            if (Number.isNaN(d.getTime())) return "";
-            const pad = (n) => String(n).padStart(2, "0");
-            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-        }
-
-        function fromDatetimeLocalToIso(value) {
-            if (!value || !String(value).trim()) return null;
-            const d = new Date(value);
-            if (Number.isNaN(d.getTime())) return null;
-            return d.toISOString();
-        }
-
         function getAllNicheOptionStrings() {
             const set = new Set(SCHEMA_NICHE_OPTIONS);
             if (state.dataLoaded) {
@@ -388,6 +384,48 @@
                 });
             }
             return [...set].sort((a, b) => a.localeCompare(b));
+        }
+
+        function sortedUniqueRowField(rowKey) {
+            return [...new Set(state.allRows.map((r) => safeText(r[rowKey])).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+        }
+
+        function alphaSelectOptionsWithCurrent(rowKey, currentValue) {
+            const set = new Set(sortedUniqueRowField(rowKey));
+            const cur = safeText(currentValue);
+            if (cur) set.add(cur);
+            return [...set].sort((a, b) => a.localeCompare(b));
+        }
+
+        function discoverySelectOptionsWithCurrent(currentValue) {
+            const keys = new Set(DISCOVERY_STATUS_ORDER);
+            state.allRows.forEach((r) => {
+                const v = safeText(r.discoveryStatus);
+                if (v) keys.add(v);
+            });
+            const cur = safeText(currentValue);
+            if (cur) keys.add(cur);
+            return sortDiscoveryStatusKeys(keys);
+        }
+
+        function setLeadModalSelectOptions(selectEl, optionStrings, currentValue) {
+            if (!selectEl) return;
+            const cur = safeText(currentValue);
+            selectEl.innerHTML = '<option value="">—</option>'
+                + optionStrings.map((v) => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+            selectEl.value = cur;
+        }
+
+        /** Populate single-select dropdowns from loaded data (Airtable single-select fields). */
+        function fillLeadModalSingleSelects(row) {
+            const src = row ? row.source : "";
+            const loc = row ? row.location : "";
+            const st = row ? row.status : "";
+            const disc = row ? row.discoveryStatus : "";
+            setLeadModalSelectOptions(els.leadFieldSource, alphaSelectOptionsWithCurrent("source", src), src);
+            setLeadModalSelectOptions(els.leadFieldLocation, alphaSelectOptionsWithCurrent("location", loc), loc);
+            setLeadModalSelectOptions(els.leadFieldStatus, alphaSelectOptionsWithCurrent("status", st), st);
+            setLeadModalSelectOptions(els.leadFieldDiscoveryStatus, discoverySelectOptionsWithCurrent(disc), disc);
         }
 
         function buildLeadModalNicheCheckboxes(selectedTags) {
@@ -421,31 +459,59 @@
             els.leadEditModalError.classList.remove("hidden");
         }
 
+        function clearLeadAutosaveTimer() {
+            if (state.leadAutosaveTimer) {
+                clearTimeout(state.leadAutosaveTimer);
+                state.leadAutosaveTimer = null;
+            }
+        }
+
+        function setLeadSaveStatus(text, isError) {
+            if (!els.leadSaveStatus) return;
+            els.leadSaveStatus.textContent = text || "";
+            els.leadSaveStatus.className = "text-sm text-right min-w-0 " + (isError ? "text-red-600" : "text-gray-500");
+        }
+
+        function scheduleLeadAutosave() {
+            if (!els.leadEditModal || els.leadEditModal.classList.contains("hidden")) return;
+            if (state.leadModalHydrating) return;
+            clearLeadAutosaveTimer();
+            state.leadAutosaveTimer = setTimeout(() => {
+                state.leadAutosaveTimer = null;
+                void flushLeadAutosave();
+            }, 650);
+        }
+
         function closeLeadEditor() {
             if (!els.leadEditModal) return;
+            clearLeadAutosaveTimer();
+            state.leadSaveInFlight = false;
+            state.leadAutosavePending = false;
+            state.leadModalHydrating = false;
             els.leadEditModal.classList.add("hidden");
             document.body.classList.remove("lead-modal-open");
             hideLeadModalError();
             delete els.leadEditModal.dataset.modalMode;
             delete els.leadEditModal.dataset.recordId;
-            if (els.leadEditSave) els.leadEditSave.textContent = "Save";
+            setLeadSaveStatus("");
         }
 
         function openCreateLeadEditor() {
             hideLeadModalError();
             if (!els.leadEditModal) return;
 
+            state.leadModalHydrating = true;
             els.leadEditModal.dataset.modalMode = "create";
             delete els.leadEditModal.dataset.recordId;
 
             if (els.leadEditModalTitle) els.leadEditModalTitle.textContent = "Create lead";
-            if (els.leadEditModalRecordId) els.leadEditModalRecordId.textContent = "New record — save to add to Airtable";
+            if (els.leadEditModalRecordId) els.leadEditModalRecordId.textContent = "New record — changes save automatically";
 
             if (els.leadFieldBusinessName) els.leadFieldBusinessName.value = "";
-            if (els.leadFieldCreated) els.leadFieldCreated.value = toDatetimeLocalValue(new Date());
-            if (els.leadFieldSource) els.leadFieldSource.value = "";
-            if (els.leadFieldLocation) els.leadFieldLocation.value = "";
-            if (els.leadFieldStatus) els.leadFieldStatus.value = "";
+            if (els.leadFieldCreatedDisplay) {
+                els.leadFieldCreatedDisplay.textContent = "Set automatically after first save";
+            }
+            fillLeadModalSingleSelects(null);
             if (els.leadFieldPhone) els.leadFieldPhone.value = "";
             if (els.leadFieldWebsite) els.leadFieldWebsite.value = "";
             if (els.leadFieldContactName) els.leadFieldContactName.value = "";
@@ -453,11 +519,12 @@
             if (els.leadFieldNotes) els.leadFieldNotes.value = "";
             if (els.leadFieldNiches) els.leadFieldNiches.innerHTML = buildLeadModalNicheCheckboxes([]);
 
-            if (els.leadEditSave) els.leadEditSave.textContent = "Create lead";
+            setLeadSaveStatus("");
 
             els.leadEditModal.classList.remove("hidden");
             document.body.classList.add("lead-modal-open");
             if (els.leadFieldBusinessName) els.leadFieldBusinessName.focus();
+            setTimeout(() => { state.leadModalHydrating = false; }, 0);
         }
 
         function openLeadEditor(recordId) {
@@ -466,6 +533,7 @@
             if (!row) return;
 
             hideLeadModalError();
+            state.leadModalHydrating = true;
             els.leadEditModal.dataset.modalMode = "edit";
             els.leadEditModal.dataset.recordId = recordId;
 
@@ -473,10 +541,10 @@
             if (els.leadEditModalRecordId) els.leadEditModalRecordId.textContent = row.id;
 
             if (els.leadFieldBusinessName) els.leadFieldBusinessName.value = row.businessName || "";
-            if (els.leadFieldCreated) els.leadFieldCreated.value = toDatetimeLocalValue(row.created);
-            if (els.leadFieldSource) els.leadFieldSource.value = row.source || "";
-            if (els.leadFieldLocation) els.leadFieldLocation.value = row.location || "";
-            if (els.leadFieldStatus) els.leadFieldStatus.value = row.status || "";
+            if (els.leadFieldCreatedDisplay) {
+                els.leadFieldCreatedDisplay.textContent = formatCreated(row.created);
+            }
+            fillLeadModalSingleSelects(row);
             if (els.leadFieldPhone) els.leadFieldPhone.value = row.phoneNumber || "";
             if (els.leadFieldWebsite) els.leadFieldWebsite.value = row.website || "";
             if (els.leadFieldContactName) els.leadFieldContactName.value = row.contactName || "";
@@ -484,11 +552,12 @@
             if (els.leadFieldNotes) els.leadFieldNotes.value = row.notes || "";
             if (els.leadFieldNiches) els.leadFieldNiches.innerHTML = buildLeadModalNicheCheckboxes(row.nicheTags);
 
-            if (els.leadEditSave) els.leadEditSave.textContent = "Save changes";
+            setLeadSaveStatus("");
 
             els.leadEditModal.classList.remove("hidden");
             document.body.classList.add("lead-modal-open");
             if (els.leadFieldBusinessName) els.leadFieldBusinessName.focus();
+            setTimeout(() => { state.leadModalHydrating = false; }, 0);
         }
 
         async function patchLeadRecord(recordId, fields) {
@@ -542,6 +611,7 @@
                 Source: els.leadFieldSource ? els.leadFieldSource.value.trim() : "",
                 Location: els.leadFieldLocation ? els.leadFieldLocation.value.trim() : "",
                 Status: els.leadFieldStatus ? els.leadFieldStatus.value.trim() : "",
+                "Discovery Status": els.leadFieldDiscoveryStatus ? els.leadFieldDiscoveryStatus.value.trim() : "",
                 "Phone Number": els.leadFieldPhone ? els.leadFieldPhone.value.replace(/\D/g, "") : "",
                 Website: els.leadFieldWebsite ? els.leadFieldWebsite.value.trim() : "",
                 "Contact Name": els.leadFieldContactName ? els.leadFieldContactName.value.trim() : "",
@@ -549,10 +619,6 @@
                 Notes: els.leadFieldNotes ? els.leadFieldNotes.value : "",
                 "Niche(s)": niches
             };
-            const createdIso = els.leadFieldCreated && els.leadFieldCreated.value
-                ? fromDatetimeLocalToIso(els.leadFieldCreated.value)
-                : null;
-            if (createdIso) fields.Created = createdIso;
             return fields;
         }
 
@@ -575,32 +641,47 @@
             return Object.assign({}, base, patchFields || {});
         }
 
-        async function submitLeadEditor() {
-            if (!els.leadEditSave || !els.leadEditModal) return;
+        async function flushLeadAutosave() {
+            if (!els.leadEditModal || els.leadEditModal.classList.contains("hidden")) return;
+            if (state.leadModalHydrating) return;
+            if (state.leadSaveInFlight) {
+                state.leadAutosavePending = true;
+                return;
+            }
+
+            state.leadSaveInFlight = true;
+            hideLeadModalError();
+            setLeadSaveStatus("Saving…");
 
             const mode = els.leadEditModal.dataset.modalMode || "edit";
-            hideLeadModalError();
-            els.leadEditSave.disabled = true;
-
             try {
-                if (mode === "create") {
+                let recordId = els.leadEditModal.dataset.recordId || "";
+
+                if (mode === "create" && !recordId) {
                     const fields = collectLeadFieldsFromForm();
-                    if (!fields["Business Name"]) {
-                        showLeadModalError("Business Name is required.");
-                        return;
-                    }
                     const created = await createLeadRecord(fields);
                     const normalized = normalizeRecord(created);
                     state.allRows.push(normalized);
                     if (!state.dataLoaded) state.dataLoaded = true;
+                    recordId = created.id || normalized.id;
+                    els.leadEditModal.dataset.modalMode = "edit";
+                    els.leadEditModal.dataset.recordId = recordId;
+                    if (els.leadEditModalRecordId) els.leadEditModalRecordId.textContent = recordId;
+                    if (els.leadEditModalTitle) els.leadEditModalTitle.textContent = normalized.businessName || "Lead";
+                    if (els.leadFieldCreatedDisplay) {
+                        els.leadFieldCreatedDisplay.textContent = formatCreated(normalized.created);
+                    }
+                    fillLeadModalSingleSelects(normalized);
                     updateSelectOptions(state.allRows);
                     applyFiltersAndSort();
-                    closeLeadEditor();
+                    setLeadSaveStatus("Saved");
                     return;
                 }
 
-                const recordId = els.leadEditModal.dataset.recordId;
-                if (!recordId) return;
+                if (!recordId) {
+                    setLeadSaveStatus("");
+                    return;
+                }
 
                 const fields = collectLeadFieldsFromForm();
                 const updated = await patchLeadRecord(recordId, fields);
@@ -616,11 +697,16 @@
 
                 updateSelectOptions(state.allRows);
                 applyFiltersAndSort();
-                closeLeadEditor();
+                setLeadSaveStatus("Saved");
             } catch (err) {
                 showLeadModalError(err.message || (mode === "create" ? "Create failed." : "Save failed."));
+                setLeadSaveStatus("Save failed", true);
             } finally {
-                els.leadEditSave.disabled = false;
+                state.leadSaveInFlight = false;
+                if (state.leadAutosavePending) {
+                    state.leadAutosavePending = false;
+                    scheduleLeadAutosave();
+                }
             }
         }
 
@@ -863,7 +949,7 @@
 
         function renderTable() {
             if (!state.dataLoaded) {
-                els.tableBody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-gray-500 whitespace-normal">Expand All Leads to load records from Airtable.</td></tr>';
+                els.tableBody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-gray-500 whitespace-normal">Loading leads from Airtable…</td></tr>';
                 return;
             }
             if (!state.filteredRows.length) {
@@ -899,7 +985,7 @@
                 state.dataLoaded = false;
                 state.allRows = [];
                 showError(error.message || "Failed to load Airtable data.");
-                els.statusText.textContent = "Load failed — fix the error and expand a section again to retry.";
+                els.statusText.textContent = "Load failed — fix the error and expand All Leads again (or refresh) to retry.";
                 if (els.resultCount) els.resultCount.textContent = "";
                 if (els.discoveryCallsContainer) {
                     els.discoveryCallsContainer.innerHTML = '<p class="text-gray-500 py-2">Could not load discovery data.</p>';
@@ -1024,10 +1110,9 @@
             }
 
             if (els.leadEditForm) {
-                els.leadEditForm.addEventListener("submit", (e) => {
-                    e.preventDefault();
-                    void submitLeadEditor();
-                });
+                els.leadEditForm.addEventListener("submit", (e) => e.preventDefault());
+                els.leadEditForm.addEventListener("input", () => scheduleLeadAutosave());
+                els.leadEditForm.addEventListener("change", () => scheduleLeadAutosave());
             }
             if (els.leadEditModalClose) els.leadEditModalClose.addEventListener("click", closeLeadEditor);
             if (els.leadEditCancel) els.leadEditCancel.addEventListener("click", closeLeadEditor);
@@ -1041,6 +1126,7 @@
 
         wireEvents();
         applyFiltersAndSort();
+        if (els.allLeadsDetails && els.allLeadsDetails.open) void ensureLeadsLoaded();
     </script>
 </body>
 </html>

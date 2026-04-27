@@ -5,14 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
-    <title>Peak Leads Group - Service Agreement</title>
-    <meta name="description" content="Pay Per Result Service Agreement between Peak Leads Group and clients for qualified homeowner leads.">
+    <title>Peak Leads Group — Service Agreement</title>
+    <meta name="description" content="Service agreement for Peak Leads Group B2B clients.">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -21,7 +17,6 @@
             overflow-x: hidden;
         }
 
-        /* Header Navigation */
         .header {
             background: white;
             padding: 1rem 0;
@@ -40,13 +35,11 @@
             padding: 0 2rem;
         }
 
-        .logo {
-            height: 60px;
-        }
+        .logo { height: 60px; }
 
-        /* Hero Section */
         .hero {
-            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.5)), url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/BlissfulBathsBack.jpg?raw=true');
+            background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.55)),
+                url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -59,22 +52,7 @@
             position: relative;
         }
 
-        .hero-content {
-            max-width: 1000px;
-            padding: 2rem;
-            animation: fadeInUp 1s ease-out;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+        .hero-content { max-width: 1000px; padding: 2rem; }
 
         .hero-content h1 {
             font-size: 3.5rem;
@@ -91,19 +69,16 @@
             text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
         }
 
-        /* Intro Section */
         .intro-section {
             padding: 5rem 2rem;
-            background: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
+            background: linear-gradient(rgba(255,255,255,0.88), rgba(255,255,255,0.88)),
+                url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
         }
 
-        .intro-container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
+        .intro-container { max-width: 1000px; margin: 0 auto; }
 
         .intro {
             background: white;
@@ -112,30 +87,32 @@
             box-shadow: 0 5px 20px rgba(0,0,0,0.08);
         }
 
-        .intro p {
-            font-size: 1.1rem;
+        .intro p, .section .agreement-body {
+            font-size: 1.05rem;
             line-height: 1.8;
             color: #333;
+            margin-bottom: 1rem;
         }
 
-        /* Agreement Sections */
-        .agreement-section {
-            padding: 5rem 2rem;
-            background: #f8f9fa;
+        .section .agreement-body p { margin-bottom: 1rem; }
+        .section .agreement-body p:last-child { margin-bottom: 0; }
+        .section .agreement-body ol, .section .agreement-body ul {
+            margin: 0.75rem 0 0.75rem 1.5rem;
+            padding-left: 0.5rem;
         }
+        .section .agreement-body li { margin: 0.35rem 0; }
 
+        .agreement-section { padding: 5rem 2rem; background: #f8f9fa; }
         .agreement-section-alt {
             padding: 5rem 2rem;
-            background: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
+            background: linear-gradient(rgba(255,255,255,0.88), rgba(255,255,255,0.88)),
+                url('https://raw.githubusercontent.com/peakleadsgroup/landing-pages/main/Images/MarbleTexture.jpg?raw=true');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
         }
 
-        .agreement-container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
+        .agreement-container { max-width: 1000px; margin: 0 auto; }
 
         .section {
             background: white;
@@ -174,87 +151,55 @@
             margin-right: 1.25rem;
             font-weight: 600;
             font-size: 1.1rem;
+            flex-shrink: 0;
         }
 
-        .section p {
-            font-size: 1.05rem;
-            line-height: 1.8;
-            color: #555;
-            margin-bottom: 1rem;
-        }
-
-        .section p:last-child {
-            margin-bottom: 0;
-        }
-
-        .highlight {
-            background: #fff3cd;
-            padding: 1.75rem;
+        .section-required-note {
+            margin-top: 1.25rem;
+            padding: 1rem 1.25rem;
+            background: #fff8e6;
             border-radius: 8px;
-            margin: 1.25rem 0;
             border-left: 4px solid #f39c12;
+            font-size: 0.95rem;
         }
 
-        .highlight p {
-            margin: 0;
+        .section-required-note label {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.65rem;
+            cursor: pointer;
             color: #333;
-            font-size: 1.05rem;
         }
 
-        .pricing {
-            background: #d4edda;
-            padding: 1.75rem;
-            border-radius: 8px;
-            margin: 1.25rem 0;
-            border-left: 4px solid #28a745;
+        .section-required-note input { margin-top: 0.25rem; flex-shrink: 0; }
+
+        .sign-bar {
+            max-width: 1000px;
+            margin: 0 auto 4rem;
+            padding: 0 2rem;
+            text-align: center;
         }
 
-        .pricing h4 {
-            color: #155724;
-            margin-bottom: 0.75rem;
-            font-size: 1.2rem;
+        .btn-primary {
+            display: inline-block;
+            background: #4a6fa5;
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
             font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(74, 111, 165, 0.35);
         }
 
-        .pricing p {
-            color: #155724;
-            margin: 0;
-            font-size: 1.05rem;
+        .btn-primary:hover:not(:disabled) { background: #3d5d8a; }
+        .btn-primary:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            box-shadow: none;
         }
 
-        .criteria-list {
-            background: #f8f9fa;
-            padding: 2rem;
-            border-radius: 8px;
-            margin: 1.25rem 0;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
-
-        .criteria-list ul {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-
-        .criteria-list li {
-            margin: 1rem 0;
-            padding-left: 2.5rem;
-            position: relative;
-            color: #555;
-            line-height: 1.8;
-            font-size: 1.05rem;
-        }
-
-        .criteria-list li::before {
-            content: '✓';
-            position: absolute;
-            left: 0;
-            color: #28a745;
-            font-weight: bold;
-            font-size: 1.3em;
-        }
-
-        /* Footer */
         .footer {
             background: white;
             color: #333;
@@ -262,237 +207,579 @@
             border-top: 1px solid #e9ecef;
         }
 
-        .footer-container {
-            max-width: 1400px;
-            margin: 0 auto;
+        .footer-container { max-width: 1400px; margin: 0 auto; text-align: center; }
+        .footer-logo img { height: 60px; margin-bottom: 1.5rem; }
+        .footer p { color: #666; font-size: 0.9rem; margin: 0.5rem 0; }
+
+        .state-error, .state-loading {
+            max-width: 720px;
+            margin: 4rem auto;
+            padding: 2rem;
             text-align: center;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
         }
 
-        .footer-logo img {
-            height: 60px;
-            margin-bottom: 1.5rem;
+        .state-error { color: #842029; background: #f8d7da; border: 1px solid #f5c2c7; }
+
+        #stripe-placeholder {
+            display: none;
+            max-width: 640px;
+            margin: 4rem auto;
+            padding: 3rem 2rem;
+            text-align: center;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            border: 2px dashed #ced4da;
         }
 
-        .footer p {
-            color: #666;
+        #stripe-placeholder.visible { display: block; }
+
+        #stripe-placeholder h2 { margin-bottom: 0.75rem; color: #333; }
+        #stripe-placeholder p { color: #666; font-size: 1rem; }
+
+        /* Modal */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-backdrop.open { display: flex; }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            max-width: 440px;
+            width: 100%;
+            padding: 1.75rem;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+
+        .modal h3 { margin-bottom: 1rem; font-size: 1.25rem; color: #222; }
+
+        .modal label { display: block; font-size: 0.85rem; font-weight: 600; color: #555; margin-bottom: 0.35rem; }
+
+        .modal input[type="text"] {
+            width: 100%;
+            padding: 0.65rem 0.85rem;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal .check-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.95rem;
+            color: #444;
+        }
+
+        .modal .check-row input { margin-top: 0.2rem; flex-shrink: 0; }
+
+        .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; }
+
+        .btn-secondary {
+            background: #e9ecef;
+            color: #333;
+            border: none;
+            padding: 0.65rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover { background: #dee2e6; }
+
+        .modal-error {
+            display: none;
+            margin-bottom: 1rem;
+            padding: 0.65rem 0.85rem;
+            background: #f8d7da;
+            color: #842029;
+            border-radius: 8px;
             font-size: 0.9rem;
-            margin: 0.5rem 0;
         }
 
-        /* Responsive Design */
-        @media (max-width: 1024px) {
-            .hero-content h1 {
-                font-size: 2.5rem;
-            }
-
-            .hero-content .subtitle {
-                font-size: 1.2rem;
-            }
-        }
+        .modal-error.visible { display: block; }
 
         @media (max-width: 768px) {
-            .hero {
-                min-height: 30vh;
-                background-attachment: scroll;
-            }
-
-            .intro-section,
-            .agreement-section-alt {
-                background-attachment: scroll;
-            }
-
-            .hero-content h1 {
-                font-size: 2rem;
-            }
-
-            .hero-content .subtitle {
-                font-size: 1.1rem;
-            }
-
-            .section {
-                padding: 1.5rem;
-            }
-
-            .section-title {
-                font-size: 1.3rem;
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .section-number {
-                margin-bottom: 1rem;
-                margin-right: 0;
-            }
+            .hero { min-height: 30vh; background-attachment: scroll; }
+            .intro-section, .agreement-section-alt { background-attachment: scroll; }
+            .hero-content h1 { font-size: 2rem; }
+            .hero-content .subtitle { font-size: 1.1rem; }
+            .section { padding: 1.5rem; }
+            .section-title { font-size: 1.3rem; flex-direction: column; align-items: flex-start; }
+            .section-number { margin-bottom: 1rem; margin-right: 0; }
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <header class="header">
         <div class="nav-container">
             <a href="https://peakleadsgroup.com"><img src="https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Marketing Group" class="logo"></a>
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <h1>Service Agreement</h1>
-            <div class="subtitle">Pay Per Result Service Agreement</div>
+    <div id="state-loading" class="state-loading" style="display: none;">
+        <p>Loading your agreement…</p>
+    </div>
+
+    <div id="state-error" class="state-error" style="display: none;"></div>
+
+    <div id="stripe-placeholder" aria-live="polite">
+        <h2>Payment</h2>
+        <p>Stripe checkout will be embedded here after you sign the agreement. This area is a placeholder until your payment integration is ready.</p>
+    </div>
+
+    <div id="agreement-root" style="display: none;">
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Service Agreement</h1>
+                <div class="subtitle">Pay Per Result Service Agreement</div>
+            </div>
+        </section>
+
+        <div id="agreement-sections-mount"></div>
+
+        <div class="sign-bar" id="sign-bar-wrap">
+            <button type="button" class="btn-primary" id="btn-open-sign" disabled>Click to sign</button>
         </div>
-    </section>
 
-    <!-- Intro Section -->
-    <section class="intro-section">
-        <div class="intro-container">
-            <div class="intro">
-                <p><strong>This Service Agreement ("Agreement")</strong> is entered into by and between Peak Leads Group ("PLG") and CLIENTNAME ("Client"). By submitting payment for the onboarding invoice, the Client acknowledges and agrees to the terms set forth in this Agreement, and Peak Leads Group agrees to uphold its responsibilities as outlined herein. Payment constitutes mutual acceptance of this Agreement, including the services, responsibilities, and billing terms described below.</p>
+        <footer class="footer">
+            <div class="footer-container">
+                <div class="footer-logo">
+                    <img src="https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Marketing Group">
+                </div>
+                <p><strong>Peak Leads Group</strong></p>
+                <p>Professional Lead Generation Services</p>
             </div>
-        </div>
-    </section>
+        </footer>
+    </div>
 
-    <!-- Agreement Sections -->
-    <section class="agreement-section">
-        <div class="agreement-container">
-            <div class="section">
-                <div class="section-title">
-                    <div class="section-number">1</div>
-                    Services Provided
-                </div>
-                <p>PLG will deliver qualified homeowner leads through targeted Facebook and Instagram ad campaigns.</p>
+    <div id="sign-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="sign-modal-title">
+        <div class="modal">
+            <h3 id="sign-modal-title">Sign this agreement</h3>
+            <div id="sign-modal-error" class="modal-error"></div>
+            <label for="signer-name-input">Your full name</label>
+            <input type="text" id="signer-name-input" autocomplete="name" placeholder="Type your legal name">
+            <div class="check-row">
+                <input type="checkbox" id="signer-consent-check">
+                <label for="signer-consent-check" style="margin:0;font-weight:400;">I agree to sign this document electronically and understand that my electronic signature has the same legal effect as a handwritten signature.</label>
             </div>
-
-            <div class="section">
-                <div class="section-title">
-                    <div class="section-number">2</div>
-                    Partnership Structure
-                </div>
-                <div class="pricing">
-                    <h4>Onboarding Package – $ONBOARDINGAMOUNT (due upon signing)</h4>
-                    <p>This covers your full campaign setup and the first ONBOARDINGNUMBER qualified leads.</p>
-                </div>
-                <div class="pricing">
-                    <h4>Ongoing Billing – $PPLAMOUNT per lead</h4>
-                    <p>After the initial ONBOARDINGNUMBER leads, the Client will be billed $PPLAMOUNT per lead, charged upfront and automatically in agreed upon increments, unless otherwise agreed upon in writing by both parties.  By providing and maintaining a valid payment method, the Client authorizes PLG to process charges automatically in accordance with this Agreement.</p>
-                </div>
-            </div>
-
-            <div class="section">
-                <div class="section-title">
-                    <div class="section-number">3</div>
-                    Qualified Leads
-                </div>
-                <p>A Qualified Lead meets all of the following:</p>
-                <div class="criteria-list">
-                    <ul>
-                        <li>Verified homeowner or businessowner as determined by the onboarding intake form on the landing page</li>
-                        <li>Zip code provided is within the agreed-upon service area</li>
-                        <li>Includes a phone number that is working and in service</li>
-                    </ul>
-                </div>
-                <p>If a lead does not meet these criteria, it can be reported to PLG within 7 days of delivery for review. If confirmed, it will be replaced free of charge.</p>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" id="btn-sign-cancel">Cancel</button>
+                <button type="button" class="btn-primary" id="btn-sign-submit" style="padding: 0.65rem 1.5rem;">Sign</button>
             </div>
         </div>
-    </section>
+    </div>
 
-    <section class="agreement-section-alt">
-        <div class="agreement-container">
-            <div class="section">
-                <div class="section-title">
-                    <div class="section-number">4</div>
-                    Lead Delivery & Communication
-                </div>
-                <p>Qualified leads will be delivered to the client's chosen contact method. It is the client's responsibility to respond promptly to leads to ensure successful outcomes. The client agrees to receive a minimum of 30 qualified leads per month for the duration of their agreement with Peak Leads Group.</p>
-            </div>
+    <script>
+(function () {
+    var AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
+    var TABLE_B2B_LEADS = 'tbldNpwtCN9y5Pkiy';
+    var TABLE_SERVICE_AGREEMENT = 'tbl3UmqfqgPfaXtil';
+    var BASE = '/api/airtable/v0/' + AIRTABLE_BASE_ID;
 
-            <div class="section">
-                <div class="section-title">
-                    <div class="section-number">5</div>
-                    Guarantee
-                </div>
-                <div class="highlight">
-                    <p>If PLG fails to deliver the initial ONBOARDINGNUMBER qualified leads within 60 days of campaign launch, the client can receive a refund for the remaining undelivered leads if they so choose.</p>
-                </div>
-            </div>
+    var F = {
+        SERVICE_AGREEMENT_LINK: 'Service Agreement',
+        BUSINESS_NAME: 'Business Name',
+        LEADS_SOLD_UPFRONT: 'Leads Sold Upfront',
+        PRICE_PER_LEAD: 'Price Per Lead',
+        SIGNER_NAME: 'Signer Name',
+        SIGNER_IP: 'Signer IP',
+        SIGNED_DATE: 'Signed Date',
+        SA_TITLE: 'Title',
+        SA_TEXT: 'Text',
+        SA_REQUIRED: 'Required'
+    };
 
-            <div class="section">
-                <div class="section-title">
-                    <div class="section-number">6</div>
-                    Cancellation Policy
-                </div>
-                <p>Either party may cancel this agreement at any time for any reason, provided the Client pays any outstanding balance owed for leads delivered up to the date of cancellation. Upon cancellation, lead delivery will cease within 24 hours. The Client remains responsible for paying for any qualified leads that are delivered during that 24-hour period.</p>
-            </div>
-        </div>
-    </section>
+    function getRecordIdFromUrl() {
+        var q = new URLSearchParams(window.location.search);
+        return q.get('recordID') || q.get('recordId') || q.get('recordid') || '';
+    }
 
-    <section class="agreement-section">
-        <div class="agreement-container">
-            <div class="section">
-                <div class="section-title">
-                    <div class="section-number">7</div>
-                    Payment Terms
-                </div>
-                <p>Client agrees to maintain a valid payment method on file. If a charge fails or is declined, lead delivery will be immediately paused until the issue is resolved. Repeated payment failures may result in termination of this agreement.</p>
-            </div>
+    function looksLikeRecordId(s) {
+        return typeof s === 'string' && /^rec[a-zA-Z0-9]{14,}$/.test(s.trim());
+    }
 
-            <div class="section">
-                <div class="section-title">
-                    <div class="section-number">8</div>
-                    Entire Agreement
-                </div>
-                <p>This Agreement constitutes the full understanding between the Client and PLG. No other promises or agreements shall be valid unless made in writing and signed by both parties.</p>
-            </div>
+    /** Airtable long text may use <bold>…<bold> or </bold>; normalize to <strong>. */
+    function normalizeBoldPseudoTags(html) {
+        if (!html || typeof html !== 'string') return '';
+        var h = html.replace(/<\/bold>/gi, '</strong>');
+        var segments = h.split(/<bold>/i);
+        if (segments.length <= 1) return h;
+        var r = segments[0];
+        for (var j = 1; j < segments.length; j += 2) {
+            r += '<strong>' + (segments[j] || '');
+            if (segments[j + 1] !== undefined) {
+                r += '</strong>' + segments[j + 1];
+            } else {
+                r += '</strong>';
+            }
+        }
+        return r;
+    }
 
-            <div class="section">
-                <div class="section-title">
-                    <div class="section-number">9</div>
-                    Limitation of Liability
-                </div>
-                <p>PLG shall not be held liable for any indirect, incidental, special, or consequential damages arising out of or related to this Agreement, including but not limited to lost profits or missed opportunities. PLG's total liability under this Agreement shall not exceed the total amount paid by the Client during the term of the Agreement.</p>
-            </div>
-        </div>
-    </section>
+    function applyPlaceholders(html, vars) {
+        if (!html) return '';
+        var h = normalizeBoldPseudoTags(html);
+        var map = {
+            '[COMPANY]': vars.company || '',
+            '[ONBOARDINGAMOUNT]': vars.onboardingAmount || '',
+            '[ONBOARDINGNUMBER]': vars.onboardingNumber || '',
+            '[PPL]': vars.ppl || ''
+        };
+        Object.keys(map).forEach(function (key) {
+            h = h.split(key).join(map[key]);
+        });
+        return h;
+    }
 
-    <section class="agreement-section-alt">
-        <div class="agreement-container">
-            <div class="section">
-                <div class="section-title">
-                    <div class="section-number">10</div>
-                    Confidentiality
-                </div>
-                <p>Both parties agree to keep all proprietary or confidential information shared during the term of this Agreement strictly confidential and not disclose it to any third party without prior written consent, unless required by law.</p>
-            </div>
+    function formatUsd(n) {
+        if (n == null || n === '' || (typeof n === 'number' && !isFinite(n))) return '';
+        var num = typeof n === 'number' ? n : parseFloat(String(n).replace(/[^0-9.-]/g, ''));
+        if (!isFinite(num)) return String(n);
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
+    }
 
-            <div class="section">
-                <div class="section-title">
-                    <div class="section-number">11</div>
-                    Dispute Resolution
-                </div>
-                <p>In the event of a dispute, both parties agree to attempt to resolve the matter through good faith negotiations. If a resolution cannot be reached, the parties agree to submit the matter to binding arbitration in the state of North Carolina.</p>
-            </div>
+    function readNumber(val) {
+        if (val == null || val === '') return null;
+        if (typeof val === 'number') return isFinite(val) ? val : null;
+        var n = parseFloat(String(val).replace(/[^0-9.-]/g, ''));
+        return isFinite(n) ? n : null;
+    }
 
-            <div class="section">
-                <div class="section-title">
-                    <div class="section-number">12</div>
-                    Electronic Agreement
-                </div>
-                <div class="highlight">
-                    <p>The Client acknowledges that by submitting payment through Stripe or another digital platform, they are entering into a legally binding agreement equivalent to a signed written contract.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+    function isSigned(fields) {
+        var sn = fields[F.SIGNER_NAME];
+        var sd = fields[F.SIGNED_DATE];
+        if (sn != null && String(sn).trim() !== '') return true;
+        if (sd != null && String(sd).trim() !== '') return true;
+        return false;
+    }
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-logo">
-                <img src="https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Marketing Group">
-            </div>
-            <p><strong>Peak Leads Group</strong></p>
-            <p>Professional Lead Generation Services</p>
-            <p style="margin-top: 1rem; opacity: 0.8;">Last Updated: June 2025</p>
-        </div>
-    </footer>
+    async function fetchJson(url, options) {
+        var res = await fetch(url, options);
+        var text = await res.text();
+        var data;
+        try {
+            data = text ? JSON.parse(text) : {};
+        } catch (e) {
+            throw new Error('Invalid response from server (' + res.status + ')');
+        }
+        if (!res.ok) {
+            var msg = (data && (data.error || data.message)) || text || res.statusText;
+            throw new Error(typeof msg === 'string' ? msg : 'Request failed ' + res.status);
+        }
+        return data;
+    }
+
+    async function fetchPublicIp() {
+        try {
+            var r = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
+            if (!r.ok) return '';
+            var j = await r.json();
+            return j && j.ip ? String(j.ip) : '';
+        } catch (e) {
+            return '';
+        }
+    }
+
+    async function fetchServiceAgreementRecords(orderedIds) {
+        if (!orderedIds || !orderedIds.length) return [];
+        var chunks = [];
+        for (var c = 0; c < orderedIds.length; c += 100) {
+            chunks.push(orderedIds.slice(c, c + 100));
+        }
+        var byId = {};
+        for (var i = 0; i < chunks.length; i++) {
+            var ids = chunks[i];
+            var params = new URLSearchParams();
+            ids.forEach(function (id) { params.append('records[]', id); });
+            var url = BASE + '/' + encodeURIComponent(TABLE_SERVICE_AGREEMENT) + '?' + params.toString();
+            var data = await fetchJson(url);
+            (data.records || []).forEach(function (rec) {
+                byId[rec.id] = rec;
+            });
+        }
+        return orderedIds.map(function (id) { return byId[id]; }).filter(Boolean);
+    }
+
+    function el(tag, cls, html) {
+        var n = document.createElement(tag);
+        if (cls) n.className = cls;
+        if (html != null) n.innerHTML = html;
+        return n;
+    }
+
+    function showEl(id, on) {
+        var n = document.getElementById(id);
+        if (n) n.style.display = on ? '' : 'none';
+    }
+
+    function setError(msg) {
+        var n = document.getElementById('state-error');
+        if (n) {
+            n.textContent = msg;
+            n.style.display = msg ? 'block' : 'none';
+        }
+    }
+
+    var state = {
+        recordId: null,
+        b2bFields: null,
+        sections: []
+    };
+
+    function buildVars(fields) {
+        var company = fields[F.BUSINESS_NAME] != null ? String(fields[F.BUSINESS_NAME]) : '';
+        var upfrontN = readNumber(fields[F.LEADS_SOLD_UPFRONT]);
+        var pplRaw = fields[F.PRICE_PER_LEAD];
+        var pplNum = readNumber(pplRaw);
+        var onboardingAmount = upfrontN != null && pplNum != null ? formatUsd(upfrontN * pplNum) : '';
+        var onboardingNumber = upfrontN != null ? String(upfrontN) : '';
+        var ppl = pplNum != null ? formatUsd(pplNum) : (pplRaw != null ? String(pplRaw) : '');
+        return {
+            company: company,
+            onboardingAmount: onboardingAmount,
+            onboardingNumber: onboardingNumber,
+            ppl: ppl
+        };
+    }
+
+    function renderAgreement() {
+        var mount = document.getElementById('agreement-sections-mount');
+        if (!mount) return;
+        mount.innerHTML = '';
+        var vars = buildVars(state.b2bFields || {});
+        var sections = state.sections;
+        var useAltBand = true;
+        var currentWrap = null;
+
+        function ensureWrap() {
+            if (!currentWrap) {
+                currentWrap = el('section', useAltBand ? 'agreement-section-alt' : 'agreement-section');
+                var inner = el('div', 'agreement-container');
+                currentWrap.appendChild(inner);
+                mount.appendChild(currentWrap);
+                return inner;
+            }
+            return currentWrap.querySelector('.agreement-container');
+        }
+
+        for (var i = 0; i < sections.length; i++) {
+            if (i % 3 === 0) {
+                currentWrap = null;
+                useAltBand = !useAltBand;
+            }
+            var container = ensureWrap();
+            var rec = sections[i];
+            var fld = rec.fields || {};
+            var title = fld[F.SA_TITLE] != null && String(fld[F.SA_TITLE]).trim() !== ''
+                ? String(fld[F.SA_TITLE]).trim()
+                : ('Section ' + (i + 1));
+            var rawText = fld[F.SA_TEXT] != null ? String(fld[F.SA_TEXT]) : '';
+            var bodyHtml = applyPlaceholders(rawText, vars);
+            var required = fld[F.SA_REQUIRED] === true;
+
+            var sectionEl = el('div', 'section');
+            var titleRow = el('div', 'section-title');
+            var num = el('div', 'section-number', String(i + 1));
+            var titleText = document.createElement('span');
+            titleText.textContent = title;
+            titleRow.appendChild(num);
+            titleRow.appendChild(titleText);
+            var bodyDiv = el('div', 'agreement-body');
+            bodyDiv.innerHTML = bodyHtml;
+            sectionEl.appendChild(titleRow);
+            sectionEl.appendChild(bodyDiv);
+
+            if (required) {
+                var note = el('div', 'section-required-note');
+                var cid = 'req-ack-' + i;
+                note.innerHTML =
+                    '<label for="' + cid + '">' +
+                    '<input type="checkbox" class="req-section-cb" data-section-index="' + i + '" id="' + cid + '">' +
+                    '<span>I have read, understand, and agree to this section.</span>' +
+                    '</label>';
+                sectionEl.appendChild(note);
+            }
+
+            container.appendChild(sectionEl);
+        }
+
+        updateSignButtonState();
+        attachRequiredListeners();
+    }
+
+    function updateSignButtonState() {
+        var btn = document.getElementById('btn-open-sign');
+        if (!btn) return;
+        var ok = true;
+        var checks = document.querySelectorAll('.req-section-cb');
+        checks.forEach(function (c) {
+            if (!c.checked) ok = false;
+        });
+        btn.disabled = !ok;
+    }
+
+    function attachRequiredListeners() {
+        document.querySelectorAll('.req-section-cb').forEach(function (c) {
+            c.addEventListener('change', updateSignButtonState);
+        });
+    }
+
+    function showSignedUi() {
+        showEl('agreement-root', false);
+        showEl('state-loading', false);
+        setError('');
+        var sp = document.getElementById('stripe-placeholder');
+        if (sp) {
+            sp.style.removeProperty('display');
+            sp.classList.add('visible');
+        }
+    }
+
+    function showUnsignedUi() {
+        var sp = document.getElementById('stripe-placeholder');
+        if (sp) {
+            sp.classList.remove('visible');
+            sp.style.removeProperty('display');
+        }
+        showEl('agreement-root', true);
+        showEl('state-loading', false);
+    }
+
+    async function load() {
+        var rid = getRecordIdFromUrl().trim();
+        showEl('state-loading', true);
+        setError('');
+        showEl('agreement-root', false);
+        var sp0 = document.getElementById('stripe-placeholder');
+        if (sp0) sp0.classList.remove('visible');
+
+        if (!looksLikeRecordId(rid)) {
+            showEl('state-loading', false);
+            setError('Missing or invalid recordID. Open this page with ?recordID=recXXXXXXXX in the URL.');
+            return;
+        }
+
+        state.recordId = rid;
+
+        try {
+            var leadUrl = BASE + '/' + encodeURIComponent(TABLE_B2B_LEADS) + '/' + encodeURIComponent(rid);
+            var leadData = await fetchJson(leadUrl);
+            var fields = leadData.fields || {};
+
+            if (isSigned(fields)) {
+                state.b2bFields = fields;
+                showSignedUi();
+                return;
+            }
+
+            var linkIds = fields[F.SERVICE_AGREEMENT_LINK];
+            if (!Array.isArray(linkIds) || linkIds.length === 0) {
+                showEl('state-loading', false);
+                setError('No Service Agreement sections are linked to this lead yet.');
+                return;
+            }
+
+            var saRecords = await fetchServiceAgreementRecords(linkIds);
+            if (saRecords.length !== linkIds.length) {
+                console.warn('Some Service Agreement records could not be loaded.');
+            }
+
+            state.b2bFields = fields;
+            state.sections = saRecords;
+            renderAgreement();
+            showUnsignedUi();
+        } catch (e) {
+            showEl('state-loading', false);
+            setError(e.message || 'Could not load agreement.');
+        }
+    }
+
+    /* --- Sign modal --- */
+    var modal = document.getElementById('sign-modal');
+    var modalErr = document.getElementById('sign-modal-error');
+
+    function openModal() {
+        modalErr.classList.remove('visible');
+        modalErr.textContent = '';
+        document.getElementById('signer-name-input').value = '';
+        document.getElementById('signer-consent-check').checked = false;
+        modal.classList.add('open');
+        document.getElementById('signer-name-input').focus();
+    }
+
+    function closeModal() {
+        modal.classList.remove('open');
+    }
+
+    document.getElementById('btn-open-sign').addEventListener('click', openModal);
+    document.getElementById('btn-sign-cancel').addEventListener('click', closeModal);
+    modal.addEventListener('click', function (ev) {
+        if (ev.target === modal) closeModal();
+    });
+
+    document.getElementById('btn-sign-submit').addEventListener('click', async function () {
+        modalErr.classList.remove('visible');
+        modalErr.textContent = '';
+        var name = document.getElementById('signer-name-input').value.trim();
+        var consent = document.getElementById('signer-consent-check').checked;
+        if (!name) {
+            modalErr.textContent = 'Please enter your full name.';
+            modalErr.classList.add('visible');
+            return;
+        }
+        if (!consent) {
+            modalErr.textContent = 'Please confirm that you agree to sign electronically.';
+            modalErr.classList.add('visible');
+            return;
+        }
+
+        var btn = document.getElementById('btn-sign-submit');
+        btn.disabled = true;
+
+        try {
+            var ip = await fetchPublicIp();
+            var signedIso = new Date().toISOString();
+            var patchUrl = BASE + '/' + encodeURIComponent(TABLE_B2B_LEADS) + '/' + encodeURIComponent(state.recordId);
+            var body = {
+                fields: {}
+            };
+            body.fields[F.SIGNER_NAME] = name;
+            body.fields[F.SIGNER_IP] = ip || '(not available)';
+            body.fields[F.SIGNED_DATE] = signedIso;
+
+            await fetchJson(patchUrl, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            closeModal();
+            showSignedUi();
+        } catch (e) {
+            modalErr.textContent = e.message || 'Could not save signature. Try again.';
+            modalErr.classList.add('visible');
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    load();
+})();
+    </script>
 </body>
 </html>
