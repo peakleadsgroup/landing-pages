@@ -49,7 +49,9 @@ export async function onRequest(context) {
     });
   }
 
+  let stage = "init";
   try {
+    stage = "check_run_status";
     const runRes = await fetch(
       `https://api.apify.com/v2/actor-runs/${runId}?token=${token}`
     );
@@ -88,6 +90,7 @@ export async function onRequest(context) {
       );
     }
 
+    stage = "fetch_dataset_items";
     const itemsRes = await fetch(
       `https://api.apify.com/v2/datasets/${defaultDatasetId}/items?token=${token}&format=json&clean=true`
     );
@@ -104,6 +107,7 @@ export async function onRequest(context) {
       "Content-Type": "application/json",
     };
 
+    stage = "load_existing_airtable_phones";
     // Fetch existing phone numbers to avoid duplicates
     const existingPhones = new Set();
     let airtableOffset = null;
@@ -162,6 +166,7 @@ export async function onRequest(context) {
     const createdRecordIds = [];
     const batchSize = 10;
 
+    stage = "save_records_to_airtable";
     for (let i = 0; i < records.length; i += batchSize) {
       const batch = records.slice(i, i + batchSize);
       const createRes = await fetch(airtableUrl, {
@@ -181,6 +186,7 @@ export async function onRequest(context) {
     }
 
     let slybroadcastResult = null;
+    stage = "launch_slybroadcast";
     if (
       launchCalls &&
       saved > 0 &&
@@ -233,6 +239,7 @@ export async function onRequest(context) {
 
             // Update Slybot Status in Airtable for records we just created and sent
             const patchBatch = 5;
+            stage = "update_airtable_sly_status";
             for (let j = 0; j < createdRecordIds.length; j += patchBatch) {
               const ids = createdRecordIds.slice(j, j + patchBatch);
               await Promise.all(
@@ -254,6 +261,7 @@ export async function onRequest(context) {
       }
     }
 
+    stage = "completed";
     const response = { status: "completed", saved };
     if (slybroadcastResult) response.slybroadcast = slybroadcastResult;
 
@@ -264,9 +272,11 @@ export async function onRequest(context) {
     return new Response(
       JSON.stringify({
         status: "failed",
+        stage,
         error: err.message || "Failed to process scrape",
       }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      // Keep 200 so frontend can show structured job status without console "resource failed" noise.
+      { status: 200, headers: { "Content-Type": "application/json" } }
     );
   }
 }

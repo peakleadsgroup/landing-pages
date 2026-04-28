@@ -285,7 +285,8 @@
                     continue;
                 }
                 if (data.status === 'failed') {
-                    throw new Error(data.error || 'Scrape failed');
+                    const stage = data.stage ? ` (${data.stage})` : '';
+                    throw new Error((data.error || 'Scrape failed') + stage);
                 }
                 if (data.status === 'completed') {
                     const saved = Number.isFinite(data.saved) ? data.saved : 0;
