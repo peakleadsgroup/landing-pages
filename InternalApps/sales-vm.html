@@ -87,28 +87,6 @@
                         <span id="btn-text">Load Voicemails</span>
                         <span id="btn-spinner" class="spinner hidden"></span>
                     </button>
-                    <button
-                        id="test-call-btn"
-                        type="button"
-                        class="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-semibold"
-                    >
-                        Test Call My Cell
-                    </button>
-                </div>
-                <p id="call-status" class="text-sm text-gray-600 mb-4"></p>
-                <div class="mb-6 p-4 border border-emerald-200 bg-emerald-50 rounded-lg">
-                    <div class="flex flex-wrap items-center gap-3">
-                        <button id="connect-browser-phone-btn" type="button" class="px-4 py-2 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 text-sm font-semibold">
-                            Connect Browser Phone
-                        </button>
-                        <button id="disconnect-browser-phone-btn" type="button" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-semibold" disabled>
-                            Disconnect
-                        </button>
-                        <span id="browser-phone-status" class="text-sm text-emerald-800">Browser phone not connected.</span>
-                    </div>
-                    <p class="text-xs text-emerald-700 mt-2">
-                        This enables two-way live audio from your browser mic/speakers to the called number.
-                    </p>
                 </div>
 
                 <div id="error-area" class="hidden mb-6 p-4 bg-red-50 rounded-lg border border-red-200">
@@ -139,11 +117,6 @@
         const recordingsSummary = document.getElementById('recordings-summary');
         const recordingsList = document.getElementById('recordings-list');
         const emptyState = document.getElementById('empty-state');
-        const testCallBtn = document.getElementById('test-call-btn');
-        const callStatus = document.getElementById('call-status');
-        const connectBrowserPhoneBtn = document.getElementById('connect-browser-phone-btn');
-        const disconnectBrowserPhoneBtn = document.getElementById('disconnect-browser-phone-btn');
-        const browserPhoneStatus = document.getElementById('browser-phone-status');
         const locationInput = document.getElementById('location-input');
         const addLocationBtn = document.getElementById('add-location-btn');
         const startQueueBtn = document.getElementById('start-queue-btn');
@@ -158,8 +131,6 @@
         let nextJobId = 1;
         let activeJobs = 0;
         const jobs = [];
-        let twilioDevice = null;
-        let browserConnection = null;
 
         function logInfo(scope, message, details) {
             console.log(`[sales-vm:${scope}] ${message}`, details || {});
@@ -178,63 +149,6 @@
             console.groupEnd();
         }
 
-        function getTwilioDeviceCtor() {
-            return window.Twilio?.Device || window.Twilio?.Voice?.Device || null;
-        }
-
-        function loadScript(src, timeoutMs = 12000) {
-            return new Promise((resolve, reject) => {
-                const existing = document.querySelector(`script[data-dynamic-src="${src}"]`);
-                if (existing) {
-                    existing.addEventListener('load', () => resolve(true), { once: true });
-                    existing.addEventListener('error', () => reject(new Error(`Script failed: ${src}`)), { once: true });
-                    return;
-                }
-                const script = document.createElement('script');
-                script.src = src;
-                script.async = true;
-                script.dataset.dynamicSrc = src;
-                const timer = setTimeout(() => {
-                    script.remove();
-                    reject(new Error(`Script load timeout: ${src}`));
-                }, timeoutMs);
-                script.onload = () => {
-                    clearTimeout(timer);
-                    resolve(true);
-                };
-                script.onerror = () => {
-                    clearTimeout(timer);
-                    reject(new Error(`Script failed: ${src}`));
-                };
-                document.head.appendChild(script);
-            });
-        }
-
-        async function ensureTwilioSdkLoaded() {
-            if (getTwilioDeviceCtor()) return true;
-            const sources = [
-                'https://sdk.twilio.com/js/voice/releases/2.10.0/twilio.min.js',
-                'https://media.twiliocdn.com/sdk/js/voice/releases/2.10.0/twilio.min.js'
-            ];
-            let lastErr = null;
-            for (const src of sources) {
-                try {
-                    logInfo('browser-phone', 'loading Twilio SDK script', { src });
-                    await loadScript(src);
-                    if (getTwilioDeviceCtor()) {
-                        logInfo('browser-phone', 'Twilio SDK loaded', { src });
-                        return true;
-                    }
-                } catch (err) {
-                    lastErr = err;
-                    logError('browser-phone', 'failed to load Twilio SDK script', err, { src });
-                }
-            }
-            if (!getTwilioDeviceCtor()) {
-                throw new Error(lastErr?.message || 'Twilio Voice SDK did not load');
-            }
-            return true;
-        }
 
         async function parseJsonSafe(res) {
             const text = await res.text();
@@ -322,105 +236,6 @@
                 .replace(/'/g, '&#39;');
         }
 
-        async function placeCall(to, label) {
-            if (twilioDevice) {
-                try {
-                    browserPhoneStatus.textContent = `Dialing ${label} from browser...`;
-                    browserConnection = await twilioDevice.connect({ params: { To: to } });
-                    callStatus.textContent = `Live call started to ${label}`;
-                    logInfo('call', 'browser live call connected', { to, label });
-                    return;
-                } catch (err) {
-                    logError('call', 'browser live call failed; falling back to server call', err, { to, label });
-                }
-            }
-            callStatus.textContent = `Calling ${label}...`;
-            try {
-                logInfo('call', 'creating outbound call', { to, label });
-                const res = await fetch('/api/call', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ to })
-                });
-                const data = await parseJsonSafe(res);
-                if (!res.ok) {
-                    const err = new Error(data.error || 'Call failed');
-                    err.cause = data;
-                    throw err;
-                }
-                const callSid = data.sid ? ` (${data.sid})` : '';
-                callStatus.textContent = `Call started to ${label}${callSid}`;
-                logInfo('call', 'outbound call created', { to, label, response: data });
-            } catch (err) {
-                callStatus.textContent = `Call failed for ${label}: ${err.message || 'Unknown error'}`;
-                logError('call', 'outbound call failed', err, { to, label });
-            }
-        }
-
-        async function connectBrowserPhone() {
-            connectBrowserPhoneBtn.disabled = true;
-            browserPhoneStatus.textContent = 'Connecting browser phone...';
-            try {
-                await ensureTwilioSdkLoaded();
-                const res = await fetch('/api/twilio/token');
-                const data = await parseJsonSafe(res);
-                if (!res.ok) {
-                    const err = new Error(data.error || 'Failed to fetch Twilio browser token');
-                    err.cause = data;
-                    throw err;
-                }
-                const TwilioDeviceCtor = getTwilioDeviceCtor();
-                if (!TwilioDeviceCtor) {
-                    throw new Error('Twilio Voice SDK did not load');
-                }
-
-                twilioDevice = new TwilioDeviceCtor(data.token, {
-                    closeProtection: true,
-                    edge: 'roaming',
-                });
-
-                twilioDevice.on('registered', () => {
-                    browserPhoneStatus.textContent = 'Browser phone connected. Ready for two-way calls.';
-                    disconnectBrowserPhoneBtn.disabled = false;
-                    connectBrowserPhoneBtn.disabled = true;
-                    logInfo('browser-phone', 'device registered', { identity: data.identity });
-                });
-                twilioDevice.on('error', (err) => {
-                    browserPhoneStatus.textContent = `Browser phone error: ${err.message || 'unknown'}`;
-                    logError('browser-phone', 'device error', err);
-                });
-                twilioDevice.on('disconnect', () => {
-                    callStatus.textContent = 'Call ended.';
-                    browserConnection = null;
-                    logInfo('browser-phone', 'call disconnected');
-                });
-
-                await twilioDevice.register();
-            } catch (err) {
-                browserPhoneStatus.textContent = `Failed to connect browser phone: ${err.message || 'unknown'}`;
-                connectBrowserPhoneBtn.disabled = false;
-                logError('browser-phone', 'failed to connect browser device', err);
-            }
-        }
-
-        async function disconnectBrowserPhone() {
-            try {
-                if (browserConnection) {
-                    browserConnection.disconnect();
-                    browserConnection = null;
-                }
-                if (twilioDevice) {
-                    twilioDevice.destroy();
-                    twilioDevice = null;
-                }
-                browserPhoneStatus.textContent = 'Browser phone disconnected.';
-                connectBrowserPhoneBtn.disabled = false;
-                disconnectBrowserPhoneBtn.disabled = true;
-                logInfo('browser-phone', 'device destroyed');
-            } catch (err) {
-                logError('browser-phone', 'disconnect failed', err);
-            }
-        }
 
         function setJobStatus(job, status, message) {
             job.status = status;
@@ -654,7 +469,6 @@
                                 <summary class="flex items-center justify-between cursor-pointer list-none py-2 hover:bg-gray-50 -mx-2 px-2 rounded-lg">
                                     <span class="font-medium text-gray-900">${displayPhone}</span>
                                     <span class="flex items-center gap-2">
-                                        ${key !== '__unknown__' ? `<button type="button" class="call-back-btn px-3 py-1.5 bg-emerald-600 text-white text-xs rounded-md hover:bg-emerald-700" data-phone="${rawPhone.replace(/"/g, '&quot;')}">Call Back</button>` : ''}
                                         <span class="text-sm text-gray-500">${count} voicemail${count !== 1 ? 's' : ''}</span>
                                     </span>
                                     <svg class="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -695,20 +509,6 @@
                             }
                         });
                     });
-                    recordingsList.querySelectorAll('.call-back-btn').forEach(btn => {
-                        btn.addEventListener('click', async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            const phone = btn.dataset.phone;
-                            if (!phone) return;
-                            btn.disabled = true;
-                            const original = btn.textContent;
-                            btn.textContent = 'Calling...';
-                            await placeCall(phone, formatPhone(phone));
-                            btn.textContent = original;
-                            btn.disabled = false;
-                        });
-                    });
                 }
             } catch (err) {
                 errorMessage.textContent = err.message || 'Unknown error';
@@ -732,16 +532,6 @@
             }
         });
         startQueueBtn.addEventListener('click', processQueue);
-        testCallBtn.addEventListener('click', async () => {
-            testCallBtn.disabled = true;
-            const original = testCallBtn.textContent;
-            testCallBtn.textContent = 'Calling...';
-            await placeCall('(919) 363-4740', '(919) 363-4740');
-            testCallBtn.textContent = original;
-            testCallBtn.disabled = false;
-        });
-        connectBrowserPhoneBtn.addEventListener('click', connectBrowserPhone);
-        disconnectBrowserPhoneBtn.addEventListener('click', disconnectBrowserPhone);
         clearFinishedBtn.addEventListener('click', () => {
             const unfinished = jobs.filter(j => j.status !== 'completed' && j.status !== 'failed');
             jobs.length = 0;
