@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
     <title>Sales Voicemails – PeakLeads</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-height: 100vh; background: #f8f9fa; }
@@ -27,11 +28,24 @@
         .status-starting, .status-running { background: #dbeafe; color: #1d4ed8; }
         .status-completed { background: #dcfce7; color: #166534; }
         .status-failed { background: #fee2e2; color: #991b1b; }
+        #scraped-zip-map { height: 360px; width: 100%; border-radius: 0.5rem; }
     </style>
 </head>
 <body class="bg-gray-50">
     <div class="min-h-screen p-6">
         <div class="max-w-4xl mx-auto space-y-6">
+            <!-- Scraped ZIP Coverage Map -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">Scraped ZIP Coverage</h2>
+                        <p class="text-sm text-gray-600 mt-1">ZIPs from Airtable table <code>tblUUP3DFDn0RmEj0</code> field <code>Zip</code>.</p>
+                    </div>
+                    <p id="scraped-zip-map-summary" class="text-sm text-gray-600">Loading map data...</p>
+                </div>
+                <div id="scraped-zip-map" class="border border-gray-200"></div>
+            </div>
+
             <!-- Scrape & Call (Bathrooms only) -->
             <div class="bg-white rounded-lg shadow-lg p-8">
                 <div class="flex items-center gap-3 mb-3">
@@ -106,6 +120,7 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const loadBtn = document.getElementById('load-btn');
         const btnText = document.getElementById('btn-text');
@@ -124,6 +139,7 @@
         const queueSummary = document.getElementById('queue-summary');
         const jobsList = document.getElementById('jobs-list');
         const jobsEmpty = document.getElementById('jobs-empty');
+        const scrapedZipMapSummary = document.getElementById('scraped-zip-map-summary');
 
         const MAX_CONCURRENT_JOBS = 8;
         const POLL_INTERVAL_MS = 5000;
@@ -131,6 +147,8 @@
         let nextJobId = 1;
         let activeJobs = 0;
         const jobs = [];
+        let scrapedZipMap = null;
+        let scrapedZipMarkers = null;
 
         function logInfo(scope, message, details) {
             console.log(`[sales-vm:${scope}] ${message}`, details || {});
@@ -157,6 +175,63 @@
                 return JSON.parse(text);
             } catch (e) {
                 return { _raw: text, _parseError: e.message };
+            }
+        }
+
+        function initScrapedZipMapCanvas() {
+            if (scrapedZipMap || !window.L) return;
+            scrapedZipMap = L.map('scraped-zip-map').setView([39.8283, -98.5795], 4);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(scrapedZipMap);
+            scrapedZipMarkers = L.layerGroup().addTo(scrapedZipMap);
+        }
+
+        async function loadScrapedZipMap() {
+            try {
+                initScrapedZipMapCanvas();
+                logInfo('scraped-map', 'loading scraped zip map data');
+                const [zipsRes, zipDataRes] = await Promise.all([
+                    fetch('/api/scraped-zips'),
+                    fetch('us_zip_complete.json')
+                ]);
+                const zipsData = await parseJsonSafe(zipsRes);
+                const allZipData = await parseJsonSafe(zipDataRes);
+
+                if (!zipsRes.ok) throw new Error(zipsData.error || 'Failed to load scraped zips');
+                if (!zipDataRes.ok) throw new Error(allZipData.error || 'Failed to load ZIP coordinates');
+
+                const scrapedZips = Array.isArray(zipsData.zips) ? zipsData.zips : [];
+                const markers = [];
+                let plotted = 0;
+                scrapedZipMarkers.clearLayers();
+
+                for (const zip of scrapedZips) {
+                    const entry = allZipData?.[zip];
+                    if (!entry || entry.lat == null || entry.lng == null) continue;
+                    const marker = L.circleMarker([entry.lat, entry.lng], {
+                        radius: 4,
+                        color: '#2563eb',
+                        fillColor: '#3b82f6',
+                        fillOpacity: 0.7,
+                        weight: 1
+                    }).bindPopup(`<strong>ZIP:</strong> ${escapeHtml(zip)}<br><em>Scraped</em>`);
+                    scrapedZipMarkers.addLayer(marker);
+                    markers.push(marker);
+                    plotted++;
+                }
+
+                scrapedZipMapSummary.textContent = `${scrapedZips.length} ZIP(s) in Airtable, ${plotted} plotted on map`;
+                if (markers.length > 0) {
+                    const group = L.featureGroup(markers);
+                    scrapedZipMap.fitBounds(group.getBounds().pad(0.15));
+                }
+                setTimeout(() => scrapedZipMap.invalidateSize(), 50);
+                logInfo('scraped-map', 'scraped zip map loaded', { total: scrapedZips.length, plotted });
+            } catch (err) {
+                scrapedZipMapSummary.textContent = `Map load error: ${err.message || 'Unknown error'}`;
+                logError('scraped-map', 'failed to load scraped zip map', err);
             }
         }
 
@@ -538,6 +613,7 @@
             jobs.push(...unfinished);
             renderJobs();
         });
+        loadScrapedZipMap();
         renderJobs();
     </script>
 </body>
