@@ -237,20 +237,35 @@ export async function onRequest(context) {
             const count = phoneList.split(",").filter(Boolean).length;
             slybroadcastResult = { sessionId: sessionId.trim(), count };
 
-            // Update Slybot Status in Airtable for records we just created and sent
-            const patchBatch = 5;
+            // Update Slybot Status in Airtable for records we just created and sent.
+            // Use Airtable batch PATCH (up to 10 records/request) to reduce Cloudflare subrequests.
+            const patchBatch = 10;
             stage = "update_airtable_sly_status";
-            for (let j = 0; j < createdRecordIds.length; j += patchBatch) {
-              const ids = createdRecordIds.slice(j, j + patchBatch);
-              await Promise.all(
-                ids.map((recId) =>
-                  fetch(`${airtableUrl}/${recId}`, {
-                    method: "PATCH",
-                    headers,
-                    body: JSON.stringify({ fields: { "Slybot Status": slyStatusSent } }),
-                  })
-                )
-              );
+            let statusUpdateWarning = null;
+            try {
+              for (let j = 0; j < createdRecordIds.length; j += patchBatch) {
+                const ids = createdRecordIds.slice(j, j + patchBatch);
+                const patchRes = await fetch(airtableUrl, {
+                  method: "PATCH",
+                  headers,
+                  body: JSON.stringify({
+                    records: ids.map((recId) => ({
+                      id: recId,
+                      fields: { "Slybot Status": slyStatusSent },
+                    })),
+                  }),
+                });
+                if (!patchRes.ok) {
+                  const errText = await patchRes.text();
+                  throw new Error(`Airtable status update: ${patchRes.status} - ${errText}`);
+                }
+              }
+            } catch (statusErr) {
+              // Calls are already launched; don't downgrade launch success if this follow-up step fails.
+              statusUpdateWarning = statusErr.message || "Failed to update Slybot Status";
+            }
+            if (statusUpdateWarning) {
+              slybroadcastResult.statusUpdateWarning = statusUpdateWarning;
             }
           } else {
             slybroadcastResult = { error: slyText.slice(0, 200) };

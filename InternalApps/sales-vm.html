@@ -87,7 +87,15 @@
                         <span id="btn-text">Load Voicemails</span>
                         <span id="btn-spinner" class="spinner hidden"></span>
                     </button>
+                    <button
+                        id="test-call-btn"
+                        type="button"
+                        class="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-semibold"
+                    >
+                        Test Call My Cell
+                    </button>
                 </div>
+                <p id="call-status" class="text-sm text-gray-600 mb-4"></p>
 
                 <div id="error-area" class="hidden mb-6 p-4 bg-red-50 rounded-lg border border-red-200">
                     <p class="text-sm font-medium text-red-800">Error</p>
@@ -117,6 +125,8 @@
         const recordingsSummary = document.getElementById('recordings-summary');
         const recordingsList = document.getElementById('recordings-list');
         const emptyState = document.getElementById('empty-state');
+        const testCallBtn = document.getElementById('test-call-btn');
+        const callStatus = document.getElementById('call-status');
         const locationInput = document.getElementById('location-input');
         const addLocationBtn = document.getElementById('add-location-btn');
         const startQueueBtn = document.getElementById('start-queue-btn');
@@ -131,6 +141,33 @@
         let nextJobId = 1;
         let activeJobs = 0;
         const jobs = [];
+
+        function logInfo(scope, message, details) {
+            console.log(`[sales-vm:${scope}] ${message}`, details || {});
+        }
+
+        function logError(scope, message, err, details) {
+            const meta = {
+                ...(details || {}),
+                errorMessage: err?.message || String(err || ''),
+                stack: err?.stack || null
+            };
+            console.groupCollapsed(`[sales-vm:${scope}] ${message}`);
+            console.error(meta.errorMessage);
+            console.log('details:', meta);
+            if (err?.cause) console.log('cause:', err.cause);
+            console.groupEnd();
+        }
+
+        async function parseJsonSafe(res) {
+            const text = await res.text();
+            if (!text) return {};
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                return { _raw: text, _parseError: e.message };
+            }
+        }
 
         function setLoading(loading) {
             loadBtn.disabled = loading;
@@ -208,6 +245,30 @@
                 .replace(/'/g, '&#39;');
         }
 
+        async function placeCall(to, label) {
+            callStatus.textContent = `Calling ${label}...`;
+            try {
+                logInfo('call', 'creating outbound call', { to, label });
+                const res = await fetch('/api/call', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ to })
+                });
+                const data = await parseJsonSafe(res);
+                if (!res.ok) {
+                    const err = new Error(data.error || 'Call failed');
+                    err.cause = data;
+                    throw err;
+                }
+                const callSid = data.sid ? ` (${data.sid})` : '';
+                callStatus.textContent = `Call started to ${label}${callSid}`;
+                logInfo('call', 'outbound call created', { to, label, response: data });
+            } catch (err) {
+                callStatus.textContent = `Call failed for ${label}: ${err.message || 'Unknown error'}`;
+                logError('call', 'outbound call failed', err, { to, label });
+            }
+        }
+
         function setJobStatus(job, status, message) {
             job.status = status;
             job.message = message || job.message || '';
@@ -276,9 +337,15 @@
         async function pollRun(job) {
             for (let i = 0; i < MAX_POLL_ATTEMPTS; i++) {
                 await new Promise(r => setTimeout(r, POLL_INTERVAL_MS));
-                const res = await fetch('/api/scrape/status?runId=' + encodeURIComponent(job.runId) + '&launchCalls=1');
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || 'Status check failed');
+                const statusUrl = '/api/scrape/status?runId=' + encodeURIComponent(job.runId) + '&launchCalls=1';
+                logInfo('scrape-status', 'polling run status', { jobId: job.id, runId: job.runId, attempt: i + 1, url: statusUrl });
+                const res = await fetch(statusUrl);
+                const data = await parseJsonSafe(res);
+                if (!res.ok) {
+                    const err = new Error(data.error || 'Status check failed');
+                    err.cause = data;
+                    throw err;
+                }
 
                 if (data.status === 'running') {
                     setJobStatus(job, 'running', `Scraping/calling in progress... (${i + 1} checks)`);
@@ -286,21 +353,42 @@
                 }
                 if (data.status === 'failed') {
                     const stage = data.stage ? ` (${data.stage})` : '';
+                    logError('scrape-status', 'run failed', new Error(data.error || 'Scrape failed'), {
+                        jobId: job.id,
+                        runId: job.runId,
+                        stage: data.stage || null,
+                        response: data
+                    });
                     throw new Error((data.error || 'Scrape failed') + stage);
                 }
                 if (data.status === 'completed') {
                     const saved = Number.isFinite(data.saved) ? data.saved : 0;
                     const slyErr = data.slybroadcast?.error;
                     const slyCount = data.slybroadcast?.count;
+                    const slyStatusWarn = data.slybroadcast?.statusUpdateWarning;
                     if (slyErr) {
                         setJobStatus(job, 'completed', `Completed: ${saved} saved. Call launch error: ${slyErr}`);
                     } else if (slyCount != null) {
-                        setJobStatus(job, 'completed', `Completed: ${saved} saved, ${slyCount} calls launched.`);
+                        if (slyStatusWarn) {
+                            setJobStatus(job, 'completed', `Completed: ${saved} saved, ${slyCount} calls launched. Status update warning: ${slyStatusWarn}`);
+                        } else {
+                            setJobStatus(job, 'completed', `Completed: ${saved} saved, ${slyCount} calls launched.`);
+                        }
                     } else {
                         setJobStatus(job, 'completed', `Completed: ${saved} saved.`);
                     }
+                    logInfo('scrape-status', 'run completed', {
+                        jobId: job.id,
+                        runId: job.runId,
+                        response: data
+                    });
                     return;
                 }
+                logInfo('scrape-status', 'unexpected status payload', {
+                    jobId: job.id,
+                    runId: job.runId,
+                    response: data
+                });
             }
             throw new Error('Timed out waiting for scrape status');
         }
@@ -309,19 +397,26 @@
             activeJobs++;
             setJobStatus(job, 'starting', 'Starting Apify run...');
             try {
+                logInfo('scrape-start', 'starting scrape job', { jobId: job.id, location: job.location });
                 const res = await fetch('/api/scrape', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ location: job.location })
                 });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || 'Failed to start scrape');
+                const data = await parseJsonSafe(res);
+                if (!res.ok) {
+                    const err = new Error(data.error || 'Failed to start scrape');
+                    err.cause = data;
+                    throw err;
+                }
                 if (!data.runId) throw new Error('Missing runId from scrape start');
                 job.runId = data.runId;
                 setJobStatus(job, 'running', 'Run started. Waiting for completion...');
+                logInfo('scrape-start', 'scrape job started', { jobId: job.id, location: job.location, runId: job.runId, response: data });
                 await pollRun(job);
             } catch (err) {
                 setJobStatus(job, 'failed', err.message || 'Unknown error');
+                logError('scrape-start', 'scrape job failed', err, { jobId: job.id, location: job.location, runId: job.runId || null });
             } finally {
                 activeJobs = Math.max(0, activeJobs - 1);
                 processQueue();
@@ -346,20 +441,26 @@
 
             const days = parseInt(daysSelect.value, 10);
             try {
+                logInfo('recordings', 'loading recordings', { days });
                 const [recordingsRes, notesRes] = await Promise.all([
                     fetch('/api/recordings?days=' + days),
                     fetch('/api/notes').catch(() => ({ ok: false }))
                 ]);
-                const data = await recordingsRes.json();
+                const data = await parseJsonSafe(recordingsRes);
 
                 if (!recordingsRes.ok) throw new Error(data.error || 'Failed to load recordings');
 
                 const recordings = data.recordings || [];
                 let notesByPhone = {};
                 if (notesRes.ok) {
-                    const notesData = await notesRes.json();
+                    const notesData = await parseJsonSafe(notesRes);
                     notesByPhone = notesData.notesByPhone || {};
                 }
+                logInfo('recordings', 'recordings loaded', {
+                    days,
+                    total: recordings.length,
+                    uniqueCallers: new Set(recordings.map(r => normalizePhoneKey(r.from))).size
+                });
 
                 recordingsSummary.textContent = recordings.length + ' voicemail(s) from ' + new Set(recordings.map(r => normalizePhoneKey(r.from))).size + ' caller(s)';
 
@@ -391,7 +492,10 @@
                             <details class="group">
                                 <summary class="flex items-center justify-between cursor-pointer list-none py-2 hover:bg-gray-50 -mx-2 px-2 rounded-lg">
                                     <span class="font-medium text-gray-900">${displayPhone}</span>
-                                    <span class="text-sm text-gray-500">${count} voicemail${count !== 1 ? 's' : ''}</span>
+                                    <span class="flex items-center gap-2">
+                                        ${key !== '__unknown__' ? `<button type="button" class="call-back-btn px-3 py-1.5 bg-emerald-600 text-white text-xs rounded-md hover:bg-emerald-700" data-phone="${rawPhone.replace(/"/g, '&quot;')}">Call Back</button>` : ''}
+                                        <span class="text-sm text-gray-500">${count} voicemail${count !== 1 ? 's' : ''}</span>
+                                    </span>
                                     <svg class="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                                 </summary>
                                 <div class="mt-2 ml-2 space-y-1 border-l-2 border-gray-200 pl-4">
@@ -417,21 +521,38 @@
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ phone, notes: textarea.value })
                                 });
-                                const data = await res.json();
+                                const data = await parseJsonSafe(res);
                                 if (!res.ok) throw new Error(data.error || 'Failed to save');
                                 btn.textContent = 'Saved';
                                 setTimeout(() => { btn.textContent = 'Save Notes'; btn.disabled = false; }, 1500);
+                                logInfo('notes', 'notes saved', { phone });
                             } catch (err) {
                                 btn.textContent = 'Error';
                                 alert(err.message);
                                 btn.disabled = false;
+                                logError('notes', 'failed to save notes', err, { phone });
                             }
+                        });
+                    });
+                    recordingsList.querySelectorAll('.call-back-btn').forEach(btn => {
+                        btn.addEventListener('click', async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const phone = btn.dataset.phone;
+                            if (!phone) return;
+                            btn.disabled = true;
+                            const original = btn.textContent;
+                            btn.textContent = 'Calling...';
+                            await placeCall(phone, formatPhone(phone));
+                            btn.textContent = original;
+                            btn.disabled = false;
                         });
                     });
                 }
             } catch (err) {
                 errorMessage.textContent = err.message || 'Unknown error';
                 errorArea.classList.remove('hidden');
+                logError('recordings', 'failed to load recordings', err, { days });
             } finally {
                 setLoading(false);
             }
@@ -450,6 +571,14 @@
             }
         });
         startQueueBtn.addEventListener('click', processQueue);
+        testCallBtn.addEventListener('click', async () => {
+            testCallBtn.disabled = true;
+            const original = testCallBtn.textContent;
+            testCallBtn.textContent = 'Calling...';
+            await placeCall('(919) 363-4740', '(919) 363-4740');
+            testCallBtn.textContent = original;
+            testCallBtn.disabled = false;
+        });
         clearFinishedBtn.addEventListener('click', () => {
             const unfinished = jobs.filter(j => j.status !== 'completed' && j.status !== 'failed');
             jobs.length = 0;
