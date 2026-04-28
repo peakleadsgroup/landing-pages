@@ -1,6 +1,7 @@
 /**
- * POST /api/scrape - Start Apify Google Maps scrape for a zip code
- * Body: { zip: "28201", niche: "Bathrooms" }
+ * POST /api/scrape - Start Apify Google Maps scrape for a location
+ * Body (new): { location: "Charlotte, NC" }
+ * Body (legacy): { zip: "28201", niche: "Bathrooms" }
  * Returns: { runId } - poll GET /api/scrape/status?runId=X for completion
  *
  * Requires env: APIFY_API_TOKEN, AIRTABLE_BASE_ID, AIRTABLE_API_KEY
@@ -28,26 +29,23 @@ export async function onRequest(context) {
 
   try {
     const body = await context.request.json();
+    const location = String(body.location || "").trim();
     const zip = String(body.zip || "").trim();
-    const niche = String(body.niche || "").trim();
+    const locationQuery = location || (zip ? `${zip}, USA` : "");
 
-    if (!/^\d{5}$/.test(zip)) {
-      return new Response(JSON.stringify({ error: "Invalid zip code" }), {
+    if (!locationQuery) {
+      return new Response(JSON.stringify({ error: "location is required" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    const searchMap = {
-      Bathrooms: "bathroom remodeling",
-      Windows: "window replacement",
-      "Floor Coating": "floor coating",
-    };
-    const searchTerm = searchMap[niche] || niche || "bathroom remodeling";
+    // Bathrooms-only flow
+    const searchTerm = "bathroom remodeling";
 
     const input = {
       searchStringsArray: [searchTerm],
-      locationQuery: `${zip}, USA`,
+      locationQuery,
       maxCrawledPlacesPerSearch: 120,
     };
 

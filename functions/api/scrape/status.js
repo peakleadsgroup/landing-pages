@@ -19,7 +19,7 @@ export async function onRequest(context) {
   const slyUid = context.env.SLYBROADCAST_UID;
   const slyPassword = context.env.SLYBROADCAST_PASSWORD;
   const slyCallerId = context.env.SLYBROADCAST_CALLER_ID;
-  const slyRecordAudio = context.env.SLYBROADCAST_RECORD_AUDIO || "DrewGenericTwilioNumber";
+  const slyRecordAudio = context.env.SLYBROADCAST_RECORD_AUDIO || "DanielLocalPick-Bathrooms";
   const slyStatusSent = context.env.SLYBROADCAST_STATUS_SENT || "Sent";
 
   if (!token || !airtableBaseId || !airtableApiKey) {
@@ -32,7 +32,8 @@ export async function onRequest(context) {
   const url = new URL(context.request.url);
   const runId = url.searchParams.get("runId");
   const nicheParam = url.searchParams.get("niche") || "Bathrooms";
-  const launchCalls = url.searchParams.get("launchCalls") === "1";
+  const launchCallsParam = url.searchParams.get("launchCalls");
+  const launchCalls = launchCallsParam == null ? true : launchCallsParam === "1";
   // Map UI niche values to exact Airtable select option names
   const nicheToAirtable = {
     Bathrooms: "Bathroom Remodeling",
