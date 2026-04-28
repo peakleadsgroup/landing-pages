@@ -28,7 +28,18 @@ async function signHs256(secret, data) {
 }
 
 export async function onRequest(context) {
+  const requestId = crypto.randomUUID().slice(0, 8);
+  const log = (message, details = {}) =>
+    console.log(`[api/twilio/token][${requestId}] ${message}`, details);
+  const logError = (message, err, details = {}) =>
+    console.error(`[api/twilio/token][${requestId}] ${message}`, {
+      ...details,
+      error: err?.message || String(err || ""),
+      stack: err?.stack || null,
+    });
+
   if (context.request.method !== "GET") {
+    log("method_not_allowed", { method: context.request.method });
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
       headers: { "Content-Type": "application/json" },
@@ -40,7 +51,15 @@ export async function onRequest(context) {
   const apiKeySecret = context.env.TWILIO_API_KEY_SECRET;
   const twimlAppSid = context.env.TWILIO_TWIML_APP_SID;
 
+  log("request_received", {
+    hasAccountSid: Boolean(accountSid),
+    hasApiKeySid: Boolean(apiKeySid),
+    hasApiKeySecret: Boolean(apiKeySecret),
+    hasTwimlAppSid: Boolean(twimlAppSid),
+  });
+
   if (!accountSid || !apiKeySid || !apiKeySecret || !twimlAppSid) {
+    log("missing_config");
     return new Response(
       JSON.stringify({
         error:
@@ -73,11 +92,13 @@ export async function onRequest(context) {
     const unsigned = `${b64url(JSON.stringify(header))}.${b64url(JSON.stringify(payload))}`;
     const signature = await signHs256(apiKeySecret, unsigned);
     const token = `${unsigned}.${signature}`;
+    log("token_created", { identity, exp });
 
     return new Response(JSON.stringify({ token, identity, exp }), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (err) {
+    logError("token_create_failed", err);
     return new Response(
       JSON.stringify({ error: err.message || "Failed to create token" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
