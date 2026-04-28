@@ -5,6 +5,16 @@
  * Returns: { status: "running"|"completed"|"failed", saved?: number, error?: string, slybroadcast?: { sessionId, count } }
  */
 export async function onRequest(context) {
+  const requestId = crypto.randomUUID().slice(0, 8);
+  const log = (message, details = {}) =>
+    console.log(`[api/scrape/status][${requestId}] ${message}`, details);
+  const logError = (message, err, details = {}) =>
+    console.error(`[api/scrape/status][${requestId}] ${message}`, {
+      ...details,
+      error: err?.message || String(err || ""),
+      stack: err?.stack || null,
+    });
+
   if (context.request.method !== "GET") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
@@ -51,6 +61,7 @@ export async function onRequest(context) {
 
   let stage = "init";
   try {
+    log("request_received", { runId, nicheParam, niche, launchCalls });
     stage = "check_run_status";
     const runRes = await fetch(
       `https://api.apify.com/v2/actor-runs/${runId}?token=${token}`
@@ -62,6 +73,7 @@ export async function onRequest(context) {
     const runData = await runRes.json();
     const status = runData.data?.status;
     const defaultDatasetId = runData.data?.defaultDatasetId;
+    log("apify_run_status", { runId, status, defaultDatasetId });
 
     if (status === "RUNNING" || status === "READY" || status === "STARTING") {
       return new Response(
@@ -99,6 +111,7 @@ export async function onRequest(context) {
       throw new Error(`Apify dataset: ${itemsRes.status} - ${errText}`);
     }
     const items = await itemsRes.json();
+    log("apify_dataset_loaded", { runId, itemsCount: Array.isArray(items) ? items.length : 0 });
 
     const today = new Date().toISOString().slice(0, 10);
     const airtableUrl = `https://api.airtable.com/v0/${airtableBaseId}/${scrapedTableId}`;
@@ -115,7 +128,11 @@ export async function onRequest(context) {
       let listUrl = airtableUrl + "?pageSize=100&fields[]=Phone";
       if (airtableOffset) listUrl += "&offset=" + airtableOffset;
       const listRes = await fetch(listUrl, { headers });
-      if (!listRes.ok) break;
+      if (!listRes.ok) {
+        const errText = await listRes.text();
+        log("airtable_existing_phone_scan_failed", { status: listRes.status, error: errText.slice(0, 300) });
+        break;
+      }
       const listData = await listRes.json();
       for (const rec of listData.records || []) {
         const p = rec.fields?.Phone;
@@ -134,6 +151,7 @@ export async function onRequest(context) {
 
     const records = [];
     const seen = new Set();
+    const warnings = [];
 
     for (const item of items) {
       const phone = item.phone || item.phoneUnformatted || "";
@@ -161,6 +179,7 @@ export async function onRequest(context) {
       if (zipNum && !isNaN(zipNum)) fields.Zip = zipNum;
       records.push({ fields });
     }
+    log("prepared_records", { candidateCount: records.length });
 
     let saved = 0;
     const createdRecordIds = [];
@@ -176,7 +195,35 @@ export async function onRequest(context) {
       });
       if (!createRes.ok) {
         const errText = await createRes.text();
-        throw new Error(`Airtable: ${createRes.status} - ${errText}`);
+        log("airtable_batch_create_failed_retrying_individual", {
+          batchStart: i,
+          batchSize: batch.length,
+          status: createRes.status,
+          error: errText.slice(0, 300),
+        });
+        // Retry each row individually so one bad record doesn't fail the whole run.
+        for (const record of batch) {
+          const singleRes = await fetch(airtableUrl, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ records: [record] }),
+          });
+          if (!singleRes.ok) {
+            const singleErr = await singleRes.text();
+            warnings.push(`Skipped one Airtable row: ${singleRes.status}`);
+            log("airtable_single_create_failed", {
+              status: singleRes.status,
+              error: singleErr.slice(0, 300),
+              fields: record.fields,
+            });
+            continue;
+          }
+          const singleData = await singleRes.json();
+          const rec = singleData.records?.[0];
+          if (rec?.id) createdRecordIds.push(rec.id);
+          saved += 1;
+        }
+        continue;
       }
       const createData = await createRes.json();
       for (const rec of createData.records || []) {
@@ -184,6 +231,7 @@ export async function onRequest(context) {
       }
       saved += batch.length;
     }
+    log("airtable_save_complete", { saved, createdRecordIds: createdRecordIds.length, warnings: warnings.length });
 
     let slybroadcastResult = null;
     stage = "launch_slybroadcast";
@@ -205,6 +253,7 @@ export async function onRequest(context) {
       const phoneList = [...new Set(phones)].join(",");
 
       if (phoneList) {
+        log("launching_slybroadcast", { uniquePhones: phoneList.split(",").filter(Boolean).length });
         const form = new URLSearchParams();
         form.set("c_uid", slyUid);
         form.set("c_password", slyPassword);
@@ -272,6 +321,7 @@ export async function onRequest(context) {
           }
         } catch (slyErr) {
           slybroadcastResult = { error: slyErr.message || "Slybroadcast request failed" };
+          logError("slybroadcast_launch_failed", slyErr);
         }
       }
     }
@@ -279,11 +329,14 @@ export async function onRequest(context) {
     stage = "completed";
     const response = { status: "completed", saved };
     if (slybroadcastResult) response.slybroadcast = slybroadcastResult;
+    if (warnings.length) response.warnings = warnings.slice(0, 20);
+    log("request_completed", { saved, hasSly: Boolean(slybroadcastResult), warnings: warnings.length });
 
     return new Response(JSON.stringify(response), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (err) {
+    logError("request_failed", err, { stage, runId });
     return new Response(
       JSON.stringify({
         status: "failed",

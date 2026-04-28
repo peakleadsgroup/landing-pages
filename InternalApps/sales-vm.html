@@ -519,6 +519,7 @@
                     const slyErr = data.slybroadcast?.error;
                     const slyCount = data.slybroadcast?.count;
                     const slyStatusWarn = data.slybroadcast?.statusUpdateWarning;
+                    const scrapeWarnings = Array.isArray(data.warnings) ? data.warnings : [];
                     if (slyErr) {
                         setJobStatus(job, 'completed', `Completed: ${saved} saved. Call launch error: ${slyErr}`);
                     } else if (slyCount != null) {
@@ -529,6 +530,13 @@
                         }
                     } else {
                         setJobStatus(job, 'completed', `Completed: ${saved} saved.`);
+                    }
+                    if (scrapeWarnings.length) {
+                        logInfo('scrape-status', 'completed with warnings', {
+                            jobId: job.id,
+                            runId: job.runId,
+                            warnings: scrapeWarnings
+                        });
                     }
                     logInfo('scrape-status', 'run completed', {
                         jobId: job.id,
