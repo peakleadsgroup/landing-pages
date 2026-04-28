@@ -7,7 +7,6 @@
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
     <title>Sales Voicemails – PeakLeads</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://sdk.twilio.com/js/voice/releases/2.10.0/twilio.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-height: 100vh; background: #f8f9fa; }
@@ -179,6 +178,64 @@
             console.groupEnd();
         }
 
+        function getTwilioDeviceCtor() {
+            return window.Twilio?.Device || window.Twilio?.Voice?.Device || null;
+        }
+
+        function loadScript(src, timeoutMs = 12000) {
+            return new Promise((resolve, reject) => {
+                const existing = document.querySelector(`script[data-dynamic-src="${src}"]`);
+                if (existing) {
+                    existing.addEventListener('load', () => resolve(true), { once: true });
+                    existing.addEventListener('error', () => reject(new Error(`Script failed: ${src}`)), { once: true });
+                    return;
+                }
+                const script = document.createElement('script');
+                script.src = src;
+                script.async = true;
+                script.dataset.dynamicSrc = src;
+                const timer = setTimeout(() => {
+                    script.remove();
+                    reject(new Error(`Script load timeout: ${src}`));
+                }, timeoutMs);
+                script.onload = () => {
+                    clearTimeout(timer);
+                    resolve(true);
+                };
+                script.onerror = () => {
+                    clearTimeout(timer);
+                    reject(new Error(`Script failed: ${src}`));
+                };
+                document.head.appendChild(script);
+            });
+        }
+
+        async function ensureTwilioSdkLoaded() {
+            if (getTwilioDeviceCtor()) return true;
+            const sources = [
+                'https://sdk.twilio.com/js/voice/releases/2.10.0/twilio.min.js',
+                'https://media.twiliocdn.com/sdk/js/voice/releases/2.10.0/twilio.min.js'
+            ];
+            let lastErr = null;
+            for (const src of sources) {
+                try {
+                    logInfo('browser-phone', 'loading Twilio SDK script', { src });
+                    await loadScript(src);
+                    if (getTwilioDeviceCtor()) {
+                        logInfo('browser-phone', 'Twilio SDK loaded', { src });
+                        return true;
+                    }
+                } catch (err) {
+                    lastErr = err;
+                    logError('browser-phone', 'failed to load Twilio SDK script', err, { src });
+                }
+            }
+            if (!getTwilioDeviceCtor()) {
+                throw new Error(lastErr?.message || 'Twilio Voice SDK did not load');
+            }
+            return true;
+        }
+
         async function parseJsonSafe(res) {
             const text = await res.text();
             if (!text) return {};
@@ -304,6 +361,7 @@
             connectBrowserPhoneBtn.disabled = true;
             browserPhoneStatus.textContent = 'Connecting browser phone...';
             try {
+                await ensureTwilioSdkLoaded();
                 const res = await fetch('/api/twilio/token');
                 const data = await parseJsonSafe(res);
                 if (!res.ok) {
@@ -311,11 +369,12 @@
                     err.cause = data;
                     throw err;
                 }
-                if (!window.Twilio?.Device) {
+                const TwilioDeviceCtor = getTwilioDeviceCtor();
+                if (!TwilioDeviceCtor) {
                     throw new Error('Twilio Voice SDK did not load');
                 }
 
-                twilioDevice = new window.Twilio.Device(data.token, {
+                twilioDevice = new TwilioDeviceCtor(data.token, {
                     closeProtection: true,
                     edge: 'roaming',
                 });
