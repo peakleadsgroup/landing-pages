@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
     <title>Sales Voicemails – PeakLeads</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://sdk.twilio.com/js/voice/releases/2.10.0/twilio.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-height: 100vh; background: #f8f9fa; }
@@ -96,6 +97,20 @@
                     </button>
                 </div>
                 <p id="call-status" class="text-sm text-gray-600 mb-4"></p>
+                <div class="mb-6 p-4 border border-emerald-200 bg-emerald-50 rounded-lg">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <button id="connect-browser-phone-btn" type="button" class="px-4 py-2 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 text-sm font-semibold">
+                            Connect Browser Phone
+                        </button>
+                        <button id="disconnect-browser-phone-btn" type="button" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-semibold" disabled>
+                            Disconnect
+                        </button>
+                        <span id="browser-phone-status" class="text-sm text-emerald-800">Browser phone not connected.</span>
+                    </div>
+                    <p class="text-xs text-emerald-700 mt-2">
+                        This enables two-way live audio from your browser mic/speakers to the called number.
+                    </p>
+                </div>
 
                 <div id="error-area" class="hidden mb-6 p-4 bg-red-50 rounded-lg border border-red-200">
                     <p class="text-sm font-medium text-red-800">Error</p>
@@ -127,6 +142,9 @@
         const emptyState = document.getElementById('empty-state');
         const testCallBtn = document.getElementById('test-call-btn');
         const callStatus = document.getElementById('call-status');
+        const connectBrowserPhoneBtn = document.getElementById('connect-browser-phone-btn');
+        const disconnectBrowserPhoneBtn = document.getElementById('disconnect-browser-phone-btn');
+        const browserPhoneStatus = document.getElementById('browser-phone-status');
         const locationInput = document.getElementById('location-input');
         const addLocationBtn = document.getElementById('add-location-btn');
         const startQueueBtn = document.getElementById('start-queue-btn');
@@ -141,6 +159,8 @@
         let nextJobId = 1;
         let activeJobs = 0;
         const jobs = [];
+        let twilioDevice = null;
+        let browserConnection = null;
 
         function logInfo(scope, message, details) {
             console.log(`[sales-vm:${scope}] ${message}`, details || {});
@@ -246,6 +266,17 @@
         }
 
         async function placeCall(to, label) {
+            if (twilioDevice) {
+                try {
+                    browserPhoneStatus.textContent = `Dialing ${label} from browser...`;
+                    browserConnection = await twilioDevice.connect({ params: { To: to } });
+                    callStatus.textContent = `Live call started to ${label}`;
+                    logInfo('call', 'browser live call connected', { to, label });
+                    return;
+                } catch (err) {
+                    logError('call', 'browser live call failed; falling back to server call', err, { to, label });
+                }
+            }
             callStatus.textContent = `Calling ${label}...`;
             try {
                 logInfo('call', 'creating outbound call', { to, label });
@@ -266,6 +297,69 @@
             } catch (err) {
                 callStatus.textContent = `Call failed for ${label}: ${err.message || 'Unknown error'}`;
                 logError('call', 'outbound call failed', err, { to, label });
+            }
+        }
+
+        async function connectBrowserPhone() {
+            connectBrowserPhoneBtn.disabled = true;
+            browserPhoneStatus.textContent = 'Connecting browser phone...';
+            try {
+                const res = await fetch('/api/twilio/token');
+                const data = await parseJsonSafe(res);
+                if (!res.ok) {
+                    const err = new Error(data.error || 'Failed to fetch Twilio browser token');
+                    err.cause = data;
+                    throw err;
+                }
+                if (!window.Twilio?.Device) {
+                    throw new Error('Twilio Voice SDK did not load');
+                }
+
+                twilioDevice = new window.Twilio.Device(data.token, {
+                    closeProtection: true,
+                    edge: 'roaming',
+                });
+
+                twilioDevice.on('registered', () => {
+                    browserPhoneStatus.textContent = 'Browser phone connected. Ready for two-way calls.';
+                    disconnectBrowserPhoneBtn.disabled = false;
+                    connectBrowserPhoneBtn.disabled = true;
+                    logInfo('browser-phone', 'device registered', { identity: data.identity });
+                });
+                twilioDevice.on('error', (err) => {
+                    browserPhoneStatus.textContent = `Browser phone error: ${err.message || 'unknown'}`;
+                    logError('browser-phone', 'device error', err);
+                });
+                twilioDevice.on('disconnect', () => {
+                    callStatus.textContent = 'Call ended.';
+                    browserConnection = null;
+                    logInfo('browser-phone', 'call disconnected');
+                });
+
+                await twilioDevice.register();
+            } catch (err) {
+                browserPhoneStatus.textContent = `Failed to connect browser phone: ${err.message || 'unknown'}`;
+                connectBrowserPhoneBtn.disabled = false;
+                logError('browser-phone', 'failed to connect browser device', err);
+            }
+        }
+
+        async function disconnectBrowserPhone() {
+            try {
+                if (browserConnection) {
+                    browserConnection.disconnect();
+                    browserConnection = null;
+                }
+                if (twilioDevice) {
+                    twilioDevice.destroy();
+                    twilioDevice = null;
+                }
+                browserPhoneStatus.textContent = 'Browser phone disconnected.';
+                connectBrowserPhoneBtn.disabled = false;
+                disconnectBrowserPhoneBtn.disabled = true;
+                logInfo('browser-phone', 'device destroyed');
+            } catch (err) {
+                logError('browser-phone', 'disconnect failed', err);
             }
         }
 
@@ -579,6 +673,8 @@
             testCallBtn.textContent = original;
             testCallBtn.disabled = false;
         });
+        connectBrowserPhoneBtn.addEventListener('click', connectBrowserPhone);
+        disconnectBrowserPhoneBtn.addEventListener('click', disconnectBrowserPhone);
         clearFinishedBtn.addEventListener('click', () => {
             const unfinished = jobs.filter(j => j.status !== 'completed' && j.status !== 'failed');
             jobs.length = 0;
