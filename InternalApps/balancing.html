@@ -62,6 +62,39 @@
         .client-table tbody tr.client-row:hover { background: #f8f9fa; }
         .client-table .client-expand-cell { width: 40px; padding: 0.35rem; }
         .client-table .name-cell { width: 100%; }
+        .group-row td {
+            background: #f1f3f4;
+            border-bottom: 1px solid #dadce0;
+            font-weight: 600;
+            color: #202124;
+        }
+        .group-summary {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .group-expand-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.7rem;
+            color: #5f6368;
+            transition: transform 0.2s, background 0.15s;
+        }
+        .group-expand-btn:hover { background: #e8f0fe; color: #1a73e8; }
+        .group-expand-btn.expanded { transform: rotate(90deg); }
+        .group-count {
+            color: #5f6368;
+            font-weight: 500;
+            font-size: 0.8125rem;
+        }
         .client-expand-btn {
             display: inline-flex;
             align-items: center;
@@ -189,12 +222,14 @@
         // Campaigns table: name can 403; use table ID (same as bathrooms.html etc.)
         const CAMPAIGNS_TABLE_ID = 'tbl6uhtOFzGzA7EMu';
         const ADSET_NAME_FIELD = 'Adset Name';
+        const ADSET_CLIENT_STATUS_FIELD = 'Client Status';
         const ADSET_B2C_LEADS_FIELD = 'B2C Leads';
         const ADSET_CAMPAIGNS_FIELD = 'Campaign';
         const CAMPAIGN_ID_FIELD = 'Campaign ID';
         const MAKE_WEBHOOK_3DAY = 'https://hook.us2.make.com/d4eoxhqbbblt5qqm6ft3rbeg5pv3ubed';
         const MAKE_WEBHOOK_7DAY = 'https://hook.us2.make.com/vbcc13xqt1yd1vmj1rseyokjptr4hadm';
         const MAKE_WEBHOOK_14DAY = 'https://hook.us2.make.com/fqdn72zbj58fwmc3gao851owopri9cvm';
+        const CLIENT_STATUS_GROUPS = ['Active', 'Paused', 'Closed', 'Setup'];
 
         async function fetchAirtable(url) {
             const res = await fetch(url);
@@ -232,7 +267,9 @@
                 clientList = records.map(function (r) {
                     var f = r.fields || {};
                     var name = (f[ADSET_NAME_FIELD] || f['Name'] || 'Unnamed').toString().trim();
-                    var row = { id: r.id, name: name, fields: f };
+                    var rawStatus = f[ADSET_CLIENT_STATUS_FIELD];
+                    var status = (rawStatus == null ? '' : String(rawStatus)).trim();
+                    var row = { id: r.id, name: name, status: status, fields: f };
                     return row;
                 });
                 if (clientList.length === 0) {
@@ -249,35 +286,95 @@
 
         function renderClientTable(clients) {
             var tbody = document.getElementById('client-tbody');
-            tbody.innerHTML = clients.map(function (c) {
-                return '<tr class="client-row" data-client-id="' + escapeHtml(c.id) + '">' +
-                    '<td class="client-expand-cell"><button type="button" class="client-expand-btn" aria-expanded="false" title="Expand">▶</button></td>' +
-                    '<td class="name-cell">' + escapeHtml(c.name) + '</td>' +
+            var groupsMap = CLIENT_STATUS_GROUPS.reduce(function (acc, status) {
+                acc[status] = [];
+                return acc;
+            }, {});
+            clients.forEach(function (c) {
+                var normalizedStatus = CLIENT_STATUS_GROUPS.find(function (status) {
+                    return status.toLowerCase() === String(c.status || '').toLowerCase();
+                });
+                if (normalizedStatus) groupsMap[normalizedStatus].push(c);
+            });
+
+            tbody.innerHTML = CLIENT_STATUS_GROUPS.map(function (status) {
+                var adsets = groupsMap[status] || [];
+                var groupKey = encodeURIComponent(status);
+                var rows = adsets.map(function (c) {
+                    return '<tr class="client-row" data-client-id="' + escapeHtml(c.id) + '" data-group="' + groupKey + '" style="display: none;">' +
+                        '<td class="client-expand-cell"><button type="button" class="client-expand-btn" aria-expanded="false" title="Expand">▶</button></td>' +
+                        '<td class="name-cell">' + escapeHtml(c.name) + '</td>' +
+                        '</tr>' +
+                        '<tr class="client-detail-row" id="client-detail-' + escapeHtml(c.id) + '" style="display: none;" data-client-id="' + escapeHtml(c.id) + '" data-group="' + groupKey + '">' +
+                        '<td colspan="2"><div class="client-detail-content" data-client-id="' + escapeHtml(c.id) + '"></div></td>' +
+                        '</tr>';
+                }).join('');
+                var emptyRow = adsets.length === 0
+                    ? '<tr class="client-row empty-group-row" data-group="' + groupKey + '" style="display: none;"><td class="client-expand-cell"></td><td class="name-cell" style="color: #5f6368;">No adsets in this status.</td></tr>'
+                    : '';
+                return '<tr class="group-row" data-group="' + groupKey + '">' +
+                    '<td colspan="2">' +
+                    '<div class="group-summary">' +
+                    '<button type="button" class="group-expand-btn" data-group="' + groupKey + '" aria-expanded="false" title="Expand group">▶</button>' +
+                    '<span>' + escapeHtml(status) + '</span>' +
+                    '<span class="group-count">(' + adsets.length + ')</span>' +
+                    '</div>' +
+                    '</td>' +
                     '</tr>' +
-                    '<tr class="client-detail-row" id="client-detail-' + escapeHtml(c.id) + '" style="display: none;" data-client-id="' + escapeHtml(c.id) + '">' +
-                    '<td colspan="2"><div class="client-detail-content" data-client-id="' + escapeHtml(c.id) + '"></div></td>' +
-                    '</tr>';
+                    rows +
+                    emptyRow;
             }).join('');
-            tbody.querySelectorAll('.client-expand-btn').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    var row = btn.closest('tr.client-row');
-                    var clientId = row.getAttribute('data-client-id');
-                    var detailRow = document.getElementById('client-detail-' + clientId);
-                    var content = detailRow.querySelector('.client-detail-content');
-                    var isExpanded = detailRow.style.display !== 'none';
-                    if (isExpanded) {
-                        detailRow.style.display = 'none';
-                        btn.classList.remove('expanded');
-                        btn.setAttribute('aria-expanded', 'false');
-                    } else {
-                        detailRow.style.display = 'table-row';
-                        btn.classList.add('expanded');
-                        btn.setAttribute('aria-expanded', 'true');
-                        if (!content.getAttribute('data-loaded')) {
-                            loadClientDetail(clientId, content, btn);
+
+            tbody.addEventListener('click', function (e) {
+                var groupBtn = e.target.closest('.group-expand-btn');
+                if (groupBtn) {
+                    toggleStatusGroup(groupBtn);
+                    return;
+                }
+                var adsetBtn = e.target.closest('.client-expand-btn');
+                if (!adsetBtn) return;
+                var row = adsetBtn.closest('tr.client-row');
+                var clientId = row.getAttribute('data-client-id');
+                var detailRow = document.getElementById('client-detail-' + clientId);
+                var content = detailRow.querySelector('.client-detail-content');
+                var isExpanded = detailRow.style.display !== 'none';
+                if (isExpanded) {
+                    detailRow.style.display = 'none';
+                    adsetBtn.classList.remove('expanded');
+                    adsetBtn.setAttribute('aria-expanded', 'false');
+                } else {
+                    detailRow.style.display = 'table-row';
+                    adsetBtn.classList.add('expanded');
+                    adsetBtn.setAttribute('aria-expanded', 'true');
+                    if (!content.getAttribute('data-loaded')) {
+                        loadClientDetail(clientId, content, adsetBtn);
+                    }
+                }
+            });
+        }
+
+        function toggleStatusGroup(groupBtn) {
+            var groupKey = groupBtn.getAttribute('data-group');
+            var shouldExpand = groupBtn.getAttribute('aria-expanded') !== 'true';
+            groupBtn.setAttribute('aria-expanded', shouldExpand ? 'true' : 'false');
+            groupBtn.classList.toggle('expanded', shouldExpand);
+            var groupRows = document.querySelectorAll('tr[data-group="' + groupKey + '"]');
+            groupRows.forEach(function (row) {
+                if (row.classList.contains('group-row')) return;
+                if (shouldExpand) {
+                    if (row.classList.contains('client-row') || row.classList.contains('empty-group-row')) {
+                        row.style.display = 'table-row';
+                    }
+                } else {
+                    row.style.display = 'none';
+                    if (row.classList.contains('client-row')) {
+                        var adsetBtn = row.querySelector('.client-expand-btn');
+                        if (adsetBtn) {
+                            adsetBtn.classList.remove('expanded');
+                            adsetBtn.setAttribute('aria-expanded', 'false');
                         }
                     }
-                });
+                }
             });
         }
 
