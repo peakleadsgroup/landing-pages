@@ -231,6 +231,13 @@
             transform: none;
         }
 
+        .tcpa-disclaimer {
+            margin-top: 12px;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #666;
+        }
+
         .form-step {
             display: none;
         }
@@ -446,19 +453,8 @@
                 </div>
             </div>
 
-            <!-- Step 2: Why interested -->
+            <!-- Step 2: Zip code -->
             <div class="form-step" id="step2">
-                <div class="step-header">Why are you interested in working with us?</div>
-                <div class="options">
-                    <div class="option" data-value="growing_sales" onclick="selectOption(this, 'interest', 'growing_sales')">Growing sales team</div>
-                    <div class="option" data-value="other_sources" onclick="selectOption(this, 'interest', 'other_sources')">Other lead sources not producing</div>
-                    <div class="option" data-value="expanding_markets" onclick="selectOption(this, 'interest', 'expanding_markets')">Expanding markets</div>
-                    <div class="option" data-value="other" onclick="selectOption(this, 'interest', 'other')">Other</div>
-                </div>
-            </div>
-
-            <!-- Step 3: Zip code -->
-            <div class="form-step" id="step3">
                 <div class="step-header">What is your business' main zip code?</div>
                 <div class="input-wrap">
                     <input type="text" id="zipcode" class="text-input" placeholder="12345" maxlength="5" inputmode="numeric" autocomplete="postal-code">
@@ -467,8 +463,8 @@
                 <button type="button" class="nav-btn" onclick="validateAndNext('zipcode')">Next</button>
             </div>
 
-            <!-- Step 4: Revenue -->
-            <div class="form-step" id="step4">
+            <!-- Step 3: Revenue -->
+            <div class="form-step" id="step3">
                 <div class="step-header">What is your estimated monthly revenue?</div>
                 <div class="options">
                     <div class="option" data-value="less_50k" onclick="selectOption(this, 'revenue', 'less_50k')">Less than $50,000</div>
@@ -479,8 +475,8 @@
                 </div>
             </div>
 
-            <!-- Step 5: Business name -->
-            <div class="form-step" id="step5">
+            <!-- Step 4: Business name -->
+            <div class="form-step" id="step4">
                 <div class="step-header">Business name</div>
                 <div class="input-wrap">
                     <input type="text" id="businessName" class="text-input" placeholder="Your business name" autocomplete="organization">
@@ -489,8 +485,8 @@
                 <button type="button" class="nav-btn" onclick="validateAndNext('businessName')">Next</button>
             </div>
 
-            <!-- Step 6: Business website -->
-            <div class="form-step" id="step6">
+            <!-- Step 5: Business website -->
+            <div class="form-step" id="step5">
                 <div class="step-header">Business website</div>
                 <div class="input-wrap">
                     <input type="text" id="businessWebsite" class="text-input" placeholder="example.com" autocomplete="url">
@@ -499,8 +495,8 @@
                 <button type="button" class="nav-btn" onclick="validateAndNext('businessWebsite')">Next</button>
             </div>
 
-            <!-- Step 7: Your name -->
-            <div class="form-step" id="step7">
+            <!-- Step 6: Your name -->
+            <div class="form-step" id="step6">
                 <div class="step-header">Your name</div>
                 <div class="name-grid">
                     <div class="input-wrap">
@@ -517,8 +513,8 @@
                 <button type="button" class="nav-btn" onclick="validateAndNext('name')">Next</button>
             </div>
 
-            <!-- Step 8: Phone -->
-            <div class="form-step" id="step8">
+            <!-- Step 7: Phone -->
+            <div class="form-step" id="step7">
                 <div class="step-header">Your phone</div>
                 <div class="input-wrap">
                     <input type="tel" id="phone" class="text-input" placeholder="(555) 123-4567" inputmode="tel" autocomplete="tel">
@@ -528,14 +524,15 @@
                 <button type="button" class="nav-btn" onclick="validateAndNext('phone')">Next</button>
             </div>
 
-            <!-- Step 9: Email + Submit -->
-            <div class="form-step" id="step9">
+            <!-- Step 8: Email + Submit -->
+            <div class="form-step" id="step8">
                 <div class="step-header">Your email</div>
                 <div class="input-wrap">
                     <input type="email" id="email" class="text-input" placeholder="you@example.com" autocomplete="email">
                     <div class="field-error" id="emailError"></div>
                 </div>
                 <button type="button" class="nav-btn" id="submitBtn" onclick="submitForm()">Get Qualified Leads!</button>
+                <p class="tcpa-disclaimer">By clicking "Get Qualified Leads!" I permit Peak Leads Group to call, email, and/or text me regarding my inquiry.</p>
             </div>
 
             <!-- Final: IMPORTANT screen -->
@@ -635,7 +632,7 @@
             }, { once: true, passive: true });
         }
 
-        const TOTAL_STEPS = 9;
+        const TOTAL_STEPS = 8;
         let currentStep = 1;
         const formData = {};
 
@@ -829,13 +826,6 @@
             '500k_1m': '$500,000-$1,000,000',
             over_1m: 'More than $1,000,000'
         };
-        const INTEREST_LABELS = {
-            growing_sales: 'Growing sales team',
-            other_sources: 'Other lead sources not producing',
-            expanding_markets: 'Expanding markets',
-            other: 'Other'
-        };
-
         function formatPhoneForDisplay(digits) {
             if (!digits || digits.length !== 10) return digits || '';
             return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
@@ -924,16 +914,11 @@
             if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
 
             const revenueLabel = REVENUE_LABELS[formData.revenue] || formData.revenue || '';
-            const interestLabel = INTEREST_LABELS[formData.interest] || formData.interest || '';
-
             const summaryParts = [
                 '=== B2B BATHROOM QUALIFICATION ===',
                 '',
                 'CONTRACTOR:',
                 `Bathroom remodeling contractor? ${formData.contractor === 'yes' ? 'Yes' : 'No'}`,
-                '',
-                'INTEREST REASON:',
-                interestLabel,
                 '',
                 'LOCATION:',
                 `Zip Code: ${formData.zipcode || ''}`,
