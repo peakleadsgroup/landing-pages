@@ -1,11 +1,19 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-<head>
+<head>`r`n<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18128405900');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
-    <title>Peak Leads Group — Service Agreement</title>
+    <title>Peak Leads Group â€” Service Agreement</title>
     <meta name="description" content="Service agreement for Peak Leads Group B2B clients.">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -430,7 +438,7 @@
     </header>
 
     <div id="state-loading" class="state-loading" style="display: none;">
-        <p>Loading your agreement…</p>
+        <p>Loading your agreementâ€¦</p>
     </div>
 
     <div id="state-error" class="state-error" style="display: none;"></div>
@@ -519,7 +527,7 @@
         console.error.apply(console, a);
     }
 
-    /** Cal.com inline embed — calLink path only; init uses namespaced API per Cal snippet. */
+    /** Cal.com inline embed â€” calLink path only; init uses namespaced API per Cal snippet. */
     var CAL_INLINE_NS = 'kick-off-call';
     var CAL_KICKOFF_CAL_LINK = 'bennett-hair-mpzude/kick-off-call';
 
@@ -615,7 +623,7 @@
         return typeof s === 'string' && /^cs_[a-zA-Z0-9_]+$/.test(s.trim());
     }
 
-    /** Airtable long text may use <bold>…<bold> or </bold>; normalize to <strong>. */
+    /** Airtable long text may use <bold>â€¦<bold> or </bold>; normalize to <strong>. */
     function normalizeBoldPseudoTags(html) {
         if (!html || typeof html !== 'string') return '';
         var h = html.replace(/<\/bold>/gi, '</strong>');
@@ -645,7 +653,7 @@
         Object.keys(map).forEach(function (key) {
             h = h.split(key).join(map[key]);
         });
-        /* Template often has $[PPL] while values are already currency ($99.00) → collapse $$… */
+        /* Template often has $[PPL] while values are already currency ($99.00) â†’ collapse $$â€¦ */
         while (h.indexOf('$$') !== -1) {
             h = h.replace(/\$\$/g, '$');
         }
@@ -661,8 +669,8 @@
 
     /**
      * B2B Leads fields used for money/count placeholders:
-     * - "Leads Sold Upfront" → [ONBOARDINGNUMBER] and (× Price Per Lead) → [ONBOARDINGAMOUNT]
-     * - "Price Per Lead" → [PPL] and used in [ONBOARDINGAMOUNT]
+     * - "Leads Sold Upfront" â†’ [ONBOARDINGNUMBER] and (Ã— Price Per Lead) â†’ [ONBOARDINGAMOUNT]
+     * - "Price Per Lead" â†’ [PPL] and used in [ONBOARDINGAMOUNT]
      * Lookup/rollup fields often arrive as [n] or { value: n }; plain number/currency fields are numbers.
      */
     function readNumber(val) {
@@ -697,13 +705,13 @@
 
     function shortUrl(u) {
         if (!u || u.length <= 160) return u;
-        return u.slice(0, 160) + '…';
+        return u.slice(0, 160) + 'â€¦';
     }
 
     async function fetchJson(url, options) {
         var method = (options && options.method) || 'GET';
         var t0 = performance.now();
-        logA('fetch →', method, shortUrl(url));
+        logA('fetch â†’', method, shortUrl(url));
         var res;
         try {
             res = await fetch(url, options);
@@ -712,7 +720,7 @@
             throw netErr;
         }
         var ms = Math.round(performance.now() - t0);
-        logA('fetch ←', res.status, res.ok, ms + 'ms');
+        logA('fetch â†', res.status, res.ok, ms + 'ms');
         var text = await res.text();
         var data;
         try {
@@ -961,7 +969,7 @@
         var payBtn = document.getElementById('btn-stripe-checkout');
         if (titleEl) titleEl.textContent = 'Secure checkout';
         if (leadEl) {
-            leadEl.textContent = 'Taking you to Stripe to complete payment…';
+            leadEl.textContent = 'Taking you to Stripe to complete paymentâ€¦';
             leadEl.style.display = '';
         }
         if (msgEl) {
@@ -1014,7 +1022,7 @@
             if (leadEl) leadEl.style.display = 'none';
             if (payBtn) payBtn.style.display = 'none';
             if (msgEl) {
-                msgEl.textContent = 'Saving your payment…';
+                msgEl.textContent = 'Saving your paymentâ€¦';
                 msgEl.className = '';
             }
             try {
@@ -1062,7 +1070,7 @@
             apiBase: BASE
         });
         if (window.location.protocol === 'file:') {
-            warnA('Page opened as file:// — fetches to /api/airtable will fail. Use your deployed site or a local server.');
+            warnA('Page opened as file:// â€” fetches to /api/airtable will fail. Use your deployed site or a local server.');
         }
 
         showEl('state-loading', true);
@@ -1091,7 +1099,7 @@
             logA('B2B Leads: link field', F.SERVICE_AGREEMENT_LINK, '=', fields[F.SERVICE_AGREEMENT_LINK]);
 
             if (isSigned(fields)) {
-                logA('B2B Leads: already signed → show payment placeholder only');
+                logA('B2B Leads: already signed â†’ show payment placeholder only');
                 state.b2bFields = fields;
                 showSignedUi();
                 await handleSignedPageEntry();
@@ -1168,7 +1176,7 @@
         btn.disabled = true;
 
         try {
-            logA('sign: fetching public IP…');
+            logA('sign: fetching public IPâ€¦');
             var ip = await fetchPublicIp();
             logA('sign: IP', ip || '(not available)');
             var signedIso = new Date().toISOString();
@@ -1228,3 +1236,4 @@
     </script>
 </body>
 </html>
+

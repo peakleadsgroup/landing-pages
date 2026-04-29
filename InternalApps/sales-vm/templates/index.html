@@ -1,11 +1,19 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-<head>
+<head>`r`n<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18128405900');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
-    <title>Sales Voicemails – PeakLeads</title>
+    <title>Sales Voicemails â€“ PeakLeads</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -82,7 +90,7 @@
         }
 
         function formatPhone(p) {
-            if (!p) return '—';
+            if (!p) return 'â€”';
             const digits = p.replace(/\D/g, '');
             if (digits.length === 10) return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
             if (digits.length === 11 && digits[0] === '1') return `(${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`;
@@ -90,14 +98,14 @@
         }
 
         function formatDuration(sec) {
-            if (sec == null) return '—';
+            if (sec == null) return 'â€”';
             const m = Math.floor(sec / 60);
             const s = sec % 60;
             return m > 0 ? `${m}:${String(s).padStart(2, '0')}` : `0:${String(s).padStart(2, '0')}`;
         }
 
         function formatDate(iso) {
-            if (!iso) return '—';
+            if (!iso) return 'â€”';
             const d = new Date(iso);
             return d.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
         }
@@ -126,7 +134,7 @@
                             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                 <div class="flex-1 min-w-0">
                                     <p class="font-medium text-gray-900">${formatPhone(r.from)}</p>
-                                    <p class="text-sm text-gray-500">${formatDate(r.date_created)} · ${formatDuration(r.duration)}</p>
+                                    <p class="text-sm text-gray-500">${formatDate(r.date_created)} Â· ${formatDuration(r.duration)}</p>
                                     ${r.to ? `<p class="text-xs text-gray-400 mt-0.5">To: ${formatPhone(r.to)}</p>` : ''}
                                 </div>
                                 <div class="flex-shrink-0">
@@ -149,3 +157,4 @@
     </script>
 </body>
 </html>
+

@@ -1,11 +1,19 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-<head>
+<head>`r`n<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18128405900');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
-    <title>Raw Zip Code Map – Lists & Selection</title>
+    <title>Raw Zip Code Map â€“ Lists & Selection</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -256,7 +264,7 @@
 <body>
     <div id="header">
         <img id="header-logo" src="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" alt="Logo">
-        <h1>Raw Zip Code Map – Lists & Selection</h1>
+        <h1>Raw Zip Code Map â€“ Lists & Selection</h1>
     </div>
     <div id="container">
         <div id="sidebar">
@@ -304,7 +312,7 @@
             </div>
             <div id="loading">
                 <div class="spinner"></div>
-                <span>Loading zip data…</span>
+                <span>Loading zip dataâ€¦</span>
             </div>
         </div>
     </div>
@@ -339,7 +347,7 @@
         function initMap() {
             map = L.map('map').setView([39.8283, -98.5795], 4);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
+                attribution: 'Â© OpenStreetMap contributors',
                 maxZoom: 19
             }).addTo(map);
             setupSelectionMode();
@@ -588,3 +596,4 @@
     </script>
 </body>
 </html>
+

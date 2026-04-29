@@ -1,6 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-<head>
+<head>`r`n<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18128405900');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -440,7 +448,7 @@
             <div class="progress-bar">
                 <div class="progress-fill" id="progressFill" style="width: 10%"></div>
             </div>
-            <button type="button" class="back-button" id="backButton" onclick="prevStep()" style="display: none;">← Back</button>
+            <button type="button" class="back-button" id="backButton" onclick="prevStep()" style="display: none;">â† Back</button>
         </div>
 
             <!-- Step 1: Contractor -->
@@ -586,7 +594,7 @@
 
         <div class="testimonial-card content-card">
             <blockquote>
-                "We've been working with Peak Leads Group for about six months now, and the experience has been excellent from day one. Their team is extremely thoughtful, responsive, and genuinely invested in our success — it never feels like we're just another account.<br><br>
+                "We've been working with Peak Leads Group for about six months now, and the experience has been excellent from day one. Their team is extremely thoughtful, responsive, and genuinely invested in our success â€” it never feels like we're just another account.<br><br>
                 Since partnering with PLG, we've been able to significantly scale our business and confidently expand our service territory into Tennessee. Their lead quality and strategic approach have played a major role in our growth and have helped us take the next step as a company.<br><br>
                 We truly view Peak Leads Group as a growth partner, not just a marketing vendor, and we're excited to continue building with them."
             </blockquote>
@@ -799,7 +807,7 @@
         }
 
         /**
-         * Resolves adATID from the URL: Airtable record IDs (rec…) are used directly;
+         * Resolves adATID from the URL: Airtable record IDs (recâ€¦) are used directly;
          * otherwise matches B2B Ads by primary field (e.g. Meta ?adATID={{ad.name}}).
          */
         async function resolveB2BAdRecordId(adParam) {
@@ -981,3 +989,4 @@
     </script>
 </body>
 </html>
+

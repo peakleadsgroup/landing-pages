@@ -1,6 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-<head>
+<head>`r`n<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18128405900');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -499,14 +507,14 @@
 
         <!-- Setup Notice -->
         <div id="setupNotice" class="setup-notice" style="display: none;">
-            <strong>⚠️ Setup Required</strong>
+            <strong>âš ï¸ Setup Required</strong>
             <p>The Lead Perfection API blocks direct browser requests (CORS). You need to set up a Make.com webhook to proxy the API calls.</p>
             <details>
                 <summary>Click for Make.com Setup Instructions</summary>
                 <ol>
                     <li>Create a new Make.com scenario</li>
-                    <li>Add <strong>Webhooks → Custom webhook</strong> as trigger</li>
-                    <li>Add <strong>HTTP → Make a request</strong> module:
+                    <li>Add <strong>Webhooks â†’ Custom webhook</strong> as trigger</li>
+                    <li>Add <strong>HTTP â†’ Make a request</strong> module:
                         <ul>
                             <li>URL: <code>https://api.leadperfection.com/token</code></li>
                             <li>Method: POST</li>
@@ -514,7 +522,7 @@
                             <li>Fields: grant_type=password, username=Peakleads, password=Peakleasds#1, clientid=ry32a, appkey=AED0AE62-ACF3-447A-941D-683AEC87C0DD</li>
                         </ul>
                     </li>
-                    <li>Add another <strong>HTTP → Make a request</strong> module:
+                    <li>Add another <strong>HTTP â†’ Make a request</strong> module:
                         <ul>
                             <li>URL: <code>https://api.leadperfection.com/api/Leads/GetLeadsForwardLook</code></li>
                             <li>Method: POST</li>
@@ -523,7 +531,7 @@
                             <li>Fields: branchid=, productid=, zip={{zip from webhook}}</li>
                         </ul>
                     </li>
-                    <li>Add <strong>Webhooks → Webhook response</strong> module:
+                    <li>Add <strong>Webhooks â†’ Webhook response</strong> module:
                         <ul>
                             <li>Status: 200</li>
                             <li>Body: {{data from step 4}}</li>
@@ -1308,3 +1316,4 @@
     </script>
 </body>
 </html>
+

@@ -1,11 +1,19 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-<head>
+<head>`r`n<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18128405900');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
-    <title>Client management — Ad set zips</title>
+    <title>Client management â€” Ad set zips</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         details.cm-client > summary { list-style: none; }
@@ -35,7 +43,7 @@
 
         <section class="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm" aria-label="Zip routing lookup">
             <h2 class="text-sm font-semibold text-slate-900 mb-1">Zip routing lookup</h2>
-            <p class="text-xs text-slate-600 mb-3">Enter a zip to list clients in <strong>link creation order</strong> (oldest junction link first — where a lead would go first if you route FIFO by signup time).</p>
+            <p class="text-xs text-slate-600 mb-3">Enter a zip to list clients in <strong>link creation order</strong> (oldest junction link first â€” where a lead would go first if you route FIFO by signup time).</p>
             <form id="zipRouteSearchForm" class="flex flex-col sm:flex-row gap-2 sm:items-center">
                 <label class="sr-only" for="zipRouteSearchInput">Zip code</label>
                 <input id="zipRouteSearchInput" type="text" inputmode="numeric" maxlength="12" placeholder="e.g. 90210" autocomplete="postal-code"
@@ -46,7 +54,7 @@
         </section>
 
         <div id="clientTreeHost" class="space-y-2">
-            <div class="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500 text-sm">Loading…</div>
+            <div class="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500 text-sm">Loadingâ€¦</div>
         </div>
 
         <p class="mt-8 text-xs text-slate-500">
@@ -65,32 +73,32 @@
             CLIENT_NAME_FIELD: 'Name',
             CLIENT_ADSET_FIELDS: ['Adsets'],
 
-            /** Adset table — shown next to each ad set name (0 / empty → displays as “none”) */
+            /** Adset table â€” shown next to each ad set name (0 / empty â†’ displays as â€œnoneâ€) */
             ADSET_WEEKLY_CAP_FIELD: 'Weekly Cap',
 
-            /** Writing new junction rows — must match your junction table */
+            /** Writing new junction rows â€” must match your junction table */
             JUNCTION_ADSET_FIELD: 'Adset',
             JUNCTION_ZIP_FIELD: 'US Zips',
 
             /**
-             * Reading links: Adset record often has a reverse link to the junction (e.g. “Adset Zip Tracking”).
-             * Tried first — finds rows even if the junction’s Adset column wasn’t back-filled.
+             * Reading links: Adset record often has a reverse link to the junction (e.g. â€œAdset Zip Trackingâ€).
+             * Tried first â€” finds rows even if the junctionâ€™s Adset column wasnâ€™t back-filled.
              */
             ADSET_JUNCTION_LINK_FIELDS: ['Adset Zip Tracking', 'Ad Set Zip Tracking'],
 
             /**
-             * Junction column that links to Adset — must exist on tbl87JqHAdJwgq1GL (same as JUNCTION_ADSET_FIELD).
-             * Do not add names from other tables (e.g. Client’s “Adsets”); wrong names cause 422 on every request.
+             * Junction column that links to Adset â€” must exist on tbl87JqHAdJwgq1GL (same as JUNCTION_ADSET_FIELD).
+             * Do not add names from other tables (e.g. Clientâ€™s â€œAdsetsâ€); wrong names cause 422 on every request.
              */
             JUNCTION_ADSET_FILTER_FIELDS: ['Adset'],
 
-            /** Which junction column points at US Zips. Use exact Airtable names only — “Zip” is not on this junction (only US Zips). */
+            /** Which junction column points at US Zips. Use exact Airtable names only â€” â€œZipâ€ is not on this junction (only US Zips). */
             JUNCTION_ZIP_LINK_FIELDS: ['US Zips'],
 
             /**
              * Optional Lookup/Rollup fields on the junction that already show the 5-digit zip.
              * If set, the UI uses them and skips extra calls to the US Zips table (fastest).
-             * Example: a Lookup of {Zip} from the linked US Zips record — use that field name here.
+             * Example: a Lookup of {Zip} from the linked US Zips record â€” use that field name here.
              */
             JUNCTION_ZIP_LOOKUP_FIELDS: [],
 
@@ -104,7 +112,7 @@
             US_ZIPS_MATCH_AS_NUMBER: true,
             US_ZIPS_MATCH_FIELD_CANDIDATES: [],
 
-            /** US Zips — two-letter state on each zip row (exact Airtable field name) */
+            /** US Zips â€” two-letter state on each zip row (exact Airtable field name) */
             US_ZIPS_STATE_FIELD: 'State',
 
             /** Batch list queries instead of one GET per zip (avoids Airtable 429 rate limits) */
@@ -112,7 +120,7 @@
             US_ZIPS_BATCH_PAUSE_MS: 150,
             JUNCTION_BATCH_CHUNK: 20,
 
-            /** Max states per filterByFormula OR(...) when loading “other zips in linked states” (keep under Airtable formula limits). */
+            /** Max states per filterByFormula OR(...) when loading â€œother zips in linked statesâ€ (keep under Airtable formula limits). */
             US_ZIPS_STATE_OR_CHUNK: 12,
         };
 
@@ -120,7 +128,7 @@
             'ZIP', 'Zip', 'zip', 'Name', 'ZCTA', 'Zcta', 'GEOID', 'Zip Code', 'ZIP Code',
         ];
 
-        /** 50 states + DC — two-letter abbreviations, sorted A–Z (for “not included” vs linked zips). */
+        /** 50 states + DC â€” two-letter abbreviations, sorted Aâ€“Z (for â€œnot includedâ€ vs linked zips). */
         const ALL_US_STATE_ABBREVS = [
             'AK', 'AL', 'AR', 'AZ', 'CA', 'CO', 'CT', 'DC', 'DE', 'FL', 'GA', 'HI', 'IA', 'ID', 'IL', 'IN', 'KS',
             'KY', 'LA', 'MA', 'MD', 'ME', 'MI', 'MN', 'MO', 'MS', 'MT', 'NC', 'ND', 'NE', 'NH', 'NJ', 'NM', 'NV',
@@ -192,10 +200,10 @@
         let usZipsMatchField = null;
         let usZipsMatchAsNumber = false;
 
-        /** @type {Map<string, string>} zip record id → display code (5 digits) */
+        /** @type {Map<string, string>} zip record id â†’ display code (5 digits) */
         const zipRecordIdToCode = new Map();
 
-        /** @type {Map<string, string>} zip record id → state abbreviation (US Zips field) */
+        /** @type {Map<string, string>} zip record id â†’ state abbreviation (US Zips field) */
         const zipRecordIdToState = new Map();
 
         const airtableUrl = (table) =>
@@ -277,7 +285,7 @@
             );
         }
 
-        /** Weekly cap for UI: 0 or empty → "none" */
+        /** Weekly cap for UI: 0 or empty â†’ "none" */
         function weeklyCapDisplay(fields) {
             const fname = CONFIG.ADSET_WEEKLY_CAP_FIELD || 'Weekly Cap';
             if (!fields || !fname) return 'none';
@@ -292,7 +300,7 @@
             return s;
         }
 
-        /** Numeric weekly cap for summing (none / empty / 0 → 0) */
+        /** Numeric weekly cap for summing (none / empty / 0 â†’ 0) */
         function weeklyCapNumeric(fields) {
             const fname = CONFIG.ADSET_WEEKLY_CAP_FIELD || 'Weekly Cap';
             if (!fields || !fname) return 0;
@@ -425,7 +433,7 @@
         }
 
         /**
-         * Fills zipRecordIdToCode by record id only — OR(RECORD_ID()=...) on US Zips.
+         * Fills zipRecordIdToCode by record id only â€” OR(RECORD_ID()=...) on US Zips.
          * When US_ZIPS_STATE_FIELD is set, also fills zipRecordIdToState (same batch).
          * @param {((done: number, total: number) => void) | null} onProgress
          */
@@ -613,7 +621,7 @@
         }
 
         /**
-         * Junction rows for an ad set only — follows links and targeted filters.
+         * Junction rows for an ad set only â€” follows links and targeted filters.
          * Never queries all US Zips; optional full junction scan only if CONFIG.JUNCTION_FALLBACK_FULL_SCAN.
          */
         async function fetchJunctionRowsForAdset(adsetId) {
@@ -672,7 +680,7 @@
          * @returns {Promise<{ zips: string, states: string, statesNotIncluded: string, linkedZipFives: string[], linkedStateAbbrevs: string[] }>}
          */
         async function commaSeparatedZipsForAdset(adsetId, onProgress) {
-            onProgress?.('Finding linked zips…');
+            onProgress?.('Finding linked zipsâ€¦');
             const rows = await fetchJunctionRowsForAdset(adsetId);
             if (rows.length === 0) {
                 return {
@@ -699,9 +707,9 @@
             }
             if (needHydrate.length > 0) {
                 const total = [...new Set(needHydrate)].length;
-                onProgress?.(`Loading zip names 0/${total}…`);
+                onProgress?.(`Loading zip names 0/${total}â€¦`);
                 await hydrateZipCodesBatch(needHydrate, (done, n) => {
-                    onProgress?.(`Loading zip names ${done}/${n}…`);
+                    onProgress?.(`Loading zip names ${done}/${n}â€¦`);
                 });
             }
             const zipRecordIds = rows.map((r) => r.zipRecordId);
@@ -830,7 +838,7 @@
                 const summary = document.createElement('summary');
                 summary.className =
                     'flex cursor-pointer select-none items-center gap-2 px-4 py-3 text-left text-base font-semibold text-slate-900 hover:bg-slate-50 rounded-xl';
-                summary.innerHTML = `<span class="inline-block w-4 shrink-0 text-slate-400 cm-chevron-client">▸</span><span class="min-w-0 flex-1 truncate">${escapeHtml(cname)}</span><span class="shrink-0 text-right text-xs font-normal text-slate-500 leading-tight"><span class="block">Weekly cap sum: ${escapeHtml(String(Math.round(weeklyCapSum)))}</span><span class="block text-slate-400">${adsetIds.length} ad set${adsetIds.length !== 1 ? 's' : ''}</span></span>`;
+                summary.innerHTML = `<span class="inline-block w-4 shrink-0 text-slate-400 cm-chevron-client">â–¸</span><span class="min-w-0 flex-1 truncate">${escapeHtml(cname)}</span><span class="shrink-0 text-right text-xs font-normal text-slate-500 leading-tight"><span class="block">Weekly cap sum: ${escapeHtml(String(Math.round(weeklyCapSum)))}</span><span class="block text-slate-400">${adsetIds.length} ad set${adsetIds.length !== 1 ? 's' : ''}</span></span>`;
 
                 const body = document.createElement('div');
                 body.className = 'border-t border-slate-100 px-3 pb-3 pt-1 space-y-1';
@@ -850,42 +858,42 @@
                         const adSum = document.createElement('summary');
                         adSum.className =
                             'flex cursor-pointer select-none items-center gap-2 px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-100/80 rounded-lg';
-                        adSum.innerHTML = `<span class="inline-block w-3.5 text-slate-400 text-xs cm-chevron-adset shrink-0">▸</span><span class="min-w-0 flex-1 truncate">${escapeHtml(label)}</span><span class="shrink-0 text-right text-xs font-normal text-slate-500 whitespace-nowrap pl-2">Weekly cap: ${escapeHtml(capText)}</span>`;
+                        adSum.innerHTML = `<span class="inline-block w-3.5 text-slate-400 text-xs cm-chevron-adset shrink-0">â–¸</span><span class="min-w-0 flex-1 truncate">${escapeHtml(label)}</span><span class="shrink-0 text-right text-xs font-normal text-slate-500 whitespace-nowrap pl-2">Weekly cap: ${escapeHtml(capText)}</span>`;
 
                         const adPanel = document.createElement('div');
                         adPanel.className = 'border-t border-slate-200/80 p-3 space-y-3 bg-white rounded-b-lg';
                         adPanel.innerHTML = `
                             <details class="cm-available-zips rounded-lg border border-slate-200 bg-slate-50/50" data-role="linked-zips-details">
                                 <summary class="flex cursor-pointer select-none items-center gap-2 rounded-lg px-2 py-2 text-left text-xs font-medium text-slate-600 hover:bg-slate-100/80">
-                                    <span class="inline-block w-3 shrink-0 text-slate-400 text-[10px] cm-chevron-avail">▸</span>
+                                    <span class="inline-block w-3 shrink-0 text-slate-400 text-[10px] cm-chevron-avail">â–¸</span>
                                     <span>Linked zips</span>
                                 </summary>
                                 <div class="border-t border-slate-200/80 px-2 pb-3 pt-2">
-                                    <p class="text-sm text-slate-700 font-mono leading-relaxed min-h-[1.25rem] break-words" data-role="zip-line">—</p>
+                                    <p class="text-sm text-slate-700 font-mono leading-relaxed min-h-[1.25rem] break-words" data-role="zip-line">â€”</p>
                                 </div>
                             </details>
                             <details class="cm-available-zips rounded-lg border border-slate-200 bg-slate-50/50" data-role="linked-states-details">
                                 <summary class="flex cursor-pointer select-none items-center gap-2 rounded-lg px-2 py-2 text-left text-xs font-medium text-slate-600 hover:bg-slate-100/80">
-                                    <span class="inline-block w-3 shrink-0 text-slate-400 text-[10px] cm-chevron-avail">▸</span>
+                                    <span class="inline-block w-3 shrink-0 text-slate-400 text-[10px] cm-chevron-avail">â–¸</span>
                                     <span>Linked states</span>
                                 </summary>
                                 <div class="border-t border-slate-200/80 px-2 pb-3 pt-2">
-                                    <p class="text-sm text-slate-700 font-mono leading-relaxed min-h-[1.25rem] break-words" data-role="states-line">—</p>
+                                    <p class="text-sm text-slate-700 font-mono leading-relaxed min-h-[1.25rem] break-words" data-role="states-line">â€”</p>
                                 </div>
                             </details>
                             <details class="cm-available-zips rounded-lg border border-slate-200 bg-slate-50/50" data-role="states-not-included-details">
                                 <summary class="flex cursor-pointer select-none items-center gap-2 rounded-lg px-2 py-2 text-left text-xs font-medium text-slate-600 hover:bg-slate-100/80">
-                                    <span class="inline-block w-3 shrink-0 text-slate-400 text-[10px] cm-chevron-avail">▸</span>
+                                    <span class="inline-block w-3 shrink-0 text-slate-400 text-[10px] cm-chevron-avail">â–¸</span>
                                     <span>States not included</span>
                                 </summary>
                                 <div class="border-t border-slate-200/80 px-2 pb-3 pt-2">
-                                    <p class="text-sm text-slate-700 font-mono leading-relaxed min-h-[1.25rem] break-words" data-role="states-not-included-line">—</p>
+                                    <p class="text-sm text-slate-700 font-mono leading-relaxed min-h-[1.25rem] break-words" data-role="states-not-included-line">â€”</p>
                                 </div>
                             </details>
                             <details class="cm-available-zips rounded-lg border border-slate-200 bg-slate-50/50" data-role="available-zips-details">
                                 <summary class="flex cursor-pointer select-none items-center gap-2 rounded-lg px-2 py-2 text-left text-xs font-medium text-slate-600 hover:bg-slate-100/80">
-                                    <span class="inline-block w-3 shrink-0 text-slate-400 text-[10px] cm-chevron-avail">▸</span>
-                                    <span>Other US Zips in linked states (not linked) — open to load</span>
+                                    <span class="inline-block w-3 shrink-0 text-slate-400 text-[10px] cm-chevron-avail">â–¸</span>
+                                    <span>Other US Zips in linked states (not linked) â€” open to load</span>
                                 </summary>
                                 <div class="border-t border-slate-200/80 px-2 pb-3 pt-2" data-role="available-zips-body">
                                     <p class="text-xs text-slate-500">Open this section to load from US Zips.</p>
@@ -960,7 +968,7 @@
 
             if (adDetails._cmLinkedStates === null) {
                 body.innerHTML =
-                    '<p class="text-xs text-slate-500">Linked zips are still loading — try again in a moment.</p>';
+                    '<p class="text-xs text-slate-500">Linked zips are still loading â€” try again in a moment.</p>';
                 return;
             }
 
@@ -975,7 +983,7 @@
             }
 
             adDetails._cmAvailZipsLoading = true;
-            body.innerHTML = '<p class="text-xs text-slate-500">Loading US Zips for linked states…</p>';
+            body.innerHTML = '<p class="text-xs text-slate-500">Loading US Zips for linked statesâ€¦</p>';
 
             try {
                 const chunkN = Math.max(1, Math.min(20, CONFIG.US_ZIPS_STATE_OR_CHUNK || 12));
@@ -1041,9 +1049,9 @@
             const zipLine = adDetails.querySelector('[data-role="zip-line"]');
             const statesLine = adDetails.querySelector('[data-role="states-line"]');
             const statesNotLine = adDetails.querySelector('[data-role="states-not-included-line"]');
-            zipLine.textContent = 'Loading…';
-            if (statesLine) statesLine.textContent = 'Loading…';
-            if (statesNotLine) statesNotLine.textContent = 'Loading…';
+            zipLine.textContent = 'Loadingâ€¦';
+            if (statesLine) statesLine.textContent = 'Loadingâ€¦';
+            if (statesNotLine) statesNotLine.textContent = 'Loadingâ€¦';
             try {
                 const { zips, states, statesNotIncluded, linkedZipFives, linkedStateAbbrevs } =
                     await commaSeparatedZipsForAdset(adsetId, (msg) => setPanelProgress(adDetails, msg));
@@ -1051,20 +1059,20 @@
                 adDetails._cmLinkedStates = linkedStateAbbrevs || [];
 
                 zipLine.textContent = zips || '(none)';
-                if (statesLine) statesLine.textContent = states || '—';
+                if (statesLine) statesLine.textContent = states || 'â€”';
                 if (statesNotLine) {
                     if (statesNotIncluded) statesNotLine.textContent = statesNotIncluded;
                     else if (usZipsStateFieldName())
                         statesNotLine.textContent = zips ? '(none)' : stateAbbrevsToSortedDisplayLine(ALL_US_STATE_ABBREVS);
-                    else statesNotLine.textContent = '—';
+                    else statesNotLine.textContent = 'â€”';
                 }
             } catch (e) {
                 console.error(e);
                 adDetails._cmLinkedZipFives = new Set();
                 adDetails._cmLinkedStates = [];
                 zipLine.textContent = 'Error loading zips.';
-                if (statesLine) statesLine.textContent = '—';
-                if (statesNotLine) statesNotLine.textContent = '—';
+                if (statesLine) statesLine.textContent = 'â€”';
+                if (statesNotLine) statesNotLine.textContent = 'â€”';
             }
         }
 
@@ -1083,7 +1091,7 @@
             btnAdd.disabled = true;
             btnRemove.disabled = true;
             const totalIn = zips.length;
-            setPanelProgress(adDetails, `Add: loading current links… (0/${totalIn} zips)`);
+            setPanelProgress(adDetails, `Add: loading current linksâ€¦ (0/${totalIn} zips)`);
 
             try {
                 const existingRows = await fetchJunctionRowsForAdset(adsetId);
@@ -1097,14 +1105,14 @@
                     const five = zips[idx];
                     setPanelProgress(
                         adDetails,
-                        `Add: looking up US Zips ${idx + 1}/${totalIn}…`
+                        `Add: looking up US Zips ${idx + 1}/${totalIn}â€¦`
                     );
                     const zipRecId = await findZipRecordId(five);
                     if (!zipRecId) {
                         notFound.push(five);
                         continue;
                     }
-                    /* Already linked for this ad set — skip; do not POST another row or change the existing link */
+                    /* Already linked for this ad set â€” skip; do not POST another row or change the existing link */
                     if (existingZipIds.has(zipRecId)) {
                         duplicate.push(five);
                         continue;
@@ -1114,9 +1122,9 @@
                 }
 
                 if (toCreate.length > 0) {
-                    setPanelProgress(adDetails, `Add: saving links 0/${toCreate.length}…`);
+                    setPanelProgress(adDetails, `Add: saving links 0/${toCreate.length}â€¦`);
                     await createJunctionRows(adsetId, toCreate, (done, tot) => {
-                        setPanelProgress(adDetails, `Add: saving links ${done}/${tot}…`);
+                        setPanelProgress(adDetails, `Add: saving links ${done}/${tot}â€¦`);
                     });
                 }
 
@@ -1159,7 +1167,7 @@
             btnAdd.disabled = true;
             btnRemove.disabled = true;
             const totalIn = zips.length;
-            setPanelProgress(adDetails, `Remove: loading links… (0/${totalIn} zips)`);
+            setPanelProgress(adDetails, `Remove: loading linksâ€¦ (0/${totalIn} zips)`);
 
             try {
                 const rows = await fetchJunctionRowsForAdset(adsetId);
@@ -1174,7 +1182,7 @@
                     const five = zips[idx];
                     setPanelProgress(
                         adDetails,
-                        `Remove: looking up ${idx + 1}/${totalIn}…`
+                        `Remove: looking up ${idx + 1}/${totalIn}â€¦`
                     );
                     const zipRecId = await findZipRecordId(five);
                     if (!zipRecId) {
@@ -1191,7 +1199,7 @@
 
                 const delTotal = toDelete.length;
                 for (let d = 0; d < toDelete.length; d++) {
-                    setPanelProgress(adDetails, `Remove: deleting ${d + 1}/${delTotal}…`);
+                    setPanelProgress(adDetails, `Remove: deleting ${d + 1}/${delTotal}â€¦`);
                     await deleteJunctionRecord(toDelete[d].junctionId);
                 }
 
@@ -1233,7 +1241,7 @@
         }
 
         function formatLinkCreated(iso) {
-            if (!iso) return '—';
+            if (!iso) return 'â€”';
             const d = new Date(iso);
             return d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
         }
@@ -1317,7 +1325,7 @@
                     const adsetId = adsetIdFromJunctionFields(rec.fields);
                     const clientName = adsetId ? clientNameForAdset(adsetId) : null;
                     const ar = adsetId ? adsetById.get(adsetId) : null;
-                    const adLabel = ar ? adsetLabel(ar.fields) : adsetId || '—';
+                    const adLabel = ar ? adsetLabel(ar.fields) : adsetId || 'â€”';
                     const clientCell =
                         clientName != null
                             ? escapeHtml(clientName)
@@ -1334,7 +1342,7 @@
 
             el.classList.remove('hidden');
             el.innerHTML = `
-    <p class="text-xs text-slate-500 mb-2">${junctionRecords.length} link(s) for <span class="font-mono font-medium text-slate-800">${escapeHtml(zipFive)}</span> — <span class="text-slate-600">oldest first (first in line)</span></p>
+    <p class="text-xs text-slate-500 mb-2">${junctionRecords.length} link(s) for <span class="font-mono font-medium text-slate-800">${escapeHtml(zipFive)}</span> â€” <span class="text-slate-600">oldest first (first in line)</span></p>
     <div class="overflow-x-auto -mx-1">
       <table class="w-full text-left border-collapse min-w-[320px]">
         <thead>
@@ -1364,7 +1372,7 @@
             btn.disabled = true;
             const resultsEl = document.getElementById('zipRouteSearchResults');
             resultsEl.classList.remove('hidden');
-            resultsEl.innerHTML = '<p class="text-sm text-slate-500">Looking up zip and junction links…</p>';
+            resultsEl.innerHTML = '<p class="text-sm text-slate-500">Looking up zip and junction linksâ€¦</p>';
             try {
                 const zipRecId = await findZipRecordId(zipFive);
                 if (!zipRecId) {
@@ -1398,3 +1406,4 @@
     </script>
 </body>
 </html>
+

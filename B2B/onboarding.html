@@ -1,6 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-<head>
+<head>`r`n<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18128405900');
+</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="robots" content="noindex, nofollow">
@@ -419,7 +427,7 @@
         <div class="form-question">
           <h2 style="font-size:1.8rem; color:#333; margin-bottom:0.5rem; text-align:center;">Contacts</h2>
           <p style="font-size:1.1rem; color:#666; margin-bottom:1rem; text-align:center;">Choose who receives instant emails and texts with lead information</p>
-          <p style="font-size:0.95rem; color:#dc3545; margin-bottom:2rem; text-align:center; font-weight:600;">⚠️ At least one contact must be selected for "New Lead" notifications and at least one contact must be selected for "Billing" notifications</p>
+          <p style="font-size:0.95rem; color:#dc3545; margin-bottom:2rem; text-align:center; font-weight:600;">âš ï¸ At least one contact must be selected for "New Lead" notifications and at least one contact must be selected for "Billing" notifications</p>
           
           <div id="contactsContainer">
             <!-- Contacts will be added here dynamically -->
@@ -523,13 +531,13 @@
         indicator.textContent = 'Saving...';
       } else if (status === 'saved') {
         indicator.classList.add('saved');
-        indicator.textContent = '✓ Saved';
+        indicator.textContent = 'âœ“ Saved';
         setTimeout(() => {
           indicator.classList.remove('saved');
         }, 2000);
       } else if (status === 'error') {
         indicator.classList.add('error');
-        indicator.textContent = '✗ Save failed';
+        indicator.textContent = 'âœ— Save failed';
         setTimeout(() => {
           indicator.classList.remove('error');
         }, 3000);
@@ -2074,4 +2082,5 @@
   </script>
 </body>
 </html>
+
 

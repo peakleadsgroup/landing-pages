@@ -1,11 +1,19 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-<head>
+<head>`r`n<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18128405900');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
-    <title>B2C Lead → Adset linker</title>
+    <title>B2C Lead â†’ Adset linker</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -126,9 +134,9 @@
 </head>
 <body>
     <header>
-        <h1>B2C Lead → Adset linker</h1>
+        <h1>B2C Lead â†’ Adset linker</h1>
         <p>
-            Choose a <strong>client</strong> and an <strong>Adset</strong>, then apply — except clients that use <strong>zip routing</strong> (<strong>Expo Home Improvement</strong>: STX, NTX, ETX, CTX, HTX; <strong>EZ Pro Bath Express</strong>: Charlotte, SC, Raleigh), which route each lead using the lead’s <strong>Zip</strong> and <strong>Adset Zip Tracking</strong> zips per regional ad set.
+            Choose a <strong>client</strong> and an <strong>Adset</strong>, then apply â€” except clients that use <strong>zip routing</strong> (<strong>Expo Home Improvement</strong>: STX, NTX, ETX, CTX, HTX; <strong>EZ Pro Bath Express</strong>: Charlotte, SC, Raleigh), which route each lead using the leadâ€™s <strong>Zip</strong> and <strong>Adset Zip Tracking</strong> zips per regional ad set.
             Other clients: match on <strong>Name</strong> in <strong>Linked Client</strong> plus record id, then set the chosen ad set.
             Console: <code>[B2C Adset Linker]</code>.
         </p>
@@ -139,16 +147,16 @@
                 <div>
                     <label for="client-select">B2C Client</label>
                     <select id="client-select" disabled>
-                        <option value="">Loading clients…</option>
+                        <option value="">Loading clientsâ€¦</option>
                     </select>
                     <p class="hint">Table: Clients</p>
                 </div>
                 <div>
                     <label for="adset-select">Adset</label>
                     <select id="adset-select" disabled>
-                        <option value="">Loading ad sets…</option>
+                        <option value="">Loading ad setsâ€¦</option>
                     </select>
-                    <p class="hint" id="adset-hint">Table: Adset · shown: Adset Name</p>
+                    <p class="hint" id="adset-hint">Table: Adset Â· shown: Adset Name</p>
                 </div>
             </div>
             <div class="actions">
@@ -163,16 +171,16 @@
         (function () {
             const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
             const AIRTABLE_BASE_URL = '/api/airtable/v0/' + AIRTABLE_BASE_ID;
-            /** Table IDs — B2C Leads / Clients / Adset in base appmBb0lzqRK9dI8v. */
+            /** Table IDs â€” B2C Leads / Clients / Adset in base appmBb0lzqRK9dI8v. */
             const TABLE_CLIENTS = 'tblMl8Y97cMSbricC';
             const TABLE_LEADS = 'tblPt6Wc79hTBSmcD';
             const TABLE_ADSET = 'tblee61crNCoSfurx';
             const FIELD_LINKED_CLIENT = 'Linked Client';
             const FIELD_ADSET = 'Adset';
             const FIELD_ADSET_NAME = 'Adset Name';
-            /** Value shown in ARRAYJOIN({Linked Client}) — usually the Clients table primary field (see Dashboards/fivestar.html). */
+            /** Value shown in ARRAYJOIN({Linked Client}) â€” usually the Clients table primary field (see Dashboards/fivestar.html). */
             const FIELD_CLIENT_NAME = 'Name';
-            /** Primary Clients → Adset link field (many bases also use one of the candidates below). */
+            /** Primary Clients â†’ Adset link field (many bases also use one of the candidates below). */
             const FIELD_CLIENT_ADSETS = 'Adsets';
             /** If a zip-routing client row has no links, try each of these field names on Clients. */
             const FIELD_CLIENT_ADSETS_CANDIDATES = [
@@ -184,22 +192,22 @@
                 'Adset',
                 'Campaign Adsets'
             ];
-            /** B2C Leads — zip for routing (text, number, or link to US Zips). */
+            /** B2C Leads â€” zip for routing (text, number, or link to US Zips). */
             const FIELD_LEAD_ZIP = 'Zip';
-            /** Junction “Adset Zip Tracking” (same table id as ClientManagement). */
+            /** Junction â€œAdset Zip Trackingâ€ (same table id as ClientManagement). */
             const TABLE_ADSET_ZIPS = 'tbl87JqHAdJwgq1GL';
             const TABLE_US_ZIPS = 'tblieaHIf6rDfFZFl';
             const FIELD_JUNCTION_ADSET = 'Adset';
             const FIELD_JUNCTION_ZIP = 'US Zips';
             /**
              * Mirrors Dashboards/ClientManagement.html CONFIG + fetchJunctionRowsForAdset().
-             * Order: (1) reverse link from Adset → junction ids, (2) filter junction where {Adset}=rec.
+             * Order: (1) reverse link from Adset â†’ junction ids, (2) filter junction where {Adset}=rec.
              */
             const ADSET_JUNCTION_REVERSE_LINK_FIELDS = ['Adset Zip Tracking', 'Ad Set Zip Tracking'];
             const JUNCTION_ADSET_FILTER_FIELDS = ['Adset'];
             const JUNCTION_ZIP_LINK_FIELDS = ['US Zips'];
             /**
-             * Clients that map each lead’s zip to an ad set via junction zips (scoped to this client’s Adsets).
+             * Clients that map each leadâ€™s zip to an ad set via junction zips (scoped to this clientâ€™s Adsets).
              * regionTokens: substrings of Adset Name used for tie-breaks when the same zip maps to multiple ad sets (earlier wins).
              */
             const ZIP_ROUTE_CLIENTS = [
@@ -214,7 +222,7 @@
             ];
             const LOG_PREFIX = '[B2C Adset Linker]';
 
-            /** Maps client record id → string used in FIND(..., ARRAYJOIN({Linked Client})). */
+            /** Maps client record id â†’ string used in FIND(..., ARRAYJOIN({Linked Client})). */
             var clientFilterNamesById = {};
             /** Resolved from first US Zips row: { field, asNumber }. */
             var usZipMatchCache = null;
@@ -290,7 +298,7 @@
                 return String(v);
             }
 
-            /** preferredKeys: try these field names first (e.g. Adset table → "Adset Name"). */
+            /** preferredKeys: try these field names first (e.g. Adset table â†’ "Adset Name"). */
             function recordLabel(fields, preferredKeys) {
                 if (!fields) return 'Unnamed';
                 var pk = preferredKeys || [];
@@ -340,7 +348,7 @@
                     if (debug) {
                         log('log', 'fetchAllRecords: request page', {
                             offset: offset != null ? offset : '(first)',
-                            urlTail: pageUrl.length > 200 ? '…' + pageUrl.slice(-200) : pageUrl
+                            urlTail: pageUrl.length > 200 ? 'â€¦' + pageUrl.slice(-200) : pageUrl
                         });
                     }
                     return fetchAirtableJson(pageUrl).then(function (data) {
@@ -368,7 +376,7 @@
             }
 
             /**
-             * ARRAYJOIN({Linked Client}) lists linked records’ primary-field values, not record ids.
+             * ARRAYJOIN({Linked Client}) lists linked recordsâ€™ primary-field values, not record ids.
              * FIND by name narrows the result set; we then require the selected client rec id in the API field array.
              */
             function leadsFilterFormulaByClientPrimaryName(clientPrimaryName) {
@@ -383,7 +391,7 @@
                     if (!Array.isArray(links)) {
                         if (!missingArrayLogged) {
                             missingArrayLogged = true;
-                            log('warn', 'Lead(s) without Linked Client as array — skipped in id filter', {
+                            log('warn', 'Lead(s) without Linked Client as array â€” skipped in id filter', {
                                 exampleLeadId: r.id,
                                 linkedClientType: typeof links,
                                 linkedClientValue: links
@@ -556,7 +564,7 @@
                 });
                 log('log', dn + ': regional ad sets (Clients link and/or Adset Name fallback + zips in Adset Zip Tracking)', {
                     byRegion: byCode,
-                    note: 'Each lead’s Zip should map to exactly one regional ad set via junction rows.'
+                    note: 'Each leadâ€™s Zip should map to exactly one regional ad set via junction rows.'
                 });
                 tokens.forEach(function (code) {
                     if (!byCode[code] || byCode[code].length === 0) {
@@ -569,7 +577,7 @@
                 });
             }
 
-            /** US Zips record id from a junction row — same idea as zipRecordIdFromJunctionFields in ClientManagement. */
+            /** US Zips record id from a junction row â€” same idea as zipRecordIdFromJunctionFields in ClientManagement. */
             function zipRecordIdFromJunctionFields(fields) {
                 if (!fields) return null;
                 var keys = JUNCTION_ZIP_LINK_FIELDS.length
@@ -609,7 +617,7 @@
             }
 
             /**
-             * Filter Adset Zip Tracking where junction column (e.g. {Adset}) = ad set id — ClientManagement step 2.
+             * Filter Adset Zip Tracking where junction column (e.g. {Adset}) = ad set id â€” ClientManagement step 2.
              */
             function fetchJunctionByAdsetFieldFormula(adsetIds, adsetFieldName, zipConfig) {
                 var unique = adsetIds.filter(function (id, i, a) {
@@ -646,7 +654,7 @@
 
             /**
              * Same strategy as ClientManagement fetchJunctionRowsForAdset(adsetId):
-             * 1) GET each Adset → read Adset Zip Tracking / Ad Set Zip Tracking → load junction rows by RECORD_ID.
+             * 1) GET each Adset â†’ read Adset Zip Tracking / Ad Set Zip Tracking â†’ load junction rows by RECORD_ID.
              * 2) If none, filter junction table with {JUNCTION_ADSET_FILTER_FIELDS} = ad set id.
              */
             function fetchJunctionForAdsetIds(adsetIds, zipConfig) {
@@ -657,26 +665,26 @@
                 if (unique.length === 0) return Promise.resolve([]);
                 return fetchJunctionViaAdsetReverseLinks(unique, zipConfig).then(function (fromReverse) {
                     if (fromReverse && fromReverse.length > 0) {
-                        log('log', logDn + ': junction rows (step 1 — Adset reverse links, same as ClientManagement)', {
+                        log('log', logDn + ': junction rows (step 1 â€” Adset reverse links, same as ClientManagement)', {
                             count: fromReverse.length
                         });
                         return fromReverse;
                     }
                     log(
                         'warn',
-                        logDn + ': no junction ids on Adset records — step 2: filter junction by linked Adset column'
+                        logDn + ': no junction ids on Adset records â€” step 2: filter junction by linked Adset column'
                     );
                     var fIdx = 0;
                     function tryNextFilterField() {
                         if (fIdx >= JUNCTION_ADSET_FILTER_FIELDS.length) {
-                            log('error', logDn + ': junction still empty — check Adset Zip Tracking on Adset rows and {Adset} on tbl87JqHAdJwgq1GL');
+                            log('error', logDn + ': junction still empty â€” check Adset Zip Tracking on Adset rows and {Adset} on tbl87JqHAdJwgq1GL');
                             return [];
                         }
                         var col = JUNCTION_ADSET_FILTER_FIELDS[fIdx];
                         fIdx += 1;
                         return fetchJunctionByAdsetFieldFormula(unique, col, zipConfig).then(function (rows) {
                             if (rows && rows.length > 0) {
-                                log('log', logDn + ': junction rows (step 2 — filter by {' + col + '})', {
+                                log('log', logDn + ': junction rows (step 2 â€” filter by {' + col + '})', {
                                     count: rows.length
                                 });
                                 return rows;
@@ -730,7 +738,7 @@
                     if (juncIds.length === 0) {
                         log(
                             'log',
-                            logDn + ': no junction ids on Adset reverse-link fields — will try junction filterByFormula next (ClientManagement step 2)'
+                            logDn + ': no junction ids on Adset reverse-link fields â€” will try junction filterByFormula next (ClientManagement step 2)'
                         );
                         return [];
                     }
@@ -747,13 +755,13 @@
             }
 
             /**
-             * @param {Object.<string,string>} [adsetIdToName] — Adset Name per id (for regional tie-breaks).
+             * @param {Object.<string,string>} [adsetIdToName] â€” Adset Name per id (for regional tie-breaks).
              * @returns {Promise<{ zipToAdset: Object.<string,string>, conflicts: Array }>}
              */
             function buildZipToAdsetMap(adsetIds, adsetIdToName, zipConfig) {
                 var tokens = (zipConfig && zipConfig.regionTokens) || [];
                 var logDn = (zipConfig && zipConfig.displayName) || 'Zip route';
-                var tieBreakHint = tokens.length ? tokens.join('→') : 'record id';
+                var tieBreakHint = tokens.length ? tokens.join('â†’') : 'record id';
                 return fetchJunctionForAdsetIds(adsetIds, zipConfig).then(function (juncRows) {
                     var zipToCandidates = {};
                     juncRows.forEach(function (row) {
@@ -792,12 +800,12 @@
                     if (conflicts.length) {
                         log(
                             'warn',
-                            logDn + ': same zip linked to multiple ad sets — picked by regional name order (' + tieBreakHint + ')',
+                            logDn + ': same zip linked to multiple ad sets â€” picked by regional name order (' + tieBreakHint + ')',
                             conflicts.slice(0, 12)
                         );
                     }
                     return enrichFiveDigitToAdsetFromJunction(zipToAdset, adsetIdToName, zipConfig).then(function (fiveDigitToAdset) {
-                        log('log', logDn + ': built zip→adset map', {
+                        log('log', logDn + ': built zipâ†’adset map', {
                             uniqueZipRecordIds: Object.keys(zipToAdset).length,
                             fiveDigitFallbackEntries: Object.keys(fiveDigitToAdset).length,
                             junctionRows: juncRows.length
@@ -813,7 +821,7 @@
 
             /**
              * Junction stores US Zips **record ids**. Leads may resolve the same ZIP to a *different* US Zips row
-             * (duplicate zips in the table). This builds 5-digit → ad set from the same junction rows so we can still match.
+             * (duplicate zips in the table). This builds 5-digit â†’ ad set from the same junction rows so we can still match.
              */
             function enrichFiveDigitToAdsetFromJunction(zipToAdset, adsetIdToName, zipConfig) {
                 var tokens = (zipConfig && zipConfig.regionTokens) || [];
@@ -843,7 +851,7 @@
                                         tokens
                                     );
                                     fiveToAd[five] = r1 <= r2 ? a1 : a2;
-                                    log('warn', logDn + ': junction had two US Zips rows for same 5-digit zip — tie-broke by region', {
+                                    log('warn', logDn + ': junction had two US Zips rows for same 5-digit zip â€” tie-broke by region', {
                                         five: five,
                                         kept: fiveToAd[five]
                                     });
@@ -909,7 +917,7 @@
                 var logDn = (zipConfig && zipConfig.displayName) || clientDisplayName || 'Zip route';
                 var q = airtableEscapeDoubleQuotes(clientDisplayName);
                 var formula = 'FIND("' + q + '", {' + FIELD_ADSET_NAME + '})';
-                log('log', logDn + ': fallback — Adset table filterByFormula', { formula: formula });
+                log('log', logDn + ': fallback â€” Adset table filterByFormula', { formula: formula });
                 return fetchAllRecords(TABLE_ADSET, formula, true).then(function (recs) {
                     return recs.map(function (r) {
                         return r.id;
@@ -981,7 +989,7 @@
                                     });
                                     log('log', (zipConfig && zipConfig.displayName) + ': assignment plan', {
                                         howItWorks:
-                                            'For each lead (already filtered by Linked Client): read Zip → match Adset Zip Tracking by US Zips record id, then by 5-digit zip if ids differ.',
+                                            'For each lead (already filtered by Linked Client): read Zip â†’ match Adset Zip Tracking by US Zips record id, then by 5-digit zip if ids differ.',
                                         planByAdset: planByAdset,
                                         skippedByReason: skippedByReason,
                                         skippedSample: skipped.slice(0, 20),
@@ -1017,7 +1025,7 @@
                         if (adsetIds.length > 0) {
                             return runZipRoutePlanWithAdsetIds(leads, adsetIds, zipConfig);
                         }
-                        log('warn', dn + ': no linked ad sets on Clients — fallback to Adset table (Adset Name contains client name)', {
+                        log('warn', dn + ': no linked ad sets on Clients â€” fallback to Adset table (Adset Name contains client name)', {
                             triedFields: FIELD_CLIENT_ADSETS_CANDIDATES
                         });
                         return fetchZipRouteAdsetIdsFromAdsetTableByName(zipConfig.displayName, zipConfig).then(function (fallbackIds) {
@@ -1028,9 +1036,9 @@
                                         dn +
                                         '. Either link them on the Clients row (field names we try: ' +
                                         FIELD_CLIENT_ADSETS_CANDIDATES.join(', ') +
-                                        '), or ensure “Adset Name” contains “' +
+                                        '), or ensure â€œAdset Nameâ€ contains â€œ' +
                                         zipConfig.displayName +
-                                        '”.'
+                                        'â€.'
                                 );
                                 return Promise.reject(new Error('ZIP_ROUTE_NO_CLIENT_ADSETS'));
                             }
@@ -1051,7 +1059,7 @@
                                 'error',
                                 'No leads could be assigned. Check console for ' +
                                     dn +
-                                    ': skippedByReason — usually Zip is empty, or the zip is not linked to a regional ad set in Adset Zip Tracking (or the lead’s US Zips row differs from the junction’s; 5-digit fallback should help).'
+                                    ': skippedByReason â€” usually Zip is empty, or the zip is not linked to a regional ad set in Adset Zip Tracking (or the leadâ€™s US Zips row differs from the junctionâ€™s; 5-digit fallback should help).'
                             );
                             return Promise.reject(new Error('ZIP_ROUTE_NO_ASSIGNMENTS'));
                         }
@@ -1066,7 +1074,7 @@
                             showStatus('info', 'Cancelled.');
                             return Promise.reject(new Error('USER_CANCEL'));
                         }
-                        showStatus('info', 'Updating ' + total + ' lead(s) across ad sets…');
+                        showStatus('info', 'Updating ' + total + ' lead(s) across ad setsâ€¦');
                         var adsetKeys = Object.keys(plan.planByAdset).sort();
                         var runAdset = function (idx) {
                             if (idx >= adsetKeys.length) {
@@ -1116,10 +1124,10 @@
                 if (adsetHintEl) {
                     adsetHintEl.textContent = zipRoute
                         ? zipCfg.displayName +
-                          ' — regions: ' +
+                          ' â€” regions: ' +
                           zipCfg.regionTokens.join(', ') +
-                          ' — each lead’s Zip picks the ad set that owns that zip in Adset Zip Tracking.'
-                        : 'Table: Adset · shown: Adset Name';
+                          ' â€” each leadâ€™s Zip picks the ad set that owns that zip in Adset Zip Tracking.'
+                        : 'Table: Adset Â· shown: Adset Name';
                 }
                 if (clientSelect.disabled) {
                     return;
@@ -1199,8 +1207,8 @@
                 hideStatus();
                 setLoading(true);
                 clientFilterNamesById = {};
-                clientSelect.innerHTML = '<option value="">Loading…</option>';
-                adsetSelect.innerHTML = '<option value="">Loading…</option>';
+                clientSelect.innerHTML = '<option value="">Loadingâ€¦</option>';
+                adsetSelect.innerHTML = '<option value="">Loadingâ€¦</option>';
                 clientSelect.disabled = true;
                 adsetSelect.disabled = true;
 
@@ -1244,8 +1252,8 @@
                                 return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' });
                             });
 
-                        populateSelect(clientSelect, 'Select a client…', clients);
-                        populateSelect(adsetSelect, 'Select an ad set…', adsets);
+                        populateSelect(clientSelect, 'Select a clientâ€¦', clients);
+                        populateSelect(adsetSelect, 'Select an ad setâ€¦', adsets);
                         log('log', 'loadDropdowns: clientFilterNamesById sample', {
                             firstClientId: clients[0] && clients[0].id,
                             firstFilterName: clients[0] && clientFilterNamesById[clients[0].id]
@@ -1306,7 +1314,7 @@
                 hideStatus();
                 btnApply.disabled = true;
                 btnReload.disabled = true;
-                showStatus('info', 'Finding matching leads in B2C Leads…');
+                showStatus('info', 'Finding matching leads in B2C Leadsâ€¦');
 
                 log('log', 'Apply: selection', {
                     clientId: clientId,
@@ -1325,7 +1333,7 @@
 
                 fetchAllRecords(TABLE_LEADS, formulaPrimary, true)
                     .then(function (rawFromName) {
-                        log('log', 'Apply: name formula — merged API rows', {
+                        log('log', 'Apply: name formula â€” merged API rows', {
                             rawCount: rawFromName.length,
                             sample: rawFromName[0]
                                 ? {
@@ -1364,11 +1372,11 @@
                         }
 
                         var formulaEq = linkedRecordEqualityFormula(clientId);
-                        log('log', 'Apply: name formula returned 0 rows — fallback {Linked Client} = record id', {
+                        log('log', 'Apply: name formula returned 0 rows â€” fallback {Linked Client} = record id', {
                             formula: formulaEq
                         });
                         return fetchAllRecords(TABLE_LEADS, formulaEq, true).then(function (rawEq) {
-                            log('log', 'Apply: equality formula — merged API rows', {
+                            log('log', 'Apply: equality formula â€” merged API rows', {
                                 rawCount: rawEq.length,
                                 sample: rawEq[0]
                                     ? {
@@ -1395,7 +1403,7 @@
                         }
 
                         if (zipRouteMode) {
-                            log('log', 'Apply: zip route — regional assignment by Zip', {
+                            log('log', 'Apply: zip route â€” regional assignment by Zip', {
                                 leadCount: leads.length,
                                 client: zipCfg.displayName
                             });
@@ -1414,7 +1422,7 @@
                             showStatus('info', 'Cancelled.');
                             return null;
                         }
-                        showStatus('info', 'Updating ' + leads.length + ' lead(s)…');
+                        showStatus('info', 'Updating ' + leads.length + ' lead(s)â€¦');
                         log('log', 'Apply: PATCH batches starting', { leadCount: leads.length, batchSize: 10 });
                         var ids = leads.map(function (r) {
                             return r.id;
@@ -1428,7 +1436,7 @@
                             log('log', 'Apply: PATCH batch', { index: i + 1, of: batches.length, size: batches[i].length });
                             return patchLeadBatch(batches[i], adsetId).then(function () {
                                 done += batches[i].length;
-                                showStatus('info', 'Updated ' + done + ' / ' + ids.length + '…');
+                                showStatus('info', 'Updated ' + done + ' / ' + ids.length + 'â€¦');
                                 return runBatch(i + 1);
                             });
                         }
@@ -1467,3 +1475,4 @@
     </script>
 </body>
 </html>
+

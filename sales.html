@@ -1,6 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-<head>
+<head>`r`n<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18128405900');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -44,7 +52,7 @@
             <div class="p-4 md:p-5 space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-3 gap-y-2 text-sm text-gray-600">
                     <div class="flex flex-wrap items-center gap-x-4 gap-y-1 min-w-0">
-                        <span id="statusText">Loading leads from Airtable…</span>
+                        <span id="statusText">Loading leads from Airtableâ€¦</span>
                         <span id="resultCount"></span>
                     </div>
                     <button type="button" id="createLeadBtn" class="shrink-0 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Create Lead</button>
@@ -85,12 +93,12 @@
                                     <th class="p-2 min-w-0">
                                         <input data-filter="businessName" type="text" placeholder="Filter..." class="w-full min-w-0 max-w-full rounded border border-gray-300 px-2 py-1">
                                     </th>
-                                    <th class="p-2 min-w-0 text-xs text-gray-400">—</th>
+                                    <th class="p-2 min-w-0 text-xs text-gray-400">â€”</th>
                                     <th class="p-2 min-w-0 align-top relative">
                                         <div class="relative niche-dropdown-wrap" id="nicheDropdownWrap">
                                             <button type="button" id="nicheDropdownBtn" class="niche-dd-btn w-full min-w-0 max-w-full text-left rounded border border-gray-300 bg-white px-2 py-1.5 text-xs flex items-center justify-between gap-1 hover:bg-gray-50">
                                                 <span id="nicheDropdownLabel" class="truncate">All niches</span>
-                                                <span class="text-gray-400 shrink-0 text-[10px]" aria-hidden="true">▾</span>
+                                                <span class="text-gray-400 shrink-0 text-[10px]" aria-hidden="true">â–¾</span>
                                             </button>
                                             <div id="nicheDropdownPanel" class="hidden absolute left-0 top-full z-40 mt-1 w-56 max-h-52 overflow-y-auto rounded-lg border border-gray-200 bg-white py-2 shadow-lg">
                                                 <div id="nicheCheckboxList" class="px-2 space-y-1"></div>
@@ -143,7 +151,7 @@
                     <h2 id="leadEditModalTitle" class="text-lg font-semibold text-gray-900 truncate">Lead</h2>
                     <p class="text-xs text-gray-500 mt-0.5 font-mono truncate" id="leadEditModalRecordId"></p>
                 </div>
-                <button type="button" id="leadEditModalClose" class="shrink-0 rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-800" aria-label="Close">✕</button>
+                <button type="button" id="leadEditModalClose" class="shrink-0 rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-800" aria-label="Close">âœ•</button>
             </div>
             <div id="leadEditModalError" class="hidden mx-5 mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"></div>
             <form id="leadEditForm" class="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-3" novalidate>
@@ -361,9 +369,9 @@
         }
 
         function formatCreated(isoValue) {
-            if (!isoValue) return "—";
+            if (!isoValue) return "â€”";
             const d = new Date(isoValue);
-            if (Number.isNaN(d.getTime())) return "—";
+            if (Number.isNaN(d.getTime())) return "â€”";
             return d.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
         }
 
@@ -411,7 +419,7 @@
         function setLeadModalSelectOptions(selectEl, optionStrings, currentValue) {
             if (!selectEl) return;
             const cur = safeText(currentValue);
-            selectEl.innerHTML = '<option value="">—</option>'
+            selectEl.innerHTML = '<option value="">â€”</option>'
                 + optionStrings.map((v) => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
             selectEl.value = cur;
         }
@@ -505,7 +513,7 @@
             delete els.leadEditModal.dataset.recordId;
 
             if (els.leadEditModalTitle) els.leadEditModalTitle.textContent = "Create lead";
-            if (els.leadEditModalRecordId) els.leadEditModalRecordId.textContent = "New record — changes save automatically";
+            if (els.leadEditModalRecordId) els.leadEditModalRecordId.textContent = "New record â€” changes save automatically";
 
             if (els.leadFieldBusinessName) els.leadFieldBusinessName.value = "";
             if (els.leadFieldCreatedDisplay) {
@@ -651,7 +659,7 @@
 
             state.leadSaveInFlight = true;
             hideLeadModalError();
-            setLeadSaveStatus("Saving…");
+            setLeadSaveStatus("Savingâ€¦");
 
             const mode = els.leadEditModal.dataset.modalMode || "edit";
             try {
@@ -730,16 +738,16 @@
             const includeDiscovery = opts.includeDiscovery !== false;
             return rows.map((row) => {
                 const discCell = includeDiscovery
-                    ? `<td class="p-3 min-w-0 sales-td-data">${escapeHtml(row.discoveryStatus || "—")}</td>`
+                    ? `<td class="p-3 min-w-0 sales-td-data">${escapeHtml(row.discoveryStatus || "â€”")}</td>`
                     : "";
                 return `
                 <tr class="lead-row align-top" data-record-id="${row.id}" title="Click to view or edit">
-                    <td class="p-3 min-w-0 font-medium text-gray-900 sales-td-data">${escapeHtml(row.businessName || "—")}</td>
+                    <td class="p-3 min-w-0 font-medium text-gray-900 sales-td-data">${escapeHtml(row.businessName || "â€”")}</td>
                     <td class="p-3 min-w-0 sales-td-data">${escapeHtml(formatCreated(row.created))}</td>
-                    <td class="p-3 min-w-0 sales-td-data">${escapeHtml(row.niches || "—")}</td>
-                    <td class="p-3 min-w-0 sales-td-data">${escapeHtml(row.source || "—")}</td>
-                    <td class="p-3 min-w-0 sales-td-data">${escapeHtml(row.location || "—")}</td>
-                    <td class="p-3 min-w-0 sales-td-data">${escapeHtml(row.status || "—")}</td>
+                    <td class="p-3 min-w-0 sales-td-data">${escapeHtml(row.niches || "â€”")}</td>
+                    <td class="p-3 min-w-0 sales-td-data">${escapeHtml(row.source || "â€”")}</td>
+                    <td class="p-3 min-w-0 sales-td-data">${escapeHtml(row.location || "â€”")}</td>
+                    <td class="p-3 min-w-0 sales-td-data">${escapeHtml(row.status || "â€”")}</td>
                     ${discCell}
                 </tr>`;
             }).join("");
@@ -748,7 +756,7 @@
         function updateDisclosureSummaries() {
             if (els.allLeadsSummaryMeta) {
                 els.allLeadsSummaryMeta.textContent = state.dataLoaded
-                    ? `${state.filteredRows.length} shown · ${state.allRows.length} total`
+                    ? `${state.filteredRows.length} shown Â· ${state.allRows.length} total`
                     : "";
             }
         }
@@ -944,12 +952,12 @@
         function renderSortIndicators() {
             document.querySelectorAll("[id^='sort-']").forEach((el) => { el.textContent = ""; });
             const active = document.getElementById(`sort-${state.sortKey}`);
-            if (active) active.textContent = state.sortDir === "asc" ? "▲" : "▼";
+            if (active) active.textContent = state.sortDir === "asc" ? "â–²" : "â–¼";
         }
 
         function renderTable() {
             if (!state.dataLoaded) {
-                els.tableBody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-gray-500 whitespace-normal">Loading leads from Airtable…</td></tr>';
+                els.tableBody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-gray-500 whitespace-normal">Loading leads from Airtableâ€¦</td></tr>';
                 return;
             }
             if (!state.filteredRows.length) {
@@ -972,8 +980,8 @@
 
         async function loadData() {
             hideError();
-            els.statusText.textContent = "Loading leads from Airtable…";
-            els.tableBody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-gray-500 whitespace-normal">Loading…</td></tr>';
+            els.statusText.textContent = "Loading leads from Airtableâ€¦";
+            els.tableBody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-gray-500 whitespace-normal">Loadingâ€¦</td></tr>';
             try {
                 const raw = await fetchAllB2BLeads();
                 state.allRows = raw.map(normalizeRecord);
@@ -985,7 +993,7 @@
                 state.dataLoaded = false;
                 state.allRows = [];
                 showError(error.message || "Failed to load Airtable data.");
-                els.statusText.textContent = "Load failed — fix the error and expand All Leads again (or refresh) to retry.";
+                els.statusText.textContent = "Load failed â€” fix the error and expand All Leads again (or refresh) to retry.";
                 if (els.resultCount) els.resultCount.textContent = "";
                 if (els.discoveryCallsContainer) {
                     els.discoveryCallsContainer.innerHTML = '<p class="text-gray-500 py-2">Could not load discovery data.</p>';
@@ -1130,3 +1138,4 @@
     </script>
 </body>
 </html>
+

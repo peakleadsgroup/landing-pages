@@ -1,6 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-<head>
+<head>`r`n<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18128405900');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -626,7 +634,7 @@
     </style>
 </head>
 <body>
-    <div class="testing-banner">⚠️ TESTING PAGE — No data will be sent to Airtable. Zip code search debugging enabled.</div>
+    <div class="testing-banner">âš ï¸ TESTING PAGE â€” No data will be sent to Airtable. Zip code search debugging enabled.</div>
     <div class="form-container">
         <div class="logo-container">
             <img id="logoImg" 
@@ -1050,10 +1058,10 @@
                     const normalizedMatch = zipCodesNormalized.includes(zipToSearch);
                     
                     if (exactMatch || normalizedMatch) {
-                        console.log(`[ZIP_DEBUG] ✓ MATCH FOUND! Client ${client.id} (${clientName}) matches zip code ${zipToSearch} (exact=${exactMatch}, normalized=${normalizedMatch})`);
+                        console.log(`[ZIP_DEBUG] âœ“ MATCH FOUND! Client ${client.id} (${clientName}) matches zip code ${zipToSearch} (exact=${exactMatch}, normalized=${normalizedMatch})`);
                         return client;
                     } else {
-                        console.log(`[ZIP_DEBUG] ✗ Client ${client.id} (${clientName}) does not have zip code ${zipToSearch}`);
+                        console.log(`[ZIP_DEBUG] âœ— Client ${client.id} (${clientName}) does not have zip code ${zipToSearch}`);
                     }
                 }
                 
@@ -2767,4 +2775,5 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
     </script>
 </body>
 </html>
+
 

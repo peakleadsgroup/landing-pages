@@ -1,6 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-<head>
+<head>`r`n<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18128405900');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -1496,7 +1504,7 @@
             params.set('email', 'peakleadsgroup@gmail.com');        // fixed inbox
             if (fullName) params.set('name', fullName);
             
-            // Phone → smsReminderNumber (+1XXXXXXXXXX) if 10 digits present
+            // Phone â†’ smsReminderNumber (+1XXXXXXXXXX) if 10 digits present
             const smsDigits = document.getElementById('phone_digits')?.value
                            || document.getElementById('phone')?.value.replace(/\D/g,'') || '';
             if (smsDigits.length === 10) params.set('smsReminderNumber', `+1${smsDigits}`);
@@ -1802,3 +1810,4 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
     </script>
 </body>
 </html>
+

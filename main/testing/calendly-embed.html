@@ -1,6 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-<head>
+<head>`r`n<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18128405900');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -130,9 +138,9 @@
             <summary>To show the actual date (not just "Booking confirmed"): set up a Make.com proxy</summary>
             <p>Calendly's embed only sends URIs in the payload, not the date. To display it:</p>
             <ol>
-                <li>Create a Make.com scenario with <strong>Webhooks → Custom webhook</strong> as trigger</li>
-                <li>Add <strong>HTTP → Make a request</strong>: GET the <code>invitee.uri</code> from the webhook body, with header <code>Authorization: Bearer YOUR_CALENDLY_TOKEN</code></li>
-                <li>Add <strong>Webhooks → Webhook response</strong> with body: <code>{"start_time": "{{2.resource.event.start_time}}"}</code> (adjust path to match Calendly API response)</li>
+                <li>Create a Make.com scenario with <strong>Webhooks â†’ Custom webhook</strong> as trigger</li>
+                <li>Add <strong>HTTP â†’ Make a request</strong>: GET the <code>invitee.uri</code> from the webhook body, with header <code>Authorization: Bearer YOUR_CALENDLY_TOKEN</code></li>
+                <li>Add <strong>Webhooks â†’ Webhook response</strong> with body: <code>{"start_time": "{{2.resource.event.start_time}}"}</code> (adjust path to match Calendly API response)</li>
                 <li>Paste the webhook URL into <code>CALENDLY_PROXY_URL</code> at the top of this page's script</li>
             </ol>
         </details>
@@ -258,3 +266,4 @@
     </script>
 </body>
 </html>
+

@@ -1,6 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-<head>
+<head>`r`n<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18128405900');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -238,7 +246,7 @@
         }
 
         .consent-title::before {
-            content: "⚠️";
+            content: "âš ï¸";
             margin-right: 10px;
             font-size: 20px;
         }
@@ -597,7 +605,7 @@
                 </div>
                 
                 <div class="consent-error" id="consentError">
-                    ⚠️ You must check this box to acknowledge and sign the agreement
+                    âš ï¸ You must check this box to acknowledge and sign the agreement
                 </div>
             </div>
 
@@ -696,7 +704,7 @@
                 loadingOverlay.classList.add('show');
                 
                 // Update button immediately
-                signButton.textContent = '✓ Document Signed';
+                signButton.textContent = 'âœ“ Document Signed';
                 signButton.classList.add('signed');
                 signButton.disabled = true;
                 signatureInput.disabled = true;
@@ -751,23 +759,23 @@ Client: Bath Pro Carolinas
 
 KEY TERMS:
 ----------
-• Revenue Share: 15% of total sale value on all closed deals from Agency leads
-• Payment Terms: Due within 7 days of deal marked "closed won"
-• CRM Access: Read-only access for verification during term + 30 days post-termination
-• Termination Notice: 24 hours notice required
-• Post-Termination Revenue Share: Applies to deals closed during 30-day access period
-• Governing Law: State of North Carolina
-• Venue: Wake County, North Carolina
+â€¢ Revenue Share: 15% of total sale value on all closed deals from Agency leads
+â€¢ Payment Terms: Due within 7 days of deal marked "closed won"
+â€¢ CRM Access: Read-only access for verification during term + 30 days post-termination
+â€¢ Termination Notice: 24 hours notice required
+â€¢ Post-Termination Revenue Share: Applies to deals closed during 30-day access period
+â€¢ Governing Law: State of North Carolina
+â€¢ Venue: Wake County, North Carolina
 
 SIGNATURE VERIFICATION:
 -----------------------
-• Consent Given: Yes
-• IP Address: ${ipAddress}
-• Location: ${locationData}
-• Device: ${/mobile/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop'}
-• Browser: ${navigator.userAgent}
-• Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
-• Signature Method: Electronic (Typed)
+â€¢ Consent Given: Yes
+â€¢ IP Address: ${ipAddress}
+â€¢ Location: ${locationData}
+â€¢ Device: ${/mobile/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop'}
+â€¢ Browser: ${navigator.userAgent}
+â€¢ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
+â€¢ Signature Method: Electronic (Typed)
 
 DOCUMENT STATUS: FULLY EXECUTED
 `.trim(),
@@ -856,7 +864,7 @@ DOCUMENT STATUS: FULLY EXECUTED
                         mode: 'no-cors'
                     });
                     
-                    console.log('✓ Contract data sent successfully to webhook');
+                    console.log('âœ“ Contract data sent successfully to webhook');
                     console.log('Response status:', response.status);
                     
                     // Store signature data locally as backup
@@ -866,13 +874,13 @@ DOCUMENT STATUS: FULLY EXECUTED
                             localStorageBackup: true,
                             backupTimestamp: new Date().toISOString()
                         };
-                        console.log('✓ Signature record created for backup');
+                        console.log('âœ“ Signature record created for backup');
                     } catch (storageError) {
                         console.log('Note: Could not create local backup:', storageError);
                     }
                     
                 } catch (webhookError) {
-                    console.error('✗ Error sending webhook:', webhookError);
+                    console.error('âœ— Error sending webhook:', webhookError);
                     alert('Warning: There was an issue submitting your signature. Please contact support with the following info:\n\nTime: ' + new Date().toISOString() + '\nSignature: ' + clientSignature);
                 }
                 
@@ -932,7 +940,7 @@ DOCUMENT STATUS: FULLY EXECUTED
                         doc.save(filename);
                         
                         loadingOverlay.classList.remove('show');
-                        alert('✓ PDF downloaded successfully!');
+                        alert('âœ“ PDF downloaded successfully!');
                     },
                     x: 40,
                     y: 40,
@@ -954,3 +962,4 @@ DOCUMENT STATUS: FULLY EXECUTED
     </script>
 </body>
 </html>
+

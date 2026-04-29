@@ -1,6 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-<head>
+<head>`r`n<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18128405900');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -69,29 +77,29 @@
                 <div id="metricsPanel" class="bg-white rounded-lg shadow-sm p-6 space-y-6">
                     <div>
                         <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Net profit per day (YTD)</h3>
-                        <p class="text-2xl font-bold text-gray-900" id="netProfitPerDay">—</p>
+                        <p class="text-2xl font-bold text-gray-900" id="netProfitPerDay">â€”</p>
                         <p class="text-sm text-gray-600 mt-1" id="netProfitPerDayDetail"></p>
                     </div>
                     <div class="border-t border-gray-100 pt-6">
                         <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Current Projection</h3>
-                        <p class="text-2xl font-bold text-gray-900" id="currentProjection">—</p>
+                        <p class="text-2xl font-bold text-gray-900" id="currentProjection">â€”</p>
                         <p class="text-sm text-gray-600 mt-1" id="currentProjectionDetail"></p>
                     </div>
                     <div class="border-t border-gray-100 pt-6">
                         <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Profit/Day Needed to $1 Mil Net</h3>
-                        <p class="text-2xl font-bold text-gray-900" id="profitPerDay1M">—</p>
+                        <p class="text-2xl font-bold text-gray-900" id="profitPerDay1M">â€”</p>
                         <p class="text-sm text-gray-600 mt-1" id="profitPerDay1MDetail"></p>
                     </div>
                     <div class="border-t border-gray-100 pt-6">
                         <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Profit/Day to $2 Mil Net</h3>
-                        <p class="text-2xl font-bold text-gray-900" id="profitPerDay2M">—</p>
+                        <p class="text-2xl font-bold text-gray-900" id="profitPerDay2M">â€”</p>
                         <p class="text-sm text-gray-600 mt-1" id="profitPerDay2MDetail"></p>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-lg shadow-sm p-6 mt-6">
                     <h2 class="text-xl font-semibold text-gray-900 mb-1">Clients Closed/Week</h2>
-                    <p class="text-sm text-gray-500 mb-4">Weeks begin Monday 12:00 AM Eastern (America/New_York). Only <span id="clientsChartYearLabel" class="font-medium">the current calendar year</span> (Eastern). Count uses each record’s <span class="font-medium">Created</span> timestamp.</p>
+                    <p class="text-sm text-gray-500 mb-4">Weeks begin Monday 12:00 AM Eastern (America/New_York). Only <span id="clientsChartYearLabel" class="font-medium">the current calendar year</span> (Eastern). Count uses each recordâ€™s <span class="font-medium">Created</span> timestamp.</p>
                     <div id="clientsChartWrap" class="bg-gray-50 rounded-lg p-4" style="height: 420px;">
                         <canvas id="clientsClosedWeekChart"></canvas>
                     </div>
@@ -109,13 +117,13 @@
 
             <div id="marginsSection" class="bg-white rounded-lg shadow-sm p-6 mt-6">
                 <h2 class="text-xl font-semibold text-gray-900 mb-2">Gross Margins</h2>
-                <p class="text-sm text-gray-500 mb-6">Revenue sums <span class="font-medium">Gross Revenue</span> from B2C Leads (Qualified, linked, <span class="font-medium">Created</span> in Eastern), plus a <span class="font-medium">25% agency fee</span> on CCC client ad spend from Make (branded + unbranded keys per period; that spend is already in total ad spend—only the fee is added to revenue). Ad spend: <code class="text-xs bg-gray-100 px-1 rounded">MAKE_PERIOD_WEBHOOKS</code> (three parallel webhooks, one JSON object each), or all nine URLs in <code class="text-xs bg-gray-100 px-1 rounded">MAKE_SPEND_WEBHOOKS</code>, or one combined <code class="text-xs bg-gray-100 px-1 rounded">MARGINS_WEBHOOK_URL</code>. Refreshes on load and when you click Refresh.</p>
+                <p class="text-sm text-gray-500 mb-6">Revenue sums <span class="font-medium">Gross Revenue</span> from B2C Leads (Qualified, linked, <span class="font-medium">Created</span> in Eastern), plus a <span class="font-medium">25% agency fee</span> on CCC client ad spend from Make (branded + unbranded keys per period; that spend is already in total ad spendâ€”only the fee is added to revenue). Ad spend: <code class="text-xs bg-gray-100 px-1 rounded">MAKE_PERIOD_WEBHOOKS</code> (three parallel webhooks, one JSON object each), or all nine URLs in <code class="text-xs bg-gray-100 px-1 rounded">MAKE_SPEND_WEBHOOKS</code>, or one combined <code class="text-xs bg-gray-100 px-1 rounded">MARGINS_WEBHOOK_URL</code>. Refreshes on load and when you click Refresh.</p>
                 <p id="grossMarginsWebhookStatus" class="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4 hidden" role="status"></p>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div id="gmColLastWeek" class="rounded-lg border border-gray-200 p-4 space-y-4">
                         <div>
                             <h3 class="text-sm font-semibold text-gray-800 uppercase tracking-wide">Last week</h3>
-                            <p class="text-xs text-gray-500 mt-1 gm-period-label">—</p>
+                            <p class="text-xs text-gray-500 mt-1 gm-period-label">â€”</p>
                         </div>
                         <div class="gm-stack space-y-4">
                             <div class="gm-metric" data-key="revenue">
@@ -141,7 +149,7 @@
                                 <p class="text-xs font-medium text-blue-700 mb-1">Profit</p>
                                 <div class="gm-metric-body min-h-[2.5rem] flex items-center">
                                     <span class="gm-spinner text-blue-600 inline-flex"><svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></span>
-                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-blue-600 gm-amount"></p><p class="text-xs text-gray-500 gm-detail">Revenue − ad spend</p></div>
+                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-blue-600 gm-amount"></p><p class="text-xs text-gray-500 gm-detail">Revenue âˆ’ ad spend</p></div>
                                     <p class="gm-err hidden text-sm text-red-600"></p>
                                 </div>
                             </div>
@@ -149,7 +157,7 @@
                                 <p class="text-xs font-medium text-purple-700 mb-1">Margins</p>
                                 <div class="gm-metric-body min-h-[2.5rem] flex items-center">
                                     <span class="gm-spinner text-purple-600 inline-flex"><svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></span>
-                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-purple-600 gm-amount"></p><p class="text-xs text-gray-500 gm-detail">Profit ÷ revenue</p></div>
+                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-purple-600 gm-amount"></p><p class="text-xs text-gray-500 gm-detail">Profit Ã· revenue</p></div>
                                     <p class="gm-err hidden text-sm text-red-600"></p>
                                 </div>
                             </div>
@@ -158,7 +166,7 @@
                     <div id="gmColThisMonth" class="rounded-lg border border-gray-200 p-4 space-y-4">
                         <div>
                             <h3 class="text-sm font-semibold text-gray-800 uppercase tracking-wide">This month</h3>
-                            <p class="text-xs text-gray-500 mt-1 gm-period-label">—</p>
+                            <p class="text-xs text-gray-500 mt-1 gm-period-label">â€”</p>
                         </div>
                         <div class="gm-stack space-y-4">
                             <div class="gm-metric" data-key="revenue">
@@ -184,7 +192,7 @@
                                 <p class="text-xs font-medium text-blue-700 mb-1">Profit</p>
                                 <div class="gm-metric-body min-h-[2.5rem] flex items-center">
                                     <span class="gm-spinner text-blue-600 inline-flex"><svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></span>
-                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-blue-600 gm-amount"></p><p class="text-xs text-gray-500 gm-detail">Revenue − ad spend</p></div>
+                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-blue-600 gm-amount"></p><p class="text-xs text-gray-500 gm-detail">Revenue âˆ’ ad spend</p></div>
                                     <p class="gm-err hidden text-sm text-red-600"></p>
                                 </div>
                             </div>
@@ -192,7 +200,7 @@
                                 <p class="text-xs font-medium text-purple-700 mb-1">Margins</p>
                                 <div class="gm-metric-body min-h-[2.5rem] flex items-center">
                                     <span class="gm-spinner text-purple-600 inline-flex"><svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></span>
-                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-purple-600 gm-amount"></p><p class="text-xs text-gray-500 gm-detail">Profit ÷ revenue</p></div>
+                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-purple-600 gm-amount"></p><p class="text-xs text-gray-500 gm-detail">Profit Ã· revenue</p></div>
                                     <p class="gm-err hidden text-sm text-red-600"></p>
                                 </div>
                             </div>
@@ -201,7 +209,7 @@
                     <div id="gmColLastMonth" class="rounded-lg border border-gray-200 p-4 space-y-4">
                         <div>
                             <h3 class="text-sm font-semibold text-gray-800 uppercase tracking-wide">Last month</h3>
-                            <p class="text-xs text-gray-500 mt-1 gm-period-label">—</p>
+                            <p class="text-xs text-gray-500 mt-1 gm-period-label">â€”</p>
                         </div>
                         <div class="gm-stack space-y-4">
                             <div class="gm-metric" data-key="revenue">
@@ -227,7 +235,7 @@
                                 <p class="text-xs font-medium text-blue-700 mb-1">Profit</p>
                                 <div class="gm-metric-body min-h-[2.5rem] flex items-center">
                                     <span class="gm-spinner text-blue-600 inline-flex"><svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></span>
-                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-blue-600 gm-amount"></p><p class="text-xs text-gray-500 gm-detail">Revenue − ad spend</p></div>
+                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-blue-600 gm-amount"></p><p class="text-xs text-gray-500 gm-detail">Revenue âˆ’ ad spend</p></div>
                                     <p class="gm-err hidden text-sm text-red-600"></p>
                                 </div>
                             </div>
@@ -235,7 +243,7 @@
                                 <p class="text-xs font-medium text-purple-700 mb-1">Margins</p>
                                 <div class="gm-metric-body min-h-[2.5rem] flex items-center">
                                     <span class="gm-spinner text-purple-600 inline-flex"><svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></span>
-                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-purple-600 gm-amount"></p><p class="text-xs text-gray-500 gm-detail">Profit ÷ revenue</p></div>
+                                    <div class="gm-ok hidden w-full"><p class="text-xl font-bold text-purple-600 gm-amount"></p><p class="text-xs text-gray-500 gm-detail">Profit Ã· revenue</p></div>
                                     <p class="gm-err hidden text-sm text-red-600"></p>
                                 </div>
                             </div>
@@ -260,7 +268,7 @@
              */
             /** Used only when neither 9-hook nor 3-period mode is active (one slow JSON response). */
             MARGINS_WEBHOOK_URL: 'https://hook.us2.make.com/m7oeayy6b2gih3bf3vubn8lhd3pc04ga',
-            /** Single-webhook mode: max wait for the full JSON response (20 min; covers ~3–5 min scenarios with headroom). */
+            /** Single-webhook mode: max wait for the full JSON response (20 min; covers ~3â€“5 min scenarios with headroom). */
             MAKE_WEBHOOK_MAX_WAIT_MS: 20 * 60 * 1000,
             /**
              * Three parallel webhooks (one scenario per period). Each returns a small JSON fragment.
@@ -304,14 +312,14 @@
             try {
                 const x = new URL(u.trim());
                 const p = x.pathname;
-                const tail = p.length > 20 ? p.slice(0, 10) + '…' + p.slice(-8) : p;
+                const tail = p.length > 20 ? p.slice(0, 10) + 'â€¦' + p.slice(-8) : p;
                 return x.hostname + tail;
             } catch {
                 return '(unparseable url)';
             }
         }
 
-        /** Leads table tblPt6Wc79hTBSmcD — use Created for lead timestamps (Airtable + in-range filter). */
+        /** Leads table tblPt6Wc79hTBSmcD â€” use Created for lead timestamps (Airtable + in-range filter). */
         const GROSS_MARGIN_FIELDS = {
             CREATED: 'Created',
             GROSS_REVENUE: 'Gross Revenue',
@@ -422,7 +430,7 @@
             const t0 = performance.now();
             logPP('log', 'Airtable fetch start (formula)', {
                 tableId,
-                formulaPreview: filterFormula.length > 180 ? filterFormula.slice(0, 180) + '…' : filterFormula
+                formulaPreview: filterFormula.length > 180 ? filterFormula.slice(0, 180) + 'â€¦' : filterFormula
             });
             let allRecords = [];
             let offset = null;
@@ -498,19 +506,19 @@
             const s = DateTime.isDateTime(start) ? start : DateTime.fromISO(String(start), { zone: ET_ZONE });
             const e = DateTime.isDateTime(end) ? end : DateTime.fromISO(String(end), { zone: ET_ZONE });
             if (s.year === e.year) {
-                return `${s.toFormat('MMM d')} – ${e.toFormat('MMM d, yyyy')} (ET)`;
+                return `${s.toFormat('MMM d')} â€“ ${e.toFormat('MMM d, yyyy')} (ET)`;
             }
-            return `${s.toFormat('MMM d, yyyy')} – ${e.toFormat('MMM d, yyyy')} (ET)`;
+            return `${s.toFormat('MMM d, yyyy')} â€“ ${e.toFormat('MMM d, yyyy')} (ET)`;
         }
 
         function formatCreatedWindowDetail(start, end) {
             const { DateTime } = luxon;
             const s = DateTime.isDateTime(start) ? start : DateTime.fromISO(String(start), { zone: ET_ZONE });
             const e = DateTime.isDateTime(end) ? end : DateTime.fromISO(String(end), { zone: ET_ZONE });
-            return `Created: ${s.toFormat('MMM d, yyyy h:mm a')} – ${e.toFormat('MMM d, yyyy h:mm a')} ET`;
+            return `Created: ${s.toFormat('MMM d, yyyy h:mm a')} â€“ ${e.toFormat('MMM d, yyyy h:mm a')} ET`;
         }
 
-        /** Last full Mon–Sun week (Eastern), month-to-date, and prior full calendar month. */
+        /** Last full Monâ€“Sun week (Eastern), month-to-date, and prior full calendar month. */
         function getGrossMarginPeriodsET() {
             const { DateTime } = luxon;
             const now = DateTime.now().setZone(ET_ZONE);
@@ -600,8 +608,8 @@
         }
 
         /**
-         * CCC branded + unbranded spend keys per period (summed, then ×0.25 as agency fee revenue).
-         * Primary: lowercase keys from one Make JSON body (lastweekcccunbranded, …).
+         * CCC branded + unbranded spend keys per period (summed, then Ã—0.25 as agency fee revenue).
+         * Primary: lowercase keys from one Make JSON body (lastweekcccunbranded, â€¦).
          * Legacy: CCClastweekunbranded-style keys still accepted.
          */
         const CCC_SPEND_KEYS_BY_PERIOD = {
@@ -657,7 +665,7 @@
             spin.classList.toggle('hidden', state !== 'loading');
             ok.classList.toggle('hidden', state !== 'ok');
             err.classList.toggle('hidden', state !== 'error');
-            if (state === 'ok' && amount) amount.textContent = opts.amount || '—';
+            if (state === 'ok' && amount) amount.textContent = opts.amount || 'â€”';
             if (state === 'ok' && detail && opts.detail != null) detail.textContent = opts.detail;
             if (state === 'error') err.textContent = opts.error || 'Error';
         }
@@ -672,7 +680,7 @@
 
         /**
          * Parse Make.com HTTP response body. Plain "Accepted" means the HTTP round-trip finished
-         * without a JSON "Webhook response" — often because Make only waits ~1 minute for that
+         * without a JSON "Webhook response" â€” often because Make only waits ~1 minute for that
          * module, so long scenarios finish later in the UI but the browser already got Accepted.
          */
         function parseMakeWebhookResponseBody(text) {
@@ -687,7 +695,7 @@
                 throw new Error(
                     'Webhook replied with "' +
                         t +
-                        '" instead of JSON. Make usually stops waiting for a "Webhook response" after about a minute — so if your scenario runs several minutes, the browser gets Accepted while Make is still running. Fix: (1) shorten the path before Webhook response, (2) split into faster parallel webhooks (fill MAKE_SPEND_WEBHOOKS in this page), or (3) async flow: scenario writes results (e.g. Data store/Airtable) and a second quick scenario or endpoint returns JSON.'
+                        '" instead of JSON. Make usually stops waiting for a "Webhook response" after about a minute â€” so if your scenario runs several minutes, the browser gets Accepted while Make is still running. Fix: (1) shorten the path before Webhook response, (2) split into faster parallel webhooks (fill MAKE_SPEND_WEBHOOKS in this page), or (3) async flow: scenario writes results (e.g. Data store/Airtable) and a second quick scenario or endpoint returns JSON.'
                 );
             }
             try {
@@ -702,7 +710,7 @@
                         /* fall through */
                     }
                 }
-                const preview = t.length > 100 ? t.slice(0, 100) + '…' : t;
+                const preview = t.length > 100 ? t.slice(0, 100) + 'â€¦' : t;
                 throw new Error(
                     'Webhook body is not JSON (starts with: ' + JSON.stringify(preview) + '). Configure Make to send JSON in the HTTP response, not only inside a later module.'
                 );
@@ -716,7 +724,7 @@
             return String(reason);
         }
 
-        /** [ CONFIG key, merged key on webhookData object ] — matches pickMarginNumber / CCC keys. */
+        /** [ CONFIG key, merged key on webhookData object ] â€” matches pickMarginNumber / CCC keys. */
         const SPEND_HOOK_DEFINITIONS = [
             ['lastWeekSpend', 'lastweek'],
             ['lastWeekCccUnbranded', 'CCClastweekunbranded'],
@@ -747,7 +755,7 @@
 
         async function fetchOnePeriodMarginWebhook(url, periodLabel, maxMs) {
             const t0 = performance.now();
-            logPP('log', 'Make period webhook → request', {
+            logPP('log', 'Make period webhook â†’ request', {
                 periodLabel,
                 endpoint: scrubWebhookUrl(url),
                 timeoutMs: maxMs
@@ -763,7 +771,7 @@
                 });
                 const text = await response.text();
                 if (!response.ok) {
-                    logPP('error', 'Make period webhook ← HTTP error', {
+                    logPP('error', 'Make period webhook â† HTTP error', {
                         periodLabel,
                         status: response.status,
                         bodyPreview: (text || '').slice(0, 200),
@@ -775,7 +783,7 @@
                 if (parsed == null || typeof parsed !== 'object' || Array.isArray(parsed)) {
                     throw new Error('Webhook JSON was not an object');
                 }
-                logPP('log', 'Make period webhook ← OK', {
+                logPP('log', 'Make period webhook â† OK', {
                     periodLabel,
                     topLevelKeys: Object.keys(parsed),
                     ms: Math.round(performance.now() - t0),
@@ -785,14 +793,14 @@
             } catch (e) {
                 if (e && e.name === 'AbortError') {
                     const mins = Math.round(maxMs / 60000) || 1;
-                    logPP('warn', 'Make period webhook ← timeout', {
+                    logPP('warn', 'Make period webhook â† timeout', {
                         periodLabel,
                         ms: Math.round(performance.now() - t0),
                         limitMin: mins
                     });
                     throw new Error(`Timed out after ${mins} min`);
                 }
-                logPP('error', 'Make period webhook ← failed', {
+                logPP('error', 'Make period webhook â† failed', {
                     periodLabel,
                     error: e.message || String(e),
                     ms: Math.round(performance.now() - t0)
@@ -836,7 +844,7 @@
                 logPP('error', 'Make 3 period webhooks: no main ad spend after merge', { failures });
                 throw new Error(
                     'No main ad spend values (lastweek / thismonth / lastmonth) after merging period webhooks. ' +
-                        failures.join(' · ')
+                        failures.join(' Â· ')
                 );
             }
             return merged;
@@ -871,7 +879,7 @@
         async function fetchSingleSpendWebhook(url, maxMs, hookMeta) {
             const t0 = performance.now();
             const { urlKey, dataKey } = hookMeta || {};
-            logPP('log', 'Make spend hook → request', {
+            logPP('log', 'Make spend hook â†’ request', {
                 urlKey,
                 dataKey,
                 endpoint: scrubWebhookUrl(url),
@@ -888,7 +896,7 @@
                 });
                 const text = await response.text();
                 if (!response.ok) {
-                    logPP('error', 'Make spend hook ← HTTP error', {
+                    logPP('error', 'Make spend hook â† HTTP error', {
                         urlKey,
                         dataKey,
                         status: response.status,
@@ -898,7 +906,7 @@
                     throw new Error(`HTTP ${response.status}: ${(text || '').slice(0, 120)}`);
                 }
                 const n = parseSingleSpendWebhookResponse(text);
-                logPP('log', 'Make spend hook ← OK', {
+                logPP('log', 'Make spend hook â† OK', {
                     urlKey,
                     dataKey,
                     spend: n,
@@ -909,10 +917,10 @@
             } catch (e) {
                 if (e && e.name === 'AbortError') {
                     const mins = Math.round(maxMs / 60000) || 1;
-                    logPP('warn', 'Make spend hook ← timeout', { urlKey, dataKey, ms: Math.round(performance.now() - t0), limitMin: mins });
+                    logPP('warn', 'Make spend hook â† timeout', { urlKey, dataKey, ms: Math.round(performance.now() - t0), limitMin: mins });
                     throw new Error(`Timed out after ${mins} min`);
                 }
-                logPP('error', 'Make spend hook ← failed', {
+                logPP('error', 'Make spend hook â† failed', {
                     urlKey,
                     dataKey,
                     error: e.message || String(e),
@@ -955,7 +963,7 @@
             );
             if (!mainOk) {
                 logPP('error', 'Make 9-hook batch: no main ad spend', { failures });
-                throw new Error('No main ad spend values (lastweek / thismonth / lastmonth). ' + failures.join(' · '));
+                throw new Error('No main ad spend values (lastweek / thismonth / lastmonth). ' + failures.join(' Â· '));
             }
             return data;
         }
@@ -963,7 +971,7 @@
         async function fetchMarginsWebhookPayloadSingle() {
             const maxMs = CONFIG.MAKE_WEBHOOK_MAX_WAIT_MS || 20 * 60 * 1000;
             const t0 = performance.now();
-            logPP('log', 'Make single webhook → request', {
+            logPP('log', 'Make single webhook â†’ request', {
                 endpoint: scrubWebhookUrl(CONFIG.MARGINS_WEBHOOK_URL),
                 timeoutMs: maxMs
             });
@@ -978,7 +986,7 @@
                 });
                 const text = await response.text();
                 if (!response.ok) {
-                    logPP('error', 'Make single webhook ← HTTP error', {
+                    logPP('error', 'Make single webhook â† HTTP error', {
                         status: response.status,
                         bodyPreview: text.slice(0, 250),
                         ms: Math.round(performance.now() - t0)
@@ -987,7 +995,7 @@
                 }
                 const parsed = unwrapMarginsPayload(parseMakeWebhookResponseBody(text));
                 const keys = parsed && typeof parsed === 'object' ? Object.keys(parsed) : [];
-                logPP('log', 'Make single webhook ← OK', {
+                logPP('log', 'Make single webhook â† OK', {
                     ms: Math.round(performance.now() - t0),
                     responseChars: text.length,
                     topLevelKeys: keys,
@@ -997,12 +1005,12 @@
             } catch (e) {
                 if (e && e.name === 'AbortError') {
                     const mins = Math.round(maxMs / 60000);
-                    logPP('warn', 'Make single webhook ← timeout', { ms: Math.round(performance.now() - t0), limitMin: mins });
+                    logPP('warn', 'Make single webhook â† timeout', { ms: Math.round(performance.now() - t0), limitMin: mins });
                     throw new Error(
                         `No response from Make.com within ${mins} minutes (browser limit). If your scenario runs longer, shorten it, split into a fast webhook + async work, or raise MAKE_WEBHOOK_MAX_WAIT_MS in the page config.`
                     );
                 }
-                logPP('error', 'Make single webhook ← failed', { error: e.message || String(e), ms: Math.round(performance.now() - t0) });
+                logPP('error', 'Make single webhook â† failed', { error: e.message || String(e), ms: Math.round(performance.now() - t0) });
                 throw e;
             } finally {
                 clearTimeout(timeoutId);
@@ -1130,11 +1138,11 @@
                         : 0;
                     revenue = baseRevenue + cccFeeAdd;
                     const createdDetail = formatCreatedWindowDetail(p.start, p.end);
-                    let revDetail = `${createdDetail} · Status = Qualified · Linked Client required`;
+                    let revDetail = `${createdDetail} Â· Status = Qualified Â· Linked Client required`;
                     if (!webhookError && webhookData) {
-                        revDetail += ` · Airtable ${formatMoney(baseRevenue)} + 25%×CCC spend (${formatMoney(cccSpendSum)}) = +${formatMoney(cccFeeAdd)}`;
+                        revDetail += ` Â· Airtable ${formatMoney(baseRevenue)} + 25%Ã—CCC spend (${formatMoney(cccSpendSum)}) = +${formatMoney(cccFeeAdd)}`;
                     } else {
-                        revDetail += ' · CCC fee not added (ad spend / webhook unavailable)';
+                        revDetail += ' Â· CCC fee not added (ad spend / webhook unavailable)';
                     }
                     setGmMetricState(colId, 'revenue', 'ok', {
                         amount: formatMoney(revenue),
@@ -1162,7 +1170,7 @@
                     else if (webhookError) pe = 'Ad spend unavailable';
                     else if (adspend === null) pe = 'Ad spend missing';
                     setGmMetricState(colId, 'profit', 'error', { error: pe });
-                    setGmMetricState(colId, 'margin', 'error', { error: '—' });
+                    setGmMetricState(colId, 'margin', 'error', { error: 'â€”' });
                     logPP('warn', `Gross margins column ${periodKey} skipped`, {
                         periodLabel: p.label,
                         revenueError,
@@ -1192,7 +1200,7 @@
                         marginPct: pct
                     });
                 } else {
-                    setGmMetricState(colId, 'margin', 'ok', { amount: '—', detail: 'No revenue in range' });
+                    setGmMetricState(colId, 'margin', 'ok', { amount: 'â€”', detail: 'No revenue in range' });
                     logPP('log', `Gross margins column ${periodKey} (no revenue)`, {
                         baseRevenue,
                         cccFeeAdd,
@@ -1219,12 +1227,12 @@
 
             if (latestRealizedCash === null || latestRealizedCash === undefined) {
                 logPP('warn', 'updateMetrics: no latest realized cash; metrics cleared');
-                document.getElementById('netProfitPerDay').textContent = '—';
+                document.getElementById('netProfitPerDay').textContent = 'â€”';
                 document.getElementById('netProfitPerDayDetail').textContent = 'No realized cash value on the latest snapshot.';
-                document.getElementById('currentProjection').textContent = '—';
+                document.getElementById('currentProjection').textContent = 'â€”';
                 document.getElementById('currentProjectionDetail').textContent = '';
-                document.getElementById('profitPerDay1M').textContent = '—';
-                document.getElementById('profitPerDay2M').textContent = '—';
+                document.getElementById('profitPerDay1M').textContent = 'â€”';
+                document.getElementById('profitPerDay2M').textContent = 'â€”';
                 document.getElementById('profitPerDay1MDetail').textContent = '';
                 document.getElementById('profitPerDay2MDetail').textContent = '';
                 return;
@@ -1235,13 +1243,13 @@
             const perDayYtd = adjustedNet / daysIn;
             document.getElementById('netProfitPerDay').textContent = formatMoney(perDayYtd);
             document.getElementById('netProfitPerDayDetail').textContent =
-                `Latest realized cash ${formatMoney(latestRealizedCash)} + owner draws (Drew Williams & Daniel Wellish) ${formatMoney(draws)} = ${formatMoney(adjustedNet)}; ÷ ${daysIn} day${daysIn === 1 ? '' : 's'} into ${new Date().getFullYear()}.`;
+                `Latest realized cash ${formatMoney(latestRealizedCash)} + owner draws (Drew Williams & Daniel Wellish) ${formatMoney(draws)} = ${formatMoney(adjustedNet)}; Ã· ${daysIn} day${daysIn === 1 ? '' : 's'} into ${new Date().getFullYear()}.`;
 
             const runRateTail = perDayYtd * daysLeft;
             const currentProjection = runRateTail + latestRealizedCash + draws;
             document.getElementById('currentProjection').textContent = formatMoney(currentProjection);
             document.getElementById('currentProjectionDetail').textContent =
-                `(net profit/day × days left) + realized cash + owner draws = (${formatMoney(perDayYtd)} × ${daysLeft}) + ${formatMoney(latestRealizedCash)} + ${formatMoney(draws)} = ${formatMoney(currentProjection)}.`;
+                `(net profit/day Ã— days left) + realized cash + owner draws = (${formatMoney(perDayYtd)} Ã— ${daysLeft}) + ${formatMoney(latestRealizedCash)} + ${formatMoney(draws)} = ${formatMoney(currentProjection)}.`;
 
             const need1m = (1_000_000 - adjustedNet) / daysLeft;
             const need2m = (2_000_000 - adjustedNet) / daysLeft;
@@ -1249,9 +1257,9 @@
             document.getElementById('profitPerDay1M').textContent = formatMoney(need1m);
             document.getElementById('profitPerDay2M').textContent = formatMoney(need2m);
             document.getElementById('profitPerDay1MDetail').textContent =
-                `(1,000,000 − adjusted net) ÷ days left = (${formatMoney(1_000_000)} − ${formatMoney(adjustedNet)}) ÷ ${daysLeft} = ${formatMoney(need1m)}`;
+                `(1,000,000 âˆ’ adjusted net) Ã· days left = (${formatMoney(1_000_000)} âˆ’ ${formatMoney(adjustedNet)}) Ã· ${daysLeft} = ${formatMoney(need1m)}`;
             document.getElementById('profitPerDay2MDetail').textContent =
-                `(2,000,000 − adjusted net) ÷ days left = (${formatMoney(2_000_000)} − ${formatMoney(adjustedNet)}) ÷ ${daysLeft} = ${formatMoney(need2m)}`;
+                `(2,000,000 âˆ’ adjusted net) Ã· days left = (${formatMoney(2_000_000)} âˆ’ ${formatMoney(adjustedNet)}) Ã· ${daysLeft} = ${formatMoney(need2m)}`;
 
             logPP('log', 'updateMetrics computed', {
                 adjustedNet,
@@ -1500,7 +1508,7 @@
             logPP('log', 'createChart: Chart.js instance created', { tuesdayGuides: tuesdays.length });
         }
 
-        /** Monday 00:00 Eastern for the week containing this instant (Mon–Sun weeks). */
+        /** Monday 00:00 Eastern for the week containing this instant (Monâ€“Sun weeks). */
         function mondayStartEastern(jsDate) {
             const { DateTime } = luxon;
             const dt = DateTime.fromJSDate(jsDate, { zone: 'utc' }).setZone(ET_ZONE);
@@ -1511,9 +1519,9 @@
         function formatWeekAxisLabel(monday) {
             const sunday = monday.plus({ days: 6 });
             if (monday.year === sunday.year) {
-                return `${monday.toFormat('MMM d')} – ${sunday.toFormat('MMM d, yyyy')}`;
+                return `${monday.toFormat('MMM d')} â€“ ${sunday.toFormat('MMM d, yyyy')}`;
             }
-            return `${monday.toFormat('MMM d, yyyy')} – ${sunday.toFormat('MMM d, yyyy')}`;
+            return `${monday.toFormat('MMM d, yyyy')} â€“ ${sunday.toFormat('MMM d, yyyy')}`;
         }
 
         /** Bucket client records by Eastern Monday-start week; fill gaps with zero. */
@@ -1647,7 +1655,7 @@
                             },
                             title: {
                                 display: true,
-                                text: 'Week (Mon – Sun, Eastern)',
+                                text: 'Week (Mon â€“ Sun, Eastern)',
                                 font: { size: 12, weight: '600' },
                                 padding: { top: 8 }
                             }
@@ -1661,3 +1669,4 @@
     </script>
 </body>
 </html>
+

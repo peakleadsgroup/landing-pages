@@ -1,6 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-<head>
+<head>`r`n<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18128405900');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -81,7 +89,7 @@
                 <svg class="w-8 h-8 text-amber-600 animate-spin mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                 </svg>
-                Loading clients…
+                Loading clientsâ€¦
             </div>
             <div id="accordionHost" class="hidden space-y-3"></div>
         </div>
@@ -179,7 +187,7 @@
         }
 
         function formatMonthLabel(key) {
-            if (!key) return '—';
+            if (!key) return 'â€”';
             const [y, m] = key.split('-').map(Number);
             const d = new Date(y, m - 1, 1);
             return d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
@@ -189,7 +197,7 @@
             return `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         }
 
-        /** Charges: line amount = Price × Number. Uses Number only when it’s a positive quantity; otherwise 1 (e.g. invoice text). */
+        /** Charges: line amount = Price Ã— Number. Uses Number only when itâ€™s a positive quantity; otherwise 1 (e.g. invoice text). */
         function parseChargeNumber(val) {
             if (val == null || val === '') return 1;
             if (typeof val === 'number' && Number.isFinite(val) && val > 0) return val;
@@ -238,7 +246,7 @@
         }
 
         /**
-         * Billed lead count for one charge row: first numeric qty among common fields, else same fallback as Price×Number (1 per row if non-numeric).
+         * Billed lead count for one charge row: first numeric qty among common fields, else same fallback as PriceÃ—Number (1 per row if non-numeric).
          */
         function billedQtyForChargeFields(fields) {
             let raw = null;
@@ -264,8 +272,8 @@
         }
 
         function formatContactFieldValue(v) {
-            if (v == null) return '—';
-            if (Array.isArray(v)) return v.length ? escapeHtml(v.map((x) => String(x)).join(', ')) : '—';
+            if (v == null) return 'â€”';
+            if (Array.isArray(v)) return v.length ? escapeHtml(v.map((x) => String(x)).join(', ')) : 'â€”';
             if (typeof v === 'object') return escapeHtml(JSON.stringify(v));
             return escapeHtml(String(v));
         }
@@ -476,7 +484,7 @@
             const fn = String(fields['First Name'] || '').trim();
             const ln = String(fields['Last Name'] || '').trim();
             const combined = `${fn} ${ln}`.trim();
-            return combined || '—';
+            return combined || 'â€”';
         }
 
         function sortLeadsByCreatedDesc(leadRecords) {
@@ -512,8 +520,8 @@
                         .map((rec) => {
                             const f = rec.fields || {};
                             const name = escapeHtml(leadDisplayName(f));
-                            const phone = escapeHtml(String(f['Phone'] || '—'));
-                            const email = escapeHtml(String(f['Email'] || '—'));
+                            const phone = escapeHtml(String(f['Phone'] || 'â€”'));
+                            const email = escapeHtml(String(f['Email'] || 'â€”'));
                             const price = formatCurrency(parseMoney(f['Price']));
                             return `<tr class="border-t border-slate-200">
                                 <td class="px-3 py-2 text-sm font-medium text-slate-900">${name}</td>
@@ -570,10 +578,10 @@
         }
 
         function formatTotalsScalar(val) {
-            if (val == null || val === '') return '—';
+            if (val == null || val === '') return 'â€”';
             if (typeof val === 'boolean') return val ? 'Yes' : 'No';
             if (Array.isArray(val)) {
-                if (!val.length) return '—';
+                if (!val.length) return 'â€”';
                 const parts = val.map((x) =>
                     x != null && typeof x === 'object' && x.name != null ? String(x.name) : String(x)
                 );
@@ -672,7 +680,7 @@
             const panel = document.getElementById(`panel-${clientId}`);
             if (!panel || loadedPanels.get(clientId)) return;
 
-            panel.innerHTML = `<div class="flex items-center gap-2 text-slate-600 text-sm py-4"><svg class="w-5 h-5 animate-spin text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Loading details…</div>`;
+            panel.innerHTML = `<div class="flex items-center gap-2 text-slate-600 text-sm py-4"><svg class="w-5 h-5 animate-spin text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Loading detailsâ€¦</div>`;
 
             try {
                 const contactIds = clientRecord.fields[CLIENT_CONTACTS_FIELD];
@@ -805,7 +813,7 @@
             }
 
             submit.disabled = true;
-            submit.textContent = 'Checking…';
+            submit.textContent = 'Checkingâ€¦';
             try {
                 sessionStorage.setItem(STORAGE_KEY, em);
                 showDashboard();
@@ -832,3 +840,4 @@
     </script>
 </body>
 </html>
+

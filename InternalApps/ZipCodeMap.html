@@ -1,6 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-<head>
+<head>`r`n<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18128405900');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -504,7 +512,7 @@
                 allUSZipCodes = Object.keys(zipCompleteData);
                 dataLoaded = true;
                 
-                console.log(`✓ Loaded ${allUSZipCodes.length} US zip codes with complete data (lat/lng/population)`);
+                console.log(`âœ“ Loaded ${allUSZipCodes.length} US zip codes with complete data (lat/lng/population)`);
             } catch (error) {
                 console.error('Error loading US zip codes data:', error);
                 alert('Warning: Could not load US zip codes database. Please check that us_zip_complete.json is in the same directory as this HTML file.\n\nError: ' + error.message);
@@ -1072,7 +1080,7 @@
                 const buttons = document.querySelectorAll('.copy-all-btn');
                 const button = buttons[0];
                 const originalText = button.textContent;
-                button.textContent = '✓ Copied!';
+                button.textContent = 'âœ“ Copied!';
                 
                 setTimeout(() => {
                     button.textContent = originalText;
@@ -1099,7 +1107,7 @@
                 const buttons = document.querySelectorAll('.copy-all-btn');
                 const button = buttons[1];
                 const originalText = button.textContent;
-                button.textContent = '✓ Copied!';
+                button.textContent = 'âœ“ Copied!';
                 
                 setTimeout(() => {
                     button.textContent = originalText;
@@ -1183,7 +1191,7 @@
                 const buttons = document.querySelectorAll('.copy-all-btn');
                 const button = buttons[3]; // Fourth copy button
                 const originalText = button.textContent;
-                button.textContent = '✓ Copied!';
+                button.textContent = 'âœ“ Copied!';
                 
                 setTimeout(() => {
                     button.textContent = originalText;
@@ -1318,7 +1326,7 @@
             navigator.clipboard.writeText(url).then(() => {
                 const button = document.querySelector('#share-section button');
                 const originalText = button.textContent;
-                button.textContent = '✓ Link Copied!';
+                button.textContent = 'âœ“ Link Copied!';
                 button.style.background = '#34a853';
                 
                 setTimeout(() => {
@@ -1335,3 +1343,4 @@
     </script>
 </body>
 </html>
+

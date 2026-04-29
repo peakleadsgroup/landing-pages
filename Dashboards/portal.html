@@ -1,6 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-<head>
+<head>`r`n<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18128405900');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -75,7 +83,7 @@
         <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-3xl shadow-lg rounded-md bg-white">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xl font-semibold text-gray-900">Billing Information</h3>
-                <button onclick="closeBillingModal()" class="text-gray-400 hover:text-gray-600">✕</button>
+                <button onclick="closeBillingModal()" class="text-gray-400 hover:text-gray-600">âœ•</button>
             </div>
             <div id="billingModalContent" class="max-h-[70vh] overflow-y-auto"></div>
         </div>
@@ -85,7 +93,7 @@
         <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xl font-semibold text-gray-900">Billing Contacts</h3>
-                <button onclick="closeBillingContactsModal()" class="text-gray-400 hover:text-gray-600">✕</button>
+                <button onclick="closeBillingContactsModal()" class="text-gray-400 hover:text-gray-600">âœ•</button>
             </div>
             <div id="billingContactsModalContent" class="max-h-[70vh] overflow-y-auto"></div>
         </div>
@@ -118,7 +126,7 @@
         <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xl font-semibold text-gray-900">Edit Lead</h3>
-                <button onclick="closeLeadEditModal()" class="text-gray-400 hover:text-gray-600">✕</button>
+                <button onclick="closeLeadEditModal()" class="text-gray-400 hover:text-gray-600">âœ•</button>
             </div>
             <div id="editLeadModalContent" class="max-h-[70vh] overflow-y-auto"></div>
         </div>
@@ -403,7 +411,7 @@
             document.getElementById('errorMessage').classList.add('hidden');
         }
 
-        function fieldDisplay(record, fieldName, fallback = '—') {
+        function fieldDisplay(record, fieldName, fallback = 'â€”') {
             const value = record.fields[fieldName];
             if (value === null || value === undefined || value === '') return fallback;
             if (Array.isArray(value)) return value.join(', ');
@@ -2223,7 +2231,7 @@
             const ql = formatAdsetNumericStat(fields['Qualified Leads']);
             const ltm = formatAdsetNumericStat(fields['Leads This Month']);
             const cap = formatAdsetNumericStat(fields['Monthly Cap']);
-            const dash = '—';
+            const dash = 'â€”';
             const qlPart = ql !== null ? ql : dash;
             if (cap === null) {
                 return `Total Qualified Leads: ${qlPart} | No monthly cap`;
@@ -2781,9 +2789,9 @@
                         <div class="border border-gray-200 rounded-lg p-4 mb-4">
                             <h4 class="text-lg font-semibold text-gray-900 mb-2">${fields.Name || 'Customer'}</h4>
                             <div class="text-sm text-gray-700 space-y-1">
-                                <p><strong>Email:</strong> ${fields.Email || '—'}</p>
-                                <p><strong>Phone:</strong> ${fields.Phone || '—'}</p>
-                                <p><strong>Address:</strong> ${fields.Address || '—'}</p>
+                                <p><strong>Email:</strong> ${fields.Email || 'â€”'}</p>
+                                <p><strong>Phone:</strong> ${fields.Phone || 'â€”'}</p>
+                                <p><strong>Address:</strong> ${fields.Address || 'â€”'}</p>
                             </div>
                         </div>
                     `);
@@ -2925,3 +2933,4 @@
     </script>
 </body>
 </html>
+

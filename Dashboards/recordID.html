@@ -1,6 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-<head>
+<head>`r`n<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18128405900');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -1643,7 +1651,7 @@
             doc.setFont(undefined, 'bold');
             doc.text('Bill to', colMid, fromY);
             doc.setFont(undefined, 'normal');
-            doc.text(billToName || '—', colMid, fromY + 6);
+            doc.text(billToName || 'â€”', colMid, fromY + 6);
             if (billToEmail) {
                 doc.text(billToEmail, colMid, fromY + 12);
             }
@@ -1682,7 +1690,7 @@
             y += 10;
 
             doc.setFont(undefined, 'normal');
-            doc.text(description || '—', margin, y);
+            doc.text(description || 'â€”', margin, y);
             doc.text(String(qty), colQty, y);
             doc.text(`$${unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, colUnit, y);
             doc.text(`$${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, colTotalX, y, { align: 'right' });
@@ -1840,3 +1848,4 @@
     </script>
 </body>
 </html>
+
