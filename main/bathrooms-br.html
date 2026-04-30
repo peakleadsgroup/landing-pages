@@ -1,6 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-<head>`r`n<!-- Google tag (gtag.js) -->
+<head><!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -319,7 +319,7 @@
 
                 <!-- Step 5: I want to -->
                 <div class="form-step" data-step="5">
-                    <h2 class="modal-title">"I want toâ€¦"</h2>
+                    <h2 class="modal-title">"I want to..."</h2>
                     <div class="option-card" data-value="accessibility" onclick="selectOption(this, 'goal', 'accessibility')">
                         <input type="radio" name="goal" id="g_accessibility">
                         <label for="g_accessibility">Improve accessibility/safety</label>
@@ -482,11 +482,11 @@
         <h1 class="hero-title">Bathroom Remodeling &<br>Renovation</h1>
         <p class="hero-subtitle">Transform your bathroom into a space you'll love:</p>
         <ul class="feature-list">
-            <li><span class="feature-check">âœ“</span> Competitive local pricing</li>
-            <li><span class="feature-check">âœ“</span> Custom shower and tub solutions</li>
-            <li><span class="feature-check">âœ“</span> Premium materials and finishes</li>
-            <li><span class="feature-check">âœ“</span> Expert installation</li>
-            <li><span class="feature-check">âœ“</span> Superior style and comfort</li>
+            <li><span class="feature-check">&#10003;</span> Competitive local pricing</li>
+            <li><span class="feature-check">&#10003;</span> Custom shower and tub solutions</li>
+            <li><span class="feature-check">&#10003;</span> Premium materials and finishes</li>
+            <li><span class="feature-check">&#10003;</span> Expert installation</li>
+            <li><span class="feature-check">&#10003;</span> Superior style and comfort</li>
         </ul>
         <div class="hero-image">
             <img src="https://images.unsplash.com/photo-1552321554-5fefe6c9ef14?w=800" alt="Modern bathroom">
@@ -574,7 +574,7 @@
         <div class="review-card" id="reviewCard">
             <img class="review-avatar" id="reviewAvatar" src="https://i.pravatar.cc/100?img=1" alt="">
             <div>
-                <div class="review-stars" id="reviewStars">â˜…â˜…â˜…â˜…â˜…</div>
+                <div class="review-stars" id="reviewStars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
                 <div class="review-name" id="reviewName">Michael T.</div>
                 <p class="review-text" id="reviewText">Our new bathroom exceeded all expectations. The contractor was professional, on time, and the quality of work was outstanding.</p>
             </div>
@@ -614,7 +614,7 @@
         </div>
         <div class="faq-item">
             <div class="faq-question" onclick="toggleFaq(this)">Should I replace or reface my tub? <span class="faq-chevron">â–¼</span></div>
-            <div class="faq-answer">If your tub is damaged, outdated, or you want a different style, replacement is often the best option. Refacing may be suitable for minor updatesâ€”we can assess during your free estimate.</div>
+            <div class="faq-answer">If your tub is damaged, outdated, or you want a different style, replacement is often the best option. Refacing may be suitable for minor updates-we can assess during your free estimate.</div>
         </div>
         <div class="faq-item">
             <div class="faq-question" onclick="toggleFaq(this)">How can I maximize my bathroom storage? <span class="faq-chevron">â–¼</span></div>
@@ -634,7 +634,7 @@
             <a href="privacypolicy.html">Privacy Policy</a>
             <a href="#">Terms of Service</a>
         </div>
-        <div class="footer-copy">Â© 2026. All rights reserved.</div>
+        <div class="footer-copy">© 2026. All rights reserved.</div>
     </footer>
 
     <script>
@@ -944,7 +944,7 @@
         function updateReview() {
             const r = reviews[reviewIdx];
             document.getElementById('reviewName').textContent = r.name;
-            document.getElementById('reviewStars').textContent = 'â˜…'.repeat(r.stars) + 'â˜†'.repeat(5 - r.stars);
+            document.getElementById('reviewStars').textContent = '&#9733;'.repeat(r.stars) + 'â˜†'.repeat(5 - r.stars);
             document.getElementById('reviewText').textContent = r.text;
             document.getElementById('reviewAvatar').src = `https://i.pravatar.cc/100?img=${r.img}`;
         }
@@ -995,4 +995,3 @@
     </script>
 </body>
 </html>
-

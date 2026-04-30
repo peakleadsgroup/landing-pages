@@ -1,6 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-<head>`r`n<!-- Google tag (gtag.js) -->
+<head><!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -516,7 +516,7 @@
     </div>
     
     <div id="scrape-bar" class="hidden">
-        <span class="zip-display">Selected Zip: <span id="selected-zip-display">â€”</span></span>
+        <span class="zip-display">Selected Zip: <span id="selected-zip-display">-</span></span>
         <span class="scrape-status" id="scrape-status"></span>
         <button type="button" class="scrape-btn" id="scrape-btn" onclick="startScrape()">Scrape & Call</button>
     </div>
@@ -562,7 +562,7 @@
             
             // Add OpenStreetMap tiles
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: 'Â© OpenStreetMap contributors',
+                attribution: '© OpenStreetMap contributors',
                 maxZoom: 19
             }).addTo(map);
             
@@ -784,7 +784,7 @@
                         statusEl.textContent = 'Scrape and call successful. Choose another zip to scrape again.';
                         statusEl.style.color = '#1e8e3e';
                         selectedZip = null;
-                        document.getElementById('selected-zip-display').textContent = 'â€”';
+                        document.getElementById('selected-zip-display').textContent = '-';
                         btn.disabled = true;
                         scrapedZipsLoaded = false;
                         loadScrapedZips();
@@ -1414,4 +1414,3 @@
     </script>
 </body>
 </html>
-

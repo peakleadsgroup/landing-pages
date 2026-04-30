@@ -1,6 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-<head>`r`n<!-- Google tag (gtag.js) -->
+<head><!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -54,26 +54,26 @@
                 <svg class="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                 </svg>
-                <p class="text-gray-600 text-sm">Loading ad spend and qualified lead countâ€¦</p>
+                <p class="text-gray-600 text-sm">Loading ad spend and qualified lead count...</p>
             </div>
 
             <div id="dataPanel" class="hidden space-y-4">
                 <div class="bg-white rounded-lg shadow-sm divide-y divide-gray-100">
                     <div class="p-5 flex justify-between items-baseline gap-4">
                         <span class="text-gray-600 font-medium">Unbranded</span>
-                        <span class="text-xl font-semibold text-gray-900 tabular-nums" id="valUnbranded">â€”</span>
+                        <span class="text-xl font-semibold text-gray-900 tabular-nums" id="valUnbranded">-</span>
                     </div>
                     <div class="p-5 flex justify-between items-baseline gap-4">
                         <span class="text-gray-600 font-medium">Branded</span>
-                        <span class="text-xl font-semibold text-gray-900 tabular-nums" id="valBranded">â€”</span>
+                        <span class="text-xl font-semibold text-gray-900 tabular-nums" id="valBranded">-</span>
                     </div>
                     <div class="p-5 flex justify-between items-baseline gap-4 bg-gray-50">
                         <span class="text-gray-900 font-semibold">Total Spend</span>
-                        <span class="text-2xl font-bold text-gray-900 tabular-nums" id="valTotal">â€”</span>
+                        <span class="text-2xl font-bold text-gray-900 tabular-nums" id="valTotal">-</span>
                     </div>
                     <div class="p-5 flex justify-between items-baseline gap-4">
                         <span class="text-gray-600 font-medium">Agency Fee (25%)</span>
-                        <span class="text-xl font-semibold text-indigo-700 tabular-nums" id="valAgencyFee">â€”</span>
+                        <span class="text-xl font-semibold text-indigo-700 tabular-nums" id="valAgencyFee">-</span>
                     </div>
                     <div class="p-5 flex justify-between items-baseline gap-4">
                         <span class="text-gray-600 font-medium">Amount Paid</span>
@@ -81,12 +81,12 @@
                     </div>
                     <div class="p-5 flex justify-between items-baseline gap-4 bg-gray-50">
                         <span class="text-gray-900 font-semibold">Amount Due</span>
-                        <span class="text-2xl font-bold text-gray-900 tabular-nums" id="valAmountDue">â€”</span>
+                        <span class="text-2xl font-bold text-gray-900 tabular-nums" id="valAmountDue">-</span>
                     </div>
                     <div class="p-5 flex justify-between items-baseline gap-4">
                         <span class="text-gray-600 font-medium">CPL</span>
                         <div class="text-right shrink-0">
-                            <span class="text-xl font-semibold text-gray-900 tabular-nums block" id="valCpl">â€”</span>
+                            <span class="text-xl font-semibold text-gray-900 tabular-nums block" id="valCpl">-</span>
                             <span class="text-sm text-gray-500 tabular-nums" id="valLeadCount"></span>
                         </div>
                     </div>
@@ -103,7 +103,7 @@
 
         /**
          * Mirrors Dashboards/recordID.html CONFIG (same base, B2C Leads, Linked Client, Name).
-         * CPL does not require loading a Clients row â€” use the same string recordID puts in filterValue after fetchClientName.
+         * CPL does not require loading a Clients row - use the same string recordID puts in filterValue after fetchClientName.
          */
         const CONFIG = {
             baseId: 'appmBb0lzqRK9dI8v',
@@ -113,7 +113,7 @@
             clientNameField: 'Name'
         };
 
-        /** Must match the clientâ€™s primary field value as it appears in ARRAYJOIN({Linked Client}) â€” same as CONFIG.filterValue in recordID. */
+        /** Must match the client's primary field value as it appears in ARRAYJOIN({Linked Client}) - same as CONFIG.filterValue in recordID. */
         const CCC_CLIENT_FILTER_VALUE = 'Creative Concepts Contracting';
         /** Optional: if set, we try to GET this Clients row first to refresh the filter name; on 404 we keep CCC_CLIENT_FILTER_VALUE. */
         const CCC_CLIENT_RECORD_ID_OPTIONAL = 'recN5TuwlaK1BW6g';
@@ -156,7 +156,7 @@
             const t = (text || '').replace(/^\uFEFF/, '').trim();
             if (!t) {
                 throw new Error(
-                    'Webhook returned an empty body. In Make, add a Webhook response module and return JSON: {"unbranded":â€¦,"branded":â€¦}.'
+                    'Webhook returned an empty body. In Make, add a Webhook response module and return JSON: {"unbranded":...,"branded":...}.'
                 );
             }
             const lower = t.toLowerCase();
@@ -209,7 +209,7 @@
         }
 
         function showError(msg, partial) {
-            document.getElementById('errorTitle').textContent = partial ? 'Spend OK â€” lead data issue' : 'Could not load spend';
+            document.getElementById('errorTitle').textContent = partial ? 'Spend OK - lead data issue' : 'Could not load spend';
             document.getElementById('errorMessage').classList.remove('hidden');
             document.getElementById('errorText').textContent = msg;
         }
@@ -250,7 +250,7 @@
         }
 
         /**
-         * Same URL as recordID.html fetchClientName (line 316). Never throws â€” on any failure returns CCC_CLIENT_FILTER_VALUE.
+         * Same URL as recordID.html fetchClientName (line 316). Never throws - on any failure returns CCC_CLIENT_FILTER_VALUE.
          */
         async function tryLoadClientNameFromRecordId(recordId) {
             if (!recordId || !String(recordId).startsWith('rec')) return CCC_CLIENT_FILTER_VALUE;
@@ -294,7 +294,7 @@
         }
 
         /**
-         * List B2C Leads â€” same URL shape as recordID.html fetchRecords (lines 391â€“394): encodeURIComponent(tableName).
+         * List B2C Leads - same URL shape as recordID.html fetchRecords (lines 391-394): encodeURIComponent(tableName).
          */
         async function fetchB2cLeadsWithFormula(filterFormula, pageSize) {
             const records = [];
@@ -318,7 +318,7 @@
         }
 
         /**
-         * Qualified CCC leads since CPL window â€” recordID client filter + Status + loose Created, then Eastern â‰¥ 3/26 in JS.
+         * Qualified CCC leads since CPL window - recordID client filter + Status + loose Created, then Eastern â‰¥ 3/26 in JS.
          * Never throws (returns 0 on failure so spend still displays).
          */
         async function fetchQualifiedCccLeadCount() {
@@ -355,18 +355,18 @@
             document.getElementById('valAmountDue').textContent = formatMoney(amountDue);
         }
 
-        /** CPL = (Total Spend + Agency Fee) Ã· leads â€” excludes Amount Paid so CPL stays stable as payments change. */
+        /** CPL = (Total Spend + Agency Fee) Ã· leads - excludes Amount Paid so CPL stays stable as payments change. */
         function applyCplToDom(leadCount, totalSpend, agencyFee) {
             const cplEl = document.getElementById('valCpl');
             const countEl = document.getElementById('valLeadCount');
             if (leadCount === null) {
-                cplEl.textContent = 'â€”';
+                cplEl.textContent = '-';
                 countEl.textContent = '';
                 return;
             }
             countEl.textContent = leadCount === 1 ? '1 lead' : `${leadCount} leads`;
             if (leadCount === 0) {
-                cplEl.textContent = 'â€”';
+                cplEl.textContent = '-';
                 return;
             }
             const cplBasis = totalSpend + agencyFee;
@@ -452,4 +452,3 @@
     </script>
 </body>
 </html>
-

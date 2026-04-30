@@ -1,6 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-<head>`r`n<!-- Google tag (gtag.js) -->
+<head><!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -531,13 +531,13 @@
         indicator.textContent = 'Saving...';
       } else if (status === 'saved') {
         indicator.classList.add('saved');
-        indicator.textContent = 'âœ“ Saved';
+        indicator.textContent = '&#10003; Saved';
         setTimeout(() => {
           indicator.classList.remove('saved');
         }, 2000);
       } else if (status === 'error') {
         indicator.classList.add('error');
-        indicator.textContent = 'âœ— Save failed';
+        indicator.textContent = '&#10007; Save failed';
         setTimeout(() => {
           indicator.classList.remove('error');
         }, 3000);
@@ -2082,5 +2082,4 @@
   </script>
 </body>
 </html>
-
 

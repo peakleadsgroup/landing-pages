@@ -1,6 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-<head>`r`n<!-- Google tag (gtag.js) -->
+<head><!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -1015,10 +1015,10 @@
                     console.log(`Checking client ${client.id}: Zip codes=[${zipCodes.join(', ')}], Looking for="${zipCode}"`);
                     
                     if (zipCodes.includes(zipCode)) {
-                        console.log(`âœ“ MATCH FOUND! Client ${client.id} matches zip code ${zipCode}`);
+                        console.log(`&#10003; MATCH FOUND! Client ${client.id} matches zip code ${zipCode}`);
                         return client;
                     } else {
-                        console.log(`âœ— Client ${client.id} does not have zip code ${zipCode}`);
+                        console.log(`&#10007; Client ${client.id} does not have zip code ${zipCode}`);
                     }
                 }
                 
@@ -2713,5 +2713,4 @@ Lead generated on: ${new Date().toLocaleDateString('en-US', {
     </script>
 </body>
 </html>
-
 

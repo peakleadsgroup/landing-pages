@@ -1,6 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-<head>`r`n<!-- Google tag (gtag.js) -->
+<head><!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -13,7 +13,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
-    <title>Balancing â€“ Adset Leads</title>
+    <title>Balancing - Adset Leads</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -179,7 +179,7 @@
             gap: 0.5rem;
         }
         .period-section summary::-webkit-details-marker { display: none; }
-        .period-section summary::before { content: 'â–¶'; font-size: 0.7rem; color: #5f6368; transition: transform 0.2s; }
+        .period-section summary::before { content: '&#9656;'; font-size: 0.7rem; color: #5f6368; transition: transform 0.2s; }
         .period-section[open] summary::before { transform: rotate(90deg); }
         .period-section .period-stats { font-weight: normal; color: #5f6368; font-size: 0.875rem; }
         .period-section .period-stats strong { color: #202124; }
@@ -212,7 +212,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div id="client-list-loading" class="loading" style="padding: 1.25rem;">Loading adsetsâ€¦</div>
+                <div id="client-list-loading" class="loading" style="padding: 1.25rem;">Loading adsets...</div>
                 <div id="client-list-empty" class="empty" style="padding: 1.25rem; display: none;">No adsets found.</div>
             </div>
         </div>
@@ -310,7 +310,7 @@
                 var groupKey = encodeURIComponent(status);
                 var rows = adsets.map(function (c) {
                     return '<tr class="client-row" data-client-id="' + escapeHtml(c.id) + '" data-group="' + groupKey + '" style="display: none;">' +
-                        '<td class="client-expand-cell"><button type="button" class="client-expand-btn" aria-expanded="false" title="Expand">â–¶</button></td>' +
+                        '<td class="client-expand-cell"><button type="button" class="client-expand-btn" aria-expanded="false" title="Expand">&#9656;</button></td>' +
                         '<td class="name-cell">' + escapeHtml(c.name) + '</td>' +
                         '</tr>' +
                         '<tr class="client-detail-row" id="client-detail-' + escapeHtml(c.id) + '" style="display: none;" data-client-id="' + escapeHtml(c.id) + '" data-group="' + groupKey + '">' +
@@ -323,7 +323,7 @@
                 return '<tr class="group-row" data-group="' + groupKey + '">' +
                     '<td colspan="2">' +
                     '<div class="group-summary">' +
-                    '<button type="button" class="group-expand-btn" data-group="' + groupKey + '" aria-expanded="false" title="Expand group">â–¶</button>' +
+                    '<button type="button" class="group-expand-btn" data-group="' + groupKey + '" aria-expanded="false" title="Expand group">&#9656;</button>' +
                     '<span>' + escapeHtml(status) + '</span>' +
                     '<span class="group-count">(' + adsets.length + ')</span>' +
                     '</div>' +
@@ -456,7 +456,7 @@
         }
 
         function formatSpend(val) {
-            if (val == null || val === '') return 'â€”';
+            if (val == null || val === '') return '-';
             const n = Number(val);
             return isNaN(n) ? val : '$' + n.toFixed(2);
         }
@@ -489,7 +489,7 @@
                     if (listEl) listEl.innerHTML = '';
                     return { totalSpend3: 0, totalSpend7: 0, totalSpend14: 0 };
                 }
-                if (listEl) listEl.innerHTML = '<div class="loading">Loading campaign spendâ€¦</div>';
+                if (listEl) listEl.innerHTML = '<div class="loading">Loading campaign spend...</div>';
 
                 const campaignResults = await Promise.all(campaigns.map(async function (c) {
                     const [r3, r7, r14] = await Promise.all([
@@ -501,7 +501,7 @@
                 }));
                 let totalSpend3 = 0, totalSpend7 = 0, totalSpend14 = 0;
                 const row = function (label, spend, start, stop) {
-                    var range = (start || stop) ? ' <span class="dates">(' + escapeHtml(formatDateEST(start)) + (start && stop ? ' â€“ ' : '') + escapeHtml(formatDateEST(stop)) + ')</span>' : '';
+                    var range = (start || stop) ? ' <span class="dates">(' + escapeHtml(formatDateEST(start)) + (start && stop ? ' - ' : '') + escapeHtml(formatDateEST(stop)) + ')</span>' : '';
                     return '<div class="campaign-period"><strong>' + escapeHtml(label) + '</strong> <span class="spend">' + escapeHtml(formatSpend(spend)) + '</span>' + range + '</div>';
                 };
                 const cards = campaignResults.map(function (o) {
@@ -545,7 +545,7 @@
 
         async function loadLeadsForClient(clientId, containerEl, spendTotals) {
             if (!containerEl) return;
-            containerEl.innerHTML = '<div class="loading">Loading leadsâ€¦</div>';
+            containerEl.innerHTML = '<div class="loading">Loading leads...</div>';
             const adsetUrl = AIRTABLE_BASE_URL + '/' + encodeURIComponent(TABLE_NAMES.ADSET) + '/' + clientId;
             const adsetRecord = await fetchAirtable(adsetUrl);
             const linkedLeadIds = adsetRecord.fields && adsetRecord.fields[ADSET_B2C_LEADS_FIELD];
@@ -573,10 +573,10 @@
                 var f = r.fields || {};
                 var created = r.createdTime ? new Date(r.createdTime) : null;
                 var status = (f['Status'] != null && f['Status'] !== '') ? String(f['Status']).trim() : '';
-                var name = (f['Full Name'] || (f['First Name'] || '') + ' ' + (f['Last Name'] || '')).trim() || 'â€”';
-                var phone = (f['Phone'] || '').trim() || 'â€”';
+                var name = (f['Full Name'] || (f['First Name'] || '') + ' ' + (f['Last Name'] || '')).trim() || '-';
+                var phone = (f['Phone'] || '').trim() || '-';
                 var summary = (f['Full Summary'] || '').trim();
-                var summaryShort = summary ? (summary.length > 120 ? summary.substring(0, 120) + 'â€¦' : summary) : 'â€”';
+                var summaryShort = summary ? (summary.length > 120 ? summary.substring(0, 120) + '...' : summary) : '-';
                 return { created: created, createdTime: r.createdTime, status: status, name: name, phone: phone, summary: summaryShort };
             });
 
@@ -586,7 +586,7 @@
                 return t >= bounds.startMs && t < bounds.endMs;
             }
             function leadRow(l) {
-                var createdStr = l.created ? l.created.toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' }) : 'â€”';
+                var createdStr = l.created ? l.created.toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' }) : '-';
                 return '<tr><td>' + escapeHtml(createdStr) + '</td><td>' + escapeHtml(l.name) + '</td><td>' + escapeHtml(l.phone) + '</td><td>' + escapeHtml(l.summary) + '</td></tr>';
             }
 
@@ -606,8 +606,8 @@
                 return d.toLocaleString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York' }) + ' EST';
             }
             function periodSummary(days, spend, count, cpl, dateStart, dateEnd) {
-                var range = (dateStart && dateEnd) ? (' (' + formatDateWithTimeEST(dateStart) + ' â€“ ' + formatDateWithTimeEST(dateEnd) + ')') : '';
-                return days + ' day' + range + ' â€” Spend: ' + formatSpend(spend) + ' | Qualified: ' + count + ' | CPL: ' + (cpl != null ? formatSpend(cpl) : 'â€”');
+                var range = (dateStart && dateEnd) ? (' (' + formatDateWithTimeEST(dateStart) + ' - ' + formatDateWithTimeEST(dateEnd) + ')') : '';
+                return days + ' day' + range + ' - Spend: ' + formatSpend(spend) + ' | Qualified: ' + count + ' | CPL: ' + (cpl != null ? formatSpend(cpl) : '-');
             }
             var dateStart3 = bounds3.startDate, dateEnd3 = bounds3.endDate;
             var dateStart7 = bounds7.startDate, dateEnd7 = bounds7.endDate;
@@ -658,4 +658,3 @@
     </script>
 </body>
 </html>
-
