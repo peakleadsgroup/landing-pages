@@ -454,7 +454,7 @@
             <!-- Step 1: Contractor -->
             <div class="form-step active" id="step1">
                 <div class="step-header">$99 per exclusive, qualified shower remodel lead</div>
-                <div class="step-subheader">Are you a bathroom remodeling contractor?</div>
+                <div class="step-subheader" id="contractorQuestion">Are you a bathroom remodeling contractor?</div>
                 <div class="options">
                     <div class="option" data-value="yes" onclick="selectOption(this, 'contractor', 'yes')">Yes</div>
                     <div class="option" data-value="no" onclick="selectOption(this, 'contractor', 'no')">No</div>
@@ -638,6 +638,12 @@
                 clearTimeout(t);
                 done();
             }, { once: true, passive: true });
+        }
+
+        const contractorQuestionOverride = new URLSearchParams(window.location.search).get('contractorQuestion');
+        if (contractorQuestionOverride) {
+            const contractorQuestionEl = document.getElementById('contractorQuestion');
+            if (contractorQuestionEl) contractorQuestionEl.textContent = contractorQuestionOverride;
         }
 
         const TOTAL_STEPS = 8;
