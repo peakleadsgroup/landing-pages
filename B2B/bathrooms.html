@@ -453,7 +453,7 @@
 
             <!-- Step 1: Contractor -->
             <div class="form-step active" id="step1">
-                <div class="step-header">$99 per exclusive, qualified shower remodel lead</div>
+                <div class="step-header" id="offerHeadline">$99 per exclusive, qualified shower remodel lead</div>
                 <div class="step-subheader" id="contractorQuestion">Are you a bathroom remodeling contractor?</div>
                 <div class="options">
                     <div class="option" data-value="yes" onclick="selectOption(this, 'contractor', 'yes')">Yes</div>
@@ -640,10 +640,25 @@
             }, { once: true, passive: true });
         }
 
-        const contractorQuestionOverride = new URLSearchParams(window.location.search).get('contractorQuestion');
+        const pageParams = new URLSearchParams(window.location.search);
+        const contractorQuestionOverride = pageParams.get('contractorQuestion');
         if (contractorQuestionOverride) {
             const contractorQuestionEl = document.getElementById('contractorQuestion');
             if (contractorQuestionEl) contractorQuestionEl.textContent = contractorQuestionOverride;
+        }
+        const offerHeadlineOverride = pageParams.get('offerHeadline');
+        if (offerHeadlineOverride) {
+            const offerHeadlineEl = document.getElementById('offerHeadline');
+            if (offerHeadlineEl) offerHeadlineEl.textContent = offerHeadlineOverride;
+        }
+        const compactMode = pageParams.get('compactMode') === '1';
+        if (compactMode) {
+            const extraSections = document.querySelectorAll(
+                '.by-the-numbers-header, .stat-card, .partners-card, .video-embed-card, .testimonial-card, .get-leads-cta'
+            );
+            extraSections.forEach((el) => {
+                el.style.display = 'none';
+            });
         }
 
         const TOTAL_STEPS = 8;
