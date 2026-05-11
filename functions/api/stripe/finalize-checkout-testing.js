@@ -5,7 +5,11 @@
  * Reads STRIPE_TEST_SECRET_KEY from env (must start with "sk_test_") and uses it
  * in place of STRIPE_SECRET_KEY when talking to Stripe.
  *
- * Fires a webhook POST to MAKE_PAYMENT_WEBHOOK_URL on a confirmed paid checkout.
+ * On a confirmed paid checkout:
+ *   1) creates a new record in PAID_CUSTOMERS_TABLE_ID with { Name: businessName }
+ *   2) sets B2B Leads "Discovery Status" = "Close Won" on the lead record
+ *   3) fires a webhook POST to MAKE_PAYMENT_WEBHOOK_URL
+ * All three side-effects are best-effort and will not fail the response if they error.
  *
  * WARNING: STRIPE_TEST_SECRET_KEY must be a Stripe test-mode key. This endpoint is
  * intentionally pinned to test mode for the agreement-testing page.
@@ -16,11 +20,21 @@ import {
   airtableGetRecord,
   airtableCreateRecord,
   airtablePatchRecord,
+  readNumber,
   stripeGet,
   F,
   B2B_LEADS_TABLE_ID,
   DEFAULT_AIRTABLE_CUSTOMER_TABLE_ID,
 } from "./stripe-lib.js";
+
+/** Airtable table where a new record is created after each successful test-mode payment. */
+const PAID_CUSTOMERS_TABLE_ID = "tblH2nVfmGNG8pAjC";
+const PAID_CUSTOMERS_NAME_FIELD = "Name";
+const PAID_CUSTOMERS_CHARGE_CADENCE_FIELD = "Charge Cadence";
+
+/** B2B Leads field + value to set on the lead row when payment lands. */
+const LEAD_DISCOVERY_STATUS_FIELD = "Discovery Status";
+const LEAD_DISCOVERY_STATUS_VALUE = "Close Won";
 
 /** Make.com webhook fired after a successful test-mode payment. */
 const MAKE_PAYMENT_WEBHOOK_URL =
@@ -185,11 +199,48 @@ export async function onRequest(context) {
       });
     }
 
+    const leadsUpfrontNumber = readNumber(leadFields[F.LEADS_SOLD_UPFRONT]);
+
+    let paidCustomerRecordId = null;
+    try {
+      const paidCustomerFields = {
+        [PAID_CUSTOMERS_NAME_FIELD]: businessName || "Customer",
+      };
+      if (leadsUpfrontNumber != null) {
+        paidCustomerFields[PAID_CUSTOMERS_CHARGE_CADENCE_FIELD] = leadsUpfrontNumber;
+      }
+      const created = await airtableCreateRecord(
+        context.env,
+        PAID_CUSTOMERS_TABLE_ID,
+        paidCustomerFields
+      );
+      paidCustomerRecordId = created && created.id ? created.id : null;
+    } catch (err) {
+      console.warn(
+        "[finalize-checkout-testing] paid-customers create failed",
+        err && err.message ? err.message : err
+      );
+    }
+
+    let discoveryStatusUpdated = false;
+    try {
+      await airtablePatchRecord(context.env, B2B_LEADS_TABLE_ID, recordId, {
+        [LEAD_DISCOVERY_STATUS_FIELD]: LEAD_DISCOVERY_STATUS_VALUE,
+      });
+      discoveryStatusUpdated = true;
+    } catch (err) {
+      console.warn(
+        "[finalize-checkout-testing] lead discovery-status update failed",
+        err && err.message ? err.message : err
+      );
+    }
+
     const webhookPromise = notifyPaymentWebhook({
       business_name: businessName,
       record_id: recordId,
       stripe_customer_id: stripeCustomerId,
       payment_intent_id: paymentIntentId,
+      paid_customer_record_id: paidCustomerRecordId,
       mode: "testing",
     });
     if (typeof context.waitUntil === "function") {
@@ -207,6 +258,8 @@ export async function onRequest(context) {
         stripeCustomerId,
         paymentMethodId,
         paymentIntentId,
+        paidCustomerRecordId,
+        discoveryStatusUpdated,
       },
       200,
       cors
