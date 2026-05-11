@@ -5,8 +5,16 @@
  * Optional: AIRTABLE_CUSTOMER_TABLE_ID (defaults to Customer table in this repo)
  * Optional: AIRTABLE_CUSTOMER_NAME_FIELD (default "Name") — primary / display name on Customer table
  *
- * After return from Stripe Checkout: retrieves session, verifies paid + metadata,
- * writes Stripe Customer ID + Payment Method ID to linked Customer row (or creates one + links).
+ * On a confirmed paid live checkout:
+ *   1) writes Stripe Customer ID + Payment Method ID to the linked Customer row
+ *      (creates one and links it to the lead if missing)
+ *   2) sets B2B Leads "Discovery Status" = "Close Won" on the lead record
+ *   3) fires a webhook POST to MAKE_PAYMENT_WEBHOOK_URL with { mode: "live", ... }
+ * Side-effects (2) and (3) are best-effort and will not fail the response if they error.
+ *
+ * The Client row in tblH2nVfmGNG8pAjC is created separately by the
+ * /api/onboarding/client endpoint after the user submits the onboarding form
+ * shown on the agreement page.
  */
 import {
   json,
@@ -20,6 +28,51 @@ import {
   DEFAULT_AIRTABLE_CUSTOMER_TABLE_ID,
 } from "./stripe-lib.js";
 
+const LOG_PREFIX = "[finalize-checkout]";
+function logFC() {
+  console.log.apply(console, [LOG_PREFIX].concat(Array.prototype.slice.call(arguments)));
+}
+function warnFC() {
+  console.warn.apply(console, [LOG_PREFIX].concat(Array.prototype.slice.call(arguments)));
+}
+function errFC() {
+  console.error.apply(console, [LOG_PREFIX].concat(Array.prototype.slice.call(arguments)));
+}
+function truncStr(s, n) {
+  if (s == null) return "";
+  const str = String(s);
+  return str.length > (n || 120) ? str.slice(0, n || 120) + "..." : str;
+}
+
+/** B2B Leads field + value to set on the lead row when payment lands. */
+const LEAD_DISCOVERY_STATUS_FIELD = "Discovery Status";
+const LEAD_DISCOVERY_STATUS_VALUE = "Close Won";
+
+/** Make.com webhook fired after a successful live payment. Same URL as the test endpoint; payload mode differs. */
+const MAKE_PAYMENT_WEBHOOK_URL =
+  "https://hook.us2.make.com/lnb3ggrqony2qi5l5s7r2c6x68hxhd5l";
+
+async function notifyPaymentWebhook(payload) {
+  const t0 = Date.now();
+  logFC("webhook posting", { url: MAKE_PAYMENT_WEBHOOK_URL, payload });
+  try {
+    const res = await fetch(MAKE_PAYMENT_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const ms = Date.now() - t0;
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      warnFC("webhook non-OK", res.status, truncStr(text, 200), ms + "ms");
+    } else {
+      logFC("webhook OK", res.status, ms + "ms");
+    }
+  } catch (err) {
+    warnFC("webhook failed", err && err.message ? err.message : err);
+  }
+}
+
 function extractPaymentMethodId(paymentIntent) {
   if (!paymentIntent || typeof paymentIntent !== "object") return null;
   const pm = paymentIntent.payment_method;
@@ -29,13 +82,23 @@ function extractPaymentMethodId(paymentIntent) {
 }
 
 export async function onRequest(context) {
+  const t0 = Date.now();
   const cors = corsFor(context.request);
+  const method = context.request.method;
 
-  if (context.request.method === "OPTIONS") {
+  logFC("request received", {
+    method,
+    url: truncStr(context.request.url, 200),
+    origin: context.request.headers.get("Origin") || "(none)",
+  });
+
+  if (method === "OPTIONS") {
+    logFC("preflight OPTIONS — 204");
     return new Response(null, { status: 204, headers: cors });
   }
 
-  if (context.request.method !== "POST") {
+  if (method !== "POST") {
+    warnFC("rejecting non-POST method:", method);
     return json({ error: "Method not allowed" }, 405, cors);
   }
 
@@ -46,29 +109,49 @@ export async function onRequest(context) {
 
   try {
     if (!context.env.STRIPE_SECRET_KEY || !context.env.AIRTABLE_API_KEY) {
+      errFC("STRIPE_SECRET_KEY or AIRTABLE_API_KEY missing");
       return json({ error: "STRIPE_SECRET_KEY and AIRTABLE_API_KEY required" }, 503, cors);
     }
+    logFC("env OK", { customerTableId, nameField });
 
     let body;
     try {
       body = await context.request.json();
-    } catch {
+    } catch (parseErr) {
+      warnFC("invalid JSON body", parseErr && parseErr.message);
       return json({ error: "Invalid JSON body" }, 400, cors);
     }
 
     const sessionId = typeof body.sessionId === "string" ? body.sessionId.trim() : "";
     if (!/^cs_[a-zA-Z0-9_]+$/.test(sessionId)) {
+      warnFC("invalid sessionId", truncStr(sessionId, 40));
       return json({ error: "Invalid sessionId" }, 400, cors);
     }
+    logFC("session id accepted", sessionId);
 
-    const expand =
-      "expand[]=customer&expand[]=payment_intent.payment_method";
-    const session = await stripeGet(
-      context.env,
-      `/v1/checkout/sessions/${encodeURIComponent(sessionId)}?${expand}`
-    );
+    const expand = "expand[]=customer&expand[]=payment_intent.payment_method";
+    let session;
+    try {
+      session = await stripeGet(
+        context.env,
+        `/v1/checkout/sessions/${encodeURIComponent(sessionId)}?${expand}`
+      );
+    } catch (sErr) {
+      errFC("stripe session GET failed", sErr && sErr.message);
+      throw sErr;
+    }
+    logFC("stripe session retrieved", {
+      id: session.id,
+      payment_status: session.payment_status,
+      mode: session.mode,
+      livemode: session.livemode,
+      amount_total: session.amount_total,
+      currency: session.currency,
+      has_metadata_lead: !!(session.metadata && session.metadata.b2b_lead_id),
+    });
 
     if (session.payment_status !== "paid") {
+      warnFC("checkout not paid", { payment_status: session.payment_status || "unknown" });
       return json({ error: `Checkout not paid (status: ${session.payment_status || "unknown"})` }, 400, cors);
     }
 
@@ -77,11 +160,19 @@ export async function onRequest(context) {
       (typeof session.client_reference_id === "string" ? session.client_reference_id : null);
 
     if (!metaLead || !/^rec[a-zA-Z0-9]{14,}$/.test(String(metaLead).trim())) {
+      errFC("session missing b2b lead reference", { metaLead });
       return json({ error: "Session missing b2b lead reference" }, 400, cors);
     }
 
     const recordId = String(metaLead).trim();
-    const lead = await airtableGetRecord(context.env, B2B_LEADS_TABLE_ID, recordId);
+    logFC("fetching B2B lead", recordId);
+    let lead;
+    try {
+      lead = await airtableGetRecord(context.env, B2B_LEADS_TABLE_ID, recordId);
+    } catch (lErr) {
+      errFC("B2B lead fetch failed", recordId, lErr && lErr.message);
+      throw lErr;
+    }
     const leadFields = lead.fields || {};
 
     const stripeCustomerRaw = session.customer;
@@ -93,6 +184,7 @@ export async function onRequest(context) {
           : null;
 
     if (!stripeCustomerId) {
+      errFC("no Stripe customer on session");
       return json({ error: "No Stripe customer on session" }, 400, cors);
     }
 
@@ -102,10 +194,16 @@ export async function onRequest(context) {
       typeof sessionPi === "object" && sessionPi ? sessionPi : null
     );
     if (!paymentMethodId && typeof sessionPi === "string") {
-      piResolved = await stripeGet(
-        context.env,
-        `/v1/payment_intents/${encodeURIComponent(sessionPi)}?expand[]=payment_method`
-      );
+      logFC("expanding payment_intent for PM id", sessionPi);
+      try {
+        piResolved = await stripeGet(
+          context.env,
+          `/v1/payment_intents/${encodeURIComponent(sessionPi)}?expand[]=payment_method`
+        );
+      } catch (piErr) {
+        errFC("payment_intent GET failed", sessionPi, piErr && piErr.message);
+        throw piErr;
+      }
       paymentMethodId = extractPaymentMethodId(piResolved);
     }
     const paymentIntentId =
@@ -114,6 +212,8 @@ export async function onRequest(context) {
         : typeof sessionPi === "string"
           ? sessionPi
           : null;
+
+    logFC("stripe references", { stripeCustomerId, paymentIntentId, paymentMethodId });
 
     const businessName =
       leadFields[F.BUSINESS_NAME] != null ? String(leadFields[F.BUSINESS_NAME]).trim() : "Customer";
@@ -127,23 +227,81 @@ export async function onRequest(context) {
 
     const existingLinks = Array.isArray(leadFields[F.CUSTOMER_LINK]) ? leadFields[F.CUSTOMER_LINK] : [];
 
+    let customerRecordId = null;
     if (existingLinks.length > 0) {
-      const customerRecId = existingLinks[0];
-      await airtablePatchRecord(context.env, customerTableId, customerRecId, customerPatchFields);
+      customerRecordId = existingLinks[0];
+      logFC("patching existing Customer row", customerRecordId);
+      try {
+        await airtablePatchRecord(context.env, customerTableId, customerRecordId, customerPatchFields);
+      } catch (cpErr) {
+        errFC("Customer patch failed", customerRecordId, cpErr && cpErr.message);
+        throw cpErr;
+      }
     } else {
       const createFields = {
         ...customerPatchFields,
         [nameField]: businessName || "Customer",
       };
-      const created = await airtableCreateRecord(context.env, customerTableId, createFields);
+      logFC("creating new Customer row", { name: truncStr(businessName, 60) });
+      let created;
+      try {
+        created = await airtableCreateRecord(context.env, customerTableId, createFields);
+      } catch (ccErr) {
+        errFC("Customer create failed", ccErr && ccErr.message);
+        throw ccErr;
+      }
       const newCustomerId = created.id;
       if (!newCustomerId) {
+        errFC("Customer create returned no id", created);
         throw new Error("Airtable did not return new Customer record id");
       }
-      await airtablePatchRecord(context.env, B2B_LEADS_TABLE_ID, recordId, {
-        [F.CUSTOMER_LINK]: [newCustomerId],
-      });
+      customerRecordId = newCustomerId;
+      logFC("new Customer created; linking back to lead", { customerRecordId, recordId });
+      try {
+        await airtablePatchRecord(context.env, B2B_LEADS_TABLE_ID, recordId, {
+          [F.CUSTOMER_LINK]: [newCustomerId],
+        });
+      } catch (linkErr) {
+        errFC("lead customer-link patch failed", linkErr && linkErr.message);
+        throw linkErr;
+      }
     }
+
+    let discoveryStatusUpdated = false;
+    try {
+      logFC("patching lead Discovery Status -> Close Won", recordId);
+      await airtablePatchRecord(context.env, B2B_LEADS_TABLE_ID, recordId, {
+        [LEAD_DISCOVERY_STATUS_FIELD]: LEAD_DISCOVERY_STATUS_VALUE,
+      });
+      discoveryStatusUpdated = true;
+      logFC("Discovery Status updated OK");
+    } catch (err) {
+      warnFC("lead discovery-status update failed", err && err.message ? err.message : err);
+    }
+
+    const webhookPromise = notifyPaymentWebhook({
+      business_name: businessName,
+      record_id: recordId,
+      stripe_customer_id: stripeCustomerId,
+      payment_intent_id: paymentIntentId,
+      mode: "live",
+    });
+    if (typeof context.waitUntil === "function") {
+      logFC("webhook deferred via waitUntil");
+      context.waitUntil(webhookPromise);
+    } else {
+      /* Local/dev runtimes without waitUntil: best-effort await, errors already swallowed. */
+      logFC("waitUntil unavailable; awaiting webhook inline");
+      await webhookPromise;
+    }
+
+    const ms = Date.now() - t0;
+    logFC("request complete", {
+      recordId,
+      customerRecordId,
+      discoveryStatusUpdated,
+      elapsedMs: ms,
+    });
 
     return json(
       {
@@ -152,12 +310,14 @@ export async function onRequest(context) {
         stripeCustomerId,
         paymentMethodId,
         paymentIntentId,
+        discoveryStatusUpdated,
       },
       200,
       cors
     );
   } catch (e) {
     const msg = e && e.message ? String(e.message) : "Server error";
+    errFC("request failed", msg, e && e.stack ? truncStr(e.stack, 1000) : "(no stack)");
     return json({ error: msg }, 500, cors);
   }
 }
