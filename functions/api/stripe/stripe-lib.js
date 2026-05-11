@@ -95,16 +95,19 @@ export async function airtableGetRecord(env, tableId, recordId) {
   return data;
 }
 
-export async function airtableCreateRecord(env, tableId, fields) {
+export async function airtableCreateRecord(env, tableId, fields, options) {
   const key = env.AIRTABLE_API_KEY;
   const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(tableId)}`;
+  /** typecast lets Airtable coerce strings into single/multi-select options (auto-creating if missing). */
+  const payload = { fields };
+  if (options && options.typecast) payload.typecast = true;
   const res = await fetch(url, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ fields }),
+    body: JSON.stringify(payload),
   });
   const text = await res.text();
   let data;
