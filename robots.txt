@@ -13,6 +13,7 @@ Disallow: /FloorCoating/
 
 # Disallow specific private pages
 Disallow: /agreement.html
+Disallow: /agreement-testing.html
 Disallow: /thank-you.html
 
 # Allow the main public pages (explicitly, though they're in root)
