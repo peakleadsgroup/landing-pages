@@ -179,13 +179,29 @@
             gap: 0.5rem;
         }
         .period-section summary::-webkit-details-marker { display: none; }
-        .period-section summary::before { content: '&#9656;'; font-size: 0.7rem; color: #5f6368; transition: transform 0.2s; }
+        /* U+25B8 same as HTML &#9656; — entity text does not work inside CSS content */
+        .period-section summary::before { content: '\25B8'; font-size: 0.7rem; color: #5f6368; transition: transform 0.2s; display: inline-block; }
         .period-section[open] summary::before { transform: rotate(90deg); }
         .period-section .period-stats { font-weight: normal; color: #5f6368; font-size: 0.875rem; }
         .period-section .period-stats strong { color: #202124; }
         .period-section table { margin: 0; border-radius: 0; }
         .period-section .panel-body { padding: 0; }
         .overflow-x-auto { overflow-x: auto; }
+        .adset-kpi-grid {
+            display: grid;
+            grid-template-columns: minmax(160px, 1fr) auto;
+            gap: 0.4rem 1rem;
+            align-items: baseline;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            padding: 0.75rem 1rem;
+            background: #f8f9fa;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            max-width: 560px;
+        }
+        .adset-kpi-grid .kpi-label { color: #5f6368; }
+        .adset-kpi-grid .kpi-value { font-weight: 600; color: #202124; text-align: right; font-variant-numeric: tabular-nums; }
     </style>
 </head>
 <body>
@@ -233,6 +249,11 @@
         const ADSET_CLIENT_STATUS_FIELD = 'Client Status';
         const ADSET_B2C_LEADS_FIELD = 'B2C Leads';
         const ADSET_CAMPAIGNS_FIELD = 'Campaign';
+        const ADSET_TBC_LEADS_FIELD = 'TBC Leads';
+        const ADSET_DAILY_LEADS_LEFT_FIELD = 'Daily Leads Left';
+        const ADSET_WEEKLY_LEADS_LEFT_FIELD = 'Weekly Leads Left';
+        const ADSET_MONTHLY_LEADS_LEFT_FIELD = 'Monthly Leads Left';
+        const ADSET_TOTAL_LEADS_LEFT_FIELD = 'Total Leads Left';
         const CAMPAIGN_ID_FIELD = 'Campaign ID';
         const MAKE_WEBHOOK_3DAY = 'https://hook.us2.make.com/d4eoxhqbbblt5qqm6ft3rbeg5pv3ubed';
         const MAKE_WEBHOOK_7DAY = 'https://hook.us2.make.com/vbcc13xqt1yd1vmj1rseyokjptr4hadm';
@@ -359,6 +380,27 @@
                     }
                 }
             });
+
+            expandDefaultStatusGroups();
+        }
+
+        function expandAllAdsetsInGroup(groupKey) {
+            document.querySelectorAll('tr.client-row[data-group="' + groupKey + '"]').forEach(function (row) {
+                var clientId = row.getAttribute('data-client-id');
+                if (!clientId) return;
+                var detailRow = document.getElementById('client-detail-' + clientId);
+                if (!detailRow) return;
+                var adsetBtn = row.querySelector('.client-expand-btn');
+                var content = detailRow.querySelector('.client-detail-content');
+                detailRow.style.display = 'table-row';
+                if (adsetBtn) {
+                    adsetBtn.classList.add('expanded');
+                    adsetBtn.setAttribute('aria-expanded', 'true');
+                }
+                if (content && !content.getAttribute('data-loaded')) {
+                    loadClientDetail(clientId, content, adsetBtn);
+                }
+            });
         }
 
         function toggleStatusGroup(groupBtn) {
@@ -384,12 +426,99 @@
                     }
                 }
             });
+            if (shouldExpand) {
+                expandAllAdsetsInGroup(groupKey);
+            }
+        }
+
+        function expandDefaultStatusGroups() {
+            ['Active', 'Paused'].forEach(function (status) {
+                var key = encodeURIComponent(status);
+                var btn = document.querySelector('#client-tbody .group-expand-btn[data-group="' + key + '"]');
+                if (btn && btn.getAttribute('aria-expanded') !== 'true') {
+                    toggleStatusGroup(btn);
+                }
+            });
         }
 
         function escapeHtml(s) {
             const div = document.createElement('div');
             div.textContent = s == null ? '' : s;
             return div.innerHTML;
+        }
+
+        function displayAirtableFieldValue(val) {
+            if (val == null || val === '') return '\u2014';
+            if (typeof val === 'number' && Number.isFinite(val)) {
+                return val % 1 === 0 ? String(val) : String(Math.round(val * 100) / 100);
+            }
+            if (typeof val === 'string') {
+                var trimmed = val.trim();
+                if (trimmed !== '' && /^-?\d+(\.\d+)?$/.test(trimmed)) {
+                    var n = Number(trimmed);
+                    if (Number.isFinite(n)) return n % 1 === 0 ? String(n) : String(Math.round(n * 100) / 100);
+                }
+            }
+            if (typeof val === 'boolean') return val ? 'Yes' : 'No';
+            if (Array.isArray(val)) {
+                if (val.length === 0) return '\u2014';
+                var allRecIds = val.every(function (v) { return typeof v === 'string' && /^rec[a-zA-Z0-9]+$/.test(v); });
+                if (allRecIds) return String(val.length) + ' linked';
+                return val.map(function (v) {
+                    if (v != null && typeof v === 'object') return '[object]';
+                    return displayAirtableFieldValue(v);
+                }).join(', ');
+            }
+            return String(val);
+        }
+
+        /** Elapsed local time since Sunday 00:00 in `timeZone`, as 0–100% of a 7-day span. */
+        function getWeekProgressPercentSundayStart(timeZone) {
+            var tz = timeZone || 'America/New_York';
+            var now = new Date();
+            var dtf = new Intl.DateTimeFormat('en-US', {
+                timeZone: tz,
+                weekday: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hourCycle: 'h23',
+                hour12: false
+            });
+            var parts = dtf.formatToParts(now);
+            var get = function (type) {
+                var p = parts.find(function (x) { return x.type === type; });
+                return p ? p.value : '';
+            };
+            var wdStr = get('weekday');
+            var dayIndex = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[wdStr];
+            if (dayIndex === undefined) return 0;
+            var hour = parseInt(get('hour'), 10) || 0;
+            var minute = parseInt(get('minute'), 10) || 0;
+            var second = parseInt(get('second'), 10) || 0;
+            var elapsedSec = dayIndex * 86400 + hour * 3600 + minute * 60 + second;
+            var weekSec = 7 * 86400;
+            var frac = elapsedSec / weekSec;
+            return Math.min(100, Math.max(0, frac * 100));
+        }
+
+        function renderAdsetKpis(containerEl, fields) {
+            if (!containerEl) return;
+            var f = fields || {};
+            function row(label, rawVal) {
+                var display = displayAirtableFieldValue(rawVal);
+                return '<div class="kpi-label">' + escapeHtml(label) + '</div><div class="kpi-value">' + escapeHtml(display) + '</div>';
+            }
+            var weekPct = getWeekProgressPercentSundayStart('America/New_York');
+            containerEl.innerHTML =
+                '<div class="adset-kpi-grid">' +
+                row('TBC Leads', f[ADSET_TBC_LEADS_FIELD]) +
+                row('Daily Leads Left', f[ADSET_DAILY_LEADS_LEFT_FIELD]) +
+                row('Weekly Leads Left', f[ADSET_WEEKLY_LEADS_LEFT_FIELD]) +
+                row('Monthly Leads Left', f[ADSET_MONTHLY_LEADS_LEFT_FIELD]) +
+                row('Total Leads Left', f[ADSET_TOTAL_LEADS_LEFT_FIELD]) +
+                '<div class="kpi-label">' + escapeHtml('Week progress (week starts Sun, America/New_York)') + '</div><div class="kpi-value">' + escapeHtml(weekPct.toFixed(1) + '%') + '</div>' +
+                '</div>';
         }
 
         function parsePeriodResponse(text, period) {
@@ -461,10 +590,10 @@
             return isNaN(n) ? val : '$' + n.toFixed(2);
         }
 
-        async function loadCampaignsForClient(clientId, listEl) {
+        async function loadCampaignsForClient(clientId, listEl, cachedAdsetRecord) {
             try {
                 const adsetUrl = AIRTABLE_BASE_URL + '/' + encodeURIComponent(TABLE_NAMES.ADSET) + '/' + clientId;
-                const adsetRecord = await fetchAirtable(adsetUrl);
+                const adsetRecord = cachedAdsetRecord || await fetchAirtable(adsetUrl);
                 const campaignRecordIds = adsetRecord.fields && adsetRecord.fields[ADSET_CAMPAIGNS_FIELD];
                 if (!campaignRecordIds || !Array.isArray(campaignRecordIds) || campaignRecordIds.length === 0) {
                     if (listEl) listEl.innerHTML = '';
@@ -543,11 +672,11 @@
             return { startMs: startMs, endMs: endMs, startDate: new Date(startMs), endDate: new Date(endMs) };
         }
 
-        async function loadLeadsForClient(clientId, containerEl, spendTotals) {
+        async function loadLeadsForClient(clientId, containerEl, spendTotals, cachedAdsetRecord) {
             if (!containerEl) return;
             containerEl.innerHTML = '<div class="loading">Loading leads...</div>';
             const adsetUrl = AIRTABLE_BASE_URL + '/' + encodeURIComponent(TABLE_NAMES.ADSET) + '/' + clientId;
-            const adsetRecord = await fetchAirtable(adsetUrl);
+            const adsetRecord = cachedAdsetRecord || await fetchAirtable(adsetUrl);
             const linkedLeadIds = adsetRecord.fields && adsetRecord.fields[ADSET_B2C_LEADS_FIELD];
             if (!linkedLeadIds || !Array.isArray(linkedLeadIds) || linkedLeadIds.length === 0) {
                 containerEl.innerHTML = '<div class="empty">No leads for this adset.</div>';
@@ -642,11 +771,16 @@
         }
 
         function loadClientDetail(clientId, contentEl, btn) {
-            contentEl.innerHTML = '<div class="panel-header" style="padding: 0 0 0.5rem 0; font-weight: 600; color: #202124;">Spend summary</div><div class="campaigns-placeholder"></div><div class="panel-header" style="padding: 1rem 0 0.5rem 0; font-weight: 600; color: #202124;">Leads by period (Qualified only)</div><div class="leads-placeholder"></div>';
+            const adsetUrl = AIRTABLE_BASE_URL + '/' + encodeURIComponent(TABLE_NAMES.ADSET) + '/' + clientId;
+            contentEl.innerHTML = '<div class="panel-header" style="padding: 0 0 0.5rem 0; font-weight: 600; color: #202124;">Adset targets</div><div class="adset-kpis-placeholder"></div><div class="panel-header" style="padding: 1rem 0 0.5rem 0; font-weight: 600; color: #202124;">Spend summary</div><div class="campaigns-placeholder"></div><div class="panel-header" style="padding: 1rem 0 0.5rem 0; font-weight: 600; color: #202124;">Leads by period (Qualified only)</div><div class="leads-placeholder"></div>';
+            var kpisPlaceholder = contentEl.querySelector('.adset-kpis-placeholder');
             var campaignsPlaceholder = contentEl.querySelector('.campaigns-placeholder');
             var leadsPlaceholder = contentEl.querySelector('.leads-placeholder');
-            loadCampaignsForClient(clientId, campaignsPlaceholder).then(function (spendTotals) {
-                return loadLeadsForClient(clientId, leadsPlaceholder, spendTotals);
+            fetchAirtable(adsetUrl).then(function (adsetRecord) {
+                renderAdsetKpis(kpisPlaceholder, adsetRecord.fields || {});
+                return loadCampaignsForClient(clientId, campaignsPlaceholder, adsetRecord).then(function (spendTotals) {
+                    return loadLeadsForClient(clientId, leadsPlaceholder, spendTotals, adsetRecord);
+                });
             }).then(function () {
                 contentEl.setAttribute('data-loaded', 'true');
             }).catch(function (e) {
