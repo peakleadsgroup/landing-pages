@@ -6,9 +6,12 @@
  * in place of STRIPE_SECRET_KEY when talking to Stripe.
  *
  * On a confirmed paid checkout:
- *   1) sets B2B Leads "Discovery Status" = "Close Won" on the lead record
- *   2) fires a webhook POST to MAKE_PAYMENT_WEBHOOK_URL
- * Both side-effects are best-effort and will not fail the response if they error.
+ *   1) writes Stripe Customer ID + Payment Method ID to the linked Customer row
+ *      (creates one and links it to the lead if missing)
+ *   2) best-effort: Charges row + Customer "Payments" link (same as live finalize); failures logged only
+ *   3) sets B2B Leads "Discovery Status" = "Close Won" on the lead record
+ *   4) fires a webhook POST to MAKE_PAYMENT_WEBHOOK_URL
+ * Both side-effects (3) and (4) are best-effort and will not fail the response if they error.
  *
  * The Client row in tblH2nVfmGNG8pAjC is no longer created here; the
  * /api/onboarding/client-testing endpoint creates it after the user submits the
@@ -27,6 +30,7 @@ import {
   F,
   B2B_LEADS_TABLE_ID,
   DEFAULT_AIRTABLE_CUSTOMER_TABLE_ID,
+  tryRecordChargeAndLinkCustomer,
 } from "./stripe-lib.js";
 
 const LOG_PREFIX = "[finalize-checkout-testing]";
@@ -281,6 +285,15 @@ export async function onRequest(context) {
       }
     }
 
+    const chargeResult = await tryRecordChargeAndLinkCustomer(context.env, {
+      customerTableId,
+      customerRecordId,
+      leadFields,
+      paymentIntentId,
+      warn: (...args) => warnFCT(...args),
+      log: (...args) => logFCT(...args),
+    });
+
     let discoveryStatusUpdated = false;
     try {
       logFCT("patching lead Discovery Status -> Close Won", recordId);
@@ -313,6 +326,8 @@ export async function onRequest(context) {
     logFCT("request complete", {
       recordId,
       customerRecordId,
+      chargeRecorded: chargeResult.ok,
+      chargeRecordId: chargeResult.chargeRecordId,
       discoveryStatusUpdated,
       elapsedMs: ms,
     });
@@ -326,6 +341,8 @@ export async function onRequest(context) {
         paymentMethodId,
         paymentIntentId,
         discoveryStatusUpdated,
+        chargeRecorded: chargeResult.ok,
+        chargeRecordId: chargeResult.chargeRecordId || null,
       },
       200,
       cors

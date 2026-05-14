@@ -8,6 +8,24 @@ export const B2B_LEADS_TABLE_ID = "tbldNpwtCN9y5Pkiy";
 /** B2B Leads → Customer (linked table). Override with env AIRTABLE_CUSTOMER_TABLE_ID if it ever changes. */
 export const DEFAULT_AIRTABLE_CUSTOMER_TABLE_ID = "tbl9xNF0tpXvzkvX7";
 
+/** Customers.Payments → Charges. Override with env AIRTABLE_CHARGES_TABLE_ID if it ever changes. */
+export const DEFAULT_AIRTABLE_CHARGES_TABLE_ID = "tblU9p7dmEgboC2Mk";
+
+/** Charges table field names (must match Airtable). */
+export const CHARGE_FIELDS = {
+  CHARGE_ID: "Charge ID",
+  STATUS: "Status",
+  AMOUNT: "Amount",
+  PRICE: "Price",
+  NUMBER: "Number",
+};
+
+/** Customers table: linked Charges records. */
+export const CUSTOMER_PAYMENTS_FIELD = "Payments";
+
+/** Customers table: long text for charge/Payments flow diagnostics. */
+export const CUSTOMER_ERROR_FIELD = "Error";
+
 export const F = {
   BUSINESS_NAME: "Business Name",
   LEADS_SOLD_UPFRONT: "Leads Sold Upfront",
@@ -144,6 +162,263 @@ export async function airtablePatchRecord(env, tableId, recordId, fields) {
     throw new Error(typeof data.error === "string" ? data.error : `Airtable ${res.status}`);
   }
   return data;
+}
+
+/**
+ * @param {object} env
+ * @param {string} tableId
+ * @param {{ filterByFormula?: string, maxRecords?: number }} query
+ */
+export async function airtableListRecords(env, tableId, query = {}) {
+  const key = env.AIRTABLE_API_KEY;
+  if (!key) throw new Error("AIRTABLE_API_KEY not configured");
+  const usp = new URLSearchParams();
+  if (query.filterByFormula != null && query.filterByFormula !== "") {
+    usp.set("filterByFormula", query.filterByFormula);
+  }
+  if (query.maxRecords != null) usp.set("maxRecords", String(query.maxRecords));
+  const qs = usp.toString();
+  const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(tableId)}${qs ? `?${qs}` : ""}`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${key}` } });
+  const text = await res.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    throw new Error(`Airtable invalid JSON (${res.status})`);
+  }
+  if (!res.ok) {
+    throw new Error(typeof data.error === "string" ? data.error : `Airtable ${res.status}`);
+  }
+  return Array.isArray(data.records) ? data.records : [];
+}
+
+/** Escape a string for use inside single quotes in an Airtable filterByFormula literal. */
+function escapeAirtableFormulaString(s) {
+  return String(s).replace(/'/g, "''");
+}
+
+const CHARGE_ERROR_LOG_MAX = 95000;
+
+function formatErr(e) {
+  if (e == null) return "(none)";
+  const msg = e.message != null ? String(e.message) : String(e);
+  const stack = e.stack != null ? String(e.stack) : "";
+  return stack ? `${msg}\n${stack}` : msg;
+}
+
+/**
+ * Best-effort: write or clear Customer "Error" long text (charge / Payments flow only).
+ * Never throws.
+ */
+async function patchCustomerChargeDiagnostic(
+  env,
+  customerTableId,
+  customerRecordId,
+  /** @type {string} full text or "" to clear */
+  body,
+  warn
+) {
+  if (!customerRecordId) return;
+  const text =
+    body.length > CHARGE_ERROR_LOG_MAX ? `${body.slice(0, CHARGE_ERROR_LOG_MAX)}\n\n...(truncated)` : body;
+  try {
+    await airtablePatchRecord(env, customerTableId, customerRecordId, {
+      [CUSTOMER_ERROR_FIELD]: text,
+    });
+  } catch (e) {
+    warn("charge: could not write Customer Error field", e && e.message);
+  }
+}
+
+/**
+ * Best-effort: create a Charges row for this Payment Intent and append it to Customer.Payments.
+ * Never throws. Failures are logged via warn(); on failure also writes details to Customer "Error".
+ *
+ * @param {object} env
+ * @param {{
+ *   chargesTableId?: string,
+ *   customerTableId: string,
+ *   customerRecordId: string,
+ *   leadFields: Record<string, unknown>,
+ *   paymentIntentId: string | null,
+ *   warn?: (...args: unknown[]) => void,
+ *   log?: (...args: unknown[]) => void,
+ * }} params
+ * @returns {Promise<{ ok: boolean, chargeRecordId?: string, duplicate?: boolean, skippedReason?: string }>}
+ */
+export async function tryRecordChargeAndLinkCustomer(env, params) {
+  const warn = typeof params.warn === "function" ? params.warn : (...a) => console.warn("[charge]", ...a);
+  const log = typeof params.log === "function" ? params.log : () => {};
+  const fromEnv = (env.AIRTABLE_CHARGES_TABLE_ID || "").trim();
+  const chargesTableId =
+    (params.chargesTableId || "").trim() || fromEnv || DEFAULT_AIRTABLE_CHARGES_TABLE_ID;
+  const { customerTableId, customerRecordId, leadFields, paymentIntentId } = params;
+
+  const fail = async (skippedReason, lines, extra) => {
+    const detail = [
+      `step: ${skippedReason}`,
+      `isoTime: ${new Date().toISOString()}`,
+      `chargesTableId: ${chargesTableId}`,
+      `customerTableId: ${customerTableId}`,
+      `customerRecordId: ${customerRecordId || "(none)"}`,
+      `paymentIntentId: ${paymentIntentId != null ? String(paymentIntentId) : "(none)"}`,
+      ...(lines || []),
+    ].join("\n");
+    warn("charge: failed —", skippedReason, extra !== undefined ? extra : "");
+    await patchCustomerChargeDiagnostic(env, customerTableId, customerRecordId, detail, warn);
+    return { ok: false, ...extra, skippedReason };
+  };
+
+  const succeed = async (result) => {
+    await patchCustomerChargeDiagnostic(env, customerTableId, customerRecordId, "", warn);
+    return result;
+  };
+
+  try {
+    if (!paymentIntentId || typeof paymentIntentId !== "string") {
+      warn("charge: skipped — no paymentIntentId");
+      return await fail("no_payment_intent", [
+        "cause: Stripe Payment Intent id missing after checkout (unexpected if session was paid).",
+      ]);
+    }
+    if (!customerRecordId) {
+      warn("charge: skipped — no customerRecordId");
+      return { ok: false, skippedReason: "no_customer" };
+    }
+
+    const upfrontRaw = readNumber(leadFields[F.LEADS_SOLD_UPFRONT]);
+    const ppl = readNumber(leadFields[F.PRICE_PER_LEAD]);
+    if (upfrontRaw == null || ppl == null || upfrontRaw <= 0 || ppl <= 0) {
+      warn("charge: skipped — invalid Leads Sold Upfront or Price Per Lead", { upfront: upfrontRaw, ppl });
+      return await fail("invalid_lead_pricing", [
+        `Leads Sold Upfront (raw): ${JSON.stringify(leadFields[F.LEADS_SOLD_UPFRONT])} → parsed: ${upfrontRaw}`,
+        `Price Per Lead (raw): ${JSON.stringify(leadFields[F.PRICE_PER_LEAD])} → parsed: ${ppl}`,
+        "expected: both positive numbers from B2B lead (same as checkout line item).",
+      ]);
+    }
+
+    const upfront = upfrontRaw;
+    const amountTotal = upfront * ppl;
+
+    let chargeRecordId = null;
+    let duplicate = false;
+    let listErrCaptured = null;
+
+    try {
+      const formula = `{${CHARGE_FIELDS.CHARGE_ID}}='${escapeAirtableFormulaString(paymentIntentId)}'`;
+      const existing = await airtableListRecords(env, chargesTableId, {
+        filterByFormula: formula,
+        maxRecords: 1,
+      });
+      if (existing.length > 0 && existing[0].id) {
+        chargeRecordId = existing[0].id;
+        duplicate = true;
+        log("charge: existing row for Payment Intent", paymentIntentId, chargeRecordId);
+      }
+    } catch (listErr) {
+      listErrCaptured = listErr;
+      warn("charge: list existing by Charge ID failed (will still try create)", listErr && listErr.message);
+    }
+
+    if (!chargeRecordId) {
+      const fields = {
+        [CHARGE_FIELDS.CHARGE_ID]: paymentIntentId,
+        [CHARGE_FIELDS.STATUS]: "succeeded",
+        [CHARGE_FIELDS.AMOUNT]: amountTotal,
+        [CHARGE_FIELDS.PRICE]: ppl,
+        [CHARGE_FIELDS.NUMBER]: upfront,
+      };
+      try {
+        const created = await airtableCreateRecord(env, chargesTableId, fields);
+        chargeRecordId = created && created.id ? created.id : null;
+        if (!chargeRecordId) {
+          warn("charge: create returned no id", created);
+          return await fail("create_no_id", [
+            "cause: Airtable POST Charges returned no record id.",
+            `responseSummary: ${JSON.stringify(created != null ? created : null)}`,
+            `payloadSent: ${JSON.stringify(fields)}`,
+            listErrCaptured
+              ? `priorListByChargeIdError (non-fatal): ${formatErr(listErrCaptured)}`
+              : "",
+          ].filter(Boolean));
+        }
+        log("charge: created Charges row", chargeRecordId);
+      } catch (createErr) {
+        warn("charge: create failed", createErr && createErr.message);
+        return await fail("create_failed", [
+          "cause: Airtable rejected Charges row create.",
+          `createError: ${formatErr(createErr)}`,
+          `payloadSent: ${JSON.stringify(fields)}`,
+          listErrCaptured
+            ? `priorListByChargeIdError (non-fatal): ${formatErr(listErrCaptured)}`
+            : "",
+        ].filter(Boolean));
+      }
+    }
+
+    let paymentLinks = [];
+    try {
+      const cust = await airtableGetRecord(env, customerTableId, customerRecordId);
+      const f = cust.fields || {};
+      const raw = f[CUSTOMER_PAYMENTS_FIELD];
+      paymentLinks = Array.isArray(raw) ? raw.filter((id) => typeof id === "string") : [];
+    } catch (getErr) {
+      warn("charge: could not read Customer for Payments link", getErr && getErr.message);
+      return await fail("customer_fetch_failed", [
+        "cause: could not GET Customer to read existing Payments links.",
+        `getCustomerError: ${formatErr(getErr)}`,
+        `chargeRecordIdToLink: ${chargeRecordId || "(none)"}`,
+      ], { chargeRecordId });
+    }
+
+    if (paymentLinks.includes(chargeRecordId)) {
+      log("charge: Customer.Payments already includes", chargeRecordId);
+      return await succeed({ ok: true, chargeRecordId, duplicate });
+    }
+
+    const merged = paymentLinks.concat([chargeRecordId]);
+    try {
+      await airtablePatchRecord(env, customerTableId, customerRecordId, {
+        [CUSTOMER_PAYMENTS_FIELD]: merged,
+      });
+      log("charge: linked to Customer.Payments", customerRecordId, chargeRecordId);
+    } catch (patchErr) {
+      warn("charge: Customer Payments patch failed", patchErr && patchErr.message);
+      return await fail(
+        "payments_patch_failed",
+        [
+          "cause: PATCH Customer to append Payments failed.",
+          `patchError: ${formatErr(patchErr)}`,
+          `existingPaymentRecordIds (${paymentLinks.length}): ${JSON.stringify(paymentLinks)}`,
+          `chargeRecordIdToAppend: ${chargeRecordId}`,
+          `mergedWouldHaveBeen (${merged.length}): ${JSON.stringify(merged)}`,
+        ],
+        { chargeRecordId, duplicate }
+      );
+    }
+
+    return await succeed({ ok: true, chargeRecordId, duplicate });
+  } catch (e) {
+    warn("charge: unexpected", e && e.message);
+    if (customerRecordId) {
+      await patchCustomerChargeDiagnostic(
+        env,
+        customerTableId,
+        customerRecordId,
+        [
+          `step: unexpected`,
+          `isoTime: ${new Date().toISOString()}`,
+          `chargesTableId: ${chargesTableId}`,
+          `customerRecordId: ${customerRecordId}`,
+          `paymentIntentId: ${paymentIntentId != null ? String(paymentIntentId) : "(none)"}`,
+          `error: ${formatErr(e)}`,
+        ].join("\n"),
+        warn
+      );
+    }
+    return { ok: false, skippedReason: "unexpected" };
+  }
 }
 
 /**

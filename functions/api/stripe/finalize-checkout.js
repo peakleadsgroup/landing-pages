@@ -3,14 +3,16 @@
  * Body JSON: { "sessionId": "cs_…" }
  * Requires env: STRIPE_SECRET_KEY, AIRTABLE_API_KEY
  * Optional: AIRTABLE_CUSTOMER_TABLE_ID (defaults to Customer table in this repo)
- * Optional: AIRTABLE_CUSTOMER_NAME_FIELD (default "Name") — primary / display name on Customer table
+ * Optional: AIRTABLE_CHARGES_TABLE_ID (defaults to Charges table tblU9p7dmEgboC2Mk)
  *
  * On a confirmed paid live checkout:
  *   1) writes Stripe Customer ID + Payment Method ID to the linked Customer row
  *      (creates one and links it to the lead if missing)
- *   2) sets B2B Leads "Discovery Status" = "Close Won" on the lead record
- *   3) fires a webhook POST to MAKE_PAYMENT_WEBHOOK_URL with { mode: "live", ... }
- * Side-effects (2) and (3) are best-effort and will not fail the response if they error.
+ *   2) best-effort: creates a Charges row (Payment Intent id, status succeeded, amount/price/number
+ *      from the lead) and appends it to Customer "Payments" — failures are logged only; response stays ok
+ *   3) sets B2B Leads "Discovery Status" = "Close Won" on the lead record
+ *   4) fires a webhook POST to MAKE_PAYMENT_WEBHOOK_URL with { mode: "live", ... }
+ * Side-effects (3) and (4) are best-effort and will not fail the response if they error.
  *
  * The Client row in tblH2nVfmGNG8pAjC is created separately by the
  * /api/onboarding/client endpoint after the user submits the onboarding form
@@ -26,6 +28,7 @@ import {
   F,
   B2B_LEADS_TABLE_ID,
   DEFAULT_AIRTABLE_CUSTOMER_TABLE_ID,
+  tryRecordChargeAndLinkCustomer,
 } from "./stripe-lib.js";
 
 const LOG_PREFIX = "[finalize-checkout]";
@@ -267,6 +270,15 @@ export async function onRequest(context) {
       }
     }
 
+    const chargeResult = await tryRecordChargeAndLinkCustomer(context.env, {
+      customerTableId,
+      customerRecordId,
+      leadFields,
+      paymentIntentId,
+      warn: (...args) => warnFC(...args),
+      log: (...args) => logFC(...args),
+    });
+
     let discoveryStatusUpdated = false;
     try {
       logFC("patching lead Discovery Status -> Close Won", recordId);
@@ -299,6 +311,8 @@ export async function onRequest(context) {
     logFC("request complete", {
       recordId,
       customerRecordId,
+      chargeRecorded: chargeResult.ok,
+      chargeRecordId: chargeResult.chargeRecordId,
       discoveryStatusUpdated,
       elapsedMs: ms,
     });
@@ -311,6 +325,8 @@ export async function onRequest(context) {
         paymentMethodId,
         paymentIntentId,
         discoveryStatusUpdated,
+        chargeRecorded: chargeResult.ok,
+        chargeRecordId: chargeResult.chargeRecordId || null,
       },
       200,
       cors
