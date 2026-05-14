@@ -214,6 +214,25 @@
 
   var scrapedZipMap = null;
   var scrapedZipMarkers = null;
+  var partnerZipMarkers = null;
+  var mapLegendAdded = false;
+
+  function addMapLegend(map) {
+    if (mapLegendAdded || !map || !window.L) return;
+    mapLegendAdded = true;
+    var legend = L.control({ position: "bottomright" });
+    legend.onAdd = function () {
+      var div = L.DomUtil.create("div", "svm-map-legend");
+      div.innerHTML =
+        "<strong>Legend</strong>" +
+        '<div class="svm-map-legend-row"><span class="svm-leg-dot svm-leg-scraped"></span><span>Scraped (tblUUP3DFDn0RmEj0)</span></div>' +
+        '<div class="svm-map-legend-row"><span class="svm-leg-dot svm-leg-partner"></span><span>Has partner (# of partners &gt; 0, tblieaHIf6rDfFZFl)</span></div>';
+      L.DomEvent.disableClickPropagation(div);
+      L.DomEvent.disableScrollPropagation(div);
+      return div;
+    };
+    legend.addTo(map);
+  }
 
   function initScrapedZipMapCanvas(summaryEl) {
     if (scrapedZipMap || !window.L) return;
@@ -225,7 +244,9 @@
       subdomains: "abcd",
       maxZoom: 20
     }).addTo(scrapedZipMap);
+    partnerZipMarkers = L.layerGroup().addTo(scrapedZipMap);
     scrapedZipMarkers = L.layerGroup().addTo(scrapedZipMap);
+    addMapLegend(scrapedZipMap);
     scrapedZipMap.whenReady(function () {
       log("map", "ready");
     });
@@ -237,7 +258,7 @@
   async function loadScrapedZipMap(summaryEl) {
     try {
       initScrapedZipMapCanvas(summaryEl);
-      if (!scrapedZipMap || !scrapedZipMarkers) {
+      if (!scrapedZipMap || !scrapedZipMarkers || !partnerZipMarkers) {
         if (!window.L) {
           if (summaryEl) summaryEl.textContent = "Map unavailable: Leaflet did not load.";
           return;
@@ -245,13 +266,20 @@
         if (summaryEl) summaryEl.textContent = "Map container missing.";
         return;
       }
-      if (summaryEl) summaryEl.textContent = "Loading ZIP list and coordinates…";
+      if (summaryEl) summaryEl.textContent = "Loading ZIP lists and coordinates…";
       var apiZipsUrl = apiUrl("/api/scraped-zips");
-      log("map", "fetch", { apiZipsUrl: apiZipsUrl, geoJsonUrl: GEO_JSON_URL });
+      var partnerZipsUrl = apiUrl("/api/partner-zips");
+      log("map", "fetch", {
+        scrapedZipsUrl: apiZipsUrl,
+        partnerZipsUrl: partnerZipsUrl,
+        geoJsonUrl: GEO_JSON_URL
+      });
       var zipsRes;
+      var partnerRes;
       var zipDataRes;
       try {
         zipsRes = await fetchWithTimeout(apiZipsUrl, {}, ZIP_API_TIMEOUT_MS);
+        partnerRes = await fetchWithTimeout(partnerZipsUrl, {}, ZIP_API_TIMEOUT_MS);
         zipDataRes = await fetchWithTimeout(GEO_JSON_URL, {}, ZIP_GEO_TIMEOUT_MS);
       } catch (e) {
         if (e && e.name === "AbortError") {
@@ -260,6 +288,7 @@
         throw e;
       }
       var zipsData = await parseJsonSafe(zipsRes);
+      var partnerPayload = await parseJsonSafe(partnerRes);
       var allZipData = await parseJsonSafe(zipDataRes);
       if (!zipsRes.ok) {
         throw new Error(zipsData.error || "Failed to load scraped zips (" + zipsRes.status + ")");
@@ -269,33 +298,72 @@
           allZipData.error || "ZIP geo file failed (" + zipDataRes.status + "). Deploy us_zip_complete.json next to this app."
         );
       }
+      var partnerZips = [];
+      if (!partnerRes.ok) {
+        log("map", "partner-zips failed", { status: partnerRes.status, error: partnerPayload.error });
+      } else {
+        partnerZips = Array.isArray(partnerPayload.zips) ? partnerPayload.zips : [];
+      }
       var scrapedZips = Array.isArray(zipsData.zips) ? zipsData.zips : [];
       var geo = buildZipGeoLookup(allZipData);
       log("map", "geo lookup", { mode: geo.mode, size: geo.size });
       scrapedZipMarkers.clearLayers();
-      var markers = [];
-      var plotted = 0;
-      for (var zi = 0; zi < scrapedZips.length; zi++) {
-        var zip = scrapedZips[zi];
-        var entry = geo.get(zip);
-        if (!entry) continue;
-        var marker = L.circleMarker([entry.lat, entry.lng], {
+      partnerZipMarkers.clearLayers();
+      var allBoundsMarkers = [];
+      var plottedScraped = 0;
+      var plottedPartner = 0;
+      var zi;
+      for (zi = 0; zi < scrapedZips.length; zi++) {
+        var szip = scrapedZips[zi];
+        var sentry = geo.get(szip);
+        if (!sentry) continue;
+        var sm = L.circleMarker([sentry.lat, sentry.lng], {
           radius: 4,
           color: "#2563eb",
           fillColor: "#3b82f6",
-          fillOpacity: 0.7,
+          fillOpacity: 0.72,
           weight: 1
-        }).bindPopup("<strong>ZIP:</strong> " + escapeHtml(zip) + "<br><em>Scraped</em>");
-        scrapedZipMarkers.addLayer(marker);
-        markers.push(marker);
-        plotted++;
+        }).bindPopup(
+          "<strong>ZIP:</strong> " +
+            escapeHtml(szip) +
+            "<br><em>Scraped</em> (scraped businesses)"
+        );
+        scrapedZipMarkers.addLayer(sm);
+        allBoundsMarkers.push(sm);
+        plottedScraped++;
+      }
+      for (zi = 0; zi < partnerZips.length; zi++) {
+        var pzip = partnerZips[zi];
+        var pentry = geo.get(pzip);
+        if (!pentry) continue;
+        var pm = L.circleMarker([pentry.lat, pentry.lng], {
+          radius: 5,
+          color: "#047857",
+          fillColor: "#10b981",
+          fillOpacity: 0.88,
+          weight: 1.5
+        }).bindPopup(
+          "<strong>ZIP:</strong> " +
+            escapeHtml(pzip) +
+            "<br><em>Partner area</em> (# of partners &gt; 0)"
+        );
+        partnerZipMarkers.addLayer(pm);
+        allBoundsMarkers.push(pm);
+        plottedPartner++;
       }
       if (summaryEl) {
         summaryEl.textContent =
-          scrapedZips.length + " ZIP(s) in Airtable, " + plotted + " on map.";
+          scrapedZips.length +
+          " scraped · " +
+          partnerZips.length +
+          " partner ZIPs in Airtable · " +
+          plottedScraped +
+          " scraped dots · " +
+          plottedPartner +
+          " partner dots on map.";
       }
-      if (markers.length > 0) {
-        var group = L.featureGroup(markers);
+      if (allBoundsMarkers.length > 0) {
+        var group = L.featureGroup(allBoundsMarkers);
         scrapedZipMap.fitBounds(group.getBounds().pad(0.15));
       }
       setTimeout(function () {

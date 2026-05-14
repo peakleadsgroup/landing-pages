@@ -46,6 +46,53 @@ body.svm-body {
   z-index: 0;
 }
 
+/* Leaflet legend (partner vs scraped) */
+.svm-map-legend {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.78rem;
+  color: #334155;
+  line-height: 1.45;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+  min-width: 11rem;
+}
+
+.svm-map-legend strong {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  margin-bottom: 0.4rem;
+}
+
+.svm-map-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.25rem;
+}
+
+.svm-leg-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.svm-leg-scraped {
+  background: #3b82f6;
+  border-color: #2563eb;
+}
+
+.svm-leg-partner {
+  background: #10b981;
+  border-color: #059669;
+}
+
 .svm-card {
   background: #fff;
   border-radius: 0.75rem;
