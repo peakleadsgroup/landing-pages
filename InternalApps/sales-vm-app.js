@@ -569,7 +569,7 @@
     if (els.errorArea) els.errorArea.classList.add("hidden");
     if (els.recordingsArea) els.recordingsArea.classList.add("hidden");
     if (els.emptyState) els.emptyState.classList.add("hidden");
-    var days = parseInt(els.daysSelect && els.daysSelect.value, 10) || 30;
+    var days = parseInt(els.daysSelect && els.daysSelect.value, 10) || 7;
     try {
       var recordingsRes = await fetch(apiUrl("/api/recordings?days=" + days));
       var notesRes = await fetch(apiUrl("/api/notes")).catch(function () {
