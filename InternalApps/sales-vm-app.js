@@ -47,6 +47,11 @@
     console.error("[sales-vm:" + scope + "] " + msg, err, detail || {});
   }
 
+  function pad2(n) {
+    var x = Number(n) || 0;
+    return x < 10 ? "0" + x : String(x);
+  }
+
   function escapeHtml(s) {
     return String(s == null ? "" : s)
       .replace(/&/g, "&amp;")
@@ -69,7 +74,7 @@
     if (sec == null) return "—";
     var m = Math.floor(sec / 60);
     var s = sec % 60;
-    return m > 0 ? m + ":" + String(s).padStart(2, "0") : "0:" + String(s).padStart(2, "0");
+    return m > 0 ? m + ":" + pad2(s) : "0:" + pad2(s);
   }
 
   function formatDate(iso) {
@@ -665,9 +670,15 @@
     }
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", boot);
-  } else {
-    boot();
+  function startApp() {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", function onReady() {
+        document.removeEventListener("DOMContentLoaded", onReady);
+        setTimeout(boot, 0);
+      });
+    } else {
+      setTimeout(boot, 0);
+    }
   }
+  startApp();
 })();
