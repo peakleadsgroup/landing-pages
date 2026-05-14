@@ -1,0 +1,401 @@
+/* Sales Voicemails page — self-contained (no Tailwind) */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body.svm-body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: #f1f5f9;
+  color: #0f172a;
+  line-height: 1.5;
+}
+
+.svm-main {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.svm-card {
+  background: #fff;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 12px rgba(15, 23, 42, 0.06);
+  padding: 1.5rem 1.75rem;
+}
+
+.svm-card h2,
+.svm-card h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.svm-card h1 {
+  font-size: 1.6rem;
+}
+
+.svm-muted {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+}
+
+.svm-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.svm-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.svm-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85em;
+  background: #f1f5f9;
+  padding: 0.1em 0.35em;
+  border-radius: 0.25rem;
+}
+
+#scraped-zip-map.svm-map {
+  height: 360px;
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+#scraped-zip-map-summary {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.svm-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.svm-stack-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.svm-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.svm-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.svm-btn {
+  cursor: pointer;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.svm-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.svm-btn-dark {
+  background: #1e293b;
+  color: #fff;
+}
+
+.svm-btn-dark:hover:not(:disabled) {
+  background: #0f172a;
+}
+
+.svm-btn-primary {
+  background: #2563eb;
+  color: #fff;
+}
+
+.svm-btn-primary:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.svm-btn-ghost {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.svm-btn-ghost:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.svm-select {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  background: #fff;
+}
+
+label.svm-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #334155;
+  margin-right: 0.35rem;
+}
+
+.svm-queue-box {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.svm-queue-head {
+  padding: 0.5rem 1rem;
+  background: #f8fafc;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+#jobs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#jobs-list li {
+  border-top: 1px solid #e2e8f0;
+  padding: 1rem;
+}
+
+#jobs-list li:first-child {
+  border-top: none;
+}
+
+#jobs-empty {
+  padding: 1rem 1.25rem;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.svm-job-title {
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 0.25rem;
+}
+
+.svm-job-meta {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.status-pending {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.status-starting,
+.status-running {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-completed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-failed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.svm-job-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.svm-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.svm-header-row img {
+  height: 2.5rem;
+  width: auto;
+}
+
+#error-area {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#error-area.hidden,
+#recordings-area.hidden,
+#empty-state.hidden {
+  display: none !important;
+}
+
+#recordings-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.svm-recording-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.35rem;
+  border-radius: 0.5rem;
+}
+
+.svm-recording-row:hover {
+  background: #f8fafc;
+}
+
+audio {
+  height: 36px;
+  max-width: 100%;
+}
+
+.spinner {
+  display: inline-block;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid #e2e8f0;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: svm-spin 0.75s linear infinite;
+  vertical-align: middle;
+}
+
+.spinner.hidden {
+  display: none;
+}
+
+@keyframes svm-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.svm-details summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.35rem;
+  border-radius: 0.5rem;
+}
+
+.svm-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.svm-details summary:hover {
+  background: #f8fafc;
+}
+
+.svm-notes-block {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.svm-notes-block label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 0.35rem;
+}
+
+textarea.svm-notes {
+  width: 100%;
+  min-height: 4rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+textarea.svm-notes:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.svm-notes-actions {
+  margin-top: 0.5rem;
+}
+
+.svm-mini {
+  font-size: 0.68rem;
+  color: #94a3b8;
+}
