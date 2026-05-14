@@ -133,6 +133,41 @@
     }
   }
 
+  /**
+   * Partner ZIPs may need many Airtable pages. Each GET /api/partner-zips returns at most
+   * 35 pages per Worker run; follow nextOffset until done (avoids CF subrequest limit).
+   */
+  async function fetchAllPartnerZips() {
+    var base = apiUrl("/api/partner-zips");
+    var all = [];
+    var seen = new Set();
+    var nextOffset = null;
+    var safety = 0;
+    while (safety < 80) {
+      safety += 1;
+      var url = base + (nextOffset ? "?offset=" + encodeURIComponent(nextOffset) : "");
+      var res = await fetchWithTimeout(url, {}, ZIP_API_TIMEOUT_MS);
+      var data = await parseJsonSafe(res);
+      if (!res.ok) {
+        throw new Error(data.error || "partner-zips failed (" + res.status + ")");
+      }
+      var batch = Array.isArray(data.zips) ? data.zips : [];
+      for (var bi = 0; bi < batch.length; bi++) {
+        var zz = batch[bi];
+        if (!seen.has(zz)) {
+          seen.add(zz);
+          all.push(zz);
+        }
+      }
+      nextOffset =
+        data.nextOffset != null && data.nextOffset !== "" ? String(data.nextOffset) : null;
+      if (!nextOffset) break;
+      log("map", "partner-zips chunk", { batch: batch.length, totalSoFar: all.length });
+    }
+    all.sort();
+    return all;
+  }
+
   function buildZipGeoLookup(raw) {
     if (raw == null || typeof raw !== "object") {
       return { get: function () { return null; }, mode: "invalid", size: 0 };
@@ -275,12 +310,14 @@
         geoJsonUrl: GEO_JSON_URL
       });
       var zipsRes;
-      var partnerRes;
       var zipDataRes;
       try {
-        zipsRes = await fetchWithTimeout(apiZipsUrl, {}, ZIP_API_TIMEOUT_MS);
-        partnerRes = await fetchWithTimeout(partnerZipsUrl, {}, ZIP_API_TIMEOUT_MS);
-        zipDataRes = await fetchWithTimeout(GEO_JSON_URL, {}, ZIP_GEO_TIMEOUT_MS);
+        var pair = await Promise.all([
+          fetchWithTimeout(apiZipsUrl, {}, ZIP_API_TIMEOUT_MS),
+          fetchWithTimeout(GEO_JSON_URL, {}, ZIP_GEO_TIMEOUT_MS)
+        ]);
+        zipsRes = pair[0];
+        zipDataRes = pair[1];
       } catch (e) {
         if (e && e.name === "AbortError") {
           if (summaryEl) summaryEl.textContent = "Request timed out. Check Network tab.";
@@ -288,7 +325,6 @@
         throw e;
       }
       var zipsData = await parseJsonSafe(zipsRes);
-      var partnerPayload = await parseJsonSafe(partnerRes);
       var allZipData = await parseJsonSafe(zipDataRes);
       if (!zipsRes.ok) {
         throw new Error(zipsData.error || "Failed to load scraped zips (" + zipsRes.status + ")");
@@ -299,10 +335,11 @@
         );
       }
       var partnerZips = [];
-      if (!partnerRes.ok) {
-        log("map", "partner-zips failed", { status: partnerRes.status, error: partnerPayload.error });
-      } else {
-        partnerZips = Array.isArray(partnerPayload.zips) ? partnerPayload.zips : [];
+      try {
+        partnerZips = await fetchAllPartnerZips();
+        log("map", "partner-zips loaded", { count: partnerZips.length });
+      } catch (pe) {
+        log("map", "partner-zips failed", { message: pe && pe.message });
       }
       var scrapedZips = Array.isArray(zipsData.zips) ? zipsData.zips : [];
       var geo = buildZipGeoLookup(allZipData);

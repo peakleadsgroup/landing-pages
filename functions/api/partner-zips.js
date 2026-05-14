@@ -1,8 +1,14 @@
 /**
  * GET /api/partner-zips
  * Unique 5-digit ZIPs from the partner / territory table where "# of Partners" > 0.
- * Table: tblieaHIf6rDfFZFl (same base as other Airtable workers).
+ * Table: tblieaHIf6rDfFZFl
+ *
+ * Pagination: Airtable is read in chunks within a single Worker invocation to stay
+ * under Cloudflare's subrequest limit. Pass ?offset=<opaque> from the previous
+ * response's nextOffset to continue. Response: { zips, nextOffset }
  */
+const MAX_AIRTABLE_PAGES_PER_REQUEST = 35;
+
 export async function onRequest(context) {
   if (context.request.method !== "GET") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -14,25 +20,31 @@ export async function onRequest(context) {
   const airtableBaseId = context.env.AIRTABLE_BASE_ID;
   const airtableApiKey = context.env.AIRTABLE_API_KEY;
   const partnerTableId = "tblieaHIf6rDfFZFl";
-  /** Must match Airtable field name exactly */
   const zipField = "Zip";
   const partnersCountField = "# of Partners";
 
   if (!airtableBaseId || !airtableApiKey) {
     return new Response(
-      JSON.stringify({ error: "Missing configuration", zips: [] }),
+      JSON.stringify({ error: "Missing configuration", zips: [], nextOffset: null }),
       { status: 503, headers: { "Content-Type": "application/json" } }
     );
   }
+
+  const requestUrl = new URL(context.request.url);
+  const startOffset = requestUrl.searchParams.get("offset") || null;
 
   const filterByFormula = `AND(NOT(BLANK({${zipField}})),{${partnersCountField}}>0)`;
 
   try {
     const zips = new Set();
-    let offset = null;
     const baseUrl = `https://api.airtable.com/v0/${airtableBaseId}/${partnerTableId}`;
 
-    do {
+    let airtableOffset = startOffset;
+    let pagesFetched = 0;
+    let nextContinuation = null;
+
+    while (pagesFetched < MAX_AIRTABLE_PAGES_PER_REQUEST) {
+      pagesFetched += 1;
       let url =
         baseUrl +
         "?pageSize=100" +
@@ -40,7 +52,9 @@ export async function onRequest(context) {
         encodeURIComponent(filterByFormula) +
         "&fields[]=" +
         encodeURIComponent(zipField);
-      if (offset) url += "&offset=" + offset;
+      if (airtableOffset) {
+        url += "&offset=" + encodeURIComponent(airtableOffset);
+      }
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${airtableApiKey}` },
@@ -57,15 +71,29 @@ export async function onRequest(context) {
           if (zipStr.length === 5) zips.add(zipStr);
         }
       }
-      offset = data.offset;
-    } while (offset);
 
-    return new Response(JSON.stringify({ zips: [...zips].sort() }), {
-      headers: { "Content-Type": "application/json" },
-    });
+      if (!data.offset) {
+        nextContinuation = null;
+        break;
+      }
+      nextContinuation = data.offset;
+      airtableOffset = data.offset;
+    }
+
+    return new Response(
+      JSON.stringify({
+        zips: [...zips].sort(),
+        nextOffset: nextContinuation,
+      }),
+      { headers: { "Content-Type": "application/json" } }
+    );
   } catch (err) {
     return new Response(
-      JSON.stringify({ error: err.message || String(err), zips: [] }),
+      JSON.stringify({
+        error: err.message || String(err),
+        zips: [],
+        nextOffset: null,
+      }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
