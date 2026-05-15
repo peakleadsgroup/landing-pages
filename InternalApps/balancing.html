@@ -380,27 +380,6 @@
                     }
                 }
             });
-
-            expandDefaultStatusGroups();
-        }
-
-        function expandAllAdsetsInGroup(groupKey) {
-            document.querySelectorAll('tr.client-row[data-group="' + groupKey + '"]').forEach(function (row) {
-                var clientId = row.getAttribute('data-client-id');
-                if (!clientId) return;
-                var detailRow = document.getElementById('client-detail-' + clientId);
-                if (!detailRow) return;
-                var adsetBtn = row.querySelector('.client-expand-btn');
-                var content = detailRow.querySelector('.client-detail-content');
-                detailRow.style.display = 'table-row';
-                if (adsetBtn) {
-                    adsetBtn.classList.add('expanded');
-                    adsetBtn.setAttribute('aria-expanded', 'true');
-                }
-                if (content && !content.getAttribute('data-loaded')) {
-                    loadClientDetail(clientId, content, adsetBtn);
-                }
-            });
         }
 
         function toggleStatusGroup(groupBtn) {
@@ -424,19 +403,6 @@
                             adsetBtn.setAttribute('aria-expanded', 'false');
                         }
                     }
-                }
-            });
-            if (shouldExpand) {
-                expandAllAdsetsInGroup(groupKey);
-            }
-        }
-
-        function expandDefaultStatusGroups() {
-            ['Active', 'Paused'].forEach(function (status) {
-                var key = encodeURIComponent(status);
-                var btn = document.querySelector('#client-tbody .group-expand-btn[data-group="' + key + '"]');
-                if (btn && btn.getAttribute('aria-expanded') !== 'true') {
-                    toggleStatusGroup(btn);
                 }
             });
         }
