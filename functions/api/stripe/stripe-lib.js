@@ -26,6 +26,17 @@ export const CUSTOMER_PAYMENTS_FIELD = "Payments";
 /** Customers table: long text for charge/Payments flow diagnostics. */
 export const CUSTOMER_ERROR_FIELD = "Error";
 
+/**
+ * Stripe Checkout Session params for agreement onboarding: card form only.
+ * Excludes Link, bank account / ACH, and any non-card payment_method_types.
+ */
+export const CHECKOUT_CARD_ONLY_STRIPE_PARAMS = {
+  mode: "payment",
+  "payment_method_types[0]": "card",
+  "wallet_options[link][display]": "never",
+  "payment_intent_data[setup_future_usage]": "off_session",
+};
+
 export const F = {
   BUSINESS_NAME: "Business Name",
   LEADS_SOLD_UPFRONT: "Leads Sold Upfront",
@@ -35,6 +46,7 @@ export const F = {
   CUSTOMER_LINK: "Customer",
   STRIPE_CUSTOMER_ID: "Stripe Customer ID",
   PAYMENT_METHOD_ID: "Payment Method ID",
+  PAYMENT_METHOD_SAVED: "Payment Method Saved",
 };
 
 export function json(data, status = 200, extraHeaders = {}) {
@@ -452,6 +464,42 @@ export async function stripePostForm(env, path, params) {
     throw new Error(typeof msg === "string" ? msg : `Stripe ${res.status}`);
   }
   return data;
+}
+
+/**
+ * Best-effort: ensure the payment method is on the Stripe Customer and set as default
+ * for future off-session charges. Never throws.
+ */
+export async function trySavePaymentMethodOnStripeCustomer(
+  env,
+  stripeCustomerId,
+  paymentMethodId,
+  { log, warn } = {}
+) {
+  const doLog = typeof log === "function" ? log : () => {};
+  const doWarn = typeof warn === "function" ? warn : (...a) => console.warn("[stripe-pm-save]", ...a);
+  if (!stripeCustomerId || !paymentMethodId) return;
+
+  try {
+    await stripePostForm(env, `/v1/payment_methods/${encodeURIComponent(paymentMethodId)}/attach`, {
+      customer: stripeCustomerId,
+    });
+    doLog("payment method attached to customer", stripeCustomerId);
+  } catch (attachErr) {
+    const msg = attachErr && attachErr.message ? String(attachErr.message) : String(attachErr);
+    if (!/already been attached|already attached/i.test(msg)) {
+      doWarn("attach payment method (may already be attached)", msg);
+    }
+  }
+
+  try {
+    await stripePostForm(env, `/v1/customers/${encodeURIComponent(stripeCustomerId)}`, {
+      "invoice_settings[default_payment_method]": paymentMethodId,
+    });
+    doLog("default payment method set on customer", stripeCustomerId);
+  } catch (defErr) {
+    doWarn("set default payment method failed", defErr && defErr.message ? defErr.message : defErr);
+  }
 }
 
 export async function stripeGet(env, path) {

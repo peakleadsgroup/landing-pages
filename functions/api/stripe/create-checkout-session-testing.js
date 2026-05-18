@@ -18,6 +18,7 @@ import {
   onboardingAmountCents,
   isLeadSigned,
   stripePostForm,
+  CHECKOUT_CARD_ONLY_STRIPE_PARAMS,
   F,
   B2B_LEADS_TABLE_ID,
 } from "./stripe-lib.js";
@@ -86,8 +87,7 @@ export async function onRequest(context) {
       fields[F.BUSINESS_NAME] != null ? String(fields[F.BUSINESS_NAME]).slice(0, 250) : "Onboarding";
 
     const params = {
-      mode: "payment",
-      "payment_method_types[0]": "card",
+      ...CHECKOUT_CARD_ONLY_STRIPE_PARAMS,
       "customer_creation": "always",
       "client_reference_id": recordId,
       "metadata[b2b_lead_id]": recordId,

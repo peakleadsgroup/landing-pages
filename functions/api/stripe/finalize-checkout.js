@@ -6,7 +6,8 @@
  * Optional: AIRTABLE_CHARGES_TABLE_ID (defaults to Charges table tblU9p7dmEgboC2Mk)
  *
  * On a confirmed paid live checkout:
- *   1) writes Stripe Customer ID + Payment Method ID to the linked Customer row
+ *   1) saves the card on the Stripe Customer (default PM) and writes Stripe Customer ID +
+ *      Payment Method ID + "Payment Method Saved" to the linked Customer row
  *      (creates one and links it to the lead if missing)
  *   2) best-effort: creates a Charges row (Payment Intent id, status succeeded, amount/price/number
  *      from the lead) and appends it to Customer "Payments" — failures are logged only; response stays ok
@@ -29,6 +30,7 @@ import {
   B2B_LEADS_TABLE_ID,
   DEFAULT_AIRTABLE_CUSTOMER_TABLE_ID,
   tryRecordChargeAndLinkCustomer,
+  trySavePaymentMethodOnStripeCustomer,
 } from "./stripe-lib.js";
 
 const LOG_PREFIX = "[finalize-checkout]";
@@ -218,6 +220,13 @@ export async function onRequest(context) {
 
     logFC("stripe references", { stripeCustomerId, paymentIntentId, paymentMethodId });
 
+    if (paymentMethodId) {
+      await trySavePaymentMethodOnStripeCustomer(context.env, stripeCustomerId, paymentMethodId, {
+        log: (...args) => logFC(...args),
+        warn: (...args) => warnFC(...args),
+      });
+    }
+
     const businessName =
       leadFields[F.BUSINESS_NAME] != null ? String(leadFields[F.BUSINESS_NAME]).trim() : "Customer";
 
@@ -226,6 +235,7 @@ export async function onRequest(context) {
     };
     if (paymentMethodId) {
       customerPatchFields[F.PAYMENT_METHOD_ID] = paymentMethodId;
+      customerPatchFields[F.PAYMENT_METHOD_SAVED] = true;
     }
 
     const existingLinks = Array.isArray(leadFields[F.CUSTOMER_LINK]) ? leadFields[F.CUSTOMER_LINK] : [];
