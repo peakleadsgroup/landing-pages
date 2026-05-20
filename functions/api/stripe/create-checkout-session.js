@@ -15,8 +15,7 @@ import {
   airtableGetRecord,
   onboardingAmountCents,
   isLeadSigned,
-  stripePostForm,
-  CHECKOUT_CARD_ONLY_STRIPE_PARAMS,
+  stripeCreateAgreementCheckoutSession,
   F,
   B2B_LEADS_TABLE_ID,
 } from "./stripe-lib.js";
@@ -73,8 +72,7 @@ export async function onRequest(context) {
 
     const businessName = fields[F.BUSINESS_NAME] != null ? String(fields[F.BUSINESS_NAME]).slice(0, 250) : "Onboarding";
 
-    const params = {
-      ...CHECKOUT_CARD_ONLY_STRIPE_PARAMS,
+    const session = await stripeCreateAgreementCheckoutSession(context.env, {
       "customer_creation": "always",
       "client_reference_id": recordId,
       "metadata[b2b_lead_id]": recordId,
@@ -84,9 +82,7 @@ export async function onRequest(context) {
       "line_items[0][price_data][currency]": "usd",
       "line_items[0][price_data][unit_amount]": String(cents),
       "line_items[0][price_data][product_data][name]": `Onboarding — ${businessName}`.slice(0, 250),
-    };
-
-    const session = await stripePostForm(context.env, "/v1/checkout/sessions", params);
+    });
 
     if (!session.url) {
       return json({ error: "Stripe did not return a checkout URL" }, 502, cors);

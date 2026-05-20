@@ -26,16 +26,43 @@ export const CUSTOMER_PAYMENTS_FIELD = "Payments";
 /** Customers table: long text for charge/Payments flow diagnostics. */
 export const CUSTOMER_ERROR_FIELD = "Error";
 
-/**
- * Stripe Checkout Session params for agreement onboarding: card form only.
- * Excludes Link, bank account / ACH, and any non-card payment_method_types.
- */
-export const CHECKOUT_CARD_ONLY_STRIPE_PARAMS = {
+/** API version that supports Checkout wallet_options.link.display (Apr 2025+). */
+export const STRIPE_CHECKOUT_API_VERSION = "2025-04-30.basil";
+
+/** Card-only Checkout (no ACH / other payment_method_types). */
+export const CHECKOUT_CARD_ONLY_BASE_PARAMS = {
   mode: "payment",
   "payment_method_types[0]": "card",
-  "wallet_options[link][display]": "never",
   "payment_intent_data[setup_future_usage]": "off_session",
 };
+
+/** Hide Stripe Link on Checkout (requires STRIPE_CHECKOUT_API_VERSION). */
+export const CHECKOUT_DISABLE_LINK_PARAMS = {
+  "wallet_options[link][display]": "never",
+};
+
+/** @deprecated Prefer CHECKOUT_CARD_ONLY_BASE_PARAMS; kept for spread compatibility. */
+export const CHECKOUT_CARD_ONLY_STRIPE_PARAMS = {
+  ...CHECKOUT_CARD_ONLY_BASE_PARAMS,
+  ...CHECKOUT_DISABLE_LINK_PARAMS,
+};
+
+/**
+ * Resolve a Stripe test secret (sk_test_). Accepts STRIPE_TEST_SECRET_KEY or
+ * STRIPE_SECRET_KEY when that value is already a test key (local sandbox testing).
+ */
+export function resolveStripeTestSecretKey(env) {
+  const testKey = (env.STRIPE_TEST_SECRET_KEY || "").trim();
+  if (testKey.startsWith("sk_test_")) return testKey;
+  const mainKey = (env.STRIPE_SECRET_KEY || "").trim();
+  if (mainKey.startsWith("sk_test_")) return mainKey;
+  return "";
+}
+
+/** Env object with STRIPE_SECRET_KEY set for stripe-lib HTTP helpers. */
+export function stripeEnvWithSecretKey(env, secretKey) {
+  return { ...env, STRIPE_SECRET_KEY: secretKey };
+}
 
 export const F = {
   BUSINESS_NAME: "Business Name",
@@ -433,12 +460,47 @@ export async function tryRecordChargeAndLinkCustomer(env, params) {
   }
 }
 
-/**
- * @param {Record<string, string>} params flat Stripe API params (nested keys use bracket notation)
- */
-export async function stripePostForm(env, path, params) {
+function stripeAuthHeaders(env, apiVersion) {
   const sk = env.STRIPE_SECRET_KEY;
   if (!sk) throw new Error("STRIPE_SECRET_KEY not configured");
+  const headers = { Authorization: `Bearer ${sk}` };
+  const ver = (apiVersion || env.STRIPE_API_VERSION || "").trim();
+  if (ver) headers["Stripe-Version"] = ver;
+  return headers;
+}
+
+/**
+ * Create an agreement Checkout Session. Uses a recent Stripe API version for
+ * wallet_options; falls back without wallet_options if Stripe rejects that param.
+ *
+ * @param {Record<string, string>} sessionParams checkout fields (line items, urls, metadata, …)
+ */
+export async function stripeCreateAgreementCheckoutSession(env, sessionParams) {
+  const withLinkDisabled = {
+    ...CHECKOUT_CARD_ONLY_BASE_PARAMS,
+    ...CHECKOUT_DISABLE_LINK_PARAMS,
+    ...sessionParams,
+  };
+  try {
+    return await stripePostForm(env, "/v1/checkout/sessions", withLinkDisabled, {
+      apiVersion: STRIPE_CHECKOUT_API_VERSION,
+    });
+  } catch (e) {
+    const msg = e && e.message ? String(e.message) : "";
+    if (!/wallet_options|unknown parameter/i.test(msg)) throw e;
+    console.warn("[stripe] wallet_options rejected; retrying card-only checkout without Link override");
+    return await stripePostForm(env, "/v1/checkout/sessions", {
+      ...CHECKOUT_CARD_ONLY_BASE_PARAMS,
+      ...sessionParams,
+    });
+  }
+}
+
+/**
+ * @param {Record<string, string>} params flat Stripe API params (nested keys use bracket notation)
+ * @param {{ apiVersion?: string }} [options]
+ */
+export async function stripePostForm(env, path, params, options = {}) {
   const body = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) {
     if (v === undefined || v === null) continue;
@@ -447,7 +509,7 @@ export async function stripePostForm(env, path, params) {
   const res = await fetch(`https://api.stripe.com${path}`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${sk}`,
+      ...stripeAuthHeaders(env, options.apiVersion),
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body,
@@ -502,11 +564,12 @@ export async function trySavePaymentMethodOnStripeCustomer(
   }
 }
 
-export async function stripeGet(env, path) {
-  const sk = env.STRIPE_SECRET_KEY;
-  if (!sk) throw new Error("STRIPE_SECRET_KEY not configured");
+/**
+ * @param {{ apiVersion?: string }} [options]
+ */
+export async function stripeGet(env, path, options = {}) {
   const res = await fetch(`https://api.stripe.com${path}`, {
-    headers: { Authorization: `Bearer ${sk}` },
+    headers: stripeAuthHeaders(env, options.apiVersion),
   });
   const text = await res.text();
   let data;

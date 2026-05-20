@@ -2,8 +2,8 @@
  * POST /api/stripe/create-checkout-session-testing
  *
  * Testing/sandbox copy of /api/stripe/create-checkout-session.
- * Reads STRIPE_TEST_SECRET_KEY from env (must start with "sk_test_") and uses it
- * in place of STRIPE_SECRET_KEY when talking to Stripe.
+ * Uses STRIPE_TEST_SECRET_KEY, or STRIPE_SECRET_KEY when that value is sk_test_
+ * (handy when you temporarily point the sandbox key at STRIPE_SECRET_KEY).
  *
  * Default success/cancel path is /agreement-testing.html (override with
  * STRIPE_AGREEMENT_TESTING_PATH if needed).
@@ -17,8 +17,9 @@ import {
   airtableGetRecord,
   onboardingAmountCents,
   isLeadSigned,
-  stripePostForm,
-  CHECKOUT_CARD_ONLY_STRIPE_PARAMS,
+  stripeCreateAgreementCheckoutSession,
+  resolveStripeTestSecretKey,
+  stripeEnvWithSecretKey,
   F,
   B2B_LEADS_TABLE_ID,
 } from "./stripe-lib.js";
@@ -39,17 +40,19 @@ export async function onRequest(context) {
       return json({ error: "AIRTABLE_API_KEY not configured" }, 503, cors);
     }
 
-    const sandboxKey = (context.env.STRIPE_TEST_SECRET_KEY || "").trim();
-    if (!sandboxKey || !sandboxKey.startsWith("sk_test_")) {
+    const sandboxKey = resolveStripeTestSecretKey(context.env);
+    if (!sandboxKey) {
       return json(
-        { error: "STRIPE_TEST_SECRET_KEY not configured (must be a sk_test_ key)" },
+        {
+          error:
+            "Stripe test key not configured. Set STRIPE_TEST_SECRET_KEY or STRIPE_SECRET_KEY to an sk_test_ key.",
+        },
         503,
         cors
       );
     }
 
-    /* stripe-lib helpers read env.STRIPE_SECRET_KEY; shadow it with the sandbox key. */
-    const stripeEnv = { ...context.env, STRIPE_SECRET_KEY: sandboxKey };
+    const stripeEnv = stripeEnvWithSecretKey(context.env, sandboxKey);
 
     let body;
     try {
@@ -86,8 +89,7 @@ export async function onRequest(context) {
     const businessName =
       fields[F.BUSINESS_NAME] != null ? String(fields[F.BUSINESS_NAME]).slice(0, 250) : "Onboarding";
 
-    const params = {
-      ...CHECKOUT_CARD_ONLY_STRIPE_PARAMS,
+    const session = await stripeCreateAgreementCheckoutSession(stripeEnv, {
       "customer_creation": "always",
       "client_reference_id": recordId,
       "metadata[b2b_lead_id]": recordId,
@@ -98,9 +100,7 @@ export async function onRequest(context) {
       "line_items[0][price_data][currency]": "usd",
       "line_items[0][price_data][unit_amount]": String(cents),
       "line_items[0][price_data][product_data][name]": `Onboarding (TEST) — ${businessName}`.slice(0, 250),
-    };
-
-    const session = await stripePostForm(stripeEnv, "/v1/checkout/sessions", params);
+    });
 
     if (!session.url) {
       return json({ error: "Stripe did not return a checkout URL" }, 502, cors);

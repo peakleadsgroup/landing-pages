@@ -33,6 +33,8 @@ import {
   DEFAULT_AIRTABLE_CUSTOMER_TABLE_ID,
   tryRecordChargeAndLinkCustomer,
   trySavePaymentMethodOnStripeCustomer,
+  resolveStripeTestSecretKey,
+  stripeEnvWithSecretKey,
 } from "./stripe-lib.js";
 
 const LOG_PREFIX = "[finalize-checkout-testing]";
@@ -120,19 +122,21 @@ export async function onRequest(context) {
       return json({ error: "AIRTABLE_API_KEY required" }, 503, cors);
     }
 
-    const sandboxKey = (context.env.STRIPE_TEST_SECRET_KEY || "").trim();
-    if (!sandboxKey || !sandboxKey.startsWith("sk_test_")) {
-      errFCT("STRIPE_TEST_SECRET_KEY missing or not a sk_test_ key");
+    const sandboxKey = resolveStripeTestSecretKey(context.env);
+    if (!sandboxKey) {
+      errFCT("Stripe test secret missing (need STRIPE_TEST_SECRET_KEY or sk_test_ STRIPE_SECRET_KEY)");
       return json(
-        { error: "STRIPE_TEST_SECRET_KEY not configured (must be a sk_test_ key)" },
+        {
+          error:
+            "Stripe test key not configured. Set STRIPE_TEST_SECRET_KEY or STRIPE_SECRET_KEY to an sk_test_ key.",
+        },
         503,
         cors
       );
     }
     logFCT("env OK", { customerTableId, nameField, stripeKeyKind: "sk_test_" });
 
-    /* stripe-lib helpers read env.STRIPE_SECRET_KEY; shadow it with the sandbox key. */
-    const stripeEnv = { ...context.env, STRIPE_SECRET_KEY: sandboxKey };
+    const stripeEnv = stripeEnvWithSecretKey(context.env, sandboxKey);
 
     let body;
     try {
