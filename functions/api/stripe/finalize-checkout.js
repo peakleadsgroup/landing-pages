@@ -7,7 +7,7 @@
  *
  * On a confirmed paid live checkout:
  *   1) saves the card on the Stripe Customer (default PM) and writes Stripe Customer ID +
- *      Payment Method ID + "Payment Method Saved" to the linked Customer row
+ *      Payment Method ID to the linked Customer row, and payment flags on the B2B lead
  *      (creates one and links it to the lead if missing)
  *   2) best-effort: creates a Charges row (Payment Intent id, status succeeded, amount/price/number
  *      from the lead) and appends it to Customer "Payments" — failures are logged only; response stays ok
@@ -31,6 +31,7 @@ import {
   DEFAULT_AIRTABLE_CUSTOMER_TABLE_ID,
   tryRecordChargeAndLinkCustomer,
   trySavePaymentMethodOnStripeCustomer,
+  leadPaymentSuccessFields,
 } from "./stripe-lib.js";
 
 const LOG_PREFIX = "[finalize-checkout]";
@@ -235,7 +236,6 @@ export async function onRequest(context) {
     };
     if (paymentMethodId) {
       customerPatchFields[F.PAYMENT_METHOD_ID] = paymentMethodId;
-      customerPatchFields[F.PAYMENT_METHOD_SAVED] = true;
     }
 
     const existingLinks = Array.isArray(leadFields[F.CUSTOMER_LINK]) ? leadFields[F.CUSTOMER_LINK] : [];
@@ -289,6 +289,16 @@ export async function onRequest(context) {
       log: (...args) => logFC(...args),
     });
 
+    let leadPaymentFlagsUpdated = false;
+    try {
+      logFC("patching lead payment success flags", recordId);
+      await airtablePatchRecord(context.env, B2B_LEADS_TABLE_ID, recordId, leadPaymentSuccessFields());
+      leadPaymentFlagsUpdated = true;
+      logFC("lead payment flags updated OK");
+    } catch (err) {
+      warnFC("lead payment flags update failed", err && err.message ? err.message : err);
+    }
+
     let discoveryStatusUpdated = false;
     try {
       logFC("patching lead Discovery Status -> Close Won", recordId);
@@ -334,6 +344,7 @@ export async function onRequest(context) {
         stripeCustomerId,
         paymentMethodId,
         paymentIntentId,
+        leadPaymentFlagsUpdated,
         discoveryStatusUpdated,
         chargeRecorded: chargeResult.ok,
         chargeRecordId: chargeResult.chargeRecordId || null,

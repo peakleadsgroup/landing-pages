@@ -73,8 +73,23 @@ export const F = {
   CUSTOMER_LINK: "Customer",
   STRIPE_CUSTOMER_ID: "Stripe Customer ID",
   PAYMENT_METHOD_ID: "Payment Method ID",
-  PAYMENT_METHOD_SAVED: "Payment Method Saved",
 };
+
+/** B2B Leads fields updated after successful Stripe checkout (not on Customers table). */
+export const LEAD_PAYMENT_FIELDS = {
+  PAYMENT_METHOD_SAVED: "Payment Method Saved",
+  PAYMENT_SUCCESSFULLY_RECEIVED: "Payment Successfully Received",
+  STRIPE_CUSTOMER_CREATED: "Stripe Customer Created",
+};
+
+function formatAirtableError(data, status) {
+  const err = data && data.error;
+  if (err && typeof err === "object" && typeof err.message === "string") {
+    return err.message;
+  }
+  if (typeof err === "string") return err;
+  return `Airtable ${status}`;
+}
 
 export function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
@@ -147,7 +162,7 @@ export async function airtableGetRecord(env, tableId, recordId) {
     throw new Error(`Airtable invalid JSON (${res.status})`);
   }
   if (!res.ok) {
-    throw new Error(typeof data.error === "string" ? data.error : `Airtable ${res.status}`);
+    throw new Error(formatAirtableError(data, res.status));
   }
   return data;
 }
@@ -174,7 +189,7 @@ export async function airtableCreateRecord(env, tableId, fields, options) {
     throw new Error(`Airtable invalid JSON (${res.status})`);
   }
   if (!res.ok) {
-    throw new Error(typeof data.error === "string" ? data.error : `Airtable ${res.status}`);
+    throw new Error(formatAirtableError(data, res.status));
   }
   return data;
 }
@@ -198,9 +213,18 @@ export async function airtablePatchRecord(env, tableId, recordId, fields) {
     throw new Error(`Airtable invalid JSON (${res.status})`);
   }
   if (!res.ok) {
-    throw new Error(typeof data.error === "string" ? data.error : `Airtable ${res.status}`);
+    throw new Error(formatAirtableError(data, res.status));
   }
   return data;
+}
+
+/** Checkbox flags on the B2B lead after payment is confirmed. */
+export function leadPaymentSuccessFields() {
+  return {
+    [LEAD_PAYMENT_FIELDS.PAYMENT_METHOD_SAVED]: true,
+    [LEAD_PAYMENT_FIELDS.PAYMENT_SUCCESSFULLY_RECEIVED]: true,
+    [LEAD_PAYMENT_FIELDS.STRIPE_CUSTOMER_CREATED]: true,
+  };
 }
 
 /**
@@ -227,7 +251,7 @@ export async function airtableListRecords(env, tableId, query = {}) {
     throw new Error(`Airtable invalid JSON (${res.status})`);
   }
   if (!res.ok) {
-    throw new Error(typeof data.error === "string" ? data.error : `Airtable ${res.status}`);
+    throw new Error(formatAirtableError(data, res.status));
   }
   return Array.isArray(data.records) ? data.records : [];
 }
