@@ -134,11 +134,11 @@
   }
 
   /**
-   * Partner ZIPs may need many Airtable pages. Each GET /api/partner-zips returns at most
+   * Airtable-backed ZIP/notes lists may need many pages. Each GET returns at most
    * 35 pages per Worker run; follow nextOffset until done (avoids CF subrequest limit).
    */
-  async function fetchAllPartnerZips() {
-    var base = apiUrl("/api/partner-zips");
+  async function fetchPaginatedJsonList(apiPath, listKey, timeoutMs) {
+    var base = apiUrl(apiPath);
     var all = [];
     var seen = new Set();
     var nextOffset = null;
@@ -146,26 +146,58 @@
     while (safety < 80) {
       safety += 1;
       var url = base + (nextOffset ? "?offset=" + encodeURIComponent(nextOffset) : "");
-      var res = await fetchWithTimeout(url, {}, ZIP_API_TIMEOUT_MS);
+      var res = await fetchWithTimeout(url, {}, timeoutMs);
       var data = await parseJsonSafe(res);
       if (!res.ok) {
-        throw new Error(data.error || "partner-zips failed (" + res.status + ")");
+        throw new Error(data.error || apiPath + " failed (" + res.status + ")");
       }
-      var batch = Array.isArray(data.zips) ? data.zips : [];
+      var batch = Array.isArray(data[listKey]) ? data[listKey] : [];
       for (var bi = 0; bi < batch.length; bi++) {
-        var zz = batch[bi];
-        if (!seen.has(zz)) {
-          seen.add(zz);
-          all.push(zz);
+        var item = batch[bi];
+        if (!seen.has(item)) {
+          seen.add(item);
+          all.push(item);
         }
       }
       nextOffset =
         data.nextOffset != null && data.nextOffset !== "" ? String(data.nextOffset) : null;
       if (!nextOffset) break;
-      log("map", "partner-zips chunk", { batch: batch.length, totalSoFar: all.length });
+      log("map", apiPath + " chunk", { batch: batch.length, totalSoFar: all.length });
     }
     all.sort();
     return all;
+  }
+
+  async function fetchAllScrapedZips() {
+    return fetchPaginatedJsonList("/api/scraped-zips", "zips", ZIP_API_TIMEOUT_MS);
+  }
+
+  async function fetchAllPartnerZips() {
+    return fetchPaginatedJsonList("/api/partner-zips", "zips", ZIP_API_TIMEOUT_MS);
+  }
+
+  async function fetchAllNotesByPhone() {
+    var base = apiUrl("/api/notes");
+    var merged = {};
+    var nextOffset = null;
+    var safety = 0;
+    while (safety < 80) {
+      safety += 1;
+      var url = base + (nextOffset ? "?offset=" + encodeURIComponent(nextOffset) : "");
+      var res = await fetch(url);
+      var data = await parseJsonSafe(res);
+      if (!res.ok) {
+        throw new Error(data.error || "notes failed (" + res.status + ")");
+      }
+      var chunk = (data && data.notesByPhone) || {};
+      Object.keys(chunk).forEach(function (k) {
+        merged[k] = chunk[k];
+      });
+      nextOffset =
+        data.nextOffset != null && data.nextOffset !== "" ? String(data.nextOffset) : null;
+      if (!nextOffset) break;
+    }
+    return merged;
   }
 
   function buildZipGeoLookup(raw) {
@@ -302,46 +334,36 @@
         return;
       }
       if (summaryEl) summaryEl.textContent = "Loading ZIP lists and coordinates…";
-      var apiZipsUrl = apiUrl("/api/scraped-zips");
-      var partnerZipsUrl = apiUrl("/api/partner-zips");
-      log("map", "fetch", {
-        scrapedZipsUrl: apiZipsUrl,
-        partnerZipsUrl: partnerZipsUrl,
-        geoJsonUrl: GEO_JSON_URL
-      });
-      var zipsRes;
+      log("map", "fetch", { geoJsonUrl: GEO_JSON_URL });
       var zipDataRes;
       try {
-        var pair = await Promise.all([
-          fetchWithTimeout(apiZipsUrl, {}, ZIP_API_TIMEOUT_MS),
-          fetchWithTimeout(GEO_JSON_URL, {}, ZIP_GEO_TIMEOUT_MS)
-        ]);
-        zipsRes = pair[0];
-        zipDataRes = pair[1];
+        zipDataRes = await fetchWithTimeout(GEO_JSON_URL, {}, ZIP_GEO_TIMEOUT_MS);
       } catch (e) {
         if (e && e.name === "AbortError") {
           if (summaryEl) summaryEl.textContent = "Request timed out. Check Network tab.";
         }
         throw e;
       }
-      var zipsData = await parseJsonSafe(zipsRes);
       var allZipData = await parseJsonSafe(zipDataRes);
-      if (!zipsRes.ok) {
-        throw new Error(zipsData.error || "Failed to load scraped zips (" + zipsRes.status + ")");
-      }
       if (!zipDataRes.ok) {
         throw new Error(
           allZipData.error || "ZIP geo file failed (" + zipDataRes.status + "). Deploy us_zip_complete.json next to this app."
         );
       }
+      var scrapedZips = [];
       var partnerZips = [];
+      try {
+        scrapedZips = await fetchAllScrapedZips();
+        log("map", "scraped-zips loaded", { count: scrapedZips.length });
+      } catch (se) {
+        throw new Error((se && se.message) || "Failed to load scraped zips");
+      }
       try {
         partnerZips = await fetchAllPartnerZips();
         log("map", "partner-zips loaded", { count: partnerZips.length });
       } catch (pe) {
         log("map", "partner-zips failed", { message: pe && pe.message });
       }
-      var scrapedZips = Array.isArray(zipsData.zips) ? zipsData.zips : [];
       var geo = buildZipGeoLookup(allZipData);
       log("map", "geo lookup", { mode: geo.mode, size: geo.size });
       scrapedZipMarkers.clearLayers();
@@ -609,16 +631,14 @@
     var days = parseInt(els.daysSelect && els.daysSelect.value, 10) || 7;
     try {
       var recordingsRes = await fetch(apiUrl("/api/recordings?days=" + days));
-      var notesRes = await fetch(apiUrl("/api/notes")).catch(function () {
-        return { ok: false };
-      });
       var data = await parseJsonSafe(recordingsRes);
       if (!recordingsRes.ok) throw new Error(data.error || "Failed to load recordings");
       var recordings = data.recordings || [];
       var notesByPhone = {};
-      if (notesRes.ok) {
-        var nd = await parseJsonSafe(notesRes);
-        notesByPhone = (nd && nd.notesByPhone) || {};
+      try {
+        notesByPhone = await fetchAllNotesByPhone();
+      } catch (ne) {
+        log("recordings", "notes load failed", { message: ne && ne.message });
       }
       var uniq = new Set(recordings.map(function (r) {
         return normalizePhoneKey(r.from);
@@ -675,6 +695,11 @@
             var li = btn.closest("li");
             var ta = li && li.querySelector("textarea.notes-input");
             if (!ta || !phone) return;
+            var key = normalizePhoneKey(phone);
+            var recordId =
+              notesByPhone[key] && notesByPhone[key].recordId
+                ? notesByPhone[key].recordId
+                : null;
             btn.disabled = true;
             var prev = btn.textContent;
             btn.textContent = "Saving…";
@@ -682,7 +707,11 @@
               var res = await fetch(apiUrl("/api/notes"), {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ phone: phone, notes: ta.value })
+                body: JSON.stringify({
+                  phone: phone,
+                  notes: ta.value,
+                  recordId: recordId
+                })
               });
               var out = await parseJsonSafe(res);
               if (!res.ok) throw new Error(out.error || "Save failed");

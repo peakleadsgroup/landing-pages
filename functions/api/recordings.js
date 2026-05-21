@@ -36,24 +36,55 @@ export async function onRequest(context) {
 
   const auth = btoa(`${sid}:${token}`);
   const base = `https://api.twilio.com/2010-04-01/Accounts/${sid}`;
+  const MAX_TWILIO_LIST_PAGES = 25;
 
   try {
-    const recordings = [];
-    let listUrl = `${base}/Recordings.json?DateCreated>=${dateAfter}&DateCreated<=${dateBefore}&PageSize=100`;
-    let items = [];
-
-    // Paginate through all results (Twilio returns max 100 per page)
-    do {
-      const listRes = await fetch(listUrl.startsWith("http") ? listUrl : `https://api.twilio.com${listUrl}`, {
+    const twilioFetch = (pathOrUrl) =>
+      fetch(pathOrUrl.startsWith("http") ? pathOrUrl : `https://api.twilio.com${pathOrUrl}`, {
         headers: { Authorization: `Basic ${auth}` },
       });
+
+    // Prefetch calls in the date range (paginated) so we do not issue one subrequest per recording.
+    const callsBySid = new Map();
+    let callsUrl =
+      `${base}/Calls.json?DateCreated>=${dateAfter}&DateCreated<=${dateBefore}&PageSize=100`;
+    if (toNumber) {
+      callsUrl += `&To=${encodeURIComponent(toNumber)}`;
+    }
+    let callPages = 0;
+    do {
+      callPages += 1;
+      const callsRes = await twilioFetch(callsUrl);
+      if (!callsRes.ok) {
+        const err = await callsRes.text();
+        throw new Error(`Twilio Calls API: ${callsRes.status} - ${err}`);
+      }
+      const callsData = await callsRes.json();
+      for (const call of callsData.calls || []) {
+        if (call?.sid) {
+          callsBySid.set(call.sid, { from: call.from || null, to: call.to || null });
+        }
+      }
+      callsUrl =
+        callPages >= MAX_TWILIO_LIST_PAGES ? null : callsData.next_page_uri || null;
+    } while (callsUrl);
+
+    const recordings = [];
+    let listUrl = `${base}/Recordings.json?DateCreated>=${dateAfter}&DateCreated<=${dateBefore}&PageSize=100`;
+
+    // Paginate through all results (Twilio returns max 100 per page)
+    let recordingPages = 0;
+    do {
+      recordingPages += 1;
+      const listRes = await twilioFetch(listUrl);
       if (!listRes.ok) {
         const err = await listRes.text();
         throw new Error(`Twilio API: ${listRes.status} - ${err}`);
       }
       const listData = await listRes.json();
-      items = listData.recordings || [];
-      listUrl = listData.next_page_uri || null;
+      const items = listData.recordings || [];
+      listUrl =
+        recordingPages >= MAX_TWILIO_LIST_PAGES ? null : listData.next_page_uri || null;
 
       for (const rec of items) {
         // Include completed and processing (recent voicemails may still be processing)
@@ -61,21 +92,10 @@ export async function onRequest(context) {
         if (rec.status === "completed" && (!rec.duration || parseInt(rec.duration, 10) === 0))
           continue;
 
-        let callFrom = null;
-        let callTo = null;
-        if (rec.call_sid) {
-          try {
-            const callRes = await fetch(`${base}/Calls/${rec.call_sid}.json`, {
-              headers: { Authorization: `Basic ${auth}` },
-            });
-            if (callRes.ok) {
-              const callData = await callRes.json();
-              callFrom = callData.from;
-              callTo = callData.to;
-              if (toNumber && callTo !== toNumber) continue;
-            }
-          } catch (_) {}
-        }
+        const callInfo = rec.call_sid ? callsBySid.get(rec.call_sid) : null;
+        const callFrom = callInfo?.from ?? null;
+        const callTo = callInfo?.to ?? null;
+        if (toNumber && callTo && callTo !== toNumber) continue;
 
         recordings.push({
           sid: rec.sid,

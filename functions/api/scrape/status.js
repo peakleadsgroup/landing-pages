@@ -4,6 +4,8 @@
  *
  * Returns: { status: "running"|"completed"|"failed", saved?: number, error?: string, slybroadcast?: { sessionId, count } }
  */
+const MAX_AIRTABLE_PAGES_PER_REQUEST = 35;
+
 export async function onRequest(context) {
   const requestId = crypto.randomUUID().slice(0, 8);
   const log = (message, details = {}) =>
@@ -121,10 +123,13 @@ export async function onRequest(context) {
     };
 
     stage = "load_existing_airtable_phones";
-    // Fetch existing phone numbers to avoid duplicates
+    // Fetch existing phone numbers to avoid duplicates (capped to stay under CF subrequest limit)
     const existingPhones = new Set();
     let airtableOffset = null;
+    let phoneScanPages = 0;
+    let phoneScanTruncated = false;
     do {
+      phoneScanPages += 1;
       let listUrl = airtableUrl + "?pageSize=100&fields[]=Phone";
       if (airtableOffset) listUrl += "&offset=" + airtableOffset;
       const listRes = await fetch(listUrl, { headers });
@@ -142,6 +147,10 @@ export async function onRequest(context) {
         }
       }
       airtableOffset = listData.offset;
+      if (airtableOffset && phoneScanPages >= MAX_AIRTABLE_PAGES_PER_REQUEST) {
+        phoneScanTruncated = true;
+        airtableOffset = null;
+      }
     } while (airtableOffset);
 
     function normalizePhoneDigits(p) {
@@ -152,6 +161,11 @@ export async function onRequest(context) {
     const records = [];
     const seen = new Set();
     const warnings = [];
+    if (phoneScanTruncated) {
+      warnings.push(
+        "Duplicate check used partial Airtable phone list (subrequest limit). In-run dedup still applies."
+      );
+    }
 
     for (const item of items) {
       const phone = item.phone || item.phoneUnformatted || "";

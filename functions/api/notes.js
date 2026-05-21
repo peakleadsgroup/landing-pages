@@ -1,10 +1,14 @@
 /**
- * GET /api/notes - Fetch all notes from Airtable Sales VMs table
+ * GET /api/notes - Fetch notes from Airtable Sales VMs table (paginated)
  * PUT /api/notes - Create or update notes for a phone number
+ *
+ * GET pagination: pass ?offset= from prior response nextOffset (max 35 Airtable pages/request).
  *
  * Requires env: AIRTABLE_BASE_ID, AIRTABLE_API_KEY
  * Airtable table "Sales VMs" with fields: Phone, Notes
  */
+const MAX_AIRTABLE_PAGES_PER_REQUEST = 35;
+
 export async function onRequest(context) {
   const baseId = context.env.AIRTABLE_BASE_ID;
   const apiKey = context.env.AIRTABLE_API_KEY;
@@ -31,12 +35,19 @@ export async function onRequest(context) {
 
   if (context.request.method === "GET") {
     try {
+      const requestUrl = new URL(context.request.url);
+      const startOffset = requestUrl.searchParams.get("offset") || null;
       const notesByPhone = {};
-      let offset = null;
+      let airtableOffset = startOffset;
+      let pagesFetched = 0;
+      let nextContinuation = null;
 
-      do {
+      while (pagesFetched < MAX_AIRTABLE_PAGES_PER_REQUEST) {
+        pagesFetched += 1;
         let url = baseUrl + "?pageSize=100";
-        if (offset) url += "&offset=" + offset;
+        if (airtableOffset) {
+          url += "&offset=" + encodeURIComponent(airtableOffset);
+        }
 
         const res = await fetch(url, { headers });
         if (!res.ok) {
@@ -52,15 +63,21 @@ export async function onRequest(context) {
             notesByPhone[key] = { notes, recordId: rec.id, rawPhone: phone };
           }
         }
-        offset = data.offset;
-      } while (offset);
 
-      return new Response(JSON.stringify({ notesByPhone }), {
+        if (!data.offset) {
+          nextContinuation = null;
+          break;
+        }
+        nextContinuation = data.offset;
+        airtableOffset = data.offset;
+      }
+
+      return new Response(JSON.stringify({ notesByPhone, nextOffset: nextContinuation }), {
         headers: { "Content-Type": "application/json" },
       });
     } catch (err) {
       return new Response(
-        JSON.stringify({ error: err.message || "Failed to fetch notes" }),
+        JSON.stringify({ error: err.message || "Failed to fetch notes", notesByPhone: {}, nextOffset: null }),
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -87,25 +104,24 @@ export async function onRequest(context) {
         );
       }
 
-      let recordId = null;
-      let offset = null;
-      do {
-        let url = baseUrl + "?pageSize=100";
-        if (offset) url += "&offset=" + offset;
-        const listRes = await fetch(url, { headers });
-        if (!listRes.ok) {
-          const err = await listRes.text();
-          throw new Error(`Airtable: ${listRes.status} - ${err}`);
+      let recordId = body.recordId || null;
+      if (!recordId) {
+        const digits = key;
+        const filterByFormula =
+          `LEN(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE({Phone}," ",""),"-",""),"(",""),")",""))>=10` +
+          `,RIGHT(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE({Phone}," ",""),"-",""),"(",""),")",""),10)="${digits}"`;
+        let lookupUrl =
+          baseUrl +
+          "?pageSize=1&maxRecords=1&filterByFormula=" +
+          encodeURIComponent(filterByFormula);
+        const lookupRes = await fetch(lookupUrl, { headers });
+        if (!lookupRes.ok) {
+          const err = await lookupRes.text();
+          throw new Error(`Airtable: ${lookupRes.status} - ${err}`);
         }
-        const listData = await listRes.json();
-        for (const rec of listData.records || []) {
-          if (normalizePhone(rec.fields?.Phone) === key) {
-            recordId = rec.id;
-            break;
-          }
-        }
-        offset = recordId ? null : listData.offset;
-      } while (!recordId && offset);
+        const lookupData = await lookupRes.json();
+        recordId = lookupData.records?.[0]?.id || null;
+      }
 
       if (recordId) {
         const patchRes = await fetch(baseUrl + "/" + recordId, {
