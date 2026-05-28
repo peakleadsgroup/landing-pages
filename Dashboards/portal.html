@@ -792,9 +792,14 @@
                         const model = c['Model'] || '';
                         const status = c['Status'] || '';
                         const price = Number(c['Price']);
-                        const number = c['Number'] || '';
+                        const number = c['Number'] ?? '';
+                        const qty = Number(number);
+                        const lineTotal = Number.isFinite(price) && Number.isFinite(qty) ? price * qty : NaN;
                         const formattedPrice = Number.isFinite(price)
                             ? `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            : '$0.00';
+                        const formattedTotal = Number.isFinite(lineTotal)
+                            ? `$${lineTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                             : '$0.00';
                         const statusBadge = renderChargeStatusBadge(status);
 
@@ -805,6 +810,7 @@
                                 <td class="px-3 py-2 text-sm">${statusBadge}</td>
                                 <td class="px-3 py-2 text-sm text-gray-900 whitespace-nowrap">${formattedPrice}</td>
                                 <td class="px-3 py-2 text-sm text-gray-700 whitespace-nowrap">${number}</td>
+                                <td class="px-3 py-2 text-sm text-gray-900 whitespace-nowrap">${formattedTotal}</td>
                             </tr>
                         `;
                     }).join('');
@@ -821,6 +827,7 @@
                                             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
                                             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Price</th>
                                             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Number</th>
+                                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Total</th>
                                         </tr>
                                     </thead>
                                     <tbody>${chargesRows}</tbody>
