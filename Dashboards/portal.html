@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <style>
         details > summary .chevron-open { display: none; }
@@ -86,6 +87,31 @@
                 <button onclick="closeBillingModal()" class="text-gray-400 hover:text-gray-600">âœ•</button>
             </div>
             <div id="billingModalContent" class="max-h-[70vh] overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <div id="invoiceExportModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-lg shadow-lg rounded-md bg-white">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">Export Invoice</h3>
+                <button type="button" onclick="closeInvoiceExportModal()" class="text-gray-400 hover:text-gray-600">&#10005;</button>
+            </div>
+            <div class="border border-gray-200 rounded-lg p-6 bg-gray-50">
+                <p class="text-sm text-gray-600 mb-6">Generate a PDF invoice for charges in the selected date range.</p>
+                <div class="space-y-4">
+                    <div>
+                        <label for="invoiceExportStartDate" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                        <input type="date" id="invoiceExportStartDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label for="invoiceExportEndDate" class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                        <input type="date" id="invoiceExportEndDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <button type="button" onclick="generateInvoicePDFForDateRange()" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                        Download PDF
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -760,6 +786,7 @@
                 }
 
                 const customerCards = [];
+                const allCharges = [];
                 for (const customerId of customerIds) {
                     const response = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.customersTableName)}/${customerId}`);
                     if (!response.ok) continue;
@@ -777,7 +804,10 @@
                         const chargeResponse = await fetch(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.chargesTableName)}/${chargeId}`);
                         if (!chargeResponse.ok) continue;
                         const charge = await chargeResponse.json();
-                        if (charge && charge.fields) charges.push(charge);
+                        if (charge && charge.fields) {
+                            charges.push(charge);
+                            allCharges.push(charge);
+                        }
                     }
 
                     charges.sort((a, b) => {
@@ -849,7 +879,31 @@
                 }
 
                 const billingCardsHtml = customerCards.length ? customerCards.join('') : '<p class="text-gray-600">No readable customer records found.</p>';
-                content.innerHTML = `${billingCardsHtml}${renderBillingContactsManager()}`;
+
+                const primaryContact = currentContacts.length ? currentContacts[0] : null;
+                const billingContact = primaryContact ? {
+                    name: primaryContact.fields.Name || '',
+                    email: primaryContact.fields.Email || '',
+                    company: currentRecord.fields.Name || ''
+                } : null;
+                window._portalBillingData = {
+                    validCharges: allCharges,
+                    billingContact,
+                    clientName: currentRecord.fields.Name || ''
+                };
+
+                const invoiceExportBtn = allCharges.length ? `
+                    <div class="flex justify-end mb-3">
+                        <button type="button" onclick="openInvoiceExportModal()" class="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Export Invoice
+                        </button>
+                    </div>
+                ` : '';
+
+                content.innerHTML = `${invoiceExportBtn}${billingCardsHtml}${renderBillingContactsManager()}`;
                 attachBillingContactEditorListeners();
             } catch (err) {
                 content.innerHTML = `<p class="text-red-600">${err.message}</p>`;
@@ -2907,6 +2961,293 @@
                 alert(`Error saving billing contacts: ${err.message}`);
             }
         }
+
+        const LOGO_URL = 'https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png';
+
+        function formatInvoiceMoney(n) {
+            return Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function getJsPDFConstructor() {
+            const jspdfLib = window.jspdf || window.jsPDF;
+            return (jspdfLib && jspdfLib.jsPDF) ? jspdfLib.jsPDF : jspdfLib;
+        }
+
+        function chargeToLineItem(charge) {
+            const description = charge.fields['Description'] || charge.fields['Model'] || '-';
+            const price = charge.fields['Price'];
+            const amountField = charge.fields['Amount'];
+            const number = charge.fields['Number'];
+            const totalAmount = (amountField !== null && amountField !== undefined && Number.isFinite(Number(amountField))) ? Number(amountField) : 0;
+            const qty = (number !== null && number !== undefined && Number(number) > 0) ? Number(number) : 1;
+            const unitPrice = (price !== null && price !== undefined && Number.isFinite(Number(price))) ? Number(price) : (qty > 0 ? totalAmount / qty : totalAmount);
+            return { desc: description, qty, unit: unitPrice, total: totalAmount };
+        }
+
+        function formatInvoiceDateLong(value) {
+            if (!value) return '';
+            try {
+                const d = new Date(value);
+                if (!isNaN(d.getTime())) {
+                    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                }
+            } catch (e) {}
+            return '';
+        }
+
+        function getBillToFromBillingData(data) {
+            const billingContact = data.billingContact;
+            const clientName = data.clientName || '';
+            const billToName = billingContact
+                ? (billingContact.company ? `${billingContact.name} - ${billingContact.company}` : billingContact.name)
+                : (clientName || '');
+            const billToEmail = billingContact ? billingContact.email : '';
+            return { billToName, billToEmail };
+        }
+
+        async function addInvoiceLogo(doc, pageW, margin) {
+            const invoiceTopY = 15;
+            try {
+                const result = await new Promise((resolve) => {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.naturalWidth;
+                        canvas.height = img.naturalHeight;
+                        const ctx = canvas.getContext('2d');
+                        ctx.fillStyle = '#fff';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0);
+                        const aspect = img.naturalWidth / img.naturalHeight;
+                        resolve({ data: canvas.toDataURL('image/png'), aspect });
+                    };
+                    img.onerror = () => resolve(null);
+                    img.src = LOGO_URL;
+                });
+                if (result && result.data) {
+                    const maxW = 60, maxH = 24;
+                    const w = result.aspect >= maxW / maxH ? maxW : maxH * result.aspect;
+                    const h = result.aspect >= maxW / maxH ? maxW / result.aspect : maxH;
+                    doc.addImage(result.data, 'PNG', pageW - margin - w, invoiceTopY, w, h);
+                } else {
+                    doc.setFontSize(12);
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Peak Leads Group', pageW - margin, invoiceTopY + 12, { align: 'right' });
+                }
+            } catch (e) {
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'bold');
+                doc.text('Peak Leads Group', pageW - margin, invoiceTopY + 12, { align: 'right' });
+            }
+        }
+
+        async function buildInvoicePDF({ metaLines, summaryText, lineItems, filename }) {
+            const jsPDF = getJsPDFConstructor();
+            if (!jsPDF) {
+                alert('PDF library failed to load. Please refresh the page and try again.');
+                return;
+            }
+
+            const doc = new jsPDF();
+            const pageW = doc.internal.pageSize.getWidth();
+            const pageH = doc.internal.pageSize.getHeight();
+            const margin = 20;
+            let y = 15;
+
+            await addInvoiceLogo(doc, pageW, margin);
+
+            doc.setFontSize(28);
+            doc.setFont(undefined, 'bold');
+            doc.text('Invoice', margin, y + 20);
+            y += 38;
+
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'normal');
+            for (const line of metaLines) {
+                doc.text(line, margin, y);
+                y += 6;
+            }
+            y += 16;
+
+            const colMid = pageW / 2;
+            const fromY = y;
+            doc.text('Peak Leads Group', margin, fromY);
+            doc.text('105 Buckhaven Court', margin, fromY + 6);
+            doc.text('Apex, North Carolina 27502', margin, fromY + 12);
+            doc.text('United States', margin, fromY + 18);
+
+            const { billToName, billToEmail } = getBillToFromBillingData(window._portalBillingData || {});
+            doc.setFont(undefined, 'bold');
+            doc.text('Bill to', colMid, fromY);
+            doc.setFont(undefined, 'normal');
+            doc.text(billToName || '-', colMid, fromY + 6);
+            if (billToEmail) {
+                doc.text(billToEmail, colMid, fromY + 12);
+            }
+            y = fromY + 28;
+
+            const totalAmount = lineItems.reduce((sum, row) => sum + row.total, 0);
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.text(`$${formatInvoiceMoney(totalAmount)} USD`, margin, y);
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'normal');
+            y += 10;
+
+            if (summaryText) {
+                doc.text(summaryText, margin, y);
+                y += 15;
+            }
+
+            y += 5;
+            doc.setDrawColor(180, 180, 180);
+            doc.line(margin, y, pageW - margin, y);
+            y += 12;
+
+            const colQty = 100;
+            const colUnit = 122;
+            const colTotalX = pageW - margin;
+            const descMaxW = colQty - margin - 4;
+
+            const drawTableHeader = () => {
+                doc.setFont(undefined, 'bold');
+                doc.text('Description', margin, y);
+                doc.text('Qty', colQty, y);
+                doc.text('Unit price', colUnit, y);
+                doc.text('Total', colTotalX, y, { align: 'right' });
+                y += 10;
+                doc.setFont(undefined, 'normal');
+            };
+
+            drawTableHeader();
+
+            for (const row of lineItems) {
+                const parts = doc.splitTextToSize(row.desc, descMaxW);
+                const rowHeight = Math.max(10, parts.length * 5);
+                if (y + rowHeight > pageH - 40) {
+                    doc.addPage();
+                    y = 20;
+                    drawTableHeader();
+                }
+                parts.forEach((line, i) => {
+                    doc.text(line, margin, y + i * 5);
+                });
+                doc.text(String(row.qty), colQty, y);
+                doc.text(`$${formatInvoiceMoney(row.unit)}`, colUnit, y);
+                doc.text(`$${formatInvoiceMoney(row.total)}`, colTotalX, y, { align: 'right' });
+                y += rowHeight;
+            }
+
+            if (y + 30 > pageH - 20) {
+                doc.addPage();
+                y = 20;
+            }
+
+            doc.setDrawColor(180, 180, 180);
+            doc.line(margin, y, pageW - margin, y);
+            y += 12;
+
+            const totLabelX = 130;
+            const totValX = pageW - margin;
+            const totStr = formatInvoiceMoney(totalAmount);
+            doc.text('Subtotal', totLabelX, y);
+            doc.text(`$${totStr}`, totValX, y, { align: 'right' });
+            y += 6;
+            doc.text('Total', totLabelX, y);
+            doc.text(`$${totStr}`, totValX, y, { align: 'right' });
+            y += 6;
+            doc.setFont(undefined, 'bold');
+            doc.text('Amount charged', totLabelX, y);
+            doc.text(`$${totStr} USD`, totValX, y, { align: 'right' });
+
+            doc.save(filename);
+        }
+
+        function filterChargesByDateRange(charges, startDate, endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            return charges.filter((charge) => {
+                const created = charge.fields['Created'];
+                if (!created) return false;
+                const d = new Date(created);
+                if (isNaN(d.getTime())) return false;
+                return d >= start && d <= end;
+            });
+        }
+
+        function openInvoiceExportModal() {
+            const data = window._portalBillingData;
+            if (!data || !data.validCharges || data.validCharges.length === 0) {
+                alert('No billing charges loaded yet. Expand Billing and wait for payment history to load.');
+                return;
+            }
+            const modal = document.getElementById('invoiceExportModal');
+            const startInput = document.getElementById('invoiceExportStartDate');
+            const endInput = document.getElementById('invoiceExportEndDate');
+            const now = new Date();
+            const oneMonthAgo = new Date(now);
+            oneMonthAgo.setMonth(now.getMonth() - 1);
+            startInput.value = oneMonthAgo.toISOString().slice(0, 10);
+            endInput.value = now.toISOString().slice(0, 10);
+            modal.classList.remove('hidden');
+        }
+
+        function closeInvoiceExportModal() {
+            document.getElementById('invoiceExportModal').classList.add('hidden');
+        }
+
+        async function generateInvoicePDFForDateRange() {
+            const data = window._portalBillingData;
+            if (!data || !data.validCharges || data.validCharges.length === 0) {
+                alert('No billing charges loaded. Expand Billing and wait for payment history to load.');
+                return;
+            }
+
+            const startDate = document.getElementById('invoiceExportStartDate').value;
+            const endDate = document.getElementById('invoiceExportEndDate').value;
+            if (!startDate || !endDate) {
+                alert('Please select both start and end dates.');
+                return;
+            }
+
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            if (start > end) {
+                alert('Start date must be before or equal to end date.');
+                return;
+            }
+
+            const filtered = filterChargesByDateRange(data.validCharges, startDate, endDate);
+            if (filtered.length === 0) {
+                alert('No charges found in the selected date range.');
+                return;
+            }
+
+            filtered.sort((a, b) => new Date(a.fields['Created'] || 0) - new Date(b.fields['Created'] || 0));
+            const lineItems = filtered.map(chargeToLineItem);
+            const periodStart = formatInvoiceDateLong(startDate);
+            const periodEnd = formatInvoiceDateLong(endDate);
+            const invoiceRef = `INV-${startDate}_${endDate}`;
+            const clientSlug = (data.clientName || 'client').replace(/[^\w-]+/g, '-').replace(/-+/g, '-').slice(0, 40);
+
+            await buildInvoicePDF({
+                metaLines: [
+                    `Invoice #: ${invoiceRef}`,
+                    `Period: ${periodStart} – ${periodEnd}`
+                ],
+                summaryText: `${filtered.length} charge${filtered.length === 1 ? '' : 's'} in selected period`,
+                lineItems,
+                filename: `invoice-${clientSlug}-${startDate}-to-${endDate}.pdf`
+            });
+            closeInvoiceExportModal();
+        }
+
+        document.getElementById('invoiceExportModal').addEventListener('click', function(e) {
+            if (e.target === this) { closeInvoiceExportModal(); }
+        });
 
         document.getElementById('billingModal').addEventListener('click', function(e) {
             if (e.target === this) closeBillingModal();
