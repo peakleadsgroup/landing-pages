@@ -162,16 +162,55 @@
     <!-- Billing Modal -->
     <div id="billingModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
         <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
-            <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center justify-between mb-4 gap-3">
                 <h3 class="text-xl font-semibold text-gray-900">Billing Information</h3>
-                <button onclick="closeBillingModal()" class="text-gray-400 hover:text-gray-600">
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="openInvoiceExportModal()" id="invoiceExportBtn" class="hidden flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Export Invoice
+                    </button>
+                    <button onclick="closeBillingModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div id="billingModalContent" class="max-h-[70vh] overflow-y-auto">
+                <!-- Content will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Invoice Modal -->
+    <div id="invoiceExportModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-lg shadow-lg rounded-md bg-white">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">Export Invoice</h3>
+                <button type="button" onclick="closeInvoiceExportModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
             </div>
-            <div id="billingModalContent" class="max-h-[70vh] overflow-y-auto">
-                <!-- Content will be populated dynamically -->
+            <div class="border border-gray-200 rounded-lg p-6 bg-gray-50">
+                <p class="text-sm text-gray-600 mb-6">Generate a PDF invoice for charges in the selected date range.</p>
+                <div class="space-y-4">
+                    <div>
+                        <label for="invoiceExportStartDate" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                        <input type="date" id="invoiceExportStartDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label for="invoiceExportEndDate" class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                        <input type="date" id="invoiceExportEndDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <button type="button" onclick="generateInvoicePDFForDateRange()" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Download PDF
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1269,6 +1308,7 @@
         async function openBillingModal() {
             const modal = document.getElementById('billingModal');
             const content = document.getElementById('billingModalContent');
+            document.getElementById('invoiceExportBtn').classList.add('hidden');
 
             content.innerHTML = '<div class="text-center py-8"><svg class="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg><p class="text-gray-600">Loading billing information...</p></div>';
             modal.classList.remove('hidden');
@@ -1417,6 +1457,7 @@
                             
                             // Store for PDF generation
                             window._billingModalData = { validCharges, billingContact, clientName: clientData.fields[CONFIG.clientNameField] || customerName };
+                            document.getElementById('invoiceExportBtn').classList.remove('hidden');
 
                             const chargesRows = validCharges.map((charge, idx) => {
                                 const model = charge.fields['Model'] || '';
@@ -1545,52 +1586,49 @@
 
         const LOGO_URL = 'https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png';
 
-        async function generateInvoicePDF(chargeIndex) {
-            const data = window._billingModalData;
-            if (!data || !data.validCharges || !data.validCharges[chargeIndex]) {
-                alert('Unable to generate invoice. Please close and reopen the billing modal.');
-                return;
-            }
-            const charge = data.validCharges[chargeIndex];
-            const billingContact = data.billingContact;
-            const clientName = data.clientName || '';
+        function formatInvoiceMoney(n) {
+            return Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
 
-            const chargeId = charge.fields['Charge ID'] || charge.id || 'N/A';
-            const description = charge.fields['Description'] || charge.fields['Model'] || '';
-            const created = charge.fields['Created'] || '';
+        function getJsPDFConstructor() {
+            const jspdfLib = window.jspdf || window.jsPDF;
+            return (jspdfLib && jspdfLib.jsPDF) ? jspdfLib.jsPDF : jspdfLib;
+        }
+
+        function chargeToLineItem(charge) {
+            const description = charge.fields['Description'] || charge.fields['Model'] || '-';
             const price = charge.fields['Price'];
             const amountField = charge.fields['Amount'];
             const number = charge.fields['Number'];
-
-            let formattedDate = '';
-            if (created) {
-                try {
-                    const d = new Date(created);
-                    if (!isNaN(d.getTime())) {
-                        formattedDate = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-                    }
-                } catch (e) {}
-            }
-
-            // Total from "Amount" field; unit price from "Price" field
             const totalAmount = (amountField !== null && amountField !== undefined && Number.isFinite(Number(amountField))) ? Number(amountField) : 0;
             const qty = (number !== null && number !== undefined && Number(number) > 0) ? Number(number) : 1;
             const unitPrice = (price !== null && price !== undefined && Number.isFinite(Number(price))) ? Number(price) : (qty > 0 ? totalAmount / qty : totalAmount);
+            return { desc: description, qty, unit: unitPrice, total: totalAmount };
+        }
 
-            const billToName = billingContact ? (billingContact.company ? `${billingContact.name} - ${billingContact.company}` : billingContact.name) : (clientName || '');
+        function formatInvoiceDateLong(value) {
+            if (!value) return '';
+            try {
+                const d = new Date(value);
+                if (!isNaN(d.getTime())) {
+                    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                }
+            } catch (e) {}
+            return '';
+        }
+
+        function getBillToFromBillingData(data) {
+            const billingContact = data.billingContact;
+            const clientName = data.clientName || '';
+            const billToName = billingContact
+                ? (billingContact.company ? `${billingContact.name} - ${billingContact.company}` : billingContact.name)
+                : (clientName || '');
             const billToEmail = billingContact ? billingContact.email : '';
+            return { billToName, billToEmail };
+        }
 
-            const jspdfLib = window.jspdf || window.jsPDF;
-            const jsPDF = (jspdfLib && jspdfLib.jsPDF) ? jspdfLib.jsPDF : jspdfLib;
-            const doc = new jsPDF();
-
-            const pageW = doc.internal.pageSize.getWidth();
-            const margin = 20;
-            let y = 15;
-
-            // Logo: top aligns with top of "Invoice" text
+        async function addInvoiceLogo(doc, pageW, margin) {
             const invoiceTopY = 15;
-
             try {
                 const result = await new Promise((resolve) => {
                     const img = new Image();
@@ -1610,11 +1648,10 @@
                     img.src = LOGO_URL;
                 });
                 if (result && result.data) {
-                    const logoY = invoiceTopY;
                     const maxW = 60, maxH = 24;
                     const w = result.aspect >= maxW / maxH ? maxW : maxH * result.aspect;
                     const h = result.aspect >= maxW / maxH ? maxW / result.aspect : maxH;
-                    doc.addImage(result.data, 'PNG', pageW - margin - w, logoY, w, h);
+                    doc.addImage(result.data, 'PNG', pageW - margin - w, invoiceTopY, w, h);
                 } else {
                     doc.setFontSize(12);
                     doc.setFont(undefined, 'bold');
@@ -1625,22 +1662,36 @@
                 doc.setFont(undefined, 'bold');
                 doc.text('Peak Leads Group', pageW - margin, invoiceTopY + 12, { align: 'right' });
             }
+        }
 
-            // Invoice title (left)
+        async function buildInvoicePDF({ metaLines, summaryText, lineItems, filename }) {
+            const jsPDF = getJsPDFConstructor();
+            if (!jsPDF) {
+                alert('PDF library failed to load. Please refresh the page and try again.');
+                return;
+            }
+
+            const doc = new jsPDF();
+            const pageW = doc.internal.pageSize.getWidth();
+            const pageH = doc.internal.pageSize.getHeight();
+            const margin = 20;
+            let y = 15;
+
+            await addInvoiceLogo(doc, pageW, margin);
+
             doc.setFontSize(28);
             doc.setFont(undefined, 'bold');
             doc.text('Invoice', margin, y + 20);
             y += 38;
 
-            // Charge ID and Date (with colons)
             doc.setFontSize(11);
             doc.setFont(undefined, 'normal');
-            doc.text(`Charge ID: ${chargeId}`, margin, y);
-            y += 6;
-            doc.text(`Date: ${formattedDate}`, margin, y);
-            y += 22;
+            for (const line of metaLines) {
+                doc.text(line, margin, y);
+                y += 6;
+            }
+            y += 16;
 
-            // Two-column layout: Billing From (left) | Bill To (right)
             const colMid = pageW / 2;
             const fromY = y;
             doc.text('Peak Leads Group', margin, fromY);
@@ -1648,6 +1699,7 @@
             doc.text('Apex, North Carolina 27502', margin, fromY + 12);
             doc.text('United States', margin, fromY + 18);
 
+            const { billToName, billToEmail } = getBillToFromBillingData(window._billingModalData || {});
             doc.setFont(undefined, 'bold');
             doc.text('Bill to', colMid, fromY);
             doc.setFont(undefined, 'normal');
@@ -1657,54 +1709,70 @@
             }
             y = fromY + 28;
 
-            // Amount due (no "due [DATE]")
+            const totalAmount = lineItems.reduce((sum, row) => sum + row.total, 0);
             doc.setFontSize(16);
             doc.setFont(undefined, 'bold');
-            doc.text(`$${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`, margin, y);
+            doc.text(`$${formatInvoiceMoney(totalAmount)} USD`, margin, y);
             doc.setFontSize(11);
             doc.setFont(undefined, 'normal');
             y += 10;
 
-            // Description
-            if (description) {
-                doc.text(description, margin, y);
+            if (summaryText) {
+                doc.text(summaryText, margin, y);
                 y += 15;
             }
 
-            // Horizontal line before table
             y += 5;
             doc.setDrawColor(180, 180, 180);
             doc.line(margin, y, pageW - margin, y);
             y += 12;
 
-            // Table: Description | Qty | Unit price | Total (fixed column positions)
             const colQty = 100;
             const colUnit = 122;
             const colTotalX = pageW - margin;
+            const descMaxW = colQty - margin - 4;
 
-            doc.setFont(undefined, 'bold');
-            doc.text('Description', margin, y);
-            doc.text('Qty', colQty, y);
-            doc.text('Unit price', colUnit, y);
-            doc.text('Total', colTotalX, y, { align: 'right' });
-            y += 10;
+            const drawTableHeader = () => {
+                doc.setFont(undefined, 'bold');
+                doc.text('Description', margin, y);
+                doc.text('Qty', colQty, y);
+                doc.text('Unit price', colUnit, y);
+                doc.text('Total', colTotalX, y, { align: 'right' });
+                y += 10;
+                doc.setFont(undefined, 'normal');
+            };
 
-            doc.setFont(undefined, 'normal');
-            doc.text(description || '-', margin, y);
-            doc.text(String(qty), colQty, y);
-            doc.text(`$${unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, colUnit, y);
-            doc.text(`$${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, colTotalX, y, { align: 'right' });
-            y += 12;
+            drawTableHeader();
 
-            // Line between table and totals
+            for (const row of lineItems) {
+                const parts = doc.splitTextToSize(row.desc, descMaxW);
+                const rowHeight = Math.max(10, parts.length * 5);
+                if (y + rowHeight > pageH - 40) {
+                    doc.addPage();
+                    y = 20;
+                    drawTableHeader();
+                }
+                parts.forEach((line, i) => {
+                    doc.text(line, margin, y + i * 5);
+                });
+                doc.text(String(row.qty), colQty, y);
+                doc.text(`$${formatInvoiceMoney(row.unit)}`, colUnit, y);
+                doc.text(`$${formatInvoiceMoney(row.total)}`, colTotalX, y, { align: 'right' });
+                y += rowHeight;
+            }
+
+            if (y + 30 > pageH - 20) {
+                doc.addPage();
+                y = 20;
+            }
+
             doc.setDrawColor(180, 180, 180);
             doc.line(margin, y, pageW - margin, y);
             y += 12;
 
-            // Totals section: labels left, values right-aligned
             const totLabelX = 130;
             const totValX = pageW - margin;
-            const totStr = totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const totStr = formatInvoiceMoney(totalAmount);
             doc.text('Subtotal', totLabelX, y);
             doc.text(`$${totStr}`, totValX, y, { align: 'right' });
             y += 6;
@@ -1715,12 +1783,122 @@
             doc.text('Amount charged', totLabelX, y);
             doc.text(`$${totStr} USD`, totValX, y, { align: 'right' });
 
-            doc.save(`invoice-${chargeId}.pdf`);
+            doc.save(filename);
+        }
+
+        async function generateInvoicePDF(chargeIndex) {
+            const data = window._billingModalData;
+            if (!data || !data.validCharges || !data.validCharges[chargeIndex]) {
+                alert('Unable to generate invoice. Please close and reopen the billing modal.');
+                return;
+            }
+            const charge = data.validCharges[chargeIndex];
+            const chargeId = charge.fields['Charge ID'] || charge.id || 'N/A';
+            const created = charge.fields['Created'] || '';
+            const formattedDate = formatInvoiceDateLong(created);
+            const lineItem = chargeToLineItem(charge);
+            const description = lineItem.desc;
+
+            await buildInvoicePDF({
+                metaLines: [
+                    `Charge ID: ${chargeId}`,
+                    `Date: ${formattedDate}`
+                ],
+                summaryText: description !== '-' ? description : '',
+                lineItems: [lineItem],
+                filename: `invoice-${chargeId}.pdf`
+            });
+        }
+
+        function filterChargesByDateRange(charges, startDate, endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            return charges.filter((charge) => {
+                const created = charge.fields['Created'];
+                if (!created) return false;
+                const d = new Date(created);
+                if (isNaN(d.getTime())) return false;
+                return d >= start && d <= end;
+            });
+        }
+
+        function openInvoiceExportModal() {
+            const data = window._billingModalData;
+            if (!data || !data.validCharges || data.validCharges.length === 0) {
+                alert('No billing charges loaded yet. Open Billing and wait for payment history to load.');
+                return;
+            }
+            const modal = document.getElementById('invoiceExportModal');
+            const startInput = document.getElementById('invoiceExportStartDate');
+            const endInput = document.getElementById('invoiceExportEndDate');
+            const now = new Date();
+            const oneMonthAgo = new Date(now);
+            oneMonthAgo.setMonth(now.getMonth() - 1);
+            startInput.value = oneMonthAgo.toISOString().slice(0, 10);
+            endInput.value = now.toISOString().slice(0, 10);
+            modal.classList.remove('hidden');
+        }
+
+        function closeInvoiceExportModal() {
+            document.getElementById('invoiceExportModal').classList.add('hidden');
+        }
+
+        document.getElementById('invoiceExportModal').addEventListener('click', function(e) {
+            if (e.target === this) { closeInvoiceExportModal(); }
+        });
+
+        async function generateInvoicePDFForDateRange() {
+            const data = window._billingModalData;
+            if (!data || !data.validCharges || data.validCharges.length === 0) {
+                alert('No billing charges loaded. Open Billing and wait for payment history to load.');
+                return;
+            }
+
+            const startDate = document.getElementById('invoiceExportStartDate').value;
+            const endDate = document.getElementById('invoiceExportEndDate').value;
+            if (!startDate || !endDate) {
+                alert('Please select both start and end dates.');
+                return;
+            }
+
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            if (start > end) {
+                alert('Start date must be before or equal to end date.');
+                return;
+            }
+
+            const filtered = filterChargesByDateRange(data.validCharges, startDate, endDate);
+            if (filtered.length === 0) {
+                alert('No charges found in the selected date range.');
+                return;
+            }
+
+            filtered.sort((a, b) => new Date(a.fields['Created'] || 0) - new Date(b.fields['Created'] || 0));
+            const lineItems = filtered.map(chargeToLineItem);
+            const periodStart = formatInvoiceDateLong(startDate);
+            const periodEnd = formatInvoiceDateLong(endDate);
+            const invoiceRef = `INV-${startDate}_${endDate}`;
+            const clientSlug = (data.clientName || 'client').replace(/[^\w-]+/g, '-').replace(/-+/g, '-').slice(0, 40);
+
+            await buildInvoicePDF({
+                metaLines: [
+                    `Invoice #: ${invoiceRef}`,
+                    `Period: ${periodStart} – ${periodEnd}`
+                ],
+                summaryText: `${filtered.length} charge${filtered.length === 1 ? '' : 's'} in selected period`,
+                lineItems,
+                filename: `invoice-${clientSlug}-${startDate}-to-${endDate}.pdf`
+            });
+            closeInvoiceExportModal();
         }
 
         function closeBillingModal() {
             const modal = document.getElementById('billingModal');
             modal.classList.add('hidden');
+            document.getElementById('invoiceExportBtn').classList.add('hidden');
         }
 
         document.getElementById('billingModal').addEventListener('click', function(e) {
