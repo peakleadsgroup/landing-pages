@@ -841,8 +841,30 @@
     els.dripCloseBtn = document.getElementById("drip-close-btn");
   }
 
+  function isolateScrollWheel(container) {
+    if (!container) return;
+    container.addEventListener(
+      "wheel",
+      function (e) {
+        if (container.scrollHeight <= container.clientHeight) return;
+        e.stopPropagation();
+        var maxScroll = container.scrollHeight - container.clientHeight;
+        var scrollingDown = e.deltaY > 0;
+        var scrollingUp = e.deltaY < 0;
+        var atTop = container.scrollTop <= 0;
+        var atBottom = container.scrollTop >= maxScroll - 1;
+        if ((scrollingDown && atBottom) || (scrollingUp && atTop)) {
+          e.preventDefault();
+        }
+      },
+      { passive: false }
+    );
+  }
+
   function boot() {
     cacheElements();
+    isolateScrollWheel(document.querySelector(".msg-sidebar-scroll"));
+    isolateScrollWheel(els.messageScroll);
     bindEvents();
     setupRefreshTimer();
     loadMessages(true);
