@@ -50,21 +50,39 @@
       .replace(/"/g, "&quot;");
   }
 
+  /**
+   * Normalize to 10-digit US local number for thread grouping.
+   * Handles +1, leading 1 on 11-digit numbers, and messy duplicates.
+   * Valid NANP local numbers never start with 0 or 1, so a 10-digit value
+   * starting with 1 is treated as a stuck country-code prefix.
+   */
   function normalizePhoneKey(p) {
     if (p == null || p === "") return "";
     var d = String(p).replace(/\D/g, "");
-    if (d.length === 11 && d[0] === "1") d = d.slice(1);
-    return d.length >= 10 ? d.slice(-10) : d;
+    if (!d) return "";
+
+    while (d.length > 10 && d.charAt(0) === "1") {
+      d = d.slice(1);
+    }
+    if (d.length === 11 && d.charAt(0) === "1") {
+      d = d.slice(1);
+    }
+    if (d.length > 10) {
+      d = d.slice(-10);
+    }
+    return d.length === 10 ? d : "";
   }
 
-  function formatPhoneDisplay(key) {
-    if (!key || key.length !== 10) return key || "—";
-    return "(" + key.slice(0, 3) + ") " + key.slice(3, 6) + "-" + key.slice(6);
+  function formatPhoneDisplay(keyOrPhone) {
+    var k = normalizePhoneKey(keyOrPhone);
+    if (k.length !== 10) return String(keyOrPhone || "—");
+    return "(" + k.slice(0, 3) + ") " + k.slice(3, 6) + "-" + k.slice(6);
   }
 
-  function phoneForAirtable(key) {
-    if (!key || key.length !== 10) return key;
-    return "+1" + key;
+  function phoneForAirtable(keyOrPhone) {
+    var k = normalizePhoneKey(keyOrPhone);
+    if (k.length !== 10) return String(keyOrPhone || "");
+    return "+1" + k;
   }
 
   function parseDate(iso) {
@@ -155,7 +173,7 @@
       return {
         phoneKey: key,
         displayPhone: formatPhoneDisplay(key),
-        rawPhone: lastFields[F.PHONE] || phoneForAirtable(key),
+        rawPhone: phoneForAirtable(key),
         messages: messages,
         lastCreated: lastFields[F.CREATED],
         lastPreview: (lastFields[F.CONTENT] || "").slice(0, 80),
@@ -248,7 +266,11 @@
       if (responseFilter === "no-response" && t.hasResponded) return false;
       if (!search) return true;
       if (t.displayPhone.toLowerCase().indexOf(search) >= 0) return true;
-      if (t.phoneKey.indexOf(search.replace(/\D/g, "")) >= 0) return true;
+      var searchKey = normalizePhoneKey(search);
+      if (searchKey && t.phoneKey === searchKey) return true;
+      if (searchKey && t.phoneKey.indexOf(searchKey) >= 0) return true;
+      var searchDigits = search.replace(/\D/g, "");
+      if (searchDigits && t.phoneKey.indexOf(searchDigits.slice(-10)) >= 0) return true;
       if (t.lastPreview.toLowerCase().indexOf(search) >= 0) return true;
       return t.messages.some(function (m) {
         return String(m.fields[F.CONTENT] || "")
@@ -427,7 +449,7 @@
     if (!thread) return;
 
     var fields = {
-      Phone: thread.rawPhone || phoneForAirtable(thread.phoneKey),
+      Phone: phoneForAirtable(thread.phoneKey),
       Direction: "Outbound",
       Status: "Pending",
       "Message Content": content,
@@ -492,7 +514,7 @@
     return candidates.map(function (t) {
       return {
         phoneKey: t.phoneKey,
-        rawPhone: t.rawPhone || phoneForAirtable(t.phoneKey),
+        rawPhone: phoneForAirtable(t.phoneKey),
         tags: t.tags,
       };
     });
@@ -626,7 +648,7 @@
 
       var rec = recipients[i];
       var fields = {
-        Phone: rec.rawPhone,
+        Phone: phoneForAirtable(rec.phoneKey),
         Direction: "Outbound",
         Status: "Pending",
         "Message Content": message,
