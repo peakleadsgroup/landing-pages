@@ -24,8 +24,9 @@
   var REFRESH_MS = 30000;
   var LOG_PREFIX = "[Messages]";
 
+  var BUSINESS = "WTP";
+
   var state = {
-    business: "PLG",
     records: [],
     threads: [],
     selectedPhoneKey: null,
@@ -284,7 +285,7 @@
     var filtered = getFilteredThreads();
     if (els.threadCount) {
       els.threadCount.textContent =
-        filtered.length + " conversation" + (filtered.length === 1 ? "" : "s") + " · " + state.business;
+        filtered.length + " conversation" + (filtered.length === 1 ? "" : "s");
     }
     if (!els.threadList) return;
 
@@ -411,7 +412,7 @@
     if (els.refreshBtn) els.refreshBtn.disabled = true;
 
     try {
-      var records = await fetchAllRecords(businessFilterFormula(state.business));
+      var records = await fetchAllRecords(businessFilterFormula(BUSINESS));
       state.records = records;
       state.threads = buildThreads(records);
 
@@ -437,9 +438,17 @@
     }
   }
 
+  function focusComposeInput() {
+    if (!els.composeInput || !els.chatActive || els.chatActive.classList.contains("hidden")) return;
+    window.requestAnimationFrame(function () {
+      els.composeInput.focus();
+    });
+  }
+
   function selectThread(phoneKey) {
     state.selectedPhoneKey = phoneKey;
     renderAll();
+    focusComposeInput();
   }
 
   async function sendSingleReply(content) {
@@ -453,7 +462,7 @@
       Direction: "Outbound",
       Status: "Pending",
       "Message Content": content,
-      Business: state.business,
+      Business: BUSINESS,
       "Message Type": "Text",
     };
     if (thread.tags.length) fields[F.TAG] = thread.tags;
@@ -467,6 +476,7 @@
         state.threads = buildThreads(state.records);
         if (els.composeInput) els.composeInput.value = "";
         renderAll();
+        focusComposeInput();
         showToast("success", "Message queued for send");
       }
     } catch (err) {
@@ -652,7 +662,7 @@
         Direction: "Outbound",
         Status: "Pending",
         "Message Content": message,
-        Business: state.business,
+        Business: BUSINESS,
         "Message Type": "Text",
         Tag: tags,
       };
@@ -701,21 +711,6 @@
   }
 
   function bindEvents() {
-    document.querySelectorAll(".msg-tab").forEach(function (tab) {
-      tab.addEventListener("click", function () {
-        var business = tab.getAttribute("data-business");
-        if (!business || business === state.business) return;
-        state.business = business;
-        state.selectedPhoneKey = null;
-        document.querySelectorAll(".msg-tab").forEach(function (t) {
-          var active = t.getAttribute("data-business") === business;
-          t.classList.toggle("active", active);
-          t.setAttribute("aria-selected", active ? "true" : "false");
-        });
-        loadMessages(true);
-      });
-    });
-
     if (els.refreshBtn) {
       els.refreshBtn.addEventListener("click", function () {
         loadMessages(false);
@@ -743,6 +738,15 @@
         var content = (els.composeInput && els.composeInput.value.trim()) || "";
         if (!content || !state.selectedPhoneKey) return;
         sendSingleReply(content);
+      });
+    }
+
+    if (els.composeInput) {
+      els.composeInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          if (els.composeForm) els.composeForm.requestSubmit();
+        }
       });
     }
 
@@ -810,6 +814,7 @@
     els.threadCount = document.getElementById("thread-count");
     els.threadList = document.getElementById("thread-list");
     els.threadEmpty = document.getElementById("thread-empty");
+    els.threadScroll = document.getElementById("thread-scroll");
     els.chatPlaceholder = document.getElementById("chat-placeholder");
     els.chatActive = document.getElementById("chat-active");
     els.chatPhone = document.getElementById("chat-phone");
@@ -841,30 +846,47 @@
     els.dripCloseBtn = document.getElementById("drip-close-btn");
   }
 
-  function isolateScrollWheel(container) {
-    if (!container) return;
-    container.addEventListener(
+  function setupIndependentScrolling() {
+    var threadScroll = els.threadScroll;
+    var messageScroll = els.messageScroll;
+
+    document.addEventListener(
       "wheel",
       function (e) {
-        if (container.scrollHeight <= container.clientHeight) return;
-        e.stopPropagation();
-        var maxScroll = container.scrollHeight - container.clientHeight;
-        var scrollingDown = e.deltaY > 0;
-        var scrollingUp = e.deltaY < 0;
-        var atTop = container.scrollTop <= 0;
-        var atBottom = container.scrollTop >= maxScroll - 1;
-        if ((scrollingDown && atBottom) || (scrollingUp && atTop)) {
+        var container = null;
+        if (threadScroll && threadScroll.contains(e.target)) {
+          container = threadScroll;
+        } else if (messageScroll && messageScroll.contains(e.target)) {
+          container = messageScroll;
+        } else {
+          return;
+        }
+
+        var max = container.scrollHeight - container.clientHeight;
+        if (max <= 0) {
+          e.preventDefault();
+          return;
+        }
+
+        var nextTop = container.scrollTop + e.deltaY;
+        if (nextTop < 0) {
+          container.scrollTop = 0;
+          e.preventDefault();
+        } else if (nextTop > max) {
+          container.scrollTop = max;
+          e.preventDefault();
+        } else {
+          container.scrollTop = nextTop;
           e.preventDefault();
         }
       },
-      { passive: false }
+      { passive: false, capture: true }
     );
   }
 
   function boot() {
     cacheElements();
-    isolateScrollWheel(document.querySelector(".msg-sidebar-scroll"));
-    isolateScrollWheel(els.messageScroll);
+    setupIndependentScrolling();
     bindEvents();
     setupRefreshTimer();
     loadMessages(true);

@@ -14,17 +14,13 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" />
   <title>Messages - PeakLeads</title>
-  <link rel="stylesheet" href="messages.css" />
+  <link rel="stylesheet" href="messages.css?v=3" />
 </head>
 <body class="msg-body">
   <header class="msg-header">
     <div class="msg-header-left">
       <img src="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" alt="" width="36" height="36" />
       <h1>Messages</h1>
-    </div>
-    <div class="msg-business-tabs" role="tablist" aria-label="Business">
-      <button type="button" class="msg-tab active" data-business="PLG" role="tab" aria-selected="true">PLG</button>
-      <button type="button" class="msg-tab" data-business="WTP" role="tab" aria-selected="false">WTP</button>
     </div>
     <div class="msg-header-actions">
       <button type="button" id="mass-send-btn" class="msg-btn msg-btn-primary">Mass Send</button>
@@ -36,7 +32,7 @@
 
   <main class="msg-layout">
     <aside class="msg-sidebar" aria-label="Conversations">
-      <div class="msg-sidebar-tools">
+      <div class="msg-sidebar-top">
         <input
           id="thread-search"
           class="msg-input"
@@ -50,9 +46,9 @@
           <option value="responded">Responded</option>
           <option value="no-response">No response</option>
         </select>
+        <p id="thread-count" class="msg-sidebar-meta">Loading…</p>
       </div>
-      <p id="thread-count" class="msg-sidebar-meta">Loading…</p>
-      <div class="msg-sidebar-scroll">
+      <div id="thread-scroll" class="msg-sidebar-scroll" tabindex="0">
         <ul id="thread-list" class="msg-thread-list"></ul>
         <p id="thread-empty" class="msg-empty hidden">No conversations yet.</p>
       </div>
@@ -62,7 +58,8 @@
       <div id="chat-placeholder" class="msg-chat-placeholder">
         <p>Select a conversation or start messaging from Mass Send.</p>
       </div>
-      <div id="chat-active" class="msg-chat-active hidden">
+
+      <div id="chat-active" class="msg-chat-panel hidden">
         <div class="msg-chat-header">
           <div>
             <h2 id="chat-phone" class="msg-chat-phone"></h2>
@@ -70,9 +67,7 @@
           </div>
           <span id="chat-response-badge" class="msg-badge"></span>
         </div>
-        <div class="msg-messages-pane">
-          <div id="message-scroll" class="msg-message-scroll" role="log" aria-live="polite"></div>
-        </div>
+        <div id="message-scroll" class="msg-message-scroll" role="log" aria-live="polite" tabindex="0"></div>
         <form id="compose-form" class="msg-compose">
           <label class="msg-sr-only" for="compose-input">Reply</label>
           <textarea
@@ -80,7 +75,6 @@
             class="msg-compose-input"
             rows="2"
             placeholder="Type a message…"
-            required
           ></textarea>
           <button type="submit" id="compose-send" class="msg-btn msg-btn-primary">Send</button>
         </form>
@@ -93,7 +87,7 @@
     <div class="msg-modal-backdrop" data-close-mass></div>
     <div class="msg-modal-panel">
       <h2 id="mass-modal-title">Mass Send</h2>
-      <p class="msg-muted">Send to unique phones tagged in the current business. Messages drip out over time.</p>
+      <p class="msg-muted">Send to unique tagged phones. Messages drip out over time.</p>
 
       <label class="msg-label" for="mass-message">Message</label>
       <textarea id="mass-message" class="msg-input msg-textarea" rows="4" required placeholder="Your message…"></textarea>
@@ -155,6 +149,6 @@
     </div>
   </div>
 
-  <script src="messages-app.js"></script>
+  <script src="messages-app.js?v=3"></script>
 </body>
 </html>
