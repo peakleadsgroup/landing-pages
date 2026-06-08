@@ -5,9 +5,15 @@
   box-sizing: border-box;
 }
 
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
 body.msg-body {
   margin: 0;
-  min-height: 100vh;
+  height: 100%;
+  overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background: #e8eaed;
   color: #202124;
@@ -47,8 +53,7 @@ body.msg-body {
   padding: 0.75rem 1.25rem;
   background: #fff;
   border-bottom: 1px solid #dadce0;
-  position: sticky;
-  top: 0;
+  flex-shrink: 0;
   z-index: 100;
 }
 
@@ -185,7 +190,7 @@ body.msg-body {
   flex: 1;
   display: flex;
   min-height: 0;
-  height: calc(100vh - 57px);
+  overflow: hidden;
 }
 
 .msg-sidebar {
@@ -195,6 +200,7 @@ body.msg-body {
   border-right: 1px solid #dadce0;
   display: flex;
   flex-direction: column;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -204,6 +210,7 @@ body.msg-body {
   flex-direction: column;
   gap: 0.5rem;
   border-bottom: 1px solid #e8eaed;
+  flex-shrink: 0;
 }
 
 .msg-sidebar-meta {
@@ -211,14 +218,21 @@ body.msg-body {
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
   color: #5f6368;
+  flex-shrink: 0;
+}
+
+.msg-sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .msg-thread-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  overflow-y: auto;
-  flex: 1;
 }
 
 .msg-thread-item {
@@ -283,6 +297,8 @@ body.msg-body {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   background: #f8f9fa;
 }
 
@@ -309,6 +325,7 @@ body.msg-body {
   padding: 0.85rem 1.25rem;
   background: #fff;
   border-bottom: 1px solid #dadce0;
+  flex-shrink: 0;
 }
 
 .msg-chat-phone {
@@ -353,7 +370,10 @@ body.msg-body {
 
 .msg-message-scroll {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   padding: 1rem 1.25rem;
   display: flex;
   flex-direction: column;
@@ -436,6 +456,7 @@ body.msg-body {
   background: #fff;
   border-top: 1px solid #dadce0;
   align-items: flex-end;
+  flex-shrink: 0;
 }
 
 .msg-compose-input {
@@ -640,19 +661,18 @@ body.msg-body {
 @media (max-width: 768px) {
   .msg-layout {
     flex-direction: column;
-    height: auto;
-    min-height: calc(100vh - 57px);
   }
 
   .msg-sidebar {
     width: 100%;
-    max-height: 40vh;
+    max-height: 42vh;
     border-right: none;
     border-bottom: 1px solid #dadce0;
   }
 
   .msg-chat {
-    min-height: 50vh;
+    flex: 1;
+    min-height: 0;
   }
 
   .msg-header-actions {
