@@ -1497,14 +1497,45 @@
             return [];
         }
 
+        function getLeadCreatedTimestamp(lead) {
+            const created = lead && lead.fields ? lead.fields['Created'] : null;
+            if (created) return new Date(created).getTime();
+            if (lead && lead.createdTime) return new Date(lead.createdTime).getTime();
+            return 0;
+        }
+
         function sortLeadsByCreatedDesc(leads) {
-            return leads.slice().sort((a, b) => new Date((b.fields || {})['Created'] || 0) - new Date((a.fields || {})['Created'] || 0));
+            return leads.slice().sort((a, b) => getLeadCreatedTimestamp(b) - getLeadCreatedTimestamp(a));
+        }
+
+        async function fetchLeadSortIndexByIds(leadIds, onProgress) {
+            const uniqueIds = Array.from(new Set(leadIds || []));
+            if (!uniqueIds.length) return [];
+
+            const chunks = chunkArray(uniqueIds, 20);
+            const entries = [];
+
+            for (const idChunk of chunks) {
+                const formula = `OR(${idChunk.map((id) => `RECORD_ID()='${id}'`).join(',')})`;
+                const url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.leadsTableName)}?pageSize=100&filterByFormula=${encodeURIComponent(formula)}&fields%5B%5D=Created`;
+                const data = await fetchAirtableJson(url);
+                for (const record of data.records || []) {
+                    entries.push({ id: record.id, ts: getLeadCreatedTimestamp(record) });
+                }
+                if (typeof onProgress === 'function') {
+                    onProgress(Math.min(entries.length, uniqueIds.length), uniqueIds.length);
+                }
+                if (chunks.length > 1) await wait(220);
+            }
+
+            entries.sort((a, b) => b.ts - a.ts);
+            return entries.map((entry) => entry.id);
         }
 
         async function fetchB2CLeadsByAdsetPage(adsetId, offsetToken = null, pageSize = 10) {
-            const filterFormula = `FIND("${adsetId}", ARRAYJOIN({Adsets}))`;
+            const filterFormula = `FIND("${adsetId}", ARRAYJOIN({Adset}))`;
 
-            let url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.leadsTableName)}?pageSize=${pageSize}&filterByFormula=${encodeURIComponent(filterFormula)}`;
+            let url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.leadsTableName)}?pageSize=${pageSize}&filterByFormula=${encodeURIComponent(filterFormula)}&sort%5B0%5D%5Bfield%5D=Created&sort%5B0%5D%5Bdirection%5D=desc`;
             if (offsetToken) {
                 url += `&offset=${offsetToken}`;
             }
@@ -1513,16 +1544,6 @@
         }
 
         async function fetchAllLeadsForAdset(adsetId, onProgress) {
-            const adset = await fetchAdsetById(adsetId);
-            if (!adset) return [];
-
-            const leadIds = getLinkedB2CLeadIds(adset);
-            if (leadIds.length) {
-                return fetchLeadsByIds(leadIds, (loaded, total) => {
-                    if (typeof onProgress === 'function') onProgress(loaded, total);
-                });
-            }
-
             const all = [];
             let offsetToken = null;
             do {
@@ -1590,7 +1611,8 @@
                 adsetLeadPaginationState.set(adsetId, {
                     mode: null,
                     adsetSignature: '',
-                    ids: [],
+                    sortedIds: [],
+                    sortedIdsSignature: '',
                     total: 0,
                     page: 1,
                     formulaOffsets: { 1: null },
@@ -1633,6 +1655,8 @@
                 const signature = `${adsetId}:${leadIds.join('|')}`;
                 if (state.adsetSignature !== signature) {
                     state.adsetSignature = signature;
+                    state.sortedIds = [];
+                    state.sortedIdsSignature = '';
                     state.formulaOffsets = { 1: null };
                     state.formulaHasNextByPage = {};
                     if (targetPage === null) state.page = 1;
@@ -1646,22 +1670,11 @@
                 let hasPrev = false;
                 let hasNext = false;
 
-                if (leadIds.length) {
-                    state.mode = 'ids';
-                    state.ids = leadIds;
-                    const totalPages = Math.max(1, Math.ceil(leadIds.length / pageSize));
-                    if (page > totalPages) page = totalPages;
-                    const start = (page - 1) * pageSize;
-                    const pageLeadIds = leadIds.slice(start, start + pageSize);
-                    leadRecords = await fetchLeadsByIds(pageLeadIds);
-                    leadRecords = sortLeadsByCreatedDesc(leadRecords);
-                    hasPrev = page > 1;
-                    hasNext = page < totalPages;
-                } else {
+                try {
                     state.mode = 'formula';
                     const offsetToken = state.formulaOffsets[page] ?? null;
                     const result = await fetchB2CLeadsByAdsetPage(adsetId, offsetToken);
-                    leadRecords = sortLeadsByCreatedDesc(result.records || []);
+                    leadRecords = result.records || [];
                     state.formulaHasNextByPage[page] = !!result.nextOffset;
                     if (result.nextOffset) {
                         state.formulaOffsets[page + 1] = result.nextOffset;
@@ -1670,12 +1683,33 @@
                         page = page - 1;
                         const prevOffset = state.formulaOffsets[page] ?? null;
                         const prevResult = await fetchB2CLeadsByAdsetPage(adsetId, prevOffset);
-                        leadRecords = sortLeadsByCreatedDesc(prevResult.records || []);
+                        leadRecords = prevResult.records || [];
                         state.formulaHasNextByPage[page] = !!prevResult.nextOffset;
                         if (prevResult.nextOffset) state.formulaOffsets[page + 1] = prevResult.nextOffset;
                     }
                     hasPrev = page > 1;
                     hasNext = !!state.formulaHasNextByPage[page];
+                } catch (formulaErr) {
+                    if (!leadIds.length) throw formulaErr;
+
+                    state.mode = 'ids';
+                    if (state.sortedIdsSignature !== signature || !state.sortedIds.length) {
+                        leadsEl.innerHTML = `<p class="text-sm text-gray-600">Preparing lead list (0/${leadIds.length})...</p>`;
+                        state.sortedIds = await fetchLeadSortIndexByIds(leadIds, (loaded, total) => {
+                            leadsEl.innerHTML = `<p class="text-sm text-gray-600">Preparing lead list (${loaded}/${total})...</p>`;
+                        });
+                        state.sortedIdsSignature = signature;
+                    }
+
+                    const sortedIds = state.sortedIds;
+                    const totalPages = Math.max(1, Math.ceil(sortedIds.length / pageSize));
+                    if (page > totalPages) page = totalPages;
+                    const start = (page - 1) * pageSize;
+                    const pageLeadIds = sortedIds.slice(start, start + pageSize);
+                    leadRecords = await fetchLeadsByIds(pageLeadIds);
+                    leadRecords = sortLeadsByCreatedDesc(leadRecords);
+                    hasPrev = page > 1;
+                    hasNext = page < totalPages;
                 }
 
                 leadRecords.forEach((lead) => {
