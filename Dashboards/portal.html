@@ -207,6 +207,19 @@
             return new Promise((resolve) => setTimeout(resolve, ms));
         }
 
+        async function fetchAirtableJson(url, options = {}, attempt = 1) {
+            const maxAttempts = 5;
+            const response = await fetchWithTimeout(url, options, 20000);
+            if (response.ok) return response.json();
+            if (response.status === 429 && attempt < maxAttempts) {
+                const retryAfter = parseInt(response.headers.get('Retry-After') || '0', 10);
+                const delay = retryAfter > 0 ? retryAfter * 1000 : Math.min(30000, 500 * Math.pow(2, attempt - 1));
+                await wait(delay);
+                return fetchAirtableJson(url, options, attempt + 1);
+            }
+            throw new Error(`Airtable request failed (${response.status})`);
+        }
+
         async function fetchRecordById(recordId, attempt = 1) {
             const response = await fetchWithTimeout(`/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.tableName)}/${recordId}`);
             if (response.ok) return response.json();
@@ -252,24 +265,21 @@
             const uniqueIds = Array.from(new Set(leadIds || []));
             if (!uniqueIds.length) return [];
 
-            const chunks = chunkArray(uniqueIds, 25);
+            const chunks = chunkArray(uniqueIds, 20);
             let completed = 0;
             const allRecords = [];
 
-            await Promise.all(chunks.map(async (idChunk) => {
+            for (const idChunk of chunks) {
                 const formula = `OR(${idChunk.map((id) => `RECORD_ID()='${id}'`).join(',')})`;
                 const url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.leadsTableName)}?pageSize=100&filterByFormula=${encodeURIComponent(formula)}`;
-                const response = await fetchWithTimeout(url, {}, 20000);
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch linked leads (${response.status})`);
-                }
-                const data = await response.json();
+                const data = await fetchAirtableJson(url);
                 allRecords.push(...(data.records || []));
                 completed += idChunk.length;
                 if (typeof onProgress === 'function') {
                     onProgress(Math.min(completed, uniqueIds.length), uniqueIds.length);
                 }
-            }));
+                if (chunks.length > 1) await wait(220);
+            }
 
             return allRecords;
         }
@@ -1302,7 +1312,7 @@
                     </summary>
                     <div class="px-3 pb-3 border-t border-gray-100">
                         <div class="mt-2 flex items-center justify-end">
-                            <button type="button" onclick="exportLocationReport('${adsetId}')" class="inline-flex h-[42px] items-center justify-center gap-1.5 px-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors" title="Export location report">
+                            <button type="button" data-export-adset-id="${adsetId}" onclick="exportLocationReport('${adsetId}')" class="inline-flex h-[42px] items-center justify-center gap-1.5 px-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors" title="Export location report">
                                 <span class="text-xs font-semibold">Export</span>
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -1487,41 +1497,31 @@
             return [];
         }
 
-        async function fetchB2CLeadsByAdsetPage(adsetId, offsetToken = null) {
+        async function fetchB2CLeadsByAdsetPage(adsetId, offsetToken = null, pageSize = 10) {
             const filterFormula = `FIND("${adsetId}", ARRAYJOIN({Adsets}))`;
 
-            let url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.leadsTableName)}?pageSize=10&filterByFormula=${encodeURIComponent(filterFormula)}`;
+            let url = `/api/airtable/v0/${CONFIG.baseId}/${encodeURIComponent(CONFIG.leadsTableName)}?pageSize=${pageSize}&filterByFormula=${encodeURIComponent(filterFormula)}&sort%5B0%5D%5Bfield%5D=Created&sort%5B0%5D%5Bdirection%5D=desc`;
             if (offsetToken) {
                 url += `&offset=${offsetToken}`;
             }
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch leads by adset (${response.status})`);
-            }
-            const data = await response.json();
+            const data = await fetchAirtableJson(url);
             return { records: data.records || [], nextOffset: data.offset || null };
         }
 
-        async function fetchAllLeadsForAdset(adsetId) {
+        async function fetchAllLeadsForAdset(adsetId, onProgress) {
             const adset = await fetchAdsetById(adsetId);
             if (!adset) return [];
-
-            const leadIds = getLinkedB2CLeadIds(adset);
-            if (leadIds.length) {
-                const out = [];
-                for (const leadId of leadIds) {
-                    const lead = await fetchLeadById(leadId);
-                    if (lead) out.push(lead);
-                }
-                return out;
-            }
 
             const all = [];
             let offsetToken = null;
             do {
-                const page = await fetchB2CLeadsByAdsetPage(adsetId, offsetToken);
+                const page = await fetchB2CLeadsByAdsetPage(adsetId, offsetToken, 100);
                 all.push(...page.records);
                 offsetToken = page.nextOffset;
+                if (typeof onProgress === 'function') {
+                    onProgress(all.length);
+                }
+                if (offsetToken) await wait(220);
             } while (offsetToken);
             return all;
         }
@@ -1536,8 +1536,16 @@
         }
 
         async function exportLocationReport(adsetId) {
+            const exportBtn = document.querySelector(`button[data-export-adset-id="${adsetId}"]`);
+            const originalLabel = exportBtn ? exportBtn.innerHTML : '';
             try {
-                const leads = await fetchAllLeadsForAdset(adsetId);
+                if (exportBtn) {
+                    exportBtn.disabled = true;
+                    exportBtn.innerHTML = 'Preparing export...';
+                }
+                const leads = await fetchAllLeadsForAdset(adsetId, (count) => {
+                    if (exportBtn) exportBtn.innerHTML = `Preparing export (${count} leads)...`;
+                });
                 if (!leads.length) {
                     alert('No leads found for this location.');
                     return;
@@ -1558,15 +1566,18 @@
                 XLSX.writeFile(wb, `${safeAdset}_leads_report.xlsx`);
             } catch (err) {
                 alert(`Unable to export location report: ${err.message}`);
+            } finally {
+                if (exportBtn) {
+                    exportBtn.disabled = false;
+                    exportBtn.innerHTML = originalLabel;
+                }
             }
         }
 
         function getLeadPaginationStateForAdset(adsetId) {
             if (!adsetLeadPaginationState.has(adsetId)) {
                 adsetLeadPaginationState.set(adsetId, {
-                    mode: null,
-                    ids: [],
-                    idsSignature: '',
+                    adsetSignature: '',
                     total: 0,
                     page: 1,
                     formulaOffsets: { 1: null },
@@ -1576,11 +1587,23 @@
             return adsetLeadPaginationState.get(adsetId);
         }
 
+        function getAdsetLeadTotal(adset) {
+            const fields = adset && adset.fields ? adset.fields : {};
+            const linkedIds = getLinkedB2CLeadIds(adset);
+            if (linkedIds.length) return linkedIds.length;
+            const qualified = formatAdsetNumericStat(fields['Qualified Leads']);
+            if (qualified !== null) {
+                const parsed = parseInt(qualified, 10);
+                if (Number.isFinite(parsed)) return parsed;
+            }
+            return 0;
+        }
+
         async function loadLocationAdsetAndLeads(adsetId, targetPage = null) {
             const leadsEl = document.getElementById(`location-leads-${adsetId}`);
             if (!leadsEl) return;
 
-            leadsEl.innerHTML = '<p class="text-sm text-gray-600">Loading linked leads...</p>';
+            leadsEl.innerHTML = '<p class="text-sm text-gray-600">Loading leads...</p>';
 
             try {
                 const adset = await fetchAdsetById(adsetId);
@@ -1594,69 +1617,34 @@
 
                 const state = getLeadPaginationStateForAdset(adsetId);
                 const leadIds = getLinkedB2CLeadIds(adset);
-                if (leadIds.length) {
-                    const signature = leadIds.join('|');
-                    const shouldReloadIds = state.mode !== 'ids' || state.idsSignature !== signature || !state.ids.length;
-                    state.mode = 'ids';
-                    if (shouldReloadIds) {
-                        leadsEl.innerHTML = `<p class="text-sm text-gray-600">Loading 0/${leadIds.length} leads...</p>`;
-                        const fetchedLeads = await fetchLeadsByIds(leadIds, (loaded, total) => {
-                            leadsEl.innerHTML = `<p class="text-sm text-gray-600">Loading ${loaded}/${total} leads...</p>`;
-                        });
-                        fetchedLeads.forEach((lead) => {
-                            loadedLeadsById.set(lead.id, lead);
-                            leadToAdsetMap.set(lead.id, adsetId);
-                        });
-                        fetchedLeads.sort((a, b) => new Date((b.fields || {})['Created'] || 0) - new Date((a.fields || {})['Created'] || 0));
-                        state.ids = fetchedLeads.map((lead) => lead.id);
-                        state.idsSignature = signature;
-                        state.total = state.ids.length;
-                    } else {
-                        state.total = state.ids.length;
-                    }
-                } else if (!state.mode || state.mode !== 'formula') {
-                    state.mode = 'formula';
-                    state.ids = [];
-                    state.idsSignature = '';
-                    state.total = leadIds.length || 0;
+                const signature = `${adsetId}:${leadIds.join('|')}`;
+                if (state.adsetSignature !== signature) {
+                    state.adsetSignature = signature;
                     state.formulaOffsets = { 1: null };
                     state.formulaHasNextByPage = {};
-                } else if (leadIds.length && !state.total) {
-                    state.total = leadIds.length;
+                    if (targetPage === null) state.page = 1;
                 }
+                state.total = getAdsetLeadTotal(adset);
 
-                const pageSize = 10;
-                let leadRecords = [];
                 let page = targetPage || state.page || 1;
                 if (page < 1) page = 1;
 
-                if (state.mode === 'ids') {
-                    const totalPages = Math.max(1, Math.ceil(state.total / pageSize));
-                    if (page > totalPages) page = totalPages;
-                    const start = (page - 1) * pageSize;
-                    const pageLeadIds = state.ids.slice(start, start + pageSize);
-                    leadRecords = pageLeadIds
-                        .map((id) => loadedLeadsById.get(id))
-                        .filter(Boolean);
-                } else {
-                    const offsetToken = state.formulaOffsets[page] ?? null;
-                    const result = await fetchB2CLeadsByAdsetPage(adsetId, offsetToken);
-                    leadRecords = result.records || [];
-                    state.formulaHasNextByPage[page] = !!result.nextOffset;
-                    if (result.nextOffset) {
-                        state.formulaOffsets[page + 1] = result.nextOffset;
-                    }
-                    if (leadRecords.length === 0 && page > 1) {
-                        page = page - 1;
-                        const prevOffset = state.formulaOffsets[page] ?? null;
-                        const prevResult = await fetchB2CLeadsByAdsetPage(adsetId, prevOffset);
-                        leadRecords = prevResult.records || [];
-                        state.formulaHasNextByPage[page] = !!prevResult.nextOffset;
-                        if (prevResult.nextOffset) state.formulaOffsets[page + 1] = prevResult.nextOffset;
-                    }
+                const offsetToken = state.formulaOffsets[page] ?? null;
+                const result = await fetchB2CLeadsByAdsetPage(adsetId, offsetToken);
+                let leadRecords = result.records || [];
+                state.formulaHasNextByPage[page] = !!result.nextOffset;
+                if (result.nextOffset) {
+                    state.formulaOffsets[page + 1] = result.nextOffset;
+                }
+                if (leadRecords.length === 0 && page > 1) {
+                    page = page - 1;
+                    const prevOffset = state.formulaOffsets[page] ?? null;
+                    const prevResult = await fetchB2CLeadsByAdsetPage(adsetId, prevOffset);
+                    leadRecords = prevResult.records || [];
+                    state.formulaHasNextByPage[page] = !!prevResult.nextOffset;
+                    if (prevResult.nextOffset) state.formulaOffsets[page + 1] = prevResult.nextOffset;
                 }
 
-                leadRecords.sort((a, b) => new Date((b.fields || {})['Created'] || 0) - new Date((a.fields || {})['Created'] || 0));
                 leadRecords.forEach((lead) => {
                     loadedLeadsById.set(lead.id, lead);
                     leadToAdsetMap.set(lead.id, adsetId);
@@ -1664,9 +1652,7 @@
                 state.page = page;
 
                 const hasPrev = page > 1;
-                const hasNext = state.mode === 'ids'
-                    ? page < Math.max(1, Math.ceil(state.total / pageSize))
-                    : !!state.formulaHasNextByPage[page];
+                const hasNext = !!state.formulaHasNextByPage[page];
                 const totalText = state.total
                     ? `${state.total} total leads`
                     : `${leadRecords.length} leads on this page`;
