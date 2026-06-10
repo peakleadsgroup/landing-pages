@@ -1544,6 +1544,19 @@
         }
 
         async function fetchAllLeadsForAdset(adsetId, onProgress) {
+            const adset = await fetchAdsetById(adsetId);
+            if (!adset) return [];
+
+            const leadIds = getLinkedB2CLeadIds(adset);
+            if (leadIds.length) {
+                const sortedIds = await fetchLeadSortIndexByIds(leadIds, (loaded, total) => {
+                    if (typeof onProgress === 'function') onProgress(loaded, total);
+                });
+                return fetchLeadsByIds(sortedIds, (loaded, total) => {
+                    if (typeof onProgress === 'function') onProgress(loaded, total);
+                });
+            }
+
             const all = [];
             let offsetToken = null;
             do {
@@ -1556,6 +1569,29 @@
                 if (offsetToken) await wait(220);
             } while (offsetToken);
             return all;
+        }
+
+        async function loadLeadsPageFromSortedIds(adsetId, leadIds, signature, state, page, pageSize, leadsEl) {
+            if (state.sortedIdsSignature !== signature || !state.sortedIds.length) {
+                leadsEl.innerHTML = `<p class="text-sm text-gray-600">Preparing lead list (0/${leadIds.length})...</p>`;
+                state.sortedIds = await fetchLeadSortIndexByIds(leadIds, (loaded, total) => {
+                    leadsEl.innerHTML = `<p class="text-sm text-gray-600">Preparing lead list (${loaded}/${total})...</p>`;
+                });
+                state.sortedIdsSignature = signature;
+            }
+
+            const sortedIds = state.sortedIds;
+            const totalPages = Math.max(1, Math.ceil(sortedIds.length / pageSize));
+            if (page > totalPages) page = totalPages;
+            const start = (page - 1) * pageSize;
+            const pageLeadIds = sortedIds.slice(start, start + pageSize);
+            const leadRecords = sortLeadsByCreatedDesc(await fetchLeadsByIds(pageLeadIds));
+            return {
+                leadRecords,
+                page,
+                hasPrev: page > 1,
+                hasNext: page < totalPages
+            };
         }
 
         function formatLeadExportValue(value, key) {
@@ -1670,7 +1706,14 @@
                 let hasPrev = false;
                 let hasNext = false;
 
-                try {
+                if (leadIds.length) {
+                    state.mode = 'ids';
+                    const pageResult = await loadLeadsPageFromSortedIds(adsetId, leadIds, signature, state, page, pageSize, leadsEl);
+                    leadRecords = pageResult.leadRecords;
+                    page = pageResult.page;
+                    hasPrev = pageResult.hasPrev;
+                    hasNext = pageResult.hasNext;
+                } else {
                     state.mode = 'formula';
                     const offsetToken = state.formulaOffsets[page] ?? null;
                     const result = await fetchB2CLeadsByAdsetPage(adsetId, offsetToken);
@@ -1689,27 +1732,6 @@
                     }
                     hasPrev = page > 1;
                     hasNext = !!state.formulaHasNextByPage[page];
-                } catch (formulaErr) {
-                    if (!leadIds.length) throw formulaErr;
-
-                    state.mode = 'ids';
-                    if (state.sortedIdsSignature !== signature || !state.sortedIds.length) {
-                        leadsEl.innerHTML = `<p class="text-sm text-gray-600">Preparing lead list (0/${leadIds.length})...</p>`;
-                        state.sortedIds = await fetchLeadSortIndexByIds(leadIds, (loaded, total) => {
-                            leadsEl.innerHTML = `<p class="text-sm text-gray-600">Preparing lead list (${loaded}/${total})...</p>`;
-                        });
-                        state.sortedIdsSignature = signature;
-                    }
-
-                    const sortedIds = state.sortedIds;
-                    const totalPages = Math.max(1, Math.ceil(sortedIds.length / pageSize));
-                    if (page > totalPages) page = totalPages;
-                    const start = (page - 1) * pageSize;
-                    const pageLeadIds = sortedIds.slice(start, start + pageSize);
-                    leadRecords = await fetchLeadsByIds(pageLeadIds);
-                    leadRecords = sortLeadsByCreatedDesc(leadRecords);
-                    hasPrev = page > 1;
-                    hasNext = page < totalPages;
                 }
 
                 leadRecords.forEach((lead) => {
