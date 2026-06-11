@@ -125,11 +125,6 @@ body.ads-body {
   margin-bottom: 1rem;
 }
 
-.ads-manual-form {
-  border-top: 1px solid #e8eaed;
-  padding-top: 1rem;
-}
-
 .ads-search-row {
   display: flex;
   gap: 0.75rem;
@@ -143,23 +138,6 @@ body.ads-body {
 
 .ads-search-hint {
   margin-top: 0.5rem;
-}
-
-.ads-session-row {
-  border-top: 1px solid #e8eaed;
-  padding-top: 1rem;
-}
-
-.ads-session-controls {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.ads-session-controls .ads-select {
-  flex: 1 1 14rem;
-  min-width: 0;
 }
 
 /* Buttons */

@@ -14,7 +14,7 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" />
   <title>Ads Tool — Swipe File - PeakLeads</title>
-  <link rel="stylesheet" href="adstool.css?v=4" />
+  <link rel="stylesheet" href="adstool.css?v=5" />
 </head>
 <body class="ads-body">
   <header class="ads-header">
@@ -29,39 +29,14 @@
 
   <main class="ads-main">
     <section class="ads-card ads-search-card" aria-labelledby="ads-search-heading">
-      <h2 id="ads-search-heading" class="ads-sr-only">Search Meta Ads Library</h2>
+      <h2 id="ads-search-heading" class="ads-sr-only">Start swipe file</h2>
       <div class="ads-search-form">
-        <p class="ads-label">Endless swipe</p>
         <div class="ads-search-row">
           <button type="button" id="endless-btn" class="ads-btn ads-btn-primary">Start endless swipe</button>
         </div>
         <p class="ads-muted ads-search-hint">
           Loads 3 random words, then fetches more as you swipe. US · active · video · impressions · last ~31 days
         </p>
-      </div>
-
-      <form id="search-form" class="ads-search-form ads-manual-form">
-        <label class="ads-label" for="keyword-input">Or search one keyword</label>
-        <div class="ads-search-row">
-          <input
-            id="keyword-input"
-            class="ads-input"
-            type="text"
-            placeholder="e.g. wealth"
-            autocomplete="off"
-          />
-          <button type="submit" id="search-btn" class="ads-btn ads-btn-ghost">Fetch top videos</button>
-        </div>
-      </form>
-
-      <div class="ads-session-row">
-        <label class="ads-label" for="session-select">Saved sessions</label>
-        <div class="ads-session-controls">
-          <select id="session-select" class="ads-select" aria-label="Saved swipe sessions">
-            <option value="">— Select a session —</option>
-          </select>
-          <button type="button" id="clear-sessions-btn" class="ads-btn ads-btn-ghost">Clear all</button>
-        </div>
       </div>
     </section>
 
@@ -100,10 +75,10 @@
     </section>
 
     <section id="empty-panel" class="ads-card ads-empty-card">
-      <p class="ads-muted">Hit <strong>Start endless swipe</strong> for random keywords, or search a single keyword below.</p>
+      <p class="ads-muted">Hit <strong>Start endless swipe</strong> to browse top video ads from random keywords.</p>
     </section>
   </main>
 
-  <script src="adstool-app.js?v=4"></script>
+  <script src="adstool-app.js?v=8"></script>
 </body>
 </html>

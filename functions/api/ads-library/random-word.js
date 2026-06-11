@@ -1,7 +1,31 @@
 /**
  * GET /api/ads-library/random-word?count=3
- * Proxies https://random-words-api.kushcreates.com/api
+ * Proxies https://api.api-ninjas.com/v2/randomword
  */
+const API_NINJAS_KEY = "WiThVD69tkYe5NsR5NlTHj4zWyjvazECXOyHnQNI";
+const API_NINJAS_URL = "https://api.api-ninjas.com/v2/randomword";
+
+async function fetchOneRandomWord() {
+  const res = await fetch(API_NINJAS_URL, {
+    headers: { "X-Api-Key": API_NINJAS_KEY },
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`API Ninjas: ${res.status} - ${errText}`);
+  }
+
+  const data = await res.json();
+  if (!Array.isArray(data) || !data.length) {
+    throw new Error("No words returned from API Ninjas");
+  }
+
+  const word = String(data[0] || "").trim();
+  if (!word) {
+    throw new Error("Empty word returned from API Ninjas");
+  }
+  return word;
+}
+
 export async function onRequest(context) {
   if (context.request.method !== "GET") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -14,18 +38,29 @@ export async function onRequest(context) {
   const count = Math.min(10, Math.max(1, parseInt(url.searchParams.get("count") || "1", 10) || 1));
 
   try {
-    const res = await fetch(
-      `https://random-words-api.kushcreates.com/api?language=en&words=${count}`
-    );
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`Random words API: ${res.status} - ${errText}`);
-    }
+    const words = [];
+    const seen = new Set();
+    let attempts = 0;
+    const maxAttempts = count * 4;
 
-    const items = await res.json();
-    const words = (Array.isArray(items) ? items : [])
-      .map((item) => String(item.word || "").trim())
-      .filter(Boolean);
+    while (words.length < count && attempts < maxAttempts) {
+      attempts += 1;
+      const batchSize = count - words.length;
+      const batch = await Promise.all(
+        Array.from({ length: batchSize }, function () {
+          return fetchOneRandomWord();
+        })
+      );
+
+      for (const word of batch) {
+        const key = word.toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          words.push(word);
+          if (words.length >= count) break;
+        }
+      }
+    }
 
     if (!words.length) {
       throw new Error("No words returned from API");

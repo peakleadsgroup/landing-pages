@@ -1,23 +1,21 @@
 /**
- * Ads Tool — Meta Ads Library swipe file (endless random words)
+ * Ads Tool — Meta Ads Library endless swipe file
  */
 (function () {
   "use strict";
 
   var LOG_PREFIX = "[AdsTool]";
-  var STORAGE_KEY = "adstool_swipe_v1";
-  var MAX_SESSIONS = 30;
   var POLL_INTERVAL_MS = 4000;
   var MAX_POLL_ATTEMPTS = 90;
   var INITIAL_WORD_COUNT = 3;
+  var PRELOAD_BEHIND = 1;
+  var PRELOAD_AHEAD = 2;
 
   var state = {
-    sessions: [],
-    activeSessionId: null,
+    session: null,
     index: 0,
     scraping: false,
     endlessStarting: false,
-    runId: null,
     builtMediaSessionId: null,
     builtMediaSlotCount: 0,
   };
@@ -64,56 +62,12 @@
     }
   }
 
-  function loadStorage() {
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      var data = JSON.parse(raw);
-      if (Array.isArray(data.sessions)) {
-        state.sessions = data.sessions.map(normalizeStoredSession);
-      }
-      if (data.activeSessionId) state.activeSessionId = data.activeSessionId;
-    } catch (e) {
-      log("storage load failed", e);
-    }
-  }
-
-  function normalizeStoredSession(session) {
-    if (session.type === "endless") {
-      session.endless = session.endless || {
-        loadingCount: 0,
-        lastPrefetchAtLength: 0,
-      };
-      session.keywords = session.keywords || [];
-      session.endless.loadingCount = 0;
-    }
-    return session;
-  }
-
-  function saveStorage() {
-    try {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({
-          sessions: state.sessions,
-          activeSessionId: state.activeSessionId,
-        })
-      );
-    } catch (e) {
-      log("storage save failed", e);
-      showToast("error", "Could not save to local storage (quota?).");
-    }
-  }
-
   function makeSessionId() {
     return "s_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
   }
 
-  function getActiveSession() {
-    if (!state.activeSessionId) return null;
-    return state.sessions.find(function (s) {
-      return s.id === state.activeSessionId;
-    }) || null;
+  function getSession() {
+    return state.session;
   }
 
   function formatMetaValue(val) {
@@ -127,54 +81,83 @@
     return String(val);
   }
 
-  function formatSessionLabel(session) {
-    var d = session.createdAt ? new Date(session.createdAt) : null;
-    var when = d && !isNaN(d.getTime()) ? d.toLocaleString() : "";
-    var count = session.ads ? session.ads.length : 0;
-
-    if (session.type === "endless") {
-      var wordCount = session.keywords ? session.keywords.length : 0;
-      return (
-        "Endless · " +
-        count +
-        " videos · " +
-        wordCount +
-        " word" +
-        (wordCount === 1 ? "" : "s") +
-        (when ? " · " + when : "")
-      );
-    }
-
-    return (
-      '"' +
-      (session.keyword || "?") +
-      '" · ' +
-      count +
-      " videos" +
-      (when ? " · " + when : "")
-    );
+  function normalizeDedupText(s) {
+    return String(s == null ? "" : s)
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .replace(/[^\w\s]/g, "")
+      .trim();
   }
 
-  function renderSessionSelect() {
-    if (!els.sessionSelect) return;
-    var prev = els.sessionSelect.value;
-    els.sessionSelect.innerHTML = '<option value="">— Select a session —</option>';
-    state.sessions
-      .slice()
-      .sort(function (a, b) {
-        return String(b.createdAt).localeCompare(String(a.createdAt));
-      })
-      .forEach(function (session) {
-        var opt = document.createElement("option");
-        opt.value = session.id;
-        opt.textContent = formatSessionLabel(session);
-        els.sessionSelect.appendChild(opt);
-      });
-    if (prev && state.sessions.some(function (s) { return s.id === prev; })) {
-      els.sessionSelect.value = prev;
-    } else if (state.activeSessionId) {
-      els.sessionSelect.value = state.activeSessionId;
+  function videoUrlFingerprint(url) {
+    if (!url) return "";
+    try {
+      var u = new URL(url);
+      return u.origin + u.pathname;
+    } catch (e) {
+      return String(url).split("?")[0];
     }
+  }
+
+  function getAdDedupKeys(ad) {
+    var keys = [];
+    var videoFp = videoUrlFingerprint(ad.videoHdUrl || ad.videoSdUrl);
+    if (videoFp) keys.push("v:" + videoFp);
+
+    var body = normalizeDedupText(ad.bodyText);
+    if (body.length >= 12) keys.push("b:" + body);
+
+    var combined = normalizeDedupText(
+      [ad.bodyText, ad.caption, ad.ctaText].filter(Boolean).join(" ")
+    );
+    if (combined.length >= 12) keys.push("t:" + combined);
+
+    if (ad.pageId && body.length >= 12) {
+      keys.push("p:" + ad.pageId + ":" + body.slice(0, 150));
+    }
+
+    return keys;
+  }
+
+  function buildDedupKeySet(ads) {
+    var seen = new Set();
+    (ads || []).forEach(function (ad) {
+      getAdDedupKeys(ad).forEach(function (key) {
+        seen.add(key);
+      });
+    });
+    return seen;
+  }
+
+  function isDuplicateAd(ad, seen) {
+    var keys = getAdDedupKeys(ad);
+    if (!keys.length) return false;
+    return keys.some(function (key) {
+      return seen.has(key);
+    });
+  }
+
+  function registerAdDedupKeys(ad, seen) {
+    getAdDedupKeys(ad).forEach(function (key) {
+      seen.add(key);
+    });
+  }
+
+  function filterNewAds(existingAds, incomingAds) {
+    var seen = buildDedupKeySet(existingAds);
+    var unique = [];
+    var skipped = 0;
+
+    (incomingAds || []).forEach(function (ad) {
+      if (isDuplicateAd(ad, seen)) {
+        skipped += 1;
+        return;
+      }
+      registerAdDedupKeys(ad, seen);
+      unique.push(ad);
+    });
+
+    return { ads: unique, skipped: skipped };
   }
 
   function setStatusVisible(visible, text) {
@@ -185,8 +168,6 @@
 
   function setBusyUi(busy, statusText) {
     state.scraping = busy;
-    if (els.searchBtn) els.searchBtn.disabled = busy || state.endlessStarting;
-    if (els.keywordInput) els.keywordInput.disabled = busy || state.endlessStarting;
     if (els.endlessBtn) els.endlessBtn.disabled = busy || state.endlessStarting;
     setStatusVisible(busy || state.endlessStarting, statusText || (busy ? "Scraping Meta Ads Library…" : ""));
   }
@@ -241,8 +222,8 @@
       video.controls = true;
       video.playsInline = true;
       video.setAttribute("playsinline", "");
-      video.preload = "auto";
-      video.src = videoUrl;
+      video.preload = "none";
+      video.dataset.src = videoUrl;
       if (ad.videoPreviewUrl) video.poster = ad.videoPreviewUrl;
       video.addEventListener("error", function () {
         video.classList.add("hidden");
@@ -270,21 +251,99 @@
     }
     state.builtMediaSlotCount = session.ads.length;
 
-    if (from === 0 && session.ads.length > 0) {
-      log("preloading videos", { sessionId: session.id, count: session.ads.length });
-    } else if (from < session.ads.length) {
-      log("appended video slots", { from: from, to: session.ads.length - 1 });
+    if (from < session.ads.length) {
+      log("media slots ready", { total: session.ads.length, newFrom: from });
     }
+    updateVideoPreloadWindow(state.index);
+  }
+
+  function isInPreloadWindow(slotIndex, currentIndex) {
+    return slotIndex >= currentIndex - PRELOAD_BEHIND && slotIndex <= currentIndex + PRELOAD_AHEAD;
+  }
+
+  function unloadVideo(video) {
+    if (!video || !video.src) return;
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+    video.preload = "none";
+  }
+
+  function loadVideoForSlot(video, slotIndex, currentIndex) {
+    var url = video.dataset.src;
+    if (!url) return;
+    if (video.src) return;
+
+    video.preload = slotIndex === currentIndex ? "auto" : "metadata";
+    video.src = url;
+    video.load();
+  }
+
+  function updateVideoPreloadWindow(currentIndex) {
+    if (!els.mediaStack) return;
+    var slots = els.mediaStack.querySelectorAll(".ads-media-slot");
+    slots.forEach(function (slot) {
+      var slotIndex = parseInt(slot.getAttribute("data-index"), 10);
+      if (isNaN(slotIndex)) return;
+      var video = slot.querySelector("video");
+      if (!video) return;
+
+      if (isInPreloadWindow(slotIndex, currentIndex)) {
+        loadVideoForSlot(video, slotIndex, currentIndex);
+      } else {
+        unloadVideo(video);
+      }
+    });
+  }
+
+  function tryAutoplayVideo(video) {
+    if (!video || video.classList.contains("hidden")) return;
+
+    function play() {
+      video.currentTime = 0;
+      var playPromise = video.play();
+      if (!playPromise || typeof playPromise.catch !== "function") return;
+      playPromise.catch(function () {
+        video.muted = true;
+        video.play().catch(function () {});
+      });
+    }
+
+    if (!video.src && video.dataset.src) {
+      video.preload = "auto";
+      video.src = video.dataset.src;
+      video.load();
+    }
+
+    if (video.readyState >= 2) {
+      play();
+      return;
+    }
+
+    video.addEventListener(
+      "loadeddata",
+      function () {
+        play();
+      },
+      { once: true }
+    );
   }
 
   function showMediaAtIndex(index) {
     if (!els.mediaStack) return;
+    updateVideoPreloadWindow(index);
+
     var slots = els.mediaStack.querySelectorAll(".ads-media-slot");
     slots.forEach(function (slot, i) {
       var active = i === index;
       slot.classList.toggle("ads-media-slot-active", active);
       var video = slot.querySelector("video");
-      if (video && !active) video.pause();
+      if (!video) return;
+      if (!active) {
+        video.pause();
+        return;
+      }
+      tryAutoplayVideo(video);
     });
   }
 
@@ -341,26 +400,26 @@
       .join("");
   }
 
-  function isEndlessLoading(session) {
-    return !!(session && session.type === "endless" && session.endless && session.endless.loadingCount > 0);
+  function isSessionLoading(session) {
+    return !!(session && session.loadingCount > 0);
   }
 
   function renderSwipe() {
-    var session = getActiveSession();
-    var hasSession = session && session.ads && session.ads.length > 0;
-    var endlessLoading = isEndlessLoading(session);
+    var session = getSession();
+    var hasAds = session && session.ads && session.ads.length > 0;
+    var loading = isSessionLoading(session);
 
     if (els.emptyPanel) {
-      els.emptyPanel.classList.toggle("hidden", !!hasSession || endlessLoading || state.endlessStarting);
+      els.emptyPanel.classList.toggle("hidden", !!hasAds || loading || state.endlessStarting);
     }
-    if (els.swipePanel) els.swipePanel.classList.toggle("hidden", !hasSession && !endlessLoading);
+    if (els.swipePanel) els.swipePanel.classList.toggle("hidden", !hasAds && !loading);
 
-    if (!hasSession && !endlessLoading) {
+    if (!hasAds && !loading) {
       if (!state.endlessStarting) destroyMediaStack();
       return;
     }
 
-    if (hasSession) {
+    if (hasAds) {
       ensureMediaStack(session);
 
       var ads = session.ads;
@@ -368,26 +427,21 @@
       if (state.index >= ads.length) state.index = ads.length - 1;
 
       var ad = ads[state.index];
+      var wordCount = session.keywords ? session.keywords.length : 0;
 
       if (els.swipeKeyword) {
-        if (session.type === "endless") {
-          var wordCount = session.keywords ? session.keywords.length : 0;
-          els.swipeKeyword.textContent =
-            'Keyword: "' +
-            (ad.keyword || "?") +
-            '" · endless (' +
-            wordCount +
-            " word" +
-            (wordCount === 1 ? "" : "s") +
-            ")";
-        } else {
-          els.swipeKeyword.textContent = 'Keyword: "' + session.keyword + '"';
-        }
+        els.swipeKeyword.textContent =
+          'Keyword: "' +
+          (ad.keyword || "?") +
+          '" · ' +
+          wordCount +
+          " word" +
+          (wordCount === 1 ? "" : "s");
       }
       if (els.swipeCounter) {
         var counter = "Ad " + (state.index + 1) + " of " + ads.length + " · use ← → keys";
-        if (endlessLoading) counter += " · loading more…";
-        if (els.swipeCounter) els.swipeCounter.textContent = counter;
+        if (loading) counter += " · loading more…";
+        els.swipeCounter.textContent = counter;
       }
       if (els.swipeLibraryLink && ad) {
         els.swipeLibraryLink.href = ad.adLibraryUrl || "#";
@@ -398,61 +452,34 @@
 
       showMediaAtIndex(state.index);
       if (ad) renderSwipeMeta(ad);
-    } else if (endlessLoading && els.swipeCounter) {
+    } else if (loading && els.swipeCounter) {
       els.swipeCounter.textContent = "Loading first batch…";
     }
 
     maybePrefetchNextWord();
   }
 
-  function activateSession(sessionId) {
-    state.activeSessionId = sessionId;
-    state.index = 0;
-    state.builtMediaSessionId = null;
-    state.builtMediaSlotCount = 0;
-    saveStorage();
-    renderSessionSelect();
-    renderSwipe();
-  }
-
-  function addSession(keyword, ads, meta) {
-    var session = {
-      id: makeSessionId(),
-      type: "keyword",
-      keyword: keyword,
-      createdAt: new Date().toISOString(),
-      ads: ads,
-      meta: meta || null,
-    };
-    state.sessions.unshift(session);
-    if (state.sessions.length > MAX_SESSIONS) {
-      state.sessions = state.sessions.slice(0, MAX_SESSIONS);
-    }
-    activateSession(session.id);
-  }
-
-  function createEndlessSession() {
+  function createSession() {
     return {
       id: makeSessionId(),
-      type: "endless",
-      keyword: "endless",
       keywords: [],
-      createdAt: new Date().toISOString(),
       ads: [],
-      endless: {
-        loadingCount: 0,
-        lastPrefetchAtLength: 0,
-      },
+      loadingCount: 0,
+      lastPrefetchAtLength: 0,
     };
   }
 
   function appendAdsToSession(session, keyword, newAds) {
-    if (!newAds || !newAds.length) return 0;
+    if (!newAds || !newAds.length) return { added: 0, skipped: 0 };
+    var filtered = filterNewAds(session.ads, newAds);
+    if (!filtered.ads.length) {
+      return { added: 0, skipped: filtered.skipped };
+    }
     if (session.keywords.indexOf(keyword) === -1) {
       session.keywords.push(keyword);
     }
-    session.ads.push.apply(session.ads, newAds);
-    return newAds.length;
+    session.ads.push.apply(session.ads, filtered.ads);
+    return { added: filtered.ads.length, skipped: filtered.skipped };
   }
 
   async function fetchRandomWords(count) {
@@ -520,27 +547,32 @@
   }
 
   async function scrapeKeywordIntoSession(session, keyword) {
-    session.endless = session.endless || { loadingCount: 0, lastPrefetchAtLength: 0 };
-    session.endless.loadingCount += 1;
+    session.loadingCount += 1;
     renderSwipe();
 
     try {
       var result = await scrapeKeyword(keyword);
       var ads = result.ads || [];
-      var added = appendAdsToSession(session, keyword, ads);
-      saveStorage();
+      var appendResult = appendAdsToSession(session, keyword, ads);
       ensureMediaStack(session);
-      renderSessionSelect();
       renderSwipe();
 
-      if (added > 0) {
-        log("word scraped", { keyword: keyword, added: added, total: session.ads.length });
+      if (appendResult.added > 0) {
+        log("word scraped", {
+          keyword: keyword,
+          added: appendResult.added,
+          skippedDupes: appendResult.skipped,
+          total: session.ads.length,
+        });
       } else {
-        log("word had no videos", { keyword: keyword });
+        log("word had no new videos", {
+          keyword: keyword,
+          skippedDupes: appendResult.skipped,
+        });
       }
-      return added;
+      return appendResult;
     } finally {
-      session.endless.loadingCount = Math.max(0, session.endless.loadingCount - 1);
+      session.loadingCount = Math.max(0, session.loadingCount - 1);
       renderSwipe();
     }
   }
@@ -549,35 +581,42 @@
     if (state.scraping || state.endlessStarting) return;
 
     state.endlessStarting = true;
+    destroyMediaStack();
+    state.session = createSession();
+    state.index = 0;
     setBusyUi(true, "Fetching random words…");
 
     try {
       var words = await fetchRandomWords(INITIAL_WORD_COUNT);
-      var session = createEndlessSession();
-      state.sessions.unshift(session);
-      if (state.sessions.length > MAX_SESSIONS) {
-        state.sessions = state.sessions.slice(0, MAX_SESSIONS);
-      }
-      activateSession(session.id);
+      renderSwipe();
 
       showToast("info", "Loading: " + words.join(", "), 5000);
       setStatusVisible(true, "Scraping " + words.length + " random words…");
 
       var results = await Promise.all(
         words.map(function (word) {
-          return scrapeKeywordIntoSession(session, word);
+          return scrapeKeywordIntoSession(state.session, word);
         })
       );
 
-      var total = results.reduce(function (sum, n) { return sum + n; }, 0);
+      var total = results.reduce(function (sum, r) { return sum + r.added; }, 0);
+      var skipped = results.reduce(function (sum, r) { return sum + r.skipped; }, 0);
       if (!total) {
         showToast("error", "No video ads found from initial random words.");
+        state.session = null;
+        destroyMediaStack();
+        renderSwipe();
       } else {
-        showToast("success", "Ready — " + total + " videos from " + words.length + " words.");
+        var msg = "Ready — " + total + " videos from " + words.length + " words.";
+        if (skipped > 0) msg += " (" + skipped + " duplicates skipped.)";
+        showToast("success", msg);
       }
     } catch (err) {
       log("endless start failed", err);
       showToast("error", err.message || "Failed to start endless swipe");
+      state.session = null;
+      destroyMediaStack();
+      renderSwipe();
     } finally {
       state.endlessStarting = false;
       setBusyUi(false);
@@ -585,55 +624,33 @@
   }
 
   function maybePrefetchNextWord() {
-    var session = getActiveSession();
-    if (!session || session.type !== "endless") return;
-    if (!session.ads || !session.ads.length) return;
-    if (session.endless.loadingCount > 0) return;
+    var session = getSession();
+    if (!session || !session.ads || !session.ads.length) return;
+    if (session.loadingCount > 0) return;
 
     var len = session.ads.length;
     var threshold = Math.floor(len / 2);
     if (state.index < threshold) return;
-    if (len <= session.endless.lastPrefetchAtLength) return;
+    if (len <= session.lastPrefetchAtLength) return;
 
-    session.endless.lastPrefetchAtLength = len;
-    saveStorage();
+    session.lastPrefetchAtLength = len;
 
     fetchUniqueRandomWord(session)
       .then(function (word) {
         showToast("info", 'Loading more: "' + word + '"…', 3000);
         return scrapeKeywordIntoSession(session, word);
       })
-      .then(function (added) {
-        if (added > 0) {
-          showToast("success", "+" + added + " videos loaded.", 2500);
+      .then(function (result) {
+        if (result.added > 0) {
+          var msg = "+" + result.added + " videos loaded.";
+          if (result.skipped > 0) msg += " (" + result.skipped + " dupes skipped.)";
+          showToast("success", msg, 2500);
         }
       })
       .catch(function (err) {
         log("prefetch failed", err);
-        session.endless.lastPrefetchAtLength = 0;
-        saveStorage();
+        session.lastPrefetchAtLength = 0;
       });
-  }
-
-  async function runSearch(keyword) {
-    setBusyUi(true);
-    try {
-      var result = await scrapeKeyword(keyword);
-      var ads = result.ads || [];
-
-      if (!ads.length) {
-        showToast("error", 'No video ads found for "' + keyword + '".');
-        return;
-      }
-
-      addSession(keyword, ads, result.meta);
-      showToast("success", "Saved " + ads.length + ' videos for "' + keyword + '".');
-    } catch (err) {
-      log("scrape failed", err);
-      showToast("error", err.message || "Scrape failed");
-    } finally {
-      setBusyUi(false);
-    }
   }
 
   function goPrev() {
@@ -644,7 +661,7 @@
   }
 
   function goNext() {
-    var session = getActiveSession();
+    var session = getSession();
     if (session && session.ads && state.index < session.ads.length - 1) {
       state.index += 1;
       renderSwipe();
@@ -658,45 +675,11 @@
       });
     }
 
-    if (els.searchForm) {
-      els.searchForm.addEventListener("submit", function (e) {
-        e.preventDefault();
-        if (state.scraping || state.endlessStarting) return;
-        var keyword = (els.keywordInput && els.keywordInput.value || "").trim();
-        if (!keyword) return;
-        runSearch(keyword);
-      });
-    }
-
     if (els.prevBtn) els.prevBtn.addEventListener("click", goPrev);
     if (els.nextBtn) els.nextBtn.addEventListener("click", goNext);
 
-    if (els.sessionSelect) {
-      els.sessionSelect.addEventListener("change", function () {
-        var id = els.sessionSelect.value;
-        if (!id) return;
-        activateSession(id);
-      });
-    }
-
-    if (els.clearSessionsBtn) {
-      els.clearSessionsBtn.addEventListener("click", function () {
-        if (!state.sessions.length) return;
-        if (!window.confirm("Clear all saved swipe sessions from this browser?")) return;
-        state.sessions = [];
-        state.activeSessionId = null;
-        state.index = 0;
-        destroyMediaStack();
-        saveStorage();
-        renderSessionSelect();
-        renderSwipe();
-        showToast("info", "Cleared saved sessions.");
-      });
-    }
-
     document.addEventListener("keydown", function (e) {
-      if (!getActiveSession()) return;
-      if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+      if (!getSession()) return;
       if (e.key === "ArrowLeft") {
         e.preventDefault();
         goPrev();
@@ -710,11 +693,6 @@
   function initDom() {
     els.toastArea = document.getElementById("toast-area");
     els.endlessBtn = document.getElementById("endless-btn");
-    els.searchForm = document.getElementById("search-form");
-    els.keywordInput = document.getElementById("keyword-input");
-    els.searchBtn = document.getElementById("search-btn");
-    els.sessionSelect = document.getElementById("session-select");
-    els.clearSessionsBtn = document.getElementById("clear-sessions-btn");
     els.statusPanel = document.getElementById("status-panel");
     els.statusText = document.getElementById("status-text");
     els.emptyPanel = document.getElementById("empty-panel");
@@ -729,12 +707,13 @@
   }
 
   function init() {
+    try {
+      localStorage.removeItem("adstool_swipe_v1");
+    } catch (e) {}
     initDom();
-    loadStorage();
-    renderSessionSelect();
     renderSwipe();
     bindEvents();
-    log("initialized", { sessions: state.sessions.length });
+    log("initialized");
   }
 
   if (document.readyState === "loading") {
