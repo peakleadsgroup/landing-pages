@@ -14,7 +14,7 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" />
   <title>Ads Tool — Swipe File - PeakLeads</title>
-  <link rel="stylesheet" href="adstool.css?v=2" />
+  <link rel="stylesheet" href="adstool.css?v=4" />
 </head>
 <body class="ads-body">
   <header class="ads-header">
@@ -30,8 +30,18 @@
   <main class="ads-main">
     <section class="ads-card ads-search-card" aria-labelledby="ads-search-heading">
       <h2 id="ads-search-heading" class="ads-sr-only">Search Meta Ads Library</h2>
-      <form id="search-form" class="ads-search-form">
-        <label class="ads-label" for="keyword-input">Keyword</label>
+      <div class="ads-search-form">
+        <p class="ads-label">Endless swipe</p>
+        <div class="ads-search-row">
+          <button type="button" id="endless-btn" class="ads-btn ads-btn-primary">Start endless swipe</button>
+        </div>
+        <p class="ads-muted ads-search-hint">
+          Loads 3 random words, then fetches more as you swipe. US · active · video · impressions · last ~31 days
+        </p>
+      </div>
+
+      <form id="search-form" class="ads-search-form ads-manual-form">
+        <label class="ads-label" for="keyword-input">Or search one keyword</label>
         <div class="ads-search-row">
           <input
             id="keyword-input"
@@ -39,13 +49,9 @@
             type="text"
             placeholder="e.g. wealth"
             autocomplete="off"
-            required
           />
-          <button type="submit" id="search-btn" class="ads-btn ads-btn-primary">Fetch top videos</button>
+          <button type="submit" id="search-btn" class="ads-btn ads-btn-ghost">Fetch top videos</button>
         </div>
-        <p class="ads-muted ads-search-hint">
-          US · active · unordered keyword · video only · sorted by impressions · last ~31 days
-        </p>
       </form>
 
       <div class="ads-session-row">
@@ -81,21 +87,12 @@
         <button type="button" id="prev-btn" class="ads-nav-btn" aria-label="Previous ad">‹</button>
 
         <div class="ads-carousel-body">
-          <div class="ads-video-wrap">
-            <video
-              id="swipe-video"
-              class="ads-video"
-              controls
-              playsinline
-              preload="metadata"
-            ></video>
-            <a id="swipe-thumb-link" class="ads-thumb-link hidden" href="#" target="_blank" rel="noopener noreferrer">
-              <img id="swipe-thumb" class="ads-thumb" alt="" />
-              <span>Open ad in Ads Library</span>
-            </a>
-          </div>
+          <div id="swipe-media-stack" class="ads-media-stack" aria-live="polite"></div>
 
-          <dl id="swipe-meta" class="ads-meta"></dl>
+          <details id="swipe-details" class="ads-details">
+            <summary class="ads-details-summary">Ad details</summary>
+            <dl id="swipe-meta" class="ads-meta"></dl>
+          </details>
         </div>
 
         <button type="button" id="next-btn" class="ads-nav-btn" aria-label="Next ad">›</button>
@@ -103,10 +100,10 @@
     </section>
 
     <section id="empty-panel" class="ads-card ads-empty-card">
-      <p class="ads-muted">Enter a keyword and fetch top video ads to build your swipe file.</p>
+      <p class="ads-muted">Hit <strong>Start endless swipe</strong> for random keywords, or search a single keyword below.</p>
     </section>
   </main>
 
-  <script src="adstool-app.js?v=2"></script>
+  <script src="adstool-app.js?v=4"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 /**
- * Ads Tool — Meta Ads Library swipe file
+ * Ads Tool — Meta Ads Library swipe file (endless random words)
  */
 (function () {
   "use strict";
@@ -9,13 +9,17 @@
   var MAX_SESSIONS = 30;
   var POLL_INTERVAL_MS = 4000;
   var MAX_POLL_ATTEMPTS = 90;
+  var INITIAL_WORD_COUNT = 3;
 
   var state = {
     sessions: [],
     activeSessionId: null,
     index: 0,
     scraping: false,
+    endlessStarting: false,
     runId: null,
+    builtMediaSessionId: null,
+    builtMediaSlotCount: 0,
   };
 
   var els = {};
@@ -65,11 +69,25 @@
       var raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       var data = JSON.parse(raw);
-      if (Array.isArray(data.sessions)) state.sessions = data.sessions;
+      if (Array.isArray(data.sessions)) {
+        state.sessions = data.sessions.map(normalizeStoredSession);
+      }
       if (data.activeSessionId) state.activeSessionId = data.activeSessionId;
     } catch (e) {
       log("storage load failed", e);
     }
+  }
+
+  function normalizeStoredSession(session) {
+    if (session.type === "endless") {
+      session.endless = session.endless || {
+        loadingCount: 0,
+        lastPrefetchAtLength: 0,
+      };
+      session.keywords = session.keywords || [];
+      session.endless.loadingCount = 0;
+    }
+    return session;
   }
 
   function saveStorage() {
@@ -112,11 +130,26 @@
   function formatSessionLabel(session) {
     var d = session.createdAt ? new Date(session.createdAt) : null;
     var when = d && !isNaN(d.getTime()) ? d.toLocaleString() : "";
+    var count = session.ads ? session.ads.length : 0;
+
+    if (session.type === "endless") {
+      var wordCount = session.keywords ? session.keywords.length : 0;
+      return (
+        "Endless · " +
+        count +
+        " videos · " +
+        wordCount +
+        " word" +
+        (wordCount === 1 ? "" : "s") +
+        (when ? " · " + when : "")
+      );
+    }
+
     return (
       '"' +
-      session.keyword +
+      (session.keyword || "?") +
       '" · ' +
-      (session.ads ? session.ads.length : 0) +
+      count +
       " videos" +
       (when ? " · " + when : "")
     );
@@ -150,128 +183,233 @@
     if (els.statusText && text != null) els.statusText.textContent = text;
   }
 
-  function setScrapingUi(scraping) {
-    state.scraping = scraping;
-    if (els.searchBtn) els.searchBtn.disabled = scraping;
-    if (els.keywordInput) els.keywordInput.disabled = scraping;
-    setStatusVisible(scraping, scraping ? "Scraping Meta Ads Library…" : "");
+  function setBusyUi(busy, statusText) {
+    state.scraping = busy;
+    if (els.searchBtn) els.searchBtn.disabled = busy || state.endlessStarting;
+    if (els.keywordInput) els.keywordInput.disabled = busy || state.endlessStarting;
+    if (els.endlessBtn) els.endlessBtn.disabled = busy || state.endlessStarting;
+    setStatusVisible(busy || state.endlessStarting, statusText || (busy ? "Scraping Meta Ads Library…" : ""));
+  }
+
+  function destroyMediaStack() {
+    if (!els.mediaStack) return;
+    els.mediaStack.querySelectorAll("video").forEach(function (video) {
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+    });
+    els.mediaStack.innerHTML = "";
+    state.builtMediaSessionId = null;
+    state.builtMediaSlotCount = 0;
+  }
+
+  function createThumbFallback(ad) {
+    var thumbLink = document.createElement("a");
+    thumbLink.className = "ads-thumb-link";
+    thumbLink.href = ad.adLibraryUrl || "#";
+    thumbLink.target = "_blank";
+    thumbLink.rel = "noopener noreferrer";
+
+    if (ad.videoPreviewUrl) {
+      var img = document.createElement("img");
+      img.className = "ads-thumb";
+      img.src = ad.videoPreviewUrl;
+      img.alt = "Preview for " + (ad.pageName || "ad");
+      thumbLink.appendChild(img);
+    }
+
+    var label = document.createElement("span");
+    label.textContent = "Open ad in Ads Library";
+    thumbLink.appendChild(label);
+
+    return thumbLink;
+  }
+
+  function appendMediaSlot(ad, index) {
+    if (!els.mediaStack) return;
+
+    var slot = document.createElement("div");
+    slot.className = "ads-media-slot" + (index === state.index ? " ads-media-slot-active" : "");
+    slot.setAttribute("data-index", String(index));
+
+    var videoUrl = ad.videoHdUrl || ad.videoSdUrl;
+    var thumbLink = createThumbFallback(ad);
+
+    if (videoUrl) {
+      var video = document.createElement("video");
+      video.className = "ads-video";
+      video.controls = true;
+      video.playsInline = true;
+      video.setAttribute("playsinline", "");
+      video.preload = "auto";
+      video.src = videoUrl;
+      if (ad.videoPreviewUrl) video.poster = ad.videoPreviewUrl;
+      video.addEventListener("error", function () {
+        video.classList.add("hidden");
+        thumbLink.classList.remove("hidden");
+      });
+      slot.appendChild(video);
+      thumbLink.classList.add("hidden");
+    }
+
+    slot.appendChild(thumbLink);
+    els.mediaStack.appendChild(slot);
+  }
+
+  function ensureMediaStack(session) {
+    if (!els.mediaStack || !session || !session.ads) return;
+
+    if (state.builtMediaSessionId !== session.id) {
+      destroyMediaStack();
+      state.builtMediaSessionId = session.id;
+    }
+
+    var from = state.builtMediaSlotCount;
+    for (var i = from; i < session.ads.length; i++) {
+      appendMediaSlot(session.ads[i], i);
+    }
+    state.builtMediaSlotCount = session.ads.length;
+
+    if (from === 0 && session.ads.length > 0) {
+      log("preloading videos", { sessionId: session.id, count: session.ads.length });
+    } else if (from < session.ads.length) {
+      log("appended video slots", { from: from, to: session.ads.length - 1 });
+    }
+  }
+
+  function showMediaAtIndex(index) {
+    if (!els.mediaStack) return;
+    var slots = els.mediaStack.querySelectorAll(".ads-media-slot");
+    slots.forEach(function (slot, i) {
+      var active = i === index;
+      slot.classList.toggle("ads-media-slot-active", active);
+      var video = slot.querySelector("video");
+      if (video && !active) video.pause();
+    });
+  }
+
+  function renderSwipeMeta(ad) {
+    if (!els.swipeMeta) return;
+
+    var rows = [
+      ["Keyword", ad.keyword],
+      ["Page", ad.pageName],
+      ["Ad archive ID", ad.adArchiveId],
+      ["Body", ad.bodyText],
+      ["Caption", ad.caption],
+      ["CTA", ad.ctaText ? ad.ctaText + (ad.ctaType ? " (" + ad.ctaType + ")" : "") : null],
+      ["Landing URL", ad.linkUrl],
+      ["Display format", ad.displayFormat],
+      ["Active", ad.isActive],
+      ["Start date", ad.startDate],
+      ["End date", ad.endDate],
+      ["Spend", ad.spend != null ? formatMetaValue(ad.spend) + (ad.currency ? " " + ad.currency : "") : null],
+      ["Reach estimate", ad.reachEstimate],
+      ["Impressions index", ad.impressionsWithIndex],
+      ["Publisher platforms", ad.publisherPlatforms],
+      ["Page categories", ad.pageCategories],
+      ["Page likes", ad.pageLikeCount],
+      ["Collation count", ad.collationCount],
+      ["Entity type", ad.entityType],
+      [
+        "Page profile",
+        ad.pageProfileUri
+          ? '<a href="' + escapeHtml(ad.pageProfileUri) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(ad.pageProfileUri) + "</a>"
+          : null,
+      ],
+      [
+        "Ads Library",
+        ad.adLibraryUrl
+          ? '<a href="' + escapeHtml(ad.adLibraryUrl) + '" target="_blank" rel="noopener noreferrer">Open ad</a>'
+          : null,
+      ],
+    ];
+
+    els.swipeMeta.innerHTML = rows
+      .map(function (row) {
+        var label = row[0];
+        var value = row[1];
+        if (value == null || value === "" || value === "—") return "";
+        var display =
+          label === "Landing URL" && typeof value === "string" && value.indexOf("http") === 0
+            ? '<a href="' + escapeHtml(value) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(value) + "</a>"
+            : typeof value === "string" && value.indexOf("<a ") === 0
+              ? value
+              : escapeHtml(formatMetaValue(value));
+        return "<dt>" + escapeHtml(label) + "</dt><dd>" + display + "</dd>";
+      })
+      .join("");
+  }
+
+  function isEndlessLoading(session) {
+    return !!(session && session.type === "endless" && session.endless && session.endless.loadingCount > 0);
   }
 
   function renderSwipe() {
     var session = getActiveSession();
     var hasSession = session && session.ads && session.ads.length > 0;
+    var endlessLoading = isEndlessLoading(session);
 
-    if (els.emptyPanel) els.emptyPanel.classList.toggle("hidden", !!hasSession);
-    if (els.swipePanel) els.swipePanel.classList.toggle("hidden", !hasSession);
-
-    if (!hasSession) return;
-
-    var ads = session.ads;
-    if (state.index < 0) state.index = 0;
-    if (state.index >= ads.length) state.index = ads.length - 1;
-
-    var ad = ads[state.index];
-
-    if (els.swipeKeyword) {
-      els.swipeKeyword.textContent = 'Keyword: "' + session.keyword + '"';
+    if (els.emptyPanel) {
+      els.emptyPanel.classList.toggle("hidden", !!hasSession || endlessLoading || state.endlessStarting);
     }
-    if (els.swipeCounter) {
-      els.swipeCounter.textContent =
-        "Ad " + (state.index + 1) + " of " + ads.length + " · use ← → keys";
-    }
-    if (els.swipeLibraryLink) {
-      els.swipeLibraryLink.href = ad.adLibraryUrl || "#";
-      els.swipeLibraryLink.classList.toggle("hidden", !ad.adLibraryUrl);
-    }
-    if (els.prevBtn) els.prevBtn.disabled = state.index <= 0;
-    if (els.nextBtn) els.nextBtn.disabled = state.index >= ads.length - 1;
+    if (els.swipePanel) els.swipePanel.classList.toggle("hidden", !hasSession && !endlessLoading);
 
-    var videoUrl = ad.videoHdUrl || ad.videoSdUrl;
-    var showVideo = false;
+    if (!hasSession && !endlessLoading) {
+      if (!state.endlessStarting) destroyMediaStack();
+      return;
+    }
 
-    if (els.swipeVideo) {
-      els.swipeVideo.pause();
-      els.swipeVideo.onerror = null;
-      els.swipeVideo.removeAttribute("src");
-      els.swipeVideo.load();
-      if (videoUrl) {
-        els.swipeVideo.src = videoUrl;
-        els.swipeVideo.poster = ad.videoPreviewUrl || "";
-        showVideo = true;
-        els.swipeVideo.onerror = function () {
-          els.swipeVideo.classList.add("hidden");
-          if (els.swipeThumbLink && ad.videoPreviewUrl) {
-            els.swipeThumbLink.classList.remove("hidden");
-          }
-        };
+    if (hasSession) {
+      ensureMediaStack(session);
+
+      var ads = session.ads;
+      if (state.index < 0) state.index = 0;
+      if (state.index >= ads.length) state.index = ads.length - 1;
+
+      var ad = ads[state.index];
+
+      if (els.swipeKeyword) {
+        if (session.type === "endless") {
+          var wordCount = session.keywords ? session.keywords.length : 0;
+          els.swipeKeyword.textContent =
+            'Keyword: "' +
+            (ad.keyword || "?") +
+            '" · endless (' +
+            wordCount +
+            " word" +
+            (wordCount === 1 ? "" : "s") +
+            ")";
+        } else {
+          els.swipeKeyword.textContent = 'Keyword: "' + session.keyword + '"';
+        }
       }
-      els.swipeVideo.classList.toggle("hidden", !showVideo);
-    }
-
-    if (els.swipeThumbLink && els.swipeThumb) {
-      var thumbUrl = ad.videoPreviewUrl;
-      els.swipeThumbLink.href = ad.adLibraryUrl || "#";
-      if (thumbUrl) {
-        els.swipeThumb.src = thumbUrl;
-        els.swipeThumb.alt = "Preview for " + (ad.pageName || "ad");
+      if (els.swipeCounter) {
+        var counter = "Ad " + (state.index + 1) + " of " + ads.length + " · use ← → keys";
+        if (endlessLoading) counter += " · loading more…";
+        if (els.swipeCounter) els.swipeCounter.textContent = counter;
       }
-      els.swipeThumbLink.classList.toggle("hidden", showVideo || !thumbUrl);
+      if (els.swipeLibraryLink && ad) {
+        els.swipeLibraryLink.href = ad.adLibraryUrl || "#";
+        els.swipeLibraryLink.classList.toggle("hidden", !ad.adLibraryUrl);
+      }
+      if (els.prevBtn) els.prevBtn.disabled = state.index <= 0;
+      if (els.nextBtn) els.nextBtn.disabled = state.index >= ads.length - 1;
+
+      showMediaAtIndex(state.index);
+      if (ad) renderSwipeMeta(ad);
+    } else if (endlessLoading && els.swipeCounter) {
+      els.swipeCounter.textContent = "Loading first batch…";
     }
 
-    if (els.swipeMeta) {
-      var rows = [
-        ["Page", ad.pageName],
-        ["Ad archive ID", ad.adArchiveId],
-        ["Body", ad.bodyText],
-        ["Caption", ad.caption],
-        ["CTA", ad.ctaText ? ad.ctaText + (ad.ctaType ? " (" + ad.ctaType + ")" : "") : null],
-        ["Landing URL", ad.linkUrl],
-        ["Display format", ad.displayFormat],
-        ["Active", ad.isActive],
-        ["Start date", ad.startDate],
-        ["End date", ad.endDate],
-        ["Spend", ad.spend != null ? formatMetaValue(ad.spend) + (ad.currency ? " " + ad.currency : "") : null],
-        ["Reach estimate", ad.reachEstimate],
-        ["Impressions index", ad.impressionsWithIndex],
-        ["Publisher platforms", ad.publisherPlatforms],
-        ["Page categories", ad.pageCategories],
-        ["Page likes", ad.pageLikeCount],
-        ["Collation count", ad.collationCount],
-        ["Entity type", ad.entityType],
-        [
-          "Page profile",
-          ad.pageProfileUri
-            ? '<a href="' + escapeHtml(ad.pageProfileUri) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(ad.pageProfileUri) + "</a>"
-            : null,
-        ],
-        [
-          "Ads Library",
-          ad.adLibraryUrl
-            ? '<a href="' + escapeHtml(ad.adLibraryUrl) + '" target="_blank" rel="noopener noreferrer">Open ad</a>'
-            : null,
-        ],
-      ];
-
-      els.swipeMeta.innerHTML = rows
-        .map(function (row) {
-          var label = row[0];
-          var value = row[1];
-          if (value == null || value === "" || value === "—") return "";
-          var display =
-            label === "Landing URL" && typeof value === "string" && value.indexOf("http") === 0
-              ? '<a href="' + escapeHtml(value) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(value) + "</a>"
-              : typeof value === "string" && value.indexOf("<a ") === 0
-                ? value
-                : escapeHtml(formatMetaValue(value));
-          return "<dt>" + escapeHtml(label) + "</dt><dd>" + display + "</dd>";
-        })
-        .join("");
-    }
+    maybePrefetchNextWord();
   }
 
   function activateSession(sessionId) {
     state.activeSessionId = sessionId;
     state.index = 0;
+    state.builtMediaSessionId = null;
+    state.builtMediaSlotCount = 0;
     saveStorage();
     renderSessionSelect();
     renderSwipe();
@@ -280,6 +418,7 @@
   function addSession(keyword, ads, meta) {
     var session = {
       id: makeSessionId(),
+      type: "keyword",
       keyword: keyword,
       createdAt: new Date().toISOString(),
       ads: ads,
@@ -290,6 +429,48 @@
       state.sessions = state.sessions.slice(0, MAX_SESSIONS);
     }
     activateSession(session.id);
+  }
+
+  function createEndlessSession() {
+    return {
+      id: makeSessionId(),
+      type: "endless",
+      keyword: "endless",
+      keywords: [],
+      createdAt: new Date().toISOString(),
+      ads: [],
+      endless: {
+        loadingCount: 0,
+        lastPrefetchAtLength: 0,
+      },
+    };
+  }
+
+  function appendAdsToSession(session, keyword, newAds) {
+    if (!newAds || !newAds.length) return 0;
+    if (session.keywords.indexOf(keyword) === -1) {
+      session.keywords.push(keyword);
+    }
+    session.ads.push.apply(session.ads, newAds);
+    return newAds.length;
+  }
+
+  async function fetchRandomWords(count) {
+    var res = await fetch(apiUrl("/api/ads-library/random-word?count=" + encodeURIComponent(count)));
+    var data = await parseJsonSafe(res);
+    if (!res.ok) throw new Error(data.error || "Failed to fetch random words");
+    if (!data.words || !data.words.length) throw new Error("No random words returned");
+    return data.words;
+  }
+
+  async function fetchUniqueRandomWord(session) {
+    var i;
+    for (i = 0; i < 8; i++) {
+      var words = await fetchRandomWords(1);
+      var word = words[0];
+      if (!session.keywords || session.keywords.indexOf(word) === -1) return word;
+    }
+    return (await fetchRandomWords(1))[0];
   }
 
   async function pollRun(runId, keyword) {
@@ -309,7 +490,7 @@
       var data = await parseJsonSafe(res);
 
       if (data.status === "running") {
-        setStatusVisible(true, "Scraping… (" + (i + 1) + " checks)");
+        setStatusVisible(true, 'Scraping "' + keyword + '"… (' + (i + 1) + " checks)");
         continue;
       }
 
@@ -324,22 +505,120 @@
     throw new Error("Timed out waiting for scrape");
   }
 
-  async function runSearch(keyword) {
-    setScrapingUi(true);
+  async function scrapeKeyword(keyword) {
+    var res = await fetch(apiUrl("/api/ads-library/scrape"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ keyword: keyword }),
+    });
+    var data = await parseJsonSafe(res);
+    if (!res.ok) throw new Error(data.error || "Failed to start scrape");
+    if (!data.runId) throw new Error("Missing runId from server");
+
+    log("scrape started", { runId: data.runId, keyword: keyword });
+    return pollRun(data.runId, keyword);
+  }
+
+  async function scrapeKeywordIntoSession(session, keyword) {
+    session.endless = session.endless || { loadingCount: 0, lastPrefetchAtLength: 0 };
+    session.endless.loadingCount += 1;
+    renderSwipe();
+
     try {
-      var res = await fetch(apiUrl("/api/ads-library/scrape"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keyword: keyword }),
+      var result = await scrapeKeyword(keyword);
+      var ads = result.ads || [];
+      var added = appendAdsToSession(session, keyword, ads);
+      saveStorage();
+      ensureMediaStack(session);
+      renderSessionSelect();
+      renderSwipe();
+
+      if (added > 0) {
+        log("word scraped", { keyword: keyword, added: added, total: session.ads.length });
+      } else {
+        log("word had no videos", { keyword: keyword });
+      }
+      return added;
+    } finally {
+      session.endless.loadingCount = Math.max(0, session.endless.loadingCount - 1);
+      renderSwipe();
+    }
+  }
+
+  async function startEndlessSwipe() {
+    if (state.scraping || state.endlessStarting) return;
+
+    state.endlessStarting = true;
+    setBusyUi(true, "Fetching random words…");
+
+    try {
+      var words = await fetchRandomWords(INITIAL_WORD_COUNT);
+      var session = createEndlessSession();
+      state.sessions.unshift(session);
+      if (state.sessions.length > MAX_SESSIONS) {
+        state.sessions = state.sessions.slice(0, MAX_SESSIONS);
+      }
+      activateSession(session.id);
+
+      showToast("info", "Loading: " + words.join(", "), 5000);
+      setStatusVisible(true, "Scraping " + words.length + " random words…");
+
+      var results = await Promise.all(
+        words.map(function (word) {
+          return scrapeKeywordIntoSession(session, word);
+        })
+      );
+
+      var total = results.reduce(function (sum, n) { return sum + n; }, 0);
+      if (!total) {
+        showToast("error", "No video ads found from initial random words.");
+      } else {
+        showToast("success", "Ready — " + total + " videos from " + words.length + " words.");
+      }
+    } catch (err) {
+      log("endless start failed", err);
+      showToast("error", err.message || "Failed to start endless swipe");
+    } finally {
+      state.endlessStarting = false;
+      setBusyUi(false);
+    }
+  }
+
+  function maybePrefetchNextWord() {
+    var session = getActiveSession();
+    if (!session || session.type !== "endless") return;
+    if (!session.ads || !session.ads.length) return;
+    if (session.endless.loadingCount > 0) return;
+
+    var len = session.ads.length;
+    var threshold = Math.floor(len / 2);
+    if (state.index < threshold) return;
+    if (len <= session.endless.lastPrefetchAtLength) return;
+
+    session.endless.lastPrefetchAtLength = len;
+    saveStorage();
+
+    fetchUniqueRandomWord(session)
+      .then(function (word) {
+        showToast("info", 'Loading more: "' + word + '"…', 3000);
+        return scrapeKeywordIntoSession(session, word);
+      })
+      .then(function (added) {
+        if (added > 0) {
+          showToast("success", "+" + added + " videos loaded.", 2500);
+        }
+      })
+      .catch(function (err) {
+        log("prefetch failed", err);
+        session.endless.lastPrefetchAtLength = 0;
+        saveStorage();
       });
-      var data = await parseJsonSafe(res);
-      if (!res.ok) throw new Error(data.error || "Failed to start scrape");
-      if (!data.runId) throw new Error("Missing runId from server");
+  }
 
-      state.runId = data.runId;
-      log("scrape started", { runId: data.runId, keyword: keyword });
-
-      var result = await pollRun(data.runId, keyword);
+  async function runSearch(keyword) {
+    setBusyUi(true);
+    try {
+      var result = await scrapeKeyword(keyword);
       var ads = result.ads || [];
 
       if (!ads.length) {
@@ -348,23 +627,12 @@
       }
 
       addSession(keyword, ads, result.meta);
-      var msg =
-        "Saved " +
-        ads.length +
-        " video" +
-        (ads.length === 1 ? "" : "s") +
-        ' for "' +
-        keyword +
-        '".';
-      if (result.meta && result.meta.videoCount < result.meta.rawCount) {
-        msg += " (" + result.meta.rawCount + " raw results filtered to video.)";
-      }
-      showToast("success", msg);
+      showToast("success", "Saved " + ads.length + ' videos for "' + keyword + '".');
     } catch (err) {
       log("scrape failed", err);
       showToast("error", err.message || "Scrape failed");
     } finally {
-      setScrapingUi(false);
+      setBusyUi(false);
     }
   }
 
@@ -384,10 +652,16 @@
   }
 
   function bindEvents() {
+    if (els.endlessBtn) {
+      els.endlessBtn.addEventListener("click", function () {
+        startEndlessSwipe();
+      });
+    }
+
     if (els.searchForm) {
       els.searchForm.addEventListener("submit", function (e) {
         e.preventDefault();
-        if (state.scraping) return;
+        if (state.scraping || state.endlessStarting) return;
         var keyword = (els.keywordInput && els.keywordInput.value || "").trim();
         if (!keyword) return;
         runSearch(keyword);
@@ -412,6 +686,7 @@
         state.sessions = [];
         state.activeSessionId = null;
         state.index = 0;
+        destroyMediaStack();
         saveStorage();
         renderSessionSelect();
         renderSwipe();
@@ -434,6 +709,7 @@
 
   function initDom() {
     els.toastArea = document.getElementById("toast-area");
+    els.endlessBtn = document.getElementById("endless-btn");
     els.searchForm = document.getElementById("search-form");
     els.keywordInput = document.getElementById("keyword-input");
     els.searchBtn = document.getElementById("search-btn");
@@ -448,9 +724,7 @@
     els.swipeLibraryLink = document.getElementById("swipe-library-link");
     els.prevBtn = document.getElementById("prev-btn");
     els.nextBtn = document.getElementById("next-btn");
-    els.swipeVideo = document.getElementById("swipe-video");
-    els.swipeThumb = document.getElementById("swipe-thumb");
-    els.swipeThumbLink = document.getElementById("swipe-thumb-link");
+    els.mediaStack = document.getElementById("swipe-media-stack");
     els.swipeMeta = document.getElementById("swipe-meta");
   }
 
