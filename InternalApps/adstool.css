@@ -356,6 +356,81 @@ body.ads-body {
   padding: 0.85rem 1rem 1rem;
 }
 
+.ads-scripts-root {
+  padding: 0.85rem 1rem 1rem;
+}
+
+.ads-scripts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ads-script-card {
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  background: #fafafa;
+}
+
+.ads-script-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.ads-script-card-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #5f6368;
+}
+
+.ads-script-save-badge {
+  font-size: 0.75rem;
+  color: #5f6368;
+}
+
+.ads-script-save-badge.is-saving {
+  color: #1a73e8;
+}
+
+.ads-script-save-badge.is-error {
+  color: #c5221f;
+}
+
+.ads-script-save-badge.is-saved {
+  color: #137333;
+}
+
+.ads-scripts-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.ads-scripts-hint {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.ads-script-field {
+  margin-bottom: 0.65rem;
+}
+
+.ads-script-field:last-child {
+  margin-bottom: 0;
+}
+
+.ads-script-textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
 .ads-meta {
   margin: 0;
   display: grid;

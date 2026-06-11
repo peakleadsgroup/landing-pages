@@ -5,11 +5,28 @@
   "use strict";
 
   var LOG_PREFIX = "[AdsTool]";
-  var POLL_INTERVAL_MS = 4000;
+  var POLL_INTERVAL_MS = 10000;
   var MAX_POLL_ATTEMPTS = 90;
   var INITIAL_WORD_COUNT = 3;
   var PRELOAD_BEHIND = 1;
   var PRELOAD_AHEAD = 2;
+  var SCRIPTS_AUTO_SAVE_MS = 4000;
+
+  var AIRTABLE_BASE_ID = "appmBb0lzqRK9dI8v";
+  var SCRIPTS_TABLE_ID = "tblnyzakoO67vFwhZ";
+  var SCRIPTS_AIRTABLE_URL =
+    "/api/airtable/v0/" + AIRTABLE_BASE_ID + "/" + SCRIPTS_TABLE_ID;
+
+  var NICHE_OPTIONS = [
+    "Bathrooms",
+    "Roofing",
+    "Solar",
+    "Floor Coating",
+    "Windows",
+    "Kitchen Reface",
+    "Kitchens",
+    "Concrete Polishing",
+  ];
 
   var state = {
     session: null,
@@ -18,6 +35,8 @@
     endlessStarting: false,
     builtMediaSessionId: null,
     builtMediaSlotCount: 0,
+    scriptEntries: [],
+    scriptsAutoSaveTimer: null,
   };
 
   var els = {};
@@ -168,7 +187,6 @@
 
   function setBusyUi(busy, statusText) {
     state.scraping = busy;
-    if (els.endlessBtn) els.endlessBtn.disabled = busy || state.endlessStarting;
     setStatusVisible(busy || state.endlessStarting, statusText || (busy ? "Scraping Meta Ads Library…" : ""));
   }
 
@@ -410,12 +428,21 @@
     var loading = isSessionLoading(session);
 
     if (els.emptyPanel) {
-      els.emptyPanel.classList.toggle("hidden", !!hasAds || loading || state.endlessStarting);
+      els.emptyPanel.classList.toggle("hidden", !!hasAds);
+      if (els.emptyPanelText && !hasAds) {
+        if (state.endlessStarting) {
+          els.emptyPanelText.textContent = "Fetching random keywords…";
+        } else if (loading) {
+          els.emptyPanelText.textContent = "Loading ads…";
+        } else {
+          els.emptyPanelText.textContent = "Could not load ads. Refresh the page to try again.";
+        }
+      }
     }
     if (els.swipePanel) els.swipePanel.classList.toggle("hidden", !hasAds && !loading);
 
-    if (!hasAds && !loading) {
-      if (!state.endlessStarting) destroyMediaStack();
+    if (!hasAds && !loading && !state.endlessStarting) {
+      destroyMediaStack();
       return;
     }
 
@@ -668,13 +695,254 @@
     }
   }
 
-  function bindEvents() {
-    if (els.endlessBtn) {
-      els.endlessBtn.addEventListener("click", function () {
-        startEndlessSwipe();
+  function makeScriptEntry() {
+    return {
+      localId: "script_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+      airtableRecordId: null,
+      niche: "",
+      script: "",
+      dirty: false,
+      saving: false,
+      lastSaved: null,
+      saveError: null,
+    };
+  }
+
+  function getScriptEntry(localId) {
+    return state.scriptEntries.find(function (entry) {
+      return entry.localId === localId;
+    });
+  }
+
+  function scriptSaveBadgeClass(entry) {
+    if (entry.saving) return "is-saving";
+    if (entry.saveError) return "is-error";
+    if (entry.airtableRecordId && !entry.dirty) return "is-saved";
+    if (entry.dirty) return "";
+    return "";
+  }
+
+  function scriptSaveBadgeText(entry) {
+    if (entry.saving) return "Saving…";
+    if (entry.saveError) return "Error";
+    if (entry.airtableRecordId && !entry.dirty && entry.lastSaved) {
+      return "Saved " + entry.lastSaved.toLocaleTimeString();
+    }
+    if (entry.dirty) return "Unsaved";
+    if (entry.airtableRecordId) return "Saved";
+    return "New";
+  }
+
+  function renderScriptsList() {
+    if (!els.scriptsList) return;
+
+    els.scriptsList.innerHTML = state.scriptEntries
+      .map(function (entry, index) {
+        var nicheOptions = NICHE_OPTIONS.map(function (niche) {
+          var selected = entry.niche === niche ? " selected" : "";
+          return (
+            '<option value="' + escapeHtml(niche) + '"' + selected + ">" + escapeHtml(niche) + "</option>"
+          );
+        }).join("");
+
+        return (
+          '<article class="ads-script-card" data-entry-id="' +
+          escapeHtml(entry.localId) +
+          '">' +
+          '<div class="ads-script-card-top">' +
+          '<p class="ads-script-card-title">Record ' +
+          (index + 1) +
+          "</p>" +
+          '<span class="ads-script-save-badge ' +
+          scriptSaveBadgeClass(entry) +
+          '">' +
+          escapeHtml(scriptSaveBadgeText(entry)) +
+          "</span>" +
+          "</div>" +
+          '<div class="ads-script-field">' +
+          '<label class="ads-label" for="script-niche-' +
+          escapeHtml(entry.localId) +
+          '">Niche</label>' +
+          '<select class="ads-select script-niche" id="script-niche-' +
+          escapeHtml(entry.localId) +
+          '" data-entry-id="' +
+          escapeHtml(entry.localId) +
+          '">' +
+          '<option value="">Select niche…</option>' +
+          nicheOptions +
+          "</select>" +
+          "</div>" +
+          '<div class="ads-script-field">' +
+          '<label class="ads-label" for="script-text-' +
+          escapeHtml(entry.localId) +
+          '">Script</label>' +
+          '<textarea class="ads-input ads-script-textarea script-body" id="script-text-' +
+          escapeHtml(entry.localId) +
+          '" data-entry-id="' +
+          escapeHtml(entry.localId) +
+          '" placeholder="Write script…">' +
+          escapeHtml(entry.script) +
+          "</textarea>" +
+          "</div>" +
+          "</article>"
+        );
+      })
+      .join("");
+
+    els.scriptsList.querySelectorAll(".script-niche, .script-body").forEach(function (el) {
+      el.addEventListener("input", onScriptFieldChange);
+      el.addEventListener("change", onScriptFieldChange);
+    });
+  }
+
+  function updateScriptCardBadge(entry) {
+    if (!els.scriptsList) return;
+    var card = els.scriptsList.querySelector('[data-entry-id="' + entry.localId + '"]');
+    if (!card) return;
+    var badge = card.querySelector(".ads-script-save-badge");
+    if (!badge) return;
+    badge.className = "ads-script-save-badge " + scriptSaveBadgeClass(entry);
+    badge.textContent = scriptSaveBadgeText(entry);
+  }
+
+  function onScriptFieldChange(e) {
+    var localId = e.target.getAttribute("data-entry-id");
+    var entry = getScriptEntry(localId);
+    if (!entry) return;
+
+    if (e.target.classList.contains("script-niche")) {
+      entry.niche = e.target.value;
+    } else if (e.target.classList.contains("script-body")) {
+      entry.script = e.target.value;
+    }
+
+    entry.dirty = true;
+    entry.saveError = null;
+    updateScriptCardBadge(entry);
+    updateScriptsStatus();
+  }
+
+  function addScriptEntry() {
+    state.scriptEntries.push(makeScriptEntry());
+    renderScriptsList();
+    updateScriptsStatus();
+  }
+
+  function ensureScriptsBootstrapped() {
+    if (!state.scriptEntries.length) {
+      addScriptEntry();
+    }
+  }
+
+  function updateScriptsStatus() {
+    if (!els.scriptsStatus) return;
+    var dirtyCount = state.scriptEntries.filter(function (e) {
+      return e.dirty;
+    }).length;
+    if (dirtyCount > 0) {
+      els.scriptsStatus.textContent =
+        dirtyCount + " unsaved change" + (dirtyCount === 1 ? "" : "s") + " · auto-saves every few seconds";
+    } else {
+      els.scriptsStatus.textContent = "Auto-saves every few seconds";
+    }
+  }
+
+  function airtableErrorMessage(data, fallback) {
+    if (!data) return fallback;
+    if (typeof data.error === "string") return data.error;
+    if (data.error && data.error.message) return data.error.message;
+    if (data.message) return data.message;
+    return fallback;
+  }
+
+  async function createAirtableScriptRecord(fields) {
+    var res = await fetch(SCRIPTS_AIRTABLE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ records: [{ fields: fields }] }),
+    });
+    var data = await parseJsonSafe(res);
+    if (!res.ok) {
+      throw new Error(airtableErrorMessage(data, "Airtable create failed (" + res.status + ")"));
+    }
+    var rec = data.records && data.records[0];
+    if (!rec || !rec.id) throw new Error("Airtable create returned no record id");
+    return rec.id;
+  }
+
+  async function patchAirtableScriptRecord(recordId, fields) {
+    var res = await fetch(SCRIPTS_AIRTABLE_URL, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ records: [{ id: recordId, fields: fields }] }),
+    });
+    var data = await parseJsonSafe(res);
+    if (!res.ok) {
+      throw new Error(airtableErrorMessage(data, "Airtable update failed (" + res.status + ")"));
+    }
+  }
+
+  async function saveScriptEntry(entry) {
+    if (!entry || !entry.dirty || entry.saving) return;
+    if (!entry.niche) return;
+
+    entry.saving = true;
+    entry.saveError = null;
+    updateScriptCardBadge(entry);
+
+    var fields = {
+      Niche: entry.niche,
+      Script: entry.script || "",
+    };
+
+    try {
+      if (entry.airtableRecordId) {
+        await patchAirtableScriptRecord(entry.airtableRecordId, fields);
+      } else {
+        entry.airtableRecordId = await createAirtableScriptRecord(fields);
+      }
+      entry.dirty = false;
+      entry.lastSaved = new Date();
+      log("script saved", { recordId: entry.airtableRecordId, niche: entry.niche });
+    } catch (err) {
+      entry.saveError = err.message || "Save failed";
+      log("script save failed", err);
+    } finally {
+      entry.saving = false;
+      updateScriptCardBadge(entry);
+      updateScriptsStatus();
+    }
+  }
+
+  function flushDirtyScripts() {
+    state.scriptEntries.forEach(function (entry) {
+      if (entry.dirty && !entry.saving && entry.niche) {
+        saveScriptEntry(entry);
+      }
+    });
+  }
+
+  function initScripts() {
+    if (els.scriptsPanel) {
+      els.scriptsPanel.addEventListener("toggle", function () {
+        if (els.scriptsPanel.open) ensureScriptsBootstrapped();
       });
     }
 
+    if (els.scriptsAddBtn) {
+      els.scriptsAddBtn.addEventListener("click", function () {
+        addScriptEntry();
+      });
+    }
+
+    if (state.scriptsAutoSaveTimer) {
+      clearInterval(state.scriptsAutoSaveTimer);
+    }
+    state.scriptsAutoSaveTimer = setInterval(flushDirtyScripts, SCRIPTS_AUTO_SAVE_MS);
+    updateScriptsStatus();
+  }
+
+  function bindEvents() {
     if (els.prevBtn) els.prevBtn.addEventListener("click", goPrev);
     if (els.nextBtn) els.nextBtn.addEventListener("click", goNext);
 
@@ -692,10 +960,10 @@
 
   function initDom() {
     els.toastArea = document.getElementById("toast-area");
-    els.endlessBtn = document.getElementById("endless-btn");
     els.statusPanel = document.getElementById("status-panel");
     els.statusText = document.getElementById("status-text");
     els.emptyPanel = document.getElementById("empty-panel");
+    els.emptyPanelText = document.getElementById("empty-panel-text");
     els.swipePanel = document.getElementById("swipe-panel");
     els.swipeKeyword = document.getElementById("swipe-keyword");
     els.swipeCounter = document.getElementById("swipe-counter");
@@ -704,6 +972,10 @@
     els.nextBtn = document.getElementById("next-btn");
     els.mediaStack = document.getElementById("swipe-media-stack");
     els.swipeMeta = document.getElementById("swipe-meta");
+    els.scriptsPanel = document.getElementById("swipe-scripts");
+    els.scriptsList = document.getElementById("scripts-list");
+    els.scriptsAddBtn = document.getElementById("scripts-add-btn");
+    els.scriptsStatus = document.getElementById("scripts-status");
   }
 
   function init() {
@@ -711,9 +983,11 @@
       localStorage.removeItem("adstool_swipe_v1");
     } catch (e) {}
     initDom();
-    renderSwipe();
     bindEvents();
+    initScripts();
+    renderSwipe();
     log("initialized");
+    startEndlessSwipe();
   }
 
   if (document.readyState === "loading") {

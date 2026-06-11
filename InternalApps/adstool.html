@@ -14,7 +14,7 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" />
   <title>Ads Tool — Swipe File - PeakLeads</title>
-  <link rel="stylesheet" href="adstool.css?v=5" />
+  <link rel="stylesheet" href="adstool.css?v=6" />
 </head>
 <body class="ads-body">
   <header class="ads-header">
@@ -28,18 +28,6 @@
   <div id="toast-area" class="ads-toast-area" aria-live="polite"></div>
 
   <main class="ads-main">
-    <section class="ads-card ads-search-card" aria-labelledby="ads-search-heading">
-      <h2 id="ads-search-heading" class="ads-sr-only">Start swipe file</h2>
-      <div class="ads-search-form">
-        <div class="ads-search-row">
-          <button type="button" id="endless-btn" class="ads-btn ads-btn-primary">Start endless swipe</button>
-        </div>
-        <p class="ads-muted ads-search-hint">
-          Loads 3 random words, then fetches more as you swipe. US · active · video · impressions · last ~31 days
-        </p>
-      </div>
-    </section>
-
     <section id="status-panel" class="ads-card ads-status-card hidden" aria-live="polite">
       <p id="status-text" class="ads-status-text"></p>
       <div class="ads-progress-track" aria-hidden="true">
@@ -68,6 +56,17 @@
             <summary class="ads-details-summary">Ad details</summary>
             <dl id="swipe-meta" class="ads-meta"></dl>
           </details>
+
+          <details id="swipe-scripts" class="ads-details ads-scripts-details">
+            <summary class="ads-details-summary">Scripts</summary>
+            <div class="ads-scripts-root">
+              <div id="scripts-list" class="ads-scripts-list"></div>
+              <div class="ads-scripts-actions">
+                <button type="button" id="scripts-add-btn" class="ads-btn ads-btn-ghost">+ New script record</button>
+                <p id="scripts-status" class="ads-muted ads-scripts-hint">Auto-saves every few seconds</p>
+              </div>
+            </div>
+          </details>
         </div>
 
         <button type="button" id="next-btn" class="ads-nav-btn" aria-label="Next ad">›</button>
@@ -75,10 +74,10 @@
     </section>
 
     <section id="empty-panel" class="ads-card ads-empty-card">
-      <p class="ads-muted">Hit <strong>Start endless swipe</strong> to browse top video ads from random keywords.</p>
+      <p id="empty-panel-text" class="ads-muted">Loading random ads…</p>
     </section>
   </main>
 
-  <script src="adstool-app.js?v=8"></script>
+  <script src="adstool-app.js?v=11"></script>
 </body>
 </html>
