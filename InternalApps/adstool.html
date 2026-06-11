@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag("js", new Date());
+    gtag("config", "AW-18128405900");
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" />
+  <title>Ads Tool — Swipe File - PeakLeads</title>
+  <link rel="stylesheet" href="adstool.css?v=2" />
+</head>
+<body class="ads-body">
+  <header class="ads-header">
+    <div class="ads-header-left">
+      <img src="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" alt="" width="36" height="36" />
+      <h1>Ads Tool</h1>
+      <span class="ads-header-tag">Swipe file</span>
+    </div>
+  </header>
+
+  <div id="toast-area" class="ads-toast-area" aria-live="polite"></div>
+
+  <main class="ads-main">
+    <section class="ads-card ads-search-card" aria-labelledby="ads-search-heading">
+      <h2 id="ads-search-heading" class="ads-sr-only">Search Meta Ads Library</h2>
+      <form id="search-form" class="ads-search-form">
+        <label class="ads-label" for="keyword-input">Keyword</label>
+        <div class="ads-search-row">
+          <input
+            id="keyword-input"
+            class="ads-input"
+            type="text"
+            placeholder="e.g. wealth"
+            autocomplete="off"
+            required
+          />
+          <button type="submit" id="search-btn" class="ads-btn ads-btn-primary">Fetch top videos</button>
+        </div>
+        <p class="ads-muted ads-search-hint">
+          US · active · unordered keyword · video only · sorted by impressions · last ~31 days
+        </p>
+      </form>
+
+      <div class="ads-session-row">
+        <label class="ads-label" for="session-select">Saved sessions</label>
+        <div class="ads-session-controls">
+          <select id="session-select" class="ads-select" aria-label="Saved swipe sessions">
+            <option value="">— Select a session —</option>
+          </select>
+          <button type="button" id="clear-sessions-btn" class="ads-btn ads-btn-ghost">Clear all</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="status-panel" class="ads-card ads-status-card hidden" aria-live="polite">
+      <p id="status-text" class="ads-status-text"></p>
+      <div class="ads-progress-track" aria-hidden="true">
+        <div id="status-progress" class="ads-progress-bar"></div>
+      </div>
+    </section>
+
+    <section id="swipe-panel" class="ads-card ads-swipe-card hidden" aria-label="Swipe file viewer">
+      <div class="ads-swipe-top">
+        <div>
+          <h2 id="swipe-keyword" class="ads-swipe-title"></h2>
+          <p id="swipe-counter" class="ads-muted"></p>
+        </div>
+        <a id="swipe-library-link" class="ads-btn ads-btn-ghost" href="#" target="_blank" rel="noopener noreferrer">
+          Open in Ads Library
+        </a>
+      </div>
+
+      <div class="ads-carousel">
+        <button type="button" id="prev-btn" class="ads-nav-btn" aria-label="Previous ad">‹</button>
+
+        <div class="ads-carousel-body">
+          <div class="ads-video-wrap">
+            <video
+              id="swipe-video"
+              class="ads-video"
+              controls
+              playsinline
+              preload="metadata"
+            ></video>
+            <a id="swipe-thumb-link" class="ads-thumb-link hidden" href="#" target="_blank" rel="noopener noreferrer">
+              <img id="swipe-thumb" class="ads-thumb" alt="" />
+              <span>Open ad in Ads Library</span>
+            </a>
+          </div>
+
+          <dl id="swipe-meta" class="ads-meta"></dl>
+        </div>
+
+        <button type="button" id="next-btn" class="ads-nav-btn" aria-label="Next ad">›</button>
+      </div>
+    </section>
+
+    <section id="empty-panel" class="ads-card ads-empty-card">
+      <p class="ads-muted">Enter a keyword and fetch top video ads to build your swipe file.</p>
+    </section>
+  </main>
+
+  <script src="adstool-app.js?v=2"></script>
+</body>
+</html>

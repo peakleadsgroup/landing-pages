@@ -5,14 +5,15 @@ const { jsPDF } = require('jspdf');
 const LOGO_URL = 'https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png';
 
 const lines = [
-  { desc: 'New Bath Today TN', qty: 85, unit: 110 },
-  { desc: 'New Bath Today OH', qty: 40, unit: 110 },
-  { desc: 'New Bath Today MI', qty: 85, unit: 110 },
-  { desc: 'New Bath Today TX', qty: 59, unit: 110 },
+  { desc: 'New Bath Today IN', qty: 21, unit: 110 },
+  { desc: 'New Bath Today TX', qty: 62, unit: 110 },
+  { desc: 'New Bath Today OH', qty: 38, unit: 110 },
+  { desc: 'New Bath Today TN', qty: 21, unit: 110 },
+  { desc: 'New Bath Today AL', qty: 51, unit: 110 },
 ];
 
-const invoiceDate = 'May 1, 2026';
-const dueDate = 'June 1, 2026';
+const invoiceDate = 'June 10, 2026';
+const dueDate = 'July 1, 2026';
 const chargeId = 'NBT-2026-05-01';
 const billToName = 'New Bath Today';
 
@@ -100,7 +101,7 @@ async function main() {
   doc.setFont(undefined, 'normal');
   y += 10;
 
-  doc.text('Lead delivery — TN, OH, MI, TX', margin, y);
+  doc.text('Lead delivery — IN, TX, OH, TN, AL', margin, y);
   y += 15;
 
   y += 5;
