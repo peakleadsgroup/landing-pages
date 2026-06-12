@@ -76,6 +76,21 @@ body.ads-body {
   border-radius: 999px;
 }
 
+.ads-dev-toggle {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  color: #5f6368;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ads-dev-toggle input {
+  margin: 0;
+}
+
 /* Main */
 .ads-main {
   flex: 1 1 auto;
@@ -429,6 +444,187 @@ body.ads-body {
 .ads-script-textarea {
   min-height: 6rem;
   resize: vertical;
+}
+
+.ads-script-reading-time {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+}
+
+.ads-script-card.is-active-script {
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 1px #1a73e8;
+}
+
+/* AI Script Lab */
+.ads-ai-root {
+  padding: 0.85rem 1rem 1rem;
+}
+
+.ads-ai-actions {
+  margin-bottom: 0.85rem;
+}
+
+.ads-ai-field {
+  margin-bottom: 0.85rem;
+}
+
+.ads-ai-transcript {
+  min-height: 5rem;
+  font-size: 0.875rem;
+  background: #f8f9fa;
+}
+
+.ads-ai-source {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+}
+
+.ads-ai-structure {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+}
+
+.ads-ai-block {
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  background: #fafafa;
+  font-size: 0.875rem;
+}
+
+.ads-ai-block strong {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #5f6368;
+  margin-bottom: 0.35rem;
+}
+
+.ads-ai-block p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.ads-ai-generate-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+}
+
+.ads-ai-niche-field {
+  flex: 1 1 12rem;
+  margin-bottom: 0;
+}
+
+.ads-idea-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ads-idea-btn {
+  text-align: left;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  background: #fff;
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.ads-idea-btn:hover {
+  border-color: #1a73e8;
+  background: #e8f0fe;
+}
+
+/* Developer console */
+.ads-dev-console {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 42vh;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  border-top: 2px solid #1a73e8;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+}
+
+.ads-dev-console-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.5rem 0.85rem;
+  background: #252526;
+  border-bottom: 1px solid #3c3c3c;
+  flex: 0 0 auto;
+}
+
+.ads-dev-console-head strong {
+  color: #fff;
+}
+
+.ads-dev-console-head .ads-muted {
+  color: #9d9d9d;
+  font-size: 0.75rem;
+}
+
+.ads-dev-clear {
+  margin-left: auto;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+}
+
+.ads-dev-log {
+  overflow: auto;
+  padding: 0.5rem 0.85rem 0.85rem;
+  flex: 1 1 auto;
+}
+
+.ads-dev-entry {
+  margin-bottom: 0.5rem;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  background: #2d2d2d;
+}
+
+.ads-dev-summary {
+  cursor: pointer;
+  padding: 0.4rem 0.6rem;
+  color: #9cdcfe;
+  list-style: none;
+}
+
+.ads-dev-summary::-webkit-details-marker {
+  display: none;
+}
+
+.ads-dev-pre {
+  margin: 0;
+  padding: 0.5rem 0.6rem 0.65rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #ce9178;
+  border-top: 1px solid #3c3c3c;
+}
+
+body.ads-body.ads-dev-open {
+  padding-bottom: 42vh;
 }
 
 .ads-meta {

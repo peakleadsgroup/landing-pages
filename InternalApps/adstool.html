@@ -14,7 +14,7 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" />
   <title>Ads Tool — Swipe File - PeakLeads</title>
-  <link rel="stylesheet" href="adstool.css?v=6" />
+  <link rel="stylesheet" href="adstool.css?v=7" />
 </head>
 <body class="ads-body">
   <header class="ads-header">
@@ -23,6 +23,10 @@
       <h1>Ads Tool</h1>
       <span class="ads-header-tag">Swipe file</span>
     </div>
+    <label class="ads-dev-toggle" title="Log full OpenRouter request/response payloads on screen">
+      <input type="checkbox" id="dev-mode-toggle" />
+      Developer mode
+    </label>
   </header>
 
   <div id="toast-area" class="ads-toast-area" aria-live="polite"></div>
@@ -67,6 +71,44 @@
               </div>
             </div>
           </details>
+
+          <details id="swipe-ai" class="ads-details ads-ai-details">
+            <summary class="ads-details-summary">AI Script Lab</summary>
+            <div class="ads-ai-root">
+              <div class="ads-ai-actions">
+                <button type="button" id="ai-transcribe-btn" class="ads-btn ads-btn-primary">
+                  Transcribe &amp; analyze
+                </button>
+              </div>
+
+              <div class="ads-ai-field">
+                <label class="ads-label" for="ai-transcript">Transcript</label>
+                <textarea id="ai-transcript" class="ads-input ads-ai-transcript" readonly rows="4" placeholder="Transcript appears here…"></textarea>
+                <p id="ai-transcript-source" class="ads-muted ads-ai-source"></p>
+              </div>
+
+              <div id="ai-structure" class="ads-ai-structure"></div>
+
+              <div class="ads-ai-generate-row">
+                <div class="ads-ai-field ads-ai-niche-field">
+                  <label class="ads-label" for="ai-niche-select">Niche (context for generation)</label>
+                  <select id="ai-niche-select" class="ads-select"></select>
+                </div>
+                <button type="button" id="ai-hooks-btn" class="ads-btn ads-btn-ghost">Generate 5 hooks</button>
+                <button type="button" id="ai-next-btn" class="ads-btn ads-btn-ghost">Generate 5 next sentences</button>
+              </div>
+
+              <div class="ads-ai-field">
+                <label class="ads-label">Hook ideas <span class="ads-muted">(click to add to script)</span></label>
+                <div id="ai-hook-ideas" class="ads-idea-list"></div>
+              </div>
+
+              <div class="ads-ai-field">
+                <label class="ads-label">Next sentence ideas <span class="ads-muted">(click to append)</span></label>
+                <div id="ai-next-ideas" class="ads-idea-list"></div>
+              </div>
+            </div>
+          </details>
         </div>
 
         <button type="button" id="next-btn" class="ads-nav-btn" aria-label="Next ad">›</button>
@@ -78,6 +120,16 @@
     </section>
   </main>
 
-  <script src="adstool-app.js?v=11"></script>
+  <aside id="dev-console" class="ads-dev-console hidden" aria-label="Developer console">
+    <div class="ads-dev-console-head">
+      <strong>Developer console</strong>
+      <span class="ads-muted">Full API payloads when developer mode is on</span>
+      <button type="button" id="dev-clear-btn" class="ads-btn ads-btn-ghost ads-dev-clear">Clear</button>
+    </div>
+    <div id="dev-log" class="ads-dev-log"></div>
+  </aside>
+
+  <script src="adstool-app.js?v=14"></script>
+  <script src="adstool-ai.js?v=1"></script>
 </body>
 </html>

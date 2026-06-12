@@ -7,7 +7,8 @@
   var LOG_PREFIX = "[AdsTool]";
   var POLL_INTERVAL_MS = 10000;
   var MAX_POLL_ATTEMPTS = 90;
-  var INITIAL_WORD_COUNT = 3;
+  var INITIAL_WORD_COUNT = 1; // testing: was 3 — bump when done saving costs
+  var PREFETCH_MORE_WORDS = false; // testing: endless prefetch off — set true for production
   var PRELOAD_BEHIND = 1;
   var PRELOAD_AHEAD = 2;
   var SCRIPTS_AUTO_SAVE_MS = 4000;
@@ -36,6 +37,7 @@
     builtMediaSessionId: null,
     builtMediaSlotCount: 0,
     scriptEntries: [],
+    activeScriptEntryId: null,
     scriptsAutoSaveTimer: null,
   };
 
@@ -478,7 +480,12 @@
       if (els.nextBtn) els.nextBtn.disabled = state.index >= ads.length - 1;
 
       showMediaAtIndex(state.index);
-      if (ad) renderSwipeMeta(ad);
+      if (ad) {
+        renderSwipeMeta(ad);
+        if (window.AdsToolAI && window.AdsToolAI.onAdChanged) {
+          window.AdsToolAI.onAdChanged(ad);
+        }
+      }
     } else if (loading && els.swipeCounter) {
       els.swipeCounter.textContent = "Loading first batch…";
     }
@@ -651,6 +658,7 @@
   }
 
   function maybePrefetchNextWord() {
+    if (!PREFETCH_MORE_WORDS) return;
     var session = getSession();
     if (!session || !session.ads || !session.ads.length) return;
     if (session.loadingCount > 0) return;
@@ -714,6 +722,88 @@
     });
   }
 
+  function getActiveScriptEntry() {
+    if (state.activeScriptEntryId) {
+      var active = getScriptEntry(state.activeScriptEntryId);
+      if (active) return active;
+    }
+    return state.scriptEntries[0] || null;
+  }
+
+  function setActiveScriptEntry(localId) {
+    state.activeScriptEntryId = localId;
+    highlightActiveScriptCard();
+  }
+
+  function highlightActiveScriptCard() {
+    if (!els.scriptsList) return;
+    els.scriptsList.querySelectorAll(".ads-script-card").forEach(function (card) {
+      var id = card.getAttribute("data-entry-id");
+      card.classList.toggle("is-active-script", id === state.activeScriptEntryId);
+    });
+  }
+
+  function getCurrentAd() {
+    var session = getSession();
+    if (!session || !session.ads || !session.ads.length) return null;
+    return session.ads[state.index] || null;
+  }
+
+  function syncScriptEntryToDom(entry) {
+    if (!els.scriptsList || !entry) return;
+    var nicheEl = els.scriptsList.querySelector(
+      '.script-niche[data-entry-id="' + entry.localId + '"]'
+    );
+    var bodyEl = els.scriptsList.querySelector(
+      '.script-body[data-entry-id="' + entry.localId + '"]'
+    );
+    if (nicheEl && nicheEl.value !== entry.niche) nicheEl.value = entry.niche;
+    if (bodyEl && bodyEl.value !== entry.script) bodyEl.value = entry.script;
+    updateScriptReadingTime(entry);
+    updateScriptCardBadge(entry);
+    updateScriptsStatus();
+  }
+
+  function appendToActiveScript(text, mode) {
+    ensureScriptsBootstrapped();
+    if (els.scriptsPanel && !els.scriptsPanel.open) {
+      els.scriptsPanel.open = true;
+    }
+    var entry = getActiveScriptEntry();
+    if (!entry) return;
+
+    var trimmed = String(text || "").trim();
+    if (!trimmed) return;
+
+    if (mode === "set_or_append") {
+      if (!entry.script.trim()) {
+        entry.script = trimmed;
+      } else {
+        entry.script = entry.script.replace(/\s+$/, "") + "\n\n" + trimmed;
+      }
+    } else if (mode === "append_sentence") {
+      var base = entry.script.replace(/\s+$/, "");
+      entry.script = base ? base + " " + trimmed : trimmed;
+    } else {
+      entry.script = entry.script ? entry.script + "\n" + trimmed : trimmed;
+    }
+
+    entry.dirty = true;
+    entry.saveError = null;
+    syncScriptEntryToDom(entry);
+    setActiveScriptEntry(entry.localId);
+  }
+
+  function setActiveScriptNiche(niche) {
+    ensureScriptsBootstrapped();
+    var entry = getActiveScriptEntry();
+    if (!entry) return;
+    entry.niche = niche || "";
+    entry.dirty = true;
+    entry.saveError = null;
+    syncScriptEntryToDom(entry);
+  }
+
   function scriptSaveBadgeClass(entry) {
     if (entry.saving) return "is-saving";
     if (entry.saveError) return "is-error";
@@ -731,6 +821,48 @@
     if (entry.dirty) return "Unsaved";
     if (entry.airtableRecordId) return "Saved";
     return "New";
+  }
+
+  var SCRIPT_WORDS_PER_MINUTE = 200;
+
+  function countScriptWords(text) {
+    var trimmed = String(text || "").trim();
+    if (!trimmed) return 0;
+    return trimmed.split(/\s+/).length;
+  }
+
+  function scriptReadingTimeLabel(text) {
+    var words = countScriptWords(text);
+    var minutes = words / SCRIPT_WORDS_PER_MINUTE;
+    var timeStr;
+    if (words === 0) {
+      timeStr = "0 sec";
+    } else if (minutes < 1) {
+      var secs = Math.max(1, Math.round(minutes * 60));
+      timeStr = secs + " sec";
+    } else if (minutes < 10) {
+      timeStr = (Math.round(minutes * 10) / 10) + " min";
+    } else {
+      timeStr = Math.round(minutes) + " min";
+    }
+    return (
+      words +
+      " word" +
+      (words === 1 ? "" : "s") +
+      " · ~" +
+      timeStr +
+      " read (@ " +
+      SCRIPT_WORDS_PER_MINUTE +
+      " wpm)"
+    );
+  }
+
+  function updateScriptReadingTime(entry) {
+    if (!els.scriptsList || !entry) return;
+    var el = els.scriptsList.querySelector(
+      '.script-reading-time[data-entry-id="' + entry.localId + '"]'
+    );
+    if (el) el.textContent = scriptReadingTimeLabel(entry.script);
   }
 
   function renderScriptsList() {
@@ -783,6 +915,11 @@
           '" placeholder="Write script…">' +
           escapeHtml(entry.script) +
           "</textarea>" +
+          '<p class="ads-muted ads-script-reading-time script-reading-time" data-entry-id="' +
+          escapeHtml(entry.localId) +
+          '">' +
+          escapeHtml(scriptReadingTimeLabel(entry.script)) +
+          "</p>" +
           "</div>" +
           "</article>"
         );
@@ -793,6 +930,23 @@
       el.addEventListener("input", onScriptFieldChange);
       el.addEventListener("change", onScriptFieldChange);
     });
+
+    els.scriptsList.querySelectorAll(".script-body").forEach(function (el) {
+      el.addEventListener("focus", function () {
+        setActiveScriptEntry(el.getAttribute("data-entry-id"));
+      });
+    });
+
+    els.scriptsList.querySelectorAll(".ads-script-card").forEach(function (card) {
+      card.addEventListener("mousedown", function () {
+        setActiveScriptEntry(card.getAttribute("data-entry-id"));
+      });
+    });
+
+    if (!state.activeScriptEntryId && state.scriptEntries[0]) {
+      state.activeScriptEntryId = state.scriptEntries[0].localId;
+    }
+    highlightActiveScriptCard();
   }
 
   function updateScriptCardBadge(entry) {
@@ -814,6 +968,7 @@
       entry.niche = e.target.value;
     } else if (e.target.classList.contains("script-body")) {
       entry.script = e.target.value;
+      updateScriptReadingTime(entry);
     }
 
     entry.dirty = true;
@@ -977,6 +1132,18 @@
     els.scriptsAddBtn = document.getElementById("scripts-add-btn");
     els.scriptsStatus = document.getElementById("scripts-status");
   }
+
+  window.AdsTool = {
+    NICHE_OPTIONS: NICHE_OPTIONS,
+    getCurrentAd: getCurrentAd,
+    getActiveScriptEntry: getActiveScriptEntry,
+    getActiveScriptText: function () {
+      var entry = getActiveScriptEntry();
+      return entry ? entry.script : "";
+    },
+    appendToActiveScript: appendToActiveScript,
+    setActiveScriptNiche: setActiveScriptNiche,
+  };
 
   function init() {
     try {
