@@ -7,7 +7,7 @@
   var LOG_PREFIX = "[AdsTool]";
   var POLL_INTERVAL_MS = 10000;
   var MAX_POLL_ATTEMPTS = 90;
-  var INITIAL_WORD_COUNT = 3;
+  var INITIAL_WORD_COUNT = 1; // testing: was 3 — bump when done saving costs
   var PREFETCH_MORE_WORDS = false; // testing: endless prefetch off — set true for production
   var PRELOAD_BEHIND = 1;
   var PRELOAD_AHEAD = 2;
@@ -39,6 +39,7 @@
     scriptEntries: [],
     activeScriptEntryId: null,
     scriptsAutoSaveTimer: null,
+    soundUnlocked: false,
   };
 
   var els = {};
@@ -54,6 +55,15 @@
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
+  }
+
+  function usableMediaUrl(url) {
+    if (!url || typeof url !== "string") return null;
+    var trimmed = url.trim();
+    if (!trimmed) return null;
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    if (trimmed.indexOf("//") === 0) return "https:" + trimmed;
+    return null;
   }
 
   function apiUrl(path) {
@@ -192,6 +202,24 @@
     setStatusVisible(busy || state.endlessStarting, statusText || (busy ? "Scraping Meta Ads Library…" : ""));
   }
 
+  function prepareVideoSound(video) {
+    if (!video) return;
+    video.defaultMuted = false;
+    video.muted = false;
+    video.volume = 1;
+  }
+
+  function unlockVideoSound() {
+    if (state.soundUnlocked) return;
+    state.soundUnlocked = true;
+    if (!els.mediaStack) return;
+    els.mediaStack.querySelectorAll("video").forEach(prepareVideoSound);
+    var session = getSession();
+    if (session && session.ads && session.ads.length) {
+      showMediaAtIndex(state.index, { fromUserGesture: true });
+    }
+  }
+
   function destroyMediaStack() {
     if (!els.mediaStack) return;
     els.mediaStack.querySelectorAll("video").forEach(function (video) {
@@ -212,11 +240,14 @@
     thumbLink.rel = "noopener noreferrer";
 
     if (ad.videoPreviewUrl) {
-      var img = document.createElement("img");
-      img.className = "ads-thumb";
-      img.src = ad.videoPreviewUrl;
-      img.alt = "Preview for " + (ad.pageName || "ad");
-      thumbLink.appendChild(img);
+      var previewUrl = usableMediaUrl(ad.videoPreviewUrl);
+      if (previewUrl) {
+        var img = document.createElement("img");
+        img.className = "ads-thumb";
+        img.src = previewUrl;
+        img.alt = "Preview for " + (ad.pageName || "ad");
+        thumbLink.appendChild(img);
+      }
     }
 
     var label = document.createElement("span");
@@ -233,7 +264,7 @@
     slot.className = "ads-media-slot" + (index === state.index ? " ads-media-slot-active" : "");
     slot.setAttribute("data-index", String(index));
 
-    var videoUrl = ad.videoHdUrl || ad.videoSdUrl;
+    var videoUrl = usableMediaUrl(ad.videoHdUrl || ad.videoSdUrl);
     var thumbLink = createThumbFallback(ad);
 
     if (videoUrl) {
@@ -244,7 +275,9 @@
       video.setAttribute("playsinline", "");
       video.preload = "none";
       video.dataset.src = videoUrl;
-      if (ad.videoPreviewUrl) video.poster = ad.videoPreviewUrl;
+      prepareVideoSound(video);
+      var previewUrl = usableMediaUrl(ad.videoPreviewUrl);
+      if (previewUrl) video.poster = previewUrl;
       video.addEventListener("error", function () {
         video.classList.add("hidden");
         thumbLink.classList.remove("hidden");
@@ -316,14 +349,18 @@
     });
   }
 
-  function tryAutoplayVideo(video) {
+  function tryAutoplayVideo(video, options) {
+    options = options || {};
+    var fromUserGesture = options.fromUserGesture === true;
     if (!video || video.classList.contains("hidden")) return;
 
     function play() {
+      prepareVideoSound(video);
       video.currentTime = 0;
       var playPromise = video.play();
       if (!playPromise || typeof playPromise.catch !== "function") return;
       playPromise.catch(function () {
+        if (fromUserGesture || state.soundUnlocked) return;
         video.muted = true;
         video.play().catch(function () {});
       });
@@ -349,7 +386,7 @@
     );
   }
 
-  function showMediaAtIndex(index) {
+  function showMediaAtIndex(index, options) {
     if (!els.mediaStack) return;
     updateVideoPreloadWindow(index);
 
@@ -363,7 +400,7 @@
         video.pause();
         return;
       }
-      tryAutoplayVideo(video);
+      tryAutoplayVideo(video, options);
     });
   }
 
@@ -424,7 +461,7 @@
     return !!(session && session.loadingCount > 0);
   }
 
-  function renderSwipe() {
+  function renderSwipe(options) {
     var session = getSession();
     var hasAds = session && session.ads && session.ads.length > 0;
     var loading = isSessionLoading(session);
@@ -479,7 +516,7 @@
       if (els.prevBtn) els.prevBtn.disabled = state.index <= 0;
       if (els.nextBtn) els.nextBtn.disabled = state.index >= ads.length - 1;
 
-      showMediaAtIndex(state.index);
+      showMediaAtIndex(state.index, options);
       if (ad) {
         renderSwipeMeta(ad);
         if (window.AdsToolAI && window.AdsToolAI.onAdChanged) {
@@ -690,16 +727,18 @@
 
   function goPrev() {
     if (state.index > 0) {
+      unlockVideoSound();
       state.index -= 1;
-      renderSwipe();
+      renderSwipe({ fromUserGesture: true });
     }
   }
 
   function goNext() {
     var session = getSession();
     if (session && session.ads && state.index < session.ads.length - 1) {
+      unlockVideoSound();
       state.index += 1;
-      renderSwipe();
+      renderSwipe({ fromUserGesture: true });
     }
   }
 
@@ -1100,6 +1139,9 @@
   function bindEvents() {
     if (els.prevBtn) els.prevBtn.addEventListener("click", goPrev);
     if (els.nextBtn) els.nextBtn.addEventListener("click", goNext);
+
+    document.addEventListener("pointerdown", unlockVideoSound, { once: true });
+    document.addEventListener("keydown", unlockVideoSound, { once: true });
 
     document.addEventListener("keydown", function (e) {
       if (!getSession()) return;

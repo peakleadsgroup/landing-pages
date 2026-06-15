@@ -6,6 +6,15 @@
  */
 const AD_COUNT = 20;
 
+function normalizeMediaUrl(url) {
+  if (!url || typeof url !== "string") return null;
+  var trimmed = url.trim();
+  if (!trimmed) return null;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (trimmed.indexOf("//") === 0) return "https:" + trimmed;
+  return null;
+}
+
 function isVideoAd(item) {
   const snap = item?.snapshot || {};
   if (String(snap.display_format || "").toUpperCase() === "VIDEO") return true;
@@ -27,7 +36,7 @@ function normalizeAd(item, keyword) {
     pageId: item.page_id || snap.page_id || null,
     pageName: snap.page_name || item.page_name || null,
     pageProfileUri: snap.page_profile_uri || null,
-    pageProfilePictureUrl: snap.page_profile_picture_url || null,
+    pageProfilePictureUrl: normalizeMediaUrl(snap.page_profile_picture_url),
     pageCategories: snap.page_categories || [],
     pageLikeCount: snap.page_like_count ?? null,
     bodyText:
@@ -38,9 +47,9 @@ function normalizeAd(item, keyword) {
     ctaType: snap.cta_type || null,
     linkUrl: snap.link_url || null,
     displayFormat: snap.display_format || null,
-    videoSdUrl: v0.video_sd_url || null,
-    videoHdUrl: v0.video_hd_url || null,
-    videoPreviewUrl: v0.video_preview_image_url || null,
+    videoSdUrl: normalizeMediaUrl(v0.video_sd_url),
+    videoHdUrl: normalizeMediaUrl(v0.video_hd_url),
+    videoPreviewUrl: normalizeMediaUrl(v0.video_preview_image_url),
     adLibraryUrl:
       item.ad_library_url ||
       (archiveId ? "https://www.facebook.com/ads/library/?id=" + archiveId : null),
