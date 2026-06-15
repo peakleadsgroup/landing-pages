@@ -72,6 +72,14 @@
       font-size: 0.9375rem;
     }
 
+    .card a {
+      color: #1a73e8;
+      text-decoration: underline;
+      word-break: break-all;
+    }
+
+    .card a:hover { color: #1557b0; }
+
     .empty {
       color: #5f6368;
       font-size: 0.9375rem;
@@ -111,6 +119,26 @@
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;")
           .replace(/"/g, "&quot;");
+      }
+
+      function linkifyText(text) {
+        var escaped = escapeHtml(text);
+        return escaped.replace(/\b(https?:\/\/[^\s<]+)/gi, function (match) {
+          var url = match;
+          var trail = "";
+          while (/[.,;:!?)\]]$/.test(url)) {
+            trail = url.slice(-1) + trail;
+            url = url.slice(0, -1);
+          }
+          return (
+            '<a href="' +
+            url +
+            '" target="_blank" rel="noopener noreferrer">' +
+            url +
+            "</a>" +
+            trail
+          );
+        });
       }
 
       async function fetchAllActiveRecords() {
@@ -175,7 +203,7 @@
           .map(function (rec) {
             return (
               '<article class="card">' +
-              escapeHtml(rec.fields.Script) +
+              linkifyText(rec.fields.Script) +
               "</article>"
             );
           })
