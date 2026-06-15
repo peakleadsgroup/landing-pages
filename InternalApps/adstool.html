@@ -14,7 +14,7 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" />
   <title>Ads Tool — Swipe File - PeakLeads</title>
-  <link rel="stylesheet" href="adstool.css?v=8" />
+  <link rel="stylesheet" href="adstool.css?v=9" />
 </head>
 <body class="ads-body">
   <header class="ads-header">
@@ -51,11 +51,13 @@
       </div>
 
       <div class="ads-carousel">
-        <button type="button" id="prev-btn" class="ads-nav-btn" aria-label="Previous ad">‹</button>
+        <div class="ads-carousel-viewer">
+          <button type="button" id="prev-btn" class="ads-nav-btn" aria-label="Previous ad">‹</button>
+          <div id="swipe-media-stack" class="ads-media-stack" aria-live="polite"></div>
+          <button type="button" id="next-btn" class="ads-nav-btn" aria-label="Next ad">›</button>
+        </div>
 
         <div class="ads-carousel-body">
-          <div id="swipe-media-stack" class="ads-media-stack" aria-live="polite"></div>
-
           <details id="swipe-details" class="ads-details">
             <summary class="ads-details-summary">Ad details</summary>
             <dl id="swipe-meta" class="ads-meta"></dl>
@@ -110,8 +112,6 @@
             </div>
           </details>
         </div>
-
-        <button type="button" id="next-btn" class="ads-nav-btn" aria-label="Next ad">›</button>
       </div>
     </section>
 
@@ -130,6 +130,6 @@
   </aside>
 
   <script src="adstool-app.js?v=17"></script>
-  <script src="adstool-ai.js?v=3"></script>
+  <script src="adstool-ai.js?v=4"></script>
 </body>
 </html>

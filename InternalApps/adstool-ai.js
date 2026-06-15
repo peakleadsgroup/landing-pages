@@ -211,16 +211,15 @@
       aiState.transcriptSource = cached.transcriptSource || "";
       aiState.structure = cached.structure || null;
       aiState.segmentOrder = (cached.segmentOrder || DEFAULT_SEGMENT_ORDER).slice();
-      aiState.nextIdeas = (cached.nextIdeas || cached.variantIdeas || []).slice();
-      setWorkingScriptText(cached.workingScript || "", false);
+      aiState.nextIdeas = [];
     } else {
       aiState.transcript = "";
       aiState.transcriptSource = "";
       aiState.structure = null;
       aiState.segmentOrder = DEFAULT_SEGMENT_ORDER.slice();
       aiState.nextIdeas = [];
-      syncWorkingScriptFromBridge();
     }
+    setWorkingScriptText("", true);
     renderAiPanel();
   }
 
