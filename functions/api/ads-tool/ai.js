@@ -181,6 +181,79 @@ Generate 5 new hook options for niche: ${niche}`;
       });
     }
 
+    if (action === "generate_variants") {
+      const niche = String(body.niche || "").trim();
+      const scriptSoFar = String(body.scriptSoFar || "").trim();
+      const transcript = String(body.transcript || "").trim();
+      const structure = body.structure || {};
+      const focusSection = String(body.focusSection || "").trim();
+
+      if (!niche) return json({ error: "niche is required" }, 400);
+      if (!scriptSoFar) return json({ error: "scriptSoFar is required" }, 400);
+
+      const nicheContext = getNicheContext(niche);
+      const model = modelFor(context.env, "generate");
+
+      const system = `You help writers iterate on direct-response short-form video ad scripts for home services.
+The user builds a working script by pulling in reference copy and typing instructions (e.g. "change this hook for bathroom remodels").
+Return ONLY valid JSON: { "ideas": ["option 1", "option 2", "option 3", "option 4", "option 5"] }
+Each option is a speakable script chunk (1-4 sentences) that follows the user's latest instruction while staying on-brand for the niche.
+Options must be distinct in angle. Never delete or rewrite what the user already wrote — each option is NEW copy to append below their working script.
+Follow niche terminology rules strictly (e.g. never say "acrylic" for bathrooms — use "solid surface").`;
+
+      const user = `NICHE CONTEXT:
+${nicheContext || "(No niche context file)"}
+
+WORKING SCRIPT (user's draft + their notes/instructions — honor the latest instruction):
+${scriptSoFar}
+
+${focusSection ? `FOCUS: User is iterating on the "${focusSection}" section from the swipe ad.\n` : ""}
+ORIGINAL SWIPE TRANSCRIPT:
+${transcript || "(none)"}
+
+SWIPE AD STRUCTURE (hook / body / CTA from reference ad):
+${JSON.stringify(structure, null, 2)}
+
+Generate 5 options the user can append below their working script. Niche: ${niche}`;
+
+      const chat = await openRouterChat(
+        apiKey,
+        {
+          model,
+          ...GENERATE_DEFAULTS,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: system },
+            { role: "user", content: user },
+          ],
+        },
+        {
+          action: "generate_variants",
+          model,
+          settings: GENERATE_DEFAULTS,
+          niche,
+          nicheContextLength: nicheContext.length,
+          prompts: { system, user },
+        }
+      );
+
+      if (devMode) debugTrail.push(chat.debug);
+
+      const parsed = parseJsonFromModel(chat.content);
+      const ideas = Array.isArray(parsed.ideas) ? parsed.ideas.map(String) : [];
+      if (ideas.length < 1) {
+        throw new Error("Model returned no variant ideas");
+      }
+
+      return json({
+        ok: true,
+        ideas: ideas.slice(0, 5),
+        usage: chat.usage,
+        model: chat.model,
+        debug: devMode ? { generate_variants: chat.debug, trail: debugTrail } : undefined,
+      });
+    }
+
     if (action === "generate_next") {
       const niche = String(body.niche || "").trim();
       const scriptSoFar = String(body.scriptSoFar || "").trim();

@@ -14,7 +14,7 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" />
   <title>Ads Tool — Swipe File - PeakLeads</title>
-  <link rel="stylesheet" href="adstool.css?v=7" />
+  <link rel="stylesheet" href="adstool.css?v=8" />
 </head>
 <body class="ads-body">
   <header class="ads-header">
@@ -72,40 +72,40 @@
             </div>
           </details>
 
-          <details id="swipe-ai" class="ads-details ads-ai-details">
+          <details id="swipe-ai" class="ads-details ads-ai-details" open>
             <summary class="ads-details-summary">AI Script Lab</summary>
             <div class="ads-ai-root">
-              <div class="ads-ai-actions">
+              <div class="ads-ai-toolbar">
                 <button type="button" id="ai-transcribe-btn" class="ads-btn ads-btn-primary">
-                  Transcribe &amp; analyze
+                  Transcribe
                 </button>
-              </div>
-
-              <div class="ads-ai-field">
-                <label class="ads-label" for="ai-transcript">Transcript</label>
-                <textarea id="ai-transcript" class="ads-input ads-ai-transcript" readonly rows="4" placeholder="Transcript appears here…"></textarea>
-                <p id="ai-transcript-source" class="ads-muted ads-ai-source"></p>
-              </div>
-
-              <div id="ai-structure" class="ads-ai-structure"></div>
-
-              <div class="ads-ai-generate-row">
-                <div class="ads-ai-field ads-ai-niche-field">
-                  <label class="ads-label" for="ai-niche-select">Niche (context for generation)</label>
+                <div class="ads-ai-niche-field">
+                  <label class="ads-label" for="ai-niche-select">Niche</label>
                   <select id="ai-niche-select" class="ads-select"></select>
                 </div>
-                <button type="button" id="ai-hooks-btn" class="ads-btn ads-btn-ghost">Generate 5 hooks</button>
-                <button type="button" id="ai-next-btn" class="ads-btn ads-btn-ghost">Generate 5 next sentences</button>
+              </div>
+
+              <p id="ai-transcript-source" class="ads-muted ads-ai-source"></p>
+
+              <div class="ads-ai-field">
+                <label class="ads-label">Reference script <span class="ads-muted">(hook · body · CTA — drag to reorder, edit inline, hover to add)</span></label>
+                <div id="ai-living-transcript" class="ads-living-transcript">
+                  <p class="ads-muted ads-living-empty">Transcribe an ad to see the hook, body, and CTA highlighted here.</p>
+                </div>
               </div>
 
               <div class="ads-ai-field">
-                <label class="ads-label">Hook ideas <span class="ads-muted">(click to add to script)</span></label>
-                <div id="ai-hook-ideas" class="ads-idea-list"></div>
+                <label class="ads-label" for="ai-working-script">Your script <span class="ads-muted">(build below — nothing gets deleted, only appended)</span></label>
+                <textarea id="ai-working-script" class="ads-input ads-working-script" rows="8" placeholder="Hover a highlighted section above to pull it in, then type notes like &quot;change this hook for bathroom remodels&quot; and hit Generate 5 options…"></textarea>
+              </div>
+
+              <div class="ads-ai-generate-row">
+                <button type="button" id="ai-variants-btn" class="ads-btn ads-btn-primary">Generate 5 options</button>
               </div>
 
               <div class="ads-ai-field">
-                <label class="ads-label">Next sentence ideas <span class="ads-muted">(click to append)</span></label>
-                <div id="ai-next-ideas" class="ads-idea-list"></div>
+                <label class="ads-label">Options <span class="ads-muted">(click to append below your script)</span></label>
+                <div id="ai-variant-ideas" class="ads-idea-list"></div>
               </div>
             </div>
           </details>
@@ -130,6 +130,6 @@
   </aside>
 
   <script src="adstool-app.js?v=17"></script>
-  <script src="adstool-ai.js?v=1"></script>
+  <script src="adstool-ai.js?v=2"></script>
 </body>
 </html>

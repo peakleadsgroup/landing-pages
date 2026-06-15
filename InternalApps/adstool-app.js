@@ -803,6 +803,16 @@
     updateScriptsStatus();
   }
 
+  function setActiveScriptText(text) {
+    ensureScriptsBootstrapped();
+    var entry = getActiveScriptEntry();
+    if (!entry) return;
+    entry.script = String(text || "");
+    entry.dirty = true;
+    entry.saveError = null;
+    syncScriptEntryToDom(entry);
+  }
+
   function appendToActiveScript(text, mode) {
     ensureScriptsBootstrapped();
     if (els.scriptsPanel && !els.scriptsPanel.open) {
@@ -1184,6 +1194,7 @@
       return entry ? entry.script : "";
     },
     appendToActiveScript: appendToActiveScript,
+    setActiveScriptText: setActiveScriptText,
     setActiveScriptNiche: setActiveScriptNiche,
   };
 
