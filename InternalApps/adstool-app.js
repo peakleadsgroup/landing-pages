@@ -7,7 +7,7 @@
   var LOG_PREFIX = "[AdsTool]";
   var POLL_INTERVAL_MS = 10000;
   var MAX_POLL_ATTEMPTS = 90;
-  var INITIAL_WORD_COUNT = 1; // testing: was 3 — bump when done saving costs
+  var INITIAL_WORD_COUNT = 3;
   var PREFETCH_MORE_WORDS = false; // testing: endless prefetch off — set true for production
   var PRELOAD_BEHIND = 1;
   var PRELOAD_AHEAD = 2;
