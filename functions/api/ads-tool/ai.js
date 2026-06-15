@@ -110,150 +110,6 @@ Return ONLY valid JSON with this exact shape:
       });
     }
 
-    if (action === "generate_hooks") {
-      const niche = String(body.niche || "").trim();
-      const sourceHook = String(body.sourceHook || "").trim();
-      const transcript = String(body.transcript || "").trim();
-      const structure = body.structure || {};
-
-      if (!niche) return json({ error: "niche is required" }, 400);
-      if (!sourceHook && !transcript) {
-        return json({ error: "sourceHook or transcript is required" }, 400);
-      }
-
-      const nicheContext = getNicheContext(niche);
-      const model = modelFor(context.env, "generate");
-
-      const system = `You write high-converting short-form video ad hooks for home-services offers.
-Use the niche context to match audience, tone, and compliance.
-Return ONLY valid JSON: { "ideas": ["hook 1", "hook 2", "hook 3", "hook 4", "hook 5"] }
-Each hook should be 1-3 sentences, speakable, distinct in angle, same general intent as the reference hook.`;
-
-      const user = `NICHE CONTEXT:
-${nicheContext || "(No niche context file — use general home-services best practices)"}
-
-REFERENCE HOOK FROM SWIPE AD:
-${sourceHook || "(extract hook from transcript below)"}
-
-FULL TRANSCRIPT (for tone reference):
-${transcript || "(none)"}
-
-STRUCTURE BREAKDOWN:
-${JSON.stringify(structure, null, 2)}
-
-Generate 5 new hook options for niche: ${niche}`;
-
-      const chat = await openRouterChat(
-        apiKey,
-        {
-          model,
-          ...GENERATE_DEFAULTS,
-          response_format: { type: "json_object" },
-          messages: [
-            { role: "system", content: system },
-            { role: "user", content: user },
-          ],
-        },
-        {
-          action: "generate_hooks",
-          model,
-          settings: GENERATE_DEFAULTS,
-          niche,
-          nicheContextLength: nicheContext.length,
-          prompts: { system, user },
-        }
-      );
-
-      if (devMode) debugTrail.push(chat.debug);
-
-      const parsed = parseJsonFromModel(chat.content);
-      const ideas = Array.isArray(parsed.ideas) ? parsed.ideas.map(String) : [];
-      if (ideas.length < 1) {
-        throw new Error("Model returned no hook ideas");
-      }
-
-      return json({
-        ok: true,
-        ideas: ideas.slice(0, 5),
-        usage: chat.usage,
-        model: chat.model,
-        debug: devMode ? { generate_hooks: chat.debug, trail: debugTrail } : undefined,
-      });
-    }
-
-    if (action === "generate_variants") {
-      const niche = String(body.niche || "").trim();
-      const scriptSoFar = String(body.scriptSoFar || "").trim();
-      const transcript = String(body.transcript || "").trim();
-      const structure = body.structure || {};
-      const focusSection = String(body.focusSection || "").trim();
-
-      if (!niche) return json({ error: "niche is required" }, 400);
-      if (!scriptSoFar) return json({ error: "scriptSoFar is required" }, 400);
-
-      const nicheContext = getNicheContext(niche);
-      const model = modelFor(context.env, "generate");
-
-      const system = `You help writers iterate on direct-response short-form video ad scripts for home services.
-The user builds a working script by pulling in reference copy and typing instructions (e.g. "change this hook for bathroom remodels").
-Return ONLY valid JSON: { "ideas": ["option 1", "option 2", "option 3", "option 4", "option 5"] }
-Each option is a speakable script chunk (1-4 sentences) that follows the user's latest instruction while staying on-brand for the niche.
-Options must be distinct in angle. Never delete or rewrite what the user already wrote — each option is NEW copy to append below their working script.
-Follow niche terminology rules strictly (e.g. never say "acrylic" for bathrooms — use "solid surface").`;
-
-      const user = `NICHE CONTEXT:
-${nicheContext || "(No niche context file)"}
-
-WORKING SCRIPT (user's draft + their notes/instructions — honor the latest instruction):
-${scriptSoFar}
-
-${focusSection ? `FOCUS: User is iterating on the "${focusSection}" section from the swipe ad.\n` : ""}
-ORIGINAL SWIPE TRANSCRIPT:
-${transcript || "(none)"}
-
-SWIPE AD STRUCTURE (hook / body / CTA from reference ad):
-${JSON.stringify(structure, null, 2)}
-
-Generate 5 options the user can append below their working script. Niche: ${niche}`;
-
-      const chat = await openRouterChat(
-        apiKey,
-        {
-          model,
-          ...GENERATE_DEFAULTS,
-          response_format: { type: "json_object" },
-          messages: [
-            { role: "system", content: system },
-            { role: "user", content: user },
-          ],
-        },
-        {
-          action: "generate_variants",
-          model,
-          settings: GENERATE_DEFAULTS,
-          niche,
-          nicheContextLength: nicheContext.length,
-          prompts: { system, user },
-        }
-      );
-
-      if (devMode) debugTrail.push(chat.debug);
-
-      const parsed = parseJsonFromModel(chat.content);
-      const ideas = Array.isArray(parsed.ideas) ? parsed.ideas.map(String) : [];
-      if (ideas.length < 1) {
-        throw new Error("Model returned no variant ideas");
-      }
-
-      return json({
-        ok: true,
-        ideas: ideas.slice(0, 5),
-        usage: chat.usage,
-        model: chat.model,
-        debug: devMode ? { generate_variants: chat.debug, trail: debugTrail } : undefined,
-      });
-    }
-
     if (action === "generate_next") {
       const niche = String(body.niche || "").trim();
       const scriptSoFar = String(body.scriptSoFar || "").trim();
@@ -267,19 +123,21 @@ Generate 5 options the user can append below their working script. Niche: ${nich
       const model = modelFor(context.env, "generate");
 
       const system = `You continue direct-response video ad scripts one sentence at a time.
+The user's text box is the source of truth — read it fully, including any notes or instructions they typed.
 Return ONLY valid JSON: { "ideas": ["next sentence 1", "next sentence 2", "next sentence 3", "next sentence 4", "next sentence 5"] }
-Each idea is exactly ONE speakable sentence that could follow the script so far. Vary angle but stay coherent.`;
+Each idea is exactly ONE speakable sentence that naturally follows what they wrote. Vary angle but stay coherent.
+Follow niche terminology rules strictly (e.g. never say "acrylic" for bathrooms — use "solid surface").`;
 
       const user = `NICHE CONTEXT:
 ${nicheContext || "(No niche context file)"}
 
-SCRIPT SO FAR (write the NEXT sentence after this):
+USER'S SCRIPT TEXT BOX (write the NEXT sentence after this — this is what they are building):
 ${scriptSoFar}
 
-ORIGINAL SWIPE TRANSCRIPT (reference):
+ORIGINAL SWIPE TRANSCRIPT (optional reference):
 ${transcript || "(none)"}
 
-STRUCTURE BREAKDOWN:
+SWIPE AD STRUCTURE (optional reference):
 ${JSON.stringify(structure, null, 2)}
 
 Generate 5 options for the next sentence. Niche: ${niche}`;

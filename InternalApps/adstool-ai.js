@@ -22,8 +22,7 @@
     transcriptSource: "",
     structure: null,
     segmentOrder: DEFAULT_SEGMENT_ORDER.slice(),
-    variantIdeas: [],
-    focusSection: "",
+    nextIdeas: [],
     busy: false,
     adKey: null,
     cacheByAd: {},
@@ -117,7 +116,7 @@
   function setBusy(busy) {
     aiState.busy = busy;
     if (els.aiTranscribeBtn) els.aiTranscribeBtn.disabled = busy;
-    if (els.aiVariantsBtn) els.aiVariantsBtn.disabled = busy;
+    if (els.aiNextBtn) els.aiNextBtn.disabled = busy;
   }
 
   async function callAi(action, payload) {
@@ -169,12 +168,17 @@
     }
   }
 
-  function appendToWorkingScript(text) {
+  function appendToWorkingScript(text, mode) {
     var trimmed = String(text || "").trim();
     if (!trimmed) return;
 
     var current = getWorkingScriptText();
-    var next = current.trim() ? current.replace(/\s+$/, "") + "\n\n" + trimmed : trimmed;
+    var next;
+    if (mode === "sentence") {
+      next = current.trim() ? current.replace(/\s+$/, "") + " " + trimmed : trimmed;
+    } else {
+      next = current.trim() ? current.replace(/\s+$/, "") + "\n\n" + trimmed : trimmed;
+    }
     setWorkingScriptText(next, true);
   }
 
@@ -185,8 +189,7 @@
       transcriptSource: aiState.transcriptSource,
       structure: aiState.structure ? Object.assign({}, aiState.structure) : null,
       segmentOrder: aiState.segmentOrder.slice(),
-      variantIdeas: aiState.variantIdeas.slice(),
-      focusSection: aiState.focusSection,
+      nextIdeas: aiState.nextIdeas.slice(),
       workingScript: getWorkingScriptText(),
     };
   }
@@ -208,16 +211,14 @@
       aiState.transcriptSource = cached.transcriptSource || "";
       aiState.structure = cached.structure || null;
       aiState.segmentOrder = (cached.segmentOrder || DEFAULT_SEGMENT_ORDER).slice();
-      aiState.variantIdeas = (cached.variantIdeas || []).slice();
-      aiState.focusSection = cached.focusSection || "";
+      aiState.nextIdeas = (cached.nextIdeas || cached.variantIdeas || []).slice();
       setWorkingScriptText(cached.workingScript || "", false);
     } else {
       aiState.transcript = "";
       aiState.transcriptSource = "";
       aiState.structure = null;
       aiState.segmentOrder = DEFAULT_SEGMENT_ORDER.slice();
-      aiState.variantIdeas = [];
-      aiState.focusSection = "";
+      aiState.nextIdeas = [];
       syncWorkingScriptFromBridge();
     }
     renderAiPanel();
@@ -297,8 +298,7 @@
         e.stopPropagation();
         var key = btn.getAttribute("data-seg");
         if (!key || !aiState.structure) return;
-        aiState.focusSection = key;
-        appendToWorkingScript(aiState.structure[key] || "");
+        appendToWorkingScript(aiState.structure[key] || "", "block");
         var bridge = getBridge();
         saveCacheForAd(bridge && bridge.getCurrentAd ? bridge.getCurrentAd() : null);
       });
@@ -355,17 +355,17 @@
     });
   }
 
-  function renderVariantIdeas() {
-    if (!els.aiVariantIdeas) return;
-    if (!aiState.variantIdeas.length) {
-      els.aiVariantIdeas.innerHTML =
-        '<p class="ads-muted">Pull in a section, add your notes, then generate options.</p>';
+  function renderNextIdeas() {
+    if (!els.aiNextIdeas) return;
+    if (!aiState.nextIdeas.length) {
+      els.aiNextIdeas.innerHTML =
+        '<p class="ads-muted">Write in the box above, then generate next sentence options.</p>';
       return;
     }
-    els.aiVariantIdeas.innerHTML = aiState.variantIdeas
+    els.aiNextIdeas.innerHTML = aiState.nextIdeas
       .map(function (idea, i) {
         return (
-          '<button type="button" class="ads-idea-btn ai-variant-idea" data-idea-index="' +
+          '<button type="button" class="ads-idea-btn ai-next-idea" data-idea-index="' +
           i +
           '">' +
           escapeHtml(idea) +
@@ -384,7 +384,7 @@
           : "";
     }
     renderLivingTranscript();
-    renderVariantIdeas();
+    renderNextIdeas();
     if (els.aiNicheSelect && aiState.niche) {
       els.aiNicheSelect.value = aiState.niche;
     }
@@ -433,8 +433,7 @@
       var analyze = await callAi("analyze", { transcript: aiState.transcript });
       aiState.structure = analyze.structure || null;
       aiState.segmentOrder = DEFAULT_SEGMENT_ORDER.slice();
-      aiState.variantIdeas = [];
-      aiState.focusSection = "";
+      aiState.nextIdeas = [];
 
       saveCacheForAd(ad);
       renderAiPanel();
@@ -447,7 +446,7 @@
     }
   }
 
-  async function runGenerateVariants() {
+  async function runGenerateNext() {
     var niche = getSelectedNiche();
     if (!niche) {
       alert("Select a niche first.");
@@ -458,23 +457,22 @@
 
     var scriptSoFar = getWorkingScriptText().trim();
     if (!scriptSoFar) {
-      alert("Pull a section into your script or write something first.");
+      alert("Write something in your script box first.");
       return;
     }
 
     setBusy(true);
     try {
-      var data = await callAi("generate_variants", {
+      var data = await callAi("generate_next", {
         niche: niche,
         scriptSoFar: scriptSoFar,
         transcript: aiState.transcript,
         structure: aiState.structure,
-        focusSection: aiState.focusSection,
       });
-      aiState.variantIdeas = data.ideas || [];
+      aiState.nextIdeas = data.ideas || [];
       var bridge = getBridge();
       saveCacheForAd(bridge && bridge.getCurrentAd ? bridge.getCurrentAd() : null);
-      renderVariantIdeas();
+      renderNextIdeas();
     } catch (err) {
       alert(err.message || "Generation failed");
     } finally {
@@ -494,8 +492,8 @@
     if (els.aiTranscribeBtn) {
       els.aiTranscribeBtn.addEventListener("click", runTranscribeAndAnalyze);
     }
-    if (els.aiVariantsBtn) {
-      els.aiVariantsBtn.addEventListener("click", runGenerateVariants);
+    if (els.aiNextBtn) {
+      els.aiNextBtn.addEventListener("click", runGenerateNext);
     }
 
     if (els.aiNicheSelect) {
@@ -515,14 +513,14 @@
       });
     }
 
-    if (els.aiVariantIdeas) {
-      els.aiVariantIdeas.addEventListener("click", function (e) {
-        var btn = e.target.closest(".ai-variant-idea");
+    if (els.aiNextIdeas) {
+      els.aiNextIdeas.addEventListener("click", function (e) {
+        var btn = e.target.closest(".ai-next-idea");
         if (!btn) return;
         var idx = Number(btn.getAttribute("data-idea-index"));
-        var idea = aiState.variantIdeas[idx];
+        var idea = aiState.nextIdeas[idx];
         if (!idea) return;
-        appendToWorkingScript(idea);
+        appendToWorkingScript(idea, "sentence");
         var bridge = getBridge();
         saveCacheForAd(bridge && bridge.getCurrentAd ? bridge.getCurrentAd() : null);
       });
@@ -555,12 +553,12 @@
     els.devLog = document.getElementById("dev-log");
     els.devClearBtn = document.getElementById("dev-clear-btn");
     els.aiTranscribeBtn = document.getElementById("ai-transcribe-btn");
-    els.aiVariantsBtn = document.getElementById("ai-variants-btn");
+    els.aiNextBtn = document.getElementById("ai-next-btn");
     els.aiNicheSelect = document.getElementById("ai-niche-select");
     els.aiTranscriptSource = document.getElementById("ai-transcript-source");
     els.aiLivingTranscript = document.getElementById("ai-living-transcript");
     els.aiWorkingScript = document.getElementById("ai-working-script");
-    els.aiVariantIdeas = document.getElementById("ai-variant-ideas");
+    els.aiNextIdeas = document.getElementById("ai-next-ideas");
   }
 
   function syncNicheFromActiveScript() {
