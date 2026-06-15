@@ -25,6 +25,7 @@
     nextIdeas: [],
     busy: false,
     adKey: null,
+    swipeIndex: -1,
     cacheByAd: {},
     dragSegmentKey: null,
     syncingWorkingScript: false,
@@ -143,9 +144,11 @@
     return data;
   }
 
-  function adKeyFor(ad) {
+  function adKeyFor(ad, swipeIndex) {
     if (!ad) return null;
-    return ad.adArchiveId || ad.pageName || "ad";
+    if (ad.adArchiveId) return String(ad.adArchiveId);
+    if (swipeIndex != null) return "idx_" + swipeIndex;
+    return ad.pageName || "ad";
   }
 
   function getWorkingScriptText() {
@@ -202,8 +205,8 @@
     persistCurrentAdCache();
   }
 
-  function loadCacheForAd(ad) {
-    var key = adKeyFor(ad);
+  function loadCacheForAd(ad, swipeIndex) {
+    var key = adKeyFor(ad, swipeIndex);
     aiState.adKey = key;
     var cached = key && aiState.cacheByAd[key];
     if (cached) {
@@ -211,14 +214,13 @@
       aiState.transcriptSource = cached.transcriptSource || "";
       aiState.structure = cached.structure || null;
       aiState.segmentOrder = (cached.segmentOrder || DEFAULT_SEGMENT_ORDER).slice();
-      aiState.nextIdeas = [];
     } else {
       aiState.transcript = "";
       aiState.transcriptSource = "";
       aiState.structure = null;
       aiState.segmentOrder = DEFAULT_SEGMENT_ORDER.slice();
-      aiState.nextIdeas = [];
     }
+    aiState.nextIdeas = [];
     setWorkingScriptText("", true);
     renderAiPanel();
   }
@@ -581,12 +583,12 @@
   }
 
   window.AdsToolAI = {
-    onAdChanged: function (ad) {
+    onAdChanged: function (ad, swipeIndex) {
       if (!ad) return;
-      var key = adKeyFor(ad);
-      if (key === aiState.adKey) return;
+      if (swipeIndex === aiState.swipeIndex) return;
       persistCurrentAdCache();
-      loadCacheForAd(ad);
+      aiState.swipeIndex = swipeIndex;
+      loadCacheForAd(ad, swipeIndex);
       syncNicheFromActiveScript();
     },
   };

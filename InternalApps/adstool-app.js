@@ -520,7 +520,7 @@
       if (ad) {
         renderSwipeMeta(ad);
         if (window.AdsToolAI && window.AdsToolAI.onAdChanged) {
-          window.AdsToolAI.onAdChanged(ad);
+          window.AdsToolAI.onAdChanged(ad, state.index);
         }
       }
     } else if (loading && els.swipeCounter) {
