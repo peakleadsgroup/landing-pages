@@ -12,6 +12,7 @@
   var PRELOAD_BEHIND = 1;
   var PRELOAD_AHEAD = 2;
   var SCRIPTS_AUTO_SAVE_MS = 4000;
+  var SCRIPTS_SAVE_TO_AIRTABLE = false;
 
   var AIRTABLE_BASE_ID = "appmBb0lzqRK9dI8v";
   var SCRIPTS_TABLE_ID = "tblnyzakoO67vFwhZ";
@@ -854,6 +855,7 @@
   }
 
   function scriptSaveBadgeClass(entry) {
+    if (!SCRIPTS_SAVE_TO_AIRTABLE) return "";
     if (entry.saving) return "is-saving";
     if (entry.saveError) return "is-error";
     if (entry.airtableRecordId && !entry.dirty) return "is-saved";
@@ -862,6 +864,7 @@
   }
 
   function scriptSaveBadgeText(entry) {
+    if (!SCRIPTS_SAVE_TO_AIRTABLE) return "";
     if (entry.saving) return "Saving…";
     if (entry.saveError) return "Error";
     if (entry.airtableRecordId && !entry.dirty && entry.lastSaved) {
@@ -1040,6 +1043,10 @@
 
   function updateScriptsStatus() {
     if (!els.scriptsStatus) return;
+    if (!SCRIPTS_SAVE_TO_AIRTABLE) {
+      els.scriptsStatus.textContent = "Local only — not saved to Airtable";
+      return;
+    }
     var dirtyCount = state.scriptEntries.filter(function (e) {
       return e.dirty;
     }).length;
@@ -1087,6 +1094,7 @@
   }
 
   async function saveScriptEntry(entry) {
+    if (!SCRIPTS_SAVE_TO_AIRTABLE) return;
     if (!entry || !entry.dirty || entry.saving) return;
     if (!entry.niche) return;
 
@@ -1139,10 +1147,12 @@
       });
     }
 
-    if (state.scriptsAutoSaveTimer) {
-      clearInterval(state.scriptsAutoSaveTimer);
+    if (SCRIPTS_SAVE_TO_AIRTABLE) {
+      if (state.scriptsAutoSaveTimer) {
+        clearInterval(state.scriptsAutoSaveTimer);
+      }
+      state.scriptsAutoSaveTimer = setInterval(flushDirtyScripts, SCRIPTS_AUTO_SAVE_MS);
     }
-    state.scriptsAutoSaveTimer = setInterval(flushDirtyScripts, SCRIPTS_AUTO_SAVE_MS);
     updateScriptsStatus();
   }
 
