@@ -877,6 +877,14 @@
               <span class="field-label">Niche(s)</span>
               <div id="niche-checkboxes" class="checkbox-grid"></div>
             </div>
+            <div id="step-financing" class="kickoff-step hidden">
+              <span class="field-label">Financing?</span>
+              <div id="financing-options" class="radio-list"></div>
+            </div>
+            <div id="step-crm-launch" class="kickoff-step hidden">
+              <span class="field-label">Launch without CRM or wait until integration is complete?</span>
+              <div id="crm-launch-options" class="radio-list"></div>
+            </div>
             <div id="step-charging" class="kickoff-step hidden">
               <span class="field-label">Charging</span>
               <p class="field-subtext">Should we automatically charge after the first batch of leads/after each lead or reach out before charging?</p>
@@ -932,6 +940,8 @@
       const FIELD_STATUS = "Status";
       const FIELD_NOTES = "Notes";
       const FIELD_NICHE = "Niche";
+      const FIELD_FINANCING = "Financing";
+      const FIELD_LAUNCH_WITH_CRM = "Launch with CRM";
       const FIELD_CHARGING = "Charging";
       const FIELD_ADSET_NAME = "Adset Name";
       const FIELD_ADSET_STATUS = "Adset Status";
@@ -980,9 +990,16 @@
       ];
 
       const CHARGING_OPTIONS = ["Charging", "Pause"];
+      const FINANCING_OPTIONS = ["Yes", "No"];
+      const CRM_LAUNCH_OPTIONS = [
+        "Launch without CRM",
+        "Wait until integration is complete to launch"
+      ];
 
       const NOTES_SAVE_DELAY_MS = 2500;
       const NICHE_SAVE_DELAY_MS = 1500;
+      const FINANCING_SAVE_DELAY_MS = 1500;
+      const CRM_LAUNCH_SAVE_DELAY_MS = 1500;
       const CHARGING_SAVE_DELAY_MS = 1500;
       const CAP_SAVE_DELAY_MS = 1500;
       const SUBMIT_SAVE_DELAY_MS = 1500;
@@ -993,12 +1010,18 @@
       let currentStep = 1;
       let notesSaveTimer = null;
       let nicheSaveTimer = null;
+      let financingSaveTimer = null;
+      let crmLaunchSaveTimer = null;
       let chargingSaveTimer = null;
       let notesDirty = false;
       let nicheDirty = false;
+      let financingDirty = false;
+      let crmLaunchDirty = false;
       let chargingDirty = false;
       let notesSaving = false;
       let nicheSaving = false;
+      let financingSaving = false;
+      let crmLaunchSaving = false;
       let chargingSaving = false;
       let nextInProgress = false;
       let contactsMigrationDone = false;
@@ -1017,6 +1040,8 @@
       const modalClose = document.getElementById("modal-close");
       const nicheCheckboxesEl = document.getElementById("niche-checkboxes");
       const stepNiches = document.getElementById("step-niches");
+      const stepFinancing = document.getElementById("step-financing");
+      const stepCrmLaunch = document.getElementById("step-crm-launch");
       const stepCharging = document.getElementById("step-charging");
       const stepAdsetCaps = document.getElementById("step-adset-caps");
       const stepAdsetZips = document.getElementById("step-adset-zips");
@@ -1026,6 +1051,8 @@
       const adsetSubmitSectionsEl = document.getElementById("adset-submit-sections");
       const stepContacts = document.getElementById("step-contacts");
       const adsetContactsSectionsEl = document.getElementById("adset-contacts-sections");
+      const financingOptionsEl = document.getElementById("financing-options");
+      const crmLaunchOptionsEl = document.getElementById("crm-launch-options");
       const chargingOptionsEl = document.getElementById("charging-options");
       const notesField = document.getElementById("notes-field");
       const btnBack = document.getElementById("btn-back");
@@ -1194,6 +1221,66 @@
         updateNavigationButtons();
       }
 
+      function normalizeCrmLaunchSelection(raw) {
+        if (raw === true) return CRM_LAUNCH_OPTIONS[1];
+        if (raw === false) return CRM_LAUNCH_OPTIONS[0];
+        return "";
+      }
+
+      function getSelectedCrmLaunch() {
+        const checked = crmLaunchOptionsEl.querySelector('input[type="radio"]:checked');
+        return checked ? checked.value : "";
+      }
+
+      function renderCrmLaunchOptions(selected) {
+        crmLaunchOptionsEl.innerHTML = "";
+        const groupName = "crm-launch-choice";
+        CRM_LAUNCH_OPTIONS.forEach(function (option) {
+          const label = document.createElement("label");
+          label.className = "radio-item";
+          const input = document.createElement("input");
+          input.type = "radio";
+          input.name = groupName;
+          input.value = option;
+          input.checked = selected === option;
+          input.addEventListener("change", onCrmLaunchChange);
+          label.appendChild(input);
+          label.appendChild(document.createTextNode(option));
+          crmLaunchOptionsEl.appendChild(label);
+        });
+        updateNavigationButtons();
+      }
+
+      function normalizeFinancingSelection(raw) {
+        if (raw === true) return "Yes";
+        if (raw === false) return "No";
+        return "";
+      }
+
+      function getSelectedFinancing() {
+        const checked = financingOptionsEl.querySelector('input[type="radio"]:checked');
+        return checked ? checked.value : "";
+      }
+
+      function renderFinancingOptions(selected) {
+        financingOptionsEl.innerHTML = "";
+        const groupName = "financing-choice";
+        FINANCING_OPTIONS.forEach(function (option) {
+          const label = document.createElement("label");
+          label.className = "radio-item";
+          const input = document.createElement("input");
+          input.type = "radio";
+          input.name = groupName;
+          input.value = option;
+          input.checked = selected === option;
+          input.addEventListener("change", onFinancingChange);
+          label.appendChild(input);
+          label.appendChild(document.createTextNode(option));
+          financingOptionsEl.appendChild(label);
+        });
+        updateNavigationButtons();
+      }
+
       function normalizeChargingValue(raw) {
         const value = raw == null ? "" : String(raw).trim();
         return CHARGING_OPTIONS.indexOf(value) >= 0 ? value : "";
@@ -1207,23 +1294,27 @@
       function showKickoffStep(step) {
         currentStep = step;
         hide(stepNiches);
+        hide(stepFinancing);
+        hide(stepCrmLaunch);
         hide(stepCharging);
         hide(stepAdsetCaps);
         hide(stepAdsetZips);
         hide(stepAdsetSubmit);
         hide(stepContacts);
         if (step === 1) show(stepNiches);
-        else if (step === 2) show(stepCharging);
-        else if (step === 3) {
+        else if (step === 2) show(stepFinancing);
+        else if (step === 3) show(stepCrmLaunch);
+        else if (step === 4) show(stepCharging);
+        else if (step === 5) {
           show(stepAdsetCaps);
           renderAdsetCapSections();
-        } else if (step === 4) {
+        } else if (step === 6) {
           show(stepAdsetZips);
           renderAdsetZipSections();
-        } else if (step === 5) {
+        } else if (step === 7) {
           show(stepAdsetSubmit);
           renderAdsetSubmitSections();
-        } else if (step === 6) {
+        } else if (step === 8) {
           show(stepContacts);
         }
         setStepStatus("", "");
@@ -1789,6 +1880,14 @@
           return;
         }
         if (currentStep === 2) {
+          btnNext.disabled = !getSelectedFinancing();
+          return;
+        }
+        if (currentStep === 3) {
+          btnNext.disabled = !getSelectedCrmLaunch();
+          return;
+        }
+        if (currentStep === 4) {
           btnNext.disabled = !getSelectedCharging();
           return;
         }
@@ -1825,6 +1924,16 @@
           nicheSaveTimer = null;
           saveNiches();
         }
+        if (financingSaveTimer) {
+          clearTimeout(financingSaveTimer);
+          financingSaveTimer = null;
+          saveFinancing();
+        }
+        if (crmLaunchSaveTimer) {
+          clearTimeout(crmLaunchSaveTimer);
+          crmLaunchSaveTimer = null;
+          saveCrmLaunch();
+        }
         if (chargingSaveTimer) {
           clearTimeout(chargingSaveTimer);
           chargingSaveTimer = null;
@@ -1844,11 +1953,15 @@
         navigationEpoch += 1;
         notesDirty = false;
         nicheDirty = false;
+        financingDirty = false;
+        crmLaunchDirty = false;
         chargingDirty = false;
 
         modalTitle.textContent = clientDisplayName(record);
         notesField.value = (record.fields && record.fields[FIELD_NOTES]) || "";
         renderNicheCheckboxes(normalizeNicheValues(record.fields && record.fields[FIELD_NICHE]));
+        renderFinancingOptions(normalizeFinancingSelection(record.fields && record.fields[FIELD_FINANCING]));
+        renderCrmLaunchOptions(normalizeCrmLaunchSelection(record.fields && record.fields[FIELD_LAUNCH_WITH_CRM]));
         renderChargingOptions(normalizeChargingValue(record.fields && record.fields[FIELD_CHARGING]));
         showKickoffStep(1);
 
@@ -1939,6 +2052,86 @@
           console.error("[Kickoff] Niche save failed", err);
         } finally {
           nicheSaving = false;
+        }
+      }
+
+      function onCrmLaunchChange() {
+        crmLaunchDirty = true;
+        updateNavigationButtons();
+        if (crmLaunchSaveTimer) clearTimeout(crmLaunchSaveTimer);
+        crmLaunchSaveTimer = setTimeout(function () {
+          crmLaunchSaveTimer = null;
+          saveCrmLaunch();
+        }, CRM_LAUNCH_SAVE_DELAY_MS);
+      }
+
+      async function saveCrmLaunch() {
+        if (!selectedClient || crmLaunchSaving) return;
+        const selected = getSelectedCrmLaunch();
+        if (!selected) return;
+        const value = selected === CRM_LAUNCH_OPTIONS[1];
+        const current = selectedClient.fields && selectedClient.fields[FIELD_LAUNCH_WITH_CRM];
+        const currentBool = current === true;
+        if (value === currentBool && !crmLaunchDirty) return;
+
+        crmLaunchSaving = true;
+        try {
+          const updated = await fetchAirtableJson(
+            AIRTABLE_BASE_URL + "/" + encodeURIComponent(TABLE_CLIENT) + "/" + selectedClient.id,
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json", Accept: "application/json" },
+              body: JSON.stringify({ fields: { [FIELD_LAUNCH_WITH_CRM]: value } })
+            }
+          );
+          selectedClient = updated;
+          crmLaunchDirty = false;
+          const idx = allClients.findIndex(function (r) { return r.id === updated.id; });
+          if (idx >= 0) allClients[idx] = updated;
+        } catch (err) {
+          console.error("[Kickoff] CRM launch save failed", err);
+        } finally {
+          crmLaunchSaving = false;
+        }
+      }
+
+      function onFinancingChange() {
+        financingDirty = true;
+        updateNavigationButtons();
+        if (financingSaveTimer) clearTimeout(financingSaveTimer);
+        financingSaveTimer = setTimeout(function () {
+          financingSaveTimer = null;
+          saveFinancing();
+        }, FINANCING_SAVE_DELAY_MS);
+      }
+
+      async function saveFinancing() {
+        if (!selectedClient || financingSaving) return;
+        const selected = getSelectedFinancing();
+        if (!selected) return;
+        const value = selected === "Yes";
+        const current = selectedClient.fields && selectedClient.fields[FIELD_FINANCING];
+        const currentBool = current === true;
+        if (value === currentBool && !financingDirty) return;
+
+        financingSaving = true;
+        try {
+          const updated = await fetchAirtableJson(
+            AIRTABLE_BASE_URL + "/" + encodeURIComponent(TABLE_CLIENT) + "/" + selectedClient.id,
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json", Accept: "application/json" },
+              body: JSON.stringify({ fields: { [FIELD_FINANCING]: value } })
+            }
+          );
+          selectedClient = updated;
+          financingDirty = false;
+          const idx = allClients.findIndex(function (r) { return r.id === updated.id; });
+          if (idx >= 0) allClients[idx] = updated;
+        } catch (err) {
+          console.error("[Kickoff] Financing save failed", err);
+        } finally {
+          financingSaving = false;
         }
       }
 
@@ -2050,6 +2243,8 @@
           const idx = allClients.findIndex(function (r) { return r.id === refreshed.id; });
           if (idx >= 0) allClients[idx] = refreshed;
 
+          renderFinancingOptions(normalizeFinancingSelection(refreshed.fields && refreshed.fields[FIELD_FINANCING]));
+          renderCrmLaunchOptions(normalizeCrmLaunchSelection(refreshed.fields && refreshed.fields[FIELD_LAUNCH_WITH_CRM]));
           renderChargingOptions(normalizeChargingValue(refreshed.fields && refreshed.fields[FIELD_CHARGING]));
         } catch (err) {
           createError = err;
@@ -2071,7 +2266,7 @@
       async function advanceToContactsStep() {
         const epoch = navigationEpoch;
         await flushAdsetSubmitSaves();
-        if (epoch !== navigationEpoch || currentStep !== 5) return;
+        if (epoch !== navigationEpoch || currentStep !== 7) return;
 
         let migrationError = null;
 
@@ -2082,7 +2277,7 @@
           setStepStatus("Processing billing contacts…", "");
           try {
             const migrated = await contactTools.migrateBillingContacts(selectedClient, kickoffAdsets);
-            if (epoch !== navigationEpoch || currentStep !== 5) return;
+            if (epoch !== navigationEpoch || currentStep !== 7) return;
             selectedClient = migrated.client;
             kickoffAdsets = migrated.adsets;
             const idx = allClients.findIndex(function (r) { return r.id === selectedClient.id; });
@@ -2096,9 +2291,9 @@
           }
         }
 
-        if (epoch !== navigationEpoch || currentStep !== 5) return;
+        if (epoch !== navigationEpoch || currentStep !== 7) return;
 
-        showKickoffStep(6);
+        showKickoffStep(8);
         let renderError = null;
         try {
           await renderContactsSections();
@@ -2130,6 +2325,28 @@
             return;
           }
           if (currentStep === 2) {
+            if (financingDirty || financingSaveTimer) {
+              if (financingSaveTimer) {
+                clearTimeout(financingSaveTimer);
+                financingSaveTimer = null;
+              }
+              await saveFinancing();
+            }
+            showKickoffStep(3);
+            return;
+          }
+          if (currentStep === 3) {
+            if (crmLaunchDirty || crmLaunchSaveTimer) {
+              if (crmLaunchSaveTimer) {
+                clearTimeout(crmLaunchSaveTimer);
+                crmLaunchSaveTimer = null;
+              }
+              await saveCrmLaunch();
+            }
+            showKickoffStep(4);
+            return;
+          }
+          if (currentStep === 4) {
             if (chargingDirty || chargingSaveTimer) {
               if (chargingSaveTimer) {
                 clearTimeout(chargingSaveTimer);
@@ -2137,19 +2354,19 @@
               }
               await saveCharging();
             }
-            showKickoffStep(3);
-            return;
-          }
-          if (currentStep === 3) {
-            await flushAdsetCapSaves();
-            showKickoffStep(4);
-            return;
-          }
-          if (currentStep === 4) {
             showKickoffStep(5);
             return;
           }
           if (currentStep === 5) {
+            await flushAdsetCapSaves();
+            showKickoffStep(6);
+            return;
+          }
+          if (currentStep === 6) {
+            showKickoffStep(7);
+            return;
+          }
+          if (currentStep === 7) {
             await advanceToContactsStep();
           }
         } catch (err) {
