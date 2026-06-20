@@ -858,7 +858,7 @@
             </div>
             <div id="step-charging" class="kickoff-step hidden">
               <span class="field-label">Charging</span>
-              <p class="field-subtext">Should we automatically charge after the first bath of leads/after each lead or reach out before charging?</p>
+              <p class="field-subtext">Should we automatically charge after the first batch of leads/after each lead or reach out before charging?</p>
               <div id="charging-options" class="radio-list"></div>
             </div>
             <div id="step-adset-caps" class="kickoff-step hidden">
@@ -1959,14 +1959,23 @@
         }
       }
 
+      function getKickoffAdsetNiche(adset) {
+        return (adset.fields && adset.fields[FIELD_ADSET_NICHE]) || "";
+      }
+
+      function getNichesNeedingAdsets() {
+        const existing = new Set(
+          kickoffAdsets.map(getKickoffAdsetNiche).filter(function (niche) { return niche; })
+        );
+        return getSelectedNiches().filter(function (niche) {
+          return !existing.has(niche);
+        });
+      }
+
       async function createAdsetsForSelectedNiches() {
         const niches = getSelectedNiches();
         if (!selectedClient || niches.length === 0) return;
         if (nextInProgress) return;
-
-        nextInProgress = true;
-        updateNavigationButtons();
-        setStepStatus("Creating ad sets…", "");
 
         if (nicheDirty || nicheSaveTimer) {
           if (nicheSaveTimer) {
@@ -1976,8 +1985,19 @@
           await saveNiches();
         }
 
+        const nichesToCreate = getNichesNeedingAdsets();
+        if (nichesToCreate.length === 0) {
+          showKickoffStep(2);
+          updateNavigationButtons();
+          return;
+        }
+
+        nextInProgress = true;
+        updateNavigationButtons();
+        setStepStatus("Creating ad sets…", "");
+
         const clientName = clientDisplayName(selectedClient);
-        const records = niches.map(function (niche) {
+        const records = nichesToCreate.map(function (niche) {
           const fields = {};
           fields[FIELD_ADSET_NAME] = clientName + " - " + niche;
           fields[FIELD_ADSET_CLIENT] = [selectedClient.id];
@@ -1997,9 +2017,10 @@
             }
           );
 
-          kickoffAdsets = (created.records || []).map(function (record) {
+          const newAdsets = (created.records || []).map(function (record) {
             return { id: record.id, fields: record.fields || {} };
           });
+          kickoffAdsets = kickoffAdsets.concat(newAdsets);
 
           const refreshed = await fetchAirtableJson(
             AIRTABLE_BASE_URL + "/" + encodeURIComponent(TABLE_CLIENT) + "/" + selectedClient.id
@@ -2084,10 +2105,6 @@
         if (nextInProgress) return;
         try {
           if (currentStep === 1) {
-            if (kickoffAdsets.length > 0) {
-              showKickoffStep(2);
-              return;
-            }
             await createAdsetsForSelectedNiches();
             return;
           }
