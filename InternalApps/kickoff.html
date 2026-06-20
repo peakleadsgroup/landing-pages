@@ -151,6 +151,8 @@
       font-size: 0.875rem;
     }
 
+    .hidden { display: none !important; }
+
     .loading, .error-msg {
       text-align: center;
       padding: 2rem 1rem;
@@ -241,8 +243,36 @@
       padding: 1rem 1.25rem;
       border-top: 1px solid #e8eaed;
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
       flex-shrink: 0;
+    }
+
+    .modal-footer-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-left: auto;
+    }
+
+    button.btn-back {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      padding: 0.55rem 1.25rem;
+      border-radius: 6px;
+      border: 1px solid #dadce0;
+      cursor: pointer;
+      background: #fff;
+      color: #202124;
+    }
+
+    button.btn-back:hover:not(:disabled) { background: #f1f3f4; }
+
+    button.btn-back:disabled {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
     }
 
     .modal-notes {
@@ -286,6 +316,40 @@
       font-weight: 600;
       font-size: 0.9375rem;
       margin-bottom: 0.75rem;
+    }
+
+    .field-subtext {
+      font-size: 0.875rem;
+      color: #5f6368;
+      line-height: 1.45;
+      margin: -0.35rem 0 1rem;
+    }
+
+    .radio-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-width: 420px;
+    }
+
+    .radio-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 0.75rem;
+      border: 1px solid #e8eaed;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9375rem;
+      background: #fff;
+    }
+
+    .radio-item:hover { border-color: #1a73e8; background: #f8fbff; }
+
+    .radio-item input {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
     }
 
     .checkbox-grid {
@@ -346,6 +410,418 @@
     .status-active summary { background: #e6f4ea; }
     .status-paused summary { background: #fef7e0; }
     .status-closed summary { background: #fce8e6; }
+
+    .adset-cap-section {
+      border: 1px solid #e8eaed;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background: #fff;
+    }
+
+    .adset-cap-section:last-child { margin-bottom: 0; }
+
+    .adset-cap-heading {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.85rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #e8eaed;
+    }
+
+    .cap-fields {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .cap-field label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #5f6368;
+      margin-bottom: 0.35rem;
+    }
+
+    .cap-field input {
+      width: 100%;
+      padding: 0.55rem 0.65rem;
+      border: 1px solid #dadce0;
+      border-radius: 6px;
+      font-size: 0.9375rem;
+    }
+
+    .cap-field input:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+    }
+
+    .contacts-section {
+      border: 1px solid #e8eaed;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background: #fff;
+    }
+
+    .contacts-section:last-child { margin-bottom: 0; }
+
+    .contact-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .contact-row {
+      border: 1px solid #e8eaed;
+      border-radius: 6px;
+      padding: 0.75rem;
+      background: #f8f9fa;
+    }
+
+    .contact-row-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 0.65rem;
+      margin-bottom: 0.65rem;
+    }
+
+    .contact-field label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #5f6368;
+      margin-bottom: 0.25rem;
+    }
+
+    .contact-field input {
+      width: 100%;
+      padding: 0.5rem 0.6rem;
+      border: 1px solid #dadce0;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      background: #fff;
+    }
+
+    .contact-field input:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+    }
+
+    .contact-row-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    button.btn-contact-remove,
+    button.btn-contact-add {
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid #dadce0;
+      background: #fff;
+      color: #5f6368;
+    }
+
+    button.btn-contact-remove:hover {
+      border-color: #d93025;
+      color: #d93025;
+      background: #fce8e6;
+    }
+
+    button.btn-contact-add {
+      border-color: #1a73e8;
+      color: #1a73e8;
+      background: #e8f0fe;
+      margin-top: 0.5rem;
+    }
+
+    button.btn-contact-add:hover:not(:disabled) { background: #d2e3fc; }
+
+    button.btn-contact-add:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .contact-search-block,
+    .contact-create-block {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #e8eaed;
+    }
+
+    .contact-search-label,
+    .contact-create-title {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #5f6368;
+      margin-bottom: 0.35rem;
+    }
+
+    .contact-search-input {
+      width: 100%;
+      padding: 0.55rem 0.65rem;
+      border: 1px solid #dadce0;
+      border-radius: 6px;
+      font-size: 0.875rem;
+    }
+
+    .contact-search-input:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+    }
+
+    .contact-search-results {
+      margin-top: 0.5rem;
+      border: 1px solid #e8eaed;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .contact-search-results:not(.hidden):empty { display: none; }
+
+    button.contact-search-result {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 0.55rem 0.75rem;
+      border: none;
+      border-bottom: 1px solid #e8eaed;
+      background: #fff;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+
+    button.contact-search-result:last-child { border-bottom: none; }
+
+    button.contact-search-result:hover { background: #f1f3f4; }
+
+    .contact-create-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.5rem;
+    }
+
+    .contact-create-grid input {
+      padding: 0.5rem 0.6rem;
+      border: 1px solid #dadce0;
+      border-radius: 6px;
+      font-size: 0.875rem;
+    }
+
+    .contact-create-grid input:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+    }
+
+    .adset-zip-section {
+      border: 1px solid #e8eaed;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background: #fff;
+    }
+
+    .adset-zip-section:last-child { margin-bottom: 0; }
+
+    .zip-linked-label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #5f6368;
+      margin-bottom: 0.35rem;
+    }
+
+    .zip-linked-line {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.8125rem;
+      line-height: 1.45;
+      color: #202124;
+      min-height: 1.25rem;
+      margin-bottom: 0.85rem;
+      word-break: break-word;
+    }
+
+    .zip-input-label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #5f6368;
+      margin-bottom: 0.35rem;
+    }
+
+    .zip-input {
+      width: 100%;
+      padding: 0.65rem 0.75rem;
+      border: 1px solid #dadce0;
+      border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.875rem;
+      line-height: 1.45;
+      resize: vertical;
+      min-height: 4.5rem;
+    }
+
+    .zip-input:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+    }
+
+    .zip-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    button.btn-zip {
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 0.5rem 0.9rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      color: #fff;
+    }
+
+    button.btn-zip:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    button.btn-zip-add { background: #137333; }
+    button.btn-zip-add:hover:not(:disabled) { background: #0d652d; }
+
+    button.btn-zip-remove { background: #c5221f; }
+    button.btn-zip-remove:hover:not(:disabled) { background: #a50e0e; }
+
+    button.btn-zip-swap { background: #e37400; }
+    button.btn-zip-swap:hover:not(:disabled) { background: #c26400; }
+
+    .zip-section-status {
+      margin-top: 0.65rem;
+      font-size: 0.8125rem;
+      color: #5f6368;
+      min-height: 1.1rem;
+    }
+
+    .zip-section-status.success { color: #137333; }
+    .zip-section-status.error { color: #c5221f; }
+    .zip-section-status.info { color: #5f6368; }
+
+    .adset-submit-section {
+      border: 1px solid #e8eaed;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background: #fff;
+    }
+
+    .adset-submit-section:last-child { margin-bottom: 0; }
+
+    .submit-field {
+      margin-bottom: 1rem;
+    }
+
+    .submit-field label,
+    .submit-field .field-label-inline {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #5f6368;
+      margin-bottom: 0.35rem;
+    }
+
+    .submit-field select {
+      width: 100%;
+      max-width: 320px;
+      padding: 0.55rem 0.65rem;
+      border: 1px solid #dadce0;
+      border-radius: 6px;
+      font-size: 0.9375rem;
+      background: #fff;
+    }
+
+    .submit-field select:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+    }
+
+    .calendar-panel {
+      margin-top: 0.5rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #e8eaed;
+    }
+
+    .day-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin-top: 1rem;
+    }
+
+    .day-field-block {
+      border: 1px solid #e8eaed;
+      border-radius: 6px;
+      padding: 0.65rem 0.75rem;
+      background: #fafafa;
+    }
+
+    .day-field-block .day-name {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #202124;
+      margin-bottom: 0.5rem;
+    }
+
+    .time-slot-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+      gap: 0.35rem;
+    }
+
+    .time-slot-item {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.8125rem;
+      cursor: pointer;
+    }
+
+    .time-slot-item input {
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+    }
+
+    .phone-panel {
+      margin-top: 0.5rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #e8eaed;
+    }
+
+    .submit-field input[type="tel"] {
+      width: 100%;
+      max-width: 320px;
+      padding: 0.55rem 0.65rem;
+      border: 1px solid #dadce0;
+      border-radius: 6px;
+      font-size: 0.9375rem;
+    }
+
+    .submit-field input[type="tel"]:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+    }
   </style>
 </head>
 <body>
@@ -376,12 +852,42 @@
       <div class="modal-body">
         <div class="modal-main">
           <div class="modal-scroll">
-            <span class="field-label">Niche(s)</span>
-            <div id="niche-checkboxes" class="checkbox-grid"></div>
+            <div id="step-niches" class="kickoff-step">
+              <span class="field-label">Niche(s)</span>
+              <div id="niche-checkboxes" class="checkbox-grid"></div>
+            </div>
+            <div id="step-charging" class="kickoff-step hidden">
+              <span class="field-label">Charging</span>
+              <p class="field-subtext">Should we automatically charge after the first bath of leads/after each lead or reach out before charging?</p>
+              <div id="charging-options" class="radio-list"></div>
+            </div>
+            <div id="step-adset-caps" class="kickoff-step hidden">
+              <span class="field-label">Lead caps by ad set</span>
+              <p class="field-subtext">Set daily, weekly, and monthly lead caps for each niche ad set. Leave blank if not applicable.</p>
+              <div id="adset-caps-sections"></div>
+            </div>
+            <div id="step-adset-zips" class="kickoff-step hidden">
+              <span class="field-label">Zip codes</span>
+              <p class="field-subtext">Add or remove zip links in Adset Zip Tracking for each ad set. Leave blank if not applicable.</p>
+              <div id="adset-zips-sections"></div>
+            </div>
+            <div id="step-adset-submit" class="kickoff-step hidden">
+              <span class="field-label">Submit screen</span>
+              <p class="field-subtext">Configure how leads submit for each ad set. Calendar options appear when Calendar is selected.</p>
+              <div id="adset-submit-sections"></div>
+            </div>
+            <div id="step-contacts" class="kickoff-step hidden">
+              <span class="field-label">Contacts</span>
+              <p class="field-subtext">Manage billing contacts and new-lead notifications for each ad set. Search to link existing contacts or create new ones.</p>
+              <div id="adset-contacts-sections"></div>
+            </div>
             <p id="step-status" class="step-status hidden"></p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn-next" id="btn-next" disabled>Next</button>
+            <button type="button" class="btn-back" id="btn-back" disabled>Back</button>
+            <div class="modal-footer-actions">
+              <button type="button" class="btn-next" id="btn-next" disabled>Next</button>
+            </div>
           </div>
         </div>
         <div class="modal-notes">
@@ -392,6 +898,8 @@
     </div>
   </div>
 
+  <script src="kickoff-zips.js"></script>
+  <script src="kickoff-contacts.js"></script>
   <script>
     (function () {
       const AIRTABLE_BASE_ID = "appmBb0lzqRK9dI8v";
@@ -403,11 +911,41 @@
       const FIELD_STATUS = "Status";
       const FIELD_NOTES = "Notes";
       const FIELD_NICHE = "Niche";
+      const FIELD_CHARGING = "Charging";
       const FIELD_ADSET_NAME = "Adset Name";
       const FIELD_ADSET_STATUS = "Adset Status";
       const FIELD_ADSET_CLIENT = "Client";
+      const FIELD_ADSET_NICHE = "Adset Niche";
+      const FIELD_WEEKLY_CAP = "Weekly Cap";
+      const FIELD_MONTHLY_CAP = "Monthly Cap";
+      const FIELD_DAILY_CAP = "Daily Cap";
 
-      const STATUS_OPTIONS = ["Active", "Paused", "Setup", "Closed"];
+      const ADSET_CAP_FIELDS = [
+        FIELD_WEEKLY_CAP,
+        FIELD_MONTHLY_CAP,
+        FIELD_DAILY_CAP
+      ];
+
+      const FIELD_SUBMIT_SCREEN = "Submit Screen";
+      const FIELD_TIMEZONE = "Timezone";
+      const FIELD_CALL = "Call";
+      const FIELD_TEXT = "Text";
+      const SUBMIT_SCREEN_OPTIONS = ["Calendar", "Phone", "Text", "Phone/Text", "None"];
+      const TIMEZONE_OPTIONS = [
+        "America/Chicago",
+        "America/New_York",
+        "America/Denver",
+        "America/Los_Angeles",
+        "America/Phoenix"
+      ];
+      const DAY_FIELDS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const TIME_SLOT_OPTIONS = [
+        "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",
+        "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM",
+        "7:00 PM", "8:00 PM", "9:00 PM"
+      ];
+
+      const STATUS_OPTIONS = ["Setup", "Active", "Paused", "Closed"];
       const DEFAULT_OPEN_STATUS = "Setup";
 
       const NICHE_OPTIONS = [
@@ -420,18 +958,34 @@
         "Sealcoating"
       ];
 
+      const CHARGING_OPTIONS = ["Charging", "Pause"];
+
       const NOTES_SAVE_DELAY_MS = 2500;
       const NICHE_SAVE_DELAY_MS = 1500;
+      const CHARGING_SAVE_DELAY_MS = 1500;
+      const CAP_SAVE_DELAY_MS = 1500;
+      const SUBMIT_SAVE_DELAY_MS = 1500;
 
       let allClients = [];
       let selectedClient = null;
+      let kickoffAdsets = [];
+      let currentStep = 1;
       let notesSaveTimer = null;
       let nicheSaveTimer = null;
+      let chargingSaveTimer = null;
       let notesDirty = false;
       let nicheDirty = false;
+      let chargingDirty = false;
       let notesSaving = false;
       let nicheSaving = false;
+      let chargingSaving = false;
       let nextInProgress = false;
+      let contactsMigrationDone = false;
+      let navigationEpoch = 0;
+      const capSaveTimers = {};
+      const capSaving = {};
+      const submitSaveTimers = {};
+      const submitSaving = {};
 
       const clientSearch = document.getElementById("client-search");
       const clientLoading = document.getElementById("client-loading");
@@ -441,7 +995,19 @@
       const modalTitle = document.getElementById("modal-title");
       const modalClose = document.getElementById("modal-close");
       const nicheCheckboxesEl = document.getElementById("niche-checkboxes");
+      const stepNiches = document.getElementById("step-niches");
+      const stepCharging = document.getElementById("step-charging");
+      const stepAdsetCaps = document.getElementById("step-adset-caps");
+      const stepAdsetZips = document.getElementById("step-adset-zips");
+      const adsetCapsSectionsEl = document.getElementById("adset-caps-sections");
+      const adsetZipsSectionsEl = document.getElementById("adset-zips-sections");
+      const stepAdsetSubmit = document.getElementById("step-adset-submit");
+      const adsetSubmitSectionsEl = document.getElementById("adset-submit-sections");
+      const stepContacts = document.getElementById("step-contacts");
+      const adsetContactsSectionsEl = document.getElementById("adset-contacts-sections");
+      const chargingOptionsEl = document.getElementById("charging-options");
       const notesField = document.getElementById("notes-field");
+      const btnBack = document.getElementById("btn-back");
       const btnNext = document.getElementById("btn-next");
       const stepStatus = document.getElementById("step-status");
 
@@ -472,6 +1038,36 @@
             : null;
         }
         return records;
+      }
+
+      const zipLinking = KickoffZipLinking.create({
+        fetchJson: fetchAirtableJson,
+        airtableUrl: function (table) {
+          return AIRTABLE_BASE_URL + "/" + encodeURIComponent(table);
+        },
+      });
+
+      const contactTools = KickoffContacts.create({
+        fetchJson: fetchAirtableJson,
+        airtableUrl: function (table) {
+          return AIRTABLE_BASE_URL + "/" + encodeURIComponent(table);
+        },
+      });
+
+      function adsetNicheLabel(adset) {
+        return (
+          (adset.fields && adset.fields[FIELD_ADSET_NICHE]) ||
+          (adset.fields && adset.fields[FIELD_ADSET_NAME]) ||
+          "Ad set"
+        );
+      }
+
+      function renderAdsetZipSections() {
+        zipLinking.renderSections(adsetZipsSectionsEl, kickoffAdsets, adsetNicheLabel);
+        zipLinking.refreshAllSections(adsetZipsSectionsEl).catch(function (err) {
+          console.error("[Kickoff] Zip sections load failed", err);
+          setStepStatus(err.message || "Failed to load zip tools.", "error");
+        });
       }
 
       function clientDisplayName(record) {
@@ -574,7 +1170,590 @@
           label.appendChild(document.createTextNode(niche));
           nicheCheckboxesEl.appendChild(label);
         });
-        updateNextButton();
+        updateNavigationButtons();
+      }
+
+      function normalizeChargingValue(raw) {
+        const value = raw == null ? "" : String(raw).trim();
+        return CHARGING_OPTIONS.indexOf(value) >= 0 ? value : "";
+      }
+
+      function getSelectedCharging() {
+        const checked = chargingOptionsEl.querySelector('input[type="radio"]:checked');
+        return checked ? checked.value : "";
+      }
+
+      function showKickoffStep(step) {
+        currentStep = step;
+        hide(stepNiches);
+        hide(stepCharging);
+        hide(stepAdsetCaps);
+        hide(stepAdsetZips);
+        hide(stepAdsetSubmit);
+        hide(stepContacts);
+        if (step === 1) show(stepNiches);
+        else if (step === 2) show(stepCharging);
+        else if (step === 3) {
+          show(stepAdsetCaps);
+          renderAdsetCapSections();
+        } else if (step === 4) {
+          show(stepAdsetZips);
+          renderAdsetZipSections();
+        } else if (step === 5) {
+          show(stepAdsetSubmit);
+          renderAdsetSubmitSections();
+        } else if (step === 6) {
+          show(stepContacts);
+        }
+        setStepStatus("", "");
+        updateNavigationButtons();
+      }
+
+      async function renderContactsSections() {
+        adsetContactsSectionsEl.innerHTML = "";
+        const loading = document.createElement("p");
+        loading.className = "field-subtext";
+        loading.textContent = "Loading contacts…";
+        adsetContactsSectionsEl.appendChild(loading);
+        try {
+          await contactTools.renderContactsStep(adsetContactsSectionsEl, {
+            client: selectedClient,
+            adsets: kickoffAdsets,
+            nicheLabel: adsetNicheLabel,
+          }, {
+            onClientUpdated: function (client) {
+              selectedClient = client;
+              const idx = allClients.findIndex(function (r) { return r.id === client.id; });
+              if (idx >= 0) allClients[idx] = client;
+            },
+            onAdsetsUpdated: function (adsets) {
+              kickoffAdsets = adsets;
+            },
+          });
+        } catch (err) {
+          console.error("[Kickoff] Contacts UI failed", err);
+          adsetContactsSectionsEl.innerHTML = "";
+          const msg = document.createElement("p");
+          msg.className = "field-subtext";
+          msg.textContent = "Could not load contacts. You can go back or continue when ready.";
+          adsetContactsSectionsEl.appendChild(msg);
+          throw err;
+        }
+      }
+
+      function formatCapValue(raw) {
+        if (raw == null || raw === "") return "";
+        if (typeof raw === "number" && Number.isFinite(raw)) return String(Math.trunc(raw));
+        return String(raw);
+      }
+
+      function parseCapInput(raw) {
+        const trimmed = String(raw == null ? "" : raw).trim();
+        if (!trimmed) return null;
+        const n = Number(trimmed);
+        if (!Number.isFinite(n)) return null;
+        return Math.trunc(n);
+      }
+
+      function getAdsetCapInputs(adsetId) {
+        return adsetCapsSectionsEl.querySelectorAll('[data-adset-id="' + adsetId + '"][data-cap-field]');
+      }
+
+      function readCapFieldsFromDom(adsetId) {
+        const fields = {};
+        getAdsetCapInputs(adsetId).forEach(function (input) {
+          fields[input.dataset.capField] = parseCapInput(input.value);
+        });
+        return fields;
+      }
+
+      function capsMatchStored(adset, fields) {
+        return ADSET_CAP_FIELDS.every(function (fieldName) {
+          const stored = adset.fields && adset.fields[fieldName];
+          const storedVal = stored == null || stored === "" ? null : Math.trunc(Number(stored));
+          const nextVal = fields[fieldName];
+          return storedVal === nextVal || (storedVal == null && nextVal == null);
+        });
+      }
+
+      function renderAdsetCapSections() {
+        adsetCapsSectionsEl.innerHTML = "";
+        if (!kickoffAdsets.length) {
+          const empty = document.createElement("p");
+          empty.className = "field-subtext";
+          empty.textContent = "No ad sets to configure.";
+          adsetCapsSectionsEl.appendChild(empty);
+          return;
+        }
+
+        kickoffAdsets.forEach(function (adset) {
+          const niche =
+            (adset.fields && adset.fields[FIELD_ADSET_NICHE]) ||
+            (adset.fields && adset.fields[FIELD_ADSET_NAME]) ||
+            "Ad set";
+
+          const section = document.createElement("section");
+          section.className = "adset-cap-section";
+
+          const heading = document.createElement("h3");
+          heading.className = "adset-cap-heading";
+          heading.textContent = niche;
+          section.appendChild(heading);
+
+          const grid = document.createElement("div");
+          grid.className = "cap-fields";
+
+          ADSET_CAP_FIELDS.forEach(function (fieldName) {
+            const wrap = document.createElement("div");
+            wrap.className = "cap-field";
+
+            const inputId = "cap-" + adset.id + "-" + fieldName.replace(/\s+/g, "-");
+            const label = document.createElement("label");
+            label.textContent = fieldName;
+            label.setAttribute("for", inputId);
+
+            const input = document.createElement("input");
+            input.type = "number";
+            input.min = "0";
+            input.step = "1";
+            input.inputMode = "numeric";
+            input.id = inputId;
+            input.dataset.adsetId = adset.id;
+            input.dataset.capField = fieldName;
+            input.value = formatCapValue(adset.fields && adset.fields[fieldName]);
+            input.addEventListener("input", function () {
+              scheduleAdsetCapSave(adset.id);
+            });
+
+            wrap.appendChild(label);
+            wrap.appendChild(input);
+            grid.appendChild(wrap);
+          });
+
+          section.appendChild(grid);
+          adsetCapsSectionsEl.appendChild(section);
+        });
+      }
+
+      function scheduleAdsetCapSave(adsetId) {
+        if (capSaveTimers[adsetId]) clearTimeout(capSaveTimers[adsetId]);
+        capSaveTimers[adsetId] = setTimeout(function () {
+          capSaveTimers[adsetId] = null;
+          saveAdsetCaps(adsetId);
+        }, CAP_SAVE_DELAY_MS);
+      }
+
+      async function saveAdsetCaps(adsetId) {
+        if (capSaving[adsetId]) return;
+        const adset = kickoffAdsets.find(function (r) { return r.id === adsetId; });
+        if (!adset) return;
+
+        const fields = readCapFieldsFromDom(adsetId);
+        if (capsMatchStored(adset, fields)) return;
+
+        capSaving[adsetId] = true;
+        try {
+          const updated = await fetchAirtableJson(
+            AIRTABLE_BASE_URL + "/" + encodeURIComponent(TABLE_ADSET) + "/" + adsetId,
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json", Accept: "application/json" },
+              body: JSON.stringify({ fields: fields })
+            }
+          );
+          adset.fields = updated.fields || {};
+        } catch (err) {
+          console.error("[Kickoff] Adset cap save failed", adsetId, err);
+        } finally {
+          capSaving[adsetId] = false;
+        }
+      }
+
+      async function flushAdsetCapSaves() {
+        Object.keys(capSaveTimers).forEach(function (adsetId) {
+          clearTimeout(capSaveTimers[adsetId]);
+          delete capSaveTimers[adsetId];
+        });
+        await Promise.all(kickoffAdsets.map(function (adset) {
+          return saveAdsetCaps(adset.id);
+        }));
+      }
+
+      function normalizeMultiSelectValues(raw, allowed) {
+        if (!raw) return [];
+        const arr = Array.isArray(raw) ? raw : [raw];
+        return arr.map(function (v) {
+          if (v && typeof v === "object" && v.name != null) return String(v.name);
+          return String(v);
+        }).filter(function (n) { return allowed.indexOf(n) >= 0; });
+      }
+
+      function arraysEqual(a, b) {
+        if (a.length !== b.length) return false;
+        const sa = a.slice().sort();
+        const sb = b.slice().sort();
+        for (let i = 0; i < sa.length; i++) {
+          if (sa[i] !== sb[i]) return false;
+        }
+        return true;
+      }
+
+      function getAdsetSubmitSection(adsetId) {
+        return adsetSubmitSectionsEl.querySelector('.adset-submit-section[data-adset-id="' + adsetId + '"]');
+      }
+
+      function updateSubmitPanelsVisibility(sectionEl) {
+        const select = sectionEl.querySelector("[data-role=\"submit-screen\"]");
+        const calendarPanel = sectionEl.querySelector("[data-role=\"calendar-panel\"]");
+        const phonePanel = sectionEl.querySelector("[data-role=\"phone-panel\"]");
+        const callWrap = sectionEl.querySelector("[data-role=\"call-field-wrap\"]");
+        const textWrap = sectionEl.querySelector("[data-role=\"text-field-wrap\"]");
+        if (!select) return;
+
+        const value = select.value;
+        if (calendarPanel) {
+          if (value === "Calendar") show(calendarPanel);
+          else hide(calendarPanel);
+        }
+
+        const showCall = value === "Phone" || value === "Phone/Text";
+        const showText = value === "Text" || value === "Phone/Text";
+        const showPhonePanel = showCall || showText;
+
+        if (phonePanel) {
+          if (showPhonePanel) show(phonePanel);
+          else hide(phonePanel);
+        }
+        if (callWrap) {
+          if (showCall) show(callWrap);
+          else hide(callWrap);
+        }
+        if (textWrap) {
+          if (showText) show(textWrap);
+          else hide(textWrap);
+        }
+      }
+
+      function readSubmitFieldsFromDom(adsetId) {
+        const section = getAdsetSubmitSection(adsetId);
+        if (!section) return {};
+        const fields = {};
+        const submitSelect = section.querySelector("[data-role=\"submit-screen\"]");
+        const timezoneSelect = section.querySelector("[data-role=\"timezone\"]");
+        const callInput = section.querySelector("[data-role=\"call-field\"]");
+        const textInput = section.querySelector("[data-role=\"text-field\"]");
+        const submitValue = submitSelect && submitSelect.value ? submitSelect.value : null;
+        fields[FIELD_SUBMIT_SCREEN] = submitValue;
+
+        if (submitValue === "Calendar") {
+          fields[FIELD_TIMEZONE] = timezoneSelect && timezoneSelect.value ? timezoneSelect.value : null;
+          DAY_FIELDS.forEach(function (dayName) {
+            const checked = section.querySelectorAll(
+              'input[type="checkbox"][data-day-field="' + dayName + '"]:checked'
+            );
+            const values = Array.from(checked).map(function (el) { return el.value; });
+            fields[dayName] = values.length ? values : [];
+          });
+        }
+
+        if (submitValue === "Phone" || submitValue === "Phone/Text") {
+          fields[FIELD_CALL] = callInput && callInput.value.trim() ? callInput.value.trim() : null;
+        }
+        if (submitValue === "Text" || submitValue === "Phone/Text") {
+          fields[FIELD_TEXT] = textInput && textInput.value.trim() ? textInput.value.trim() : null;
+        }
+
+        return fields;
+      }
+
+      function submitFieldsMatchStored(adset, fields) {
+        const stored = adset.fields || {};
+        const storedSubmit = stored[FIELD_SUBMIT_SCREEN] || null;
+        const nextSubmit = fields[FIELD_SUBMIT_SCREEN] || null;
+        if (storedSubmit !== nextSubmit) return false;
+
+        if (nextSubmit === "Calendar") {
+          const storedTz = stored[FIELD_TIMEZONE] || null;
+          const nextTz = fields[FIELD_TIMEZONE] || null;
+          if (storedTz !== nextTz) return false;
+          return DAY_FIELDS.every(function (dayName) {
+            const storedDay = normalizeMultiSelectValues(stored[dayName], TIME_SLOT_OPTIONS);
+            const nextDay = fields[dayName] || [];
+            return arraysEqual(storedDay, nextDay);
+          });
+        }
+
+        if (nextSubmit === "Phone" || nextSubmit === "Phone/Text") {
+          const storedCall = stored[FIELD_CALL] || null;
+          const nextCall = fields[FIELD_CALL] || null;
+          if (storedCall !== nextCall) return false;
+        }
+
+        if (nextSubmit === "Text" || nextSubmit === "Phone/Text") {
+          const storedText = stored[FIELD_TEXT] || null;
+          const nextText = fields[FIELD_TEXT] || null;
+          if (storedText !== nextText) return false;
+        }
+
+        return true;
+      }
+
+      function renderAdsetSubmitSections() {
+        adsetSubmitSectionsEl.innerHTML = "";
+        if (!kickoffAdsets.length) {
+          const empty = document.createElement("p");
+          empty.className = "field-subtext";
+          empty.textContent = "No ad sets to configure.";
+          adsetSubmitSectionsEl.appendChild(empty);
+          return;
+        }
+
+        kickoffAdsets.forEach(function (adset) {
+          const niche = adsetNicheLabel(adset);
+          const fields = adset.fields || {};
+          const storedSubmit = fields[FIELD_SUBMIT_SCREEN] || "";
+          const storedTimezone = fields[FIELD_TIMEZONE] || "";
+          const storedCall = fields[FIELD_CALL] || "";
+          const storedText = fields[FIELD_TEXT] || "";
+
+          const section = document.createElement("section");
+          section.className = "adset-submit-section";
+          section.dataset.adsetId = adset.id;
+
+          const heading = document.createElement("h3");
+          heading.className = "adset-cap-heading";
+          heading.textContent = niche;
+          section.appendChild(heading);
+
+          const submitWrap = document.createElement("div");
+          submitWrap.className = "submit-field";
+
+          const submitLabel = document.createElement("label");
+          submitLabel.textContent = "Submit Screen";
+          submitLabel.setAttribute("for", "submit-screen-" + adset.id);
+          submitWrap.appendChild(submitLabel);
+
+          const submitSelect = document.createElement("select");
+          submitSelect.id = "submit-screen-" + adset.id;
+          submitSelect.dataset.role = "submit-screen";
+          submitSelect.dataset.adsetId = adset.id;
+
+          const blankOpt = document.createElement("option");
+          blankOpt.value = "";
+          blankOpt.textContent = "Select…";
+          submitSelect.appendChild(blankOpt);
+
+          SUBMIT_SCREEN_OPTIONS.forEach(function (opt) {
+            const option = document.createElement("option");
+            option.value = opt;
+            option.textContent = opt;
+            if (storedSubmit === opt) option.selected = true;
+            submitSelect.appendChild(option);
+          });
+
+          submitSelect.addEventListener("change", function () {
+            updateSubmitPanelsVisibility(section);
+            scheduleAdsetSubmitSave(adset.id);
+          });
+          submitWrap.appendChild(submitSelect);
+          section.appendChild(submitWrap);
+
+          const phonePanel = document.createElement("div");
+          phonePanel.className = "phone-panel";
+          phonePanel.dataset.role = "phone-panel";
+          if (storedSubmit !== "Phone" && storedSubmit !== "Text" && storedSubmit !== "Phone/Text") {
+            phonePanel.classList.add("hidden");
+          }
+
+          const callWrap = document.createElement("div");
+          callWrap.className = "submit-field";
+          callWrap.dataset.role = "call-field-wrap";
+          if (storedSubmit !== "Phone" && storedSubmit !== "Phone/Text") callWrap.classList.add("hidden");
+
+          const callLabel = document.createElement("label");
+          callLabel.textContent = "Call";
+          callLabel.setAttribute("for", "call-" + adset.id);
+          callWrap.appendChild(callLabel);
+
+          const callInput = document.createElement("input");
+          callInput.type = "tel";
+          callInput.id = "call-" + adset.id;
+          callInput.dataset.role = "call-field";
+          callInput.dataset.adsetId = adset.id;
+          callInput.value = storedCall;
+          callInput.autocomplete = "tel";
+          callInput.addEventListener("input", function () {
+            scheduleAdsetSubmitSave(adset.id);
+          });
+          callWrap.appendChild(callInput);
+          phonePanel.appendChild(callWrap);
+
+          const textWrap = document.createElement("div");
+          textWrap.className = "submit-field";
+          textWrap.dataset.role = "text-field-wrap";
+          if (storedSubmit !== "Text" && storedSubmit !== "Phone/Text") textWrap.classList.add("hidden");
+
+          const textLabel = document.createElement("label");
+          textLabel.textContent = "Text";
+          textLabel.setAttribute("for", "text-" + adset.id);
+          textWrap.appendChild(textLabel);
+
+          const textInput = document.createElement("input");
+          textInput.type = "tel";
+          textInput.id = "text-" + adset.id;
+          textInput.dataset.role = "text-field";
+          textInput.dataset.adsetId = adset.id;
+          textInput.value = storedText;
+          textInput.autocomplete = "tel";
+          textInput.addEventListener("input", function () {
+            scheduleAdsetSubmitSave(adset.id);
+          });
+          textWrap.appendChild(textInput);
+          phonePanel.appendChild(textWrap);
+
+          section.appendChild(phonePanel);
+
+          const calendarPanel = document.createElement("div");
+          calendarPanel.className = "calendar-panel";
+          calendarPanel.dataset.role = "calendar-panel";
+          if (storedSubmit !== "Calendar") calendarPanel.classList.add("hidden");
+
+          const tzWrap = document.createElement("div");
+          tzWrap.className = "submit-field";
+
+          const tzLabel = document.createElement("label");
+          tzLabel.textContent = "Timezone";
+          tzLabel.setAttribute("for", "timezone-" + adset.id);
+          tzWrap.appendChild(tzLabel);
+
+          const tzSelect = document.createElement("select");
+          tzSelect.id = "timezone-" + adset.id;
+          tzSelect.dataset.role = "timezone";
+          tzSelect.dataset.adsetId = adset.id;
+
+          const tzBlank = document.createElement("option");
+          tzBlank.value = "";
+          tzBlank.textContent = "Select…";
+          tzSelect.appendChild(tzBlank);
+
+          TIMEZONE_OPTIONS.forEach(function (tz) {
+            const option = document.createElement("option");
+            option.value = tz;
+            option.textContent = tz.replace("America/", "").replace(/_/g, " ");
+            if (storedTimezone === tz) option.selected = true;
+            tzSelect.appendChild(option);
+          });
+
+          tzSelect.addEventListener("change", function () {
+            scheduleAdsetSubmitSave(adset.id);
+          });
+          tzWrap.appendChild(tzSelect);
+          calendarPanel.appendChild(tzWrap);
+
+          const dayFieldsWrap = document.createElement("div");
+          dayFieldsWrap.className = "day-fields";
+
+          DAY_FIELDS.forEach(function (dayName) {
+            const selectedTimes = normalizeMultiSelectValues(fields[dayName], TIME_SLOT_OPTIONS);
+            const dayBlock = document.createElement("div");
+            dayBlock.className = "day-field-block";
+
+            const dayTitle = document.createElement("div");
+            dayTitle.className = "day-name";
+            dayTitle.textContent = dayName;
+            dayBlock.appendChild(dayTitle);
+
+            const grid = document.createElement("div");
+            grid.className = "time-slot-grid";
+
+            TIME_SLOT_OPTIONS.forEach(function (slot) {
+              const item = document.createElement("label");
+              item.className = "time-slot-item";
+              const input = document.createElement("input");
+              input.type = "checkbox";
+              input.value = slot;
+              input.dataset.dayField = dayName;
+              input.dataset.adsetId = adset.id;
+              input.checked = selectedTimes.indexOf(slot) >= 0;
+              input.addEventListener("change", function () {
+                scheduleAdsetSubmitSave(adset.id);
+              });
+              item.appendChild(input);
+              item.appendChild(document.createTextNode(slot));
+              grid.appendChild(item);
+            });
+
+            dayBlock.appendChild(grid);
+            dayFieldsWrap.appendChild(dayBlock);
+          });
+
+          calendarPanel.appendChild(dayFieldsWrap);
+          section.appendChild(calendarPanel);
+          adsetSubmitSectionsEl.appendChild(section);
+        });
+      }
+
+      function scheduleAdsetSubmitSave(adsetId) {
+        if (submitSaveTimers[adsetId]) clearTimeout(submitSaveTimers[adsetId]);
+        submitSaveTimers[adsetId] = setTimeout(function () {
+          submitSaveTimers[adsetId] = null;
+          saveAdsetSubmit(adsetId);
+        }, SUBMIT_SAVE_DELAY_MS);
+      }
+
+      async function saveAdsetSubmit(adsetId) {
+        if (submitSaving[adsetId]) return;
+        const adset = kickoffAdsets.find(function (r) { return r.id === adsetId; });
+        if (!adset) return;
+
+        const fields = readSubmitFieldsFromDom(adsetId);
+        if (submitFieldsMatchStored(adset, fields)) return;
+
+        submitSaving[adsetId] = true;
+        try {
+          const updated = await fetchAirtableJson(
+            AIRTABLE_BASE_URL + "/" + encodeURIComponent(TABLE_ADSET) + "/" + adsetId,
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json", Accept: "application/json" },
+              body: JSON.stringify({ fields: fields })
+            }
+          );
+          adset.fields = updated.fields || {};
+        } catch (err) {
+          console.error("[Kickoff] Adset submit save failed", adsetId, err);
+        } finally {
+          submitSaving[adsetId] = false;
+        }
+      }
+
+      async function flushAdsetSubmitSaves() {
+        Object.keys(submitSaveTimers).forEach(function (adsetId) {
+          clearTimeout(submitSaveTimers[adsetId]);
+          delete submitSaveTimers[adsetId];
+        });
+        await Promise.all(kickoffAdsets.map(function (adset) {
+          return saveAdsetSubmit(adset.id);
+        }));
+      }
+
+      function renderChargingOptions(selected) {
+        chargingOptionsEl.innerHTML = "";
+        const groupName = "charging-choice";
+        CHARGING_OPTIONS.forEach(function (option) {
+          const label = document.createElement("label");
+          label.className = "radio-item";
+          const input = document.createElement("input");
+          input.type = "radio";
+          input.name = groupName;
+          input.value = option;
+          input.checked = selected === option;
+          input.addEventListener("change", onChargingChange);
+          label.appendChild(input);
+          label.appendChild(document.createTextNode(option));
+          chargingOptionsEl.appendChild(label);
+        });
+        updateNavigationButtons();
       }
 
       function getSelectedNiches() {
@@ -582,8 +1761,24 @@
           .map(function (el) { return el.value; });
       }
 
-      function updateNextButton() {
-        btnNext.disabled = nextInProgress || getSelectedNiches().length === 0;
+      function updateNavigationButtons() {
+        btnBack.disabled = currentStep <= 1;
+        if (currentStep === 1) {
+          btnNext.disabled = getSelectedNiches().length === 0;
+          return;
+        }
+        if (currentStep === 2) {
+          btnNext.disabled = !getSelectedCharging();
+          return;
+        }
+        btnNext.disabled = false;
+      }
+
+      function handleBackClick() {
+        if (currentStep <= 1) return;
+        navigationEpoch += 1;
+        nextInProgress = false;
+        showKickoffStep(currentStep - 1);
       }
 
       function setStepStatus(message, kind) {
@@ -609,20 +1804,32 @@
           nicheSaveTimer = null;
           saveNiches();
         }
+        if (chargingSaveTimer) {
+          clearTimeout(chargingSaveTimer);
+          chargingSaveTimer = null;
+          saveCharging();
+        }
+        flushAdsetCapSaves();
+        flushAdsetSubmitSaves();
       }
 
       function openClientModal(record) {
         flushPendingSaves();
         selectedClient = record;
+        kickoffAdsets = [];
+        currentStep = 1;
         nextInProgress = false;
+        contactsMigrationDone = false;
+        navigationEpoch += 1;
         notesDirty = false;
         nicheDirty = false;
+        chargingDirty = false;
 
         modalTitle.textContent = clientDisplayName(record);
         notesField.value = (record.fields && record.fields[FIELD_NOTES]) || "";
         renderNicheCheckboxes(normalizeNicheValues(record.fields && record.fields[FIELD_NICHE]));
-        setStepStatus("", "");
-        updateNextButton();
+        renderChargingOptions(normalizeChargingValue(record.fields && record.fields[FIELD_CHARGING]));
+        showKickoffStep(1);
 
         modalBackdrop.classList.add("open");
         modalBackdrop.setAttribute("aria-hidden", "false");
@@ -634,6 +1841,8 @@
         modalBackdrop.classList.remove("open");
         modalBackdrop.setAttribute("aria-hidden", "true");
         selectedClient = null;
+        kickoffAdsets = [];
+        currentStep = 1;
       }
 
       function scheduleNotesSave() {
@@ -674,7 +1883,7 @@
 
       function onNicheChange() {
         nicheDirty = true;
-        updateNextButton();
+        updateNavigationButtons();
         if (nicheSaveTimer) clearTimeout(nicheSaveTimer);
         nicheSaveTimer = setTimeout(function () {
           nicheSaveTimer = null;
@@ -712,12 +1921,51 @@
         }
       }
 
+      function onChargingChange() {
+        chargingDirty = true;
+        updateNavigationButtons();
+        if (chargingSaveTimer) clearTimeout(chargingSaveTimer);
+        chargingSaveTimer = setTimeout(function () {
+          chargingSaveTimer = null;
+          saveCharging();
+        }, CHARGING_SAVE_DELAY_MS);
+      }
+
+      async function saveCharging() {
+        if (!selectedClient || chargingSaving) return;
+        const value = getSelectedCharging();
+        if (!value) return;
+        const current = normalizeChargingValue(selectedClient.fields && selectedClient.fields[FIELD_CHARGING]);
+        if (value === current && !chargingDirty) return;
+
+        chargingSaving = true;
+        try {
+          const updated = await fetchAirtableJson(
+            AIRTABLE_BASE_URL + "/" + encodeURIComponent(TABLE_CLIENT) + "/" + selectedClient.id,
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json", Accept: "application/json" },
+              body: JSON.stringify({ fields: { [FIELD_CHARGING]: value } })
+            }
+          );
+          selectedClient = updated;
+          chargingDirty = false;
+          const idx = allClients.findIndex(function (r) { return r.id === updated.id; });
+          if (idx >= 0) allClients[idx] = updated;
+        } catch (err) {
+          console.error("[Kickoff] Charging save failed", err);
+        } finally {
+          chargingSaving = false;
+        }
+      }
+
       async function createAdsetsForSelectedNiches() {
         const niches = getSelectedNiches();
         if (!selectedClient || niches.length === 0) return;
+        if (nextInProgress) return;
 
         nextInProgress = true;
-        updateNextButton();
+        updateNavigationButtons();
         setStepStatus("Creating ad sets…", "");
 
         if (nicheDirty || nicheSaveTimer) {
@@ -734,9 +1982,11 @@
           fields[FIELD_ADSET_NAME] = clientName + " - " + niche;
           fields[FIELD_ADSET_CLIENT] = [selectedClient.id];
           fields[FIELD_ADSET_STATUS] = "Setup";
+          fields[FIELD_ADSET_NICHE] = niche;
           return { fields: fields };
         });
 
+        let createError = null;
         try {
           const created = await fetchAirtableJson(
             AIRTABLE_BASE_URL + "/" + encodeURIComponent(TABLE_ADSET),
@@ -747,6 +1997,10 @@
             }
           );
 
+          kickoffAdsets = (created.records || []).map(function (record) {
+            return { id: record.id, fields: record.fields || {} };
+          });
+
           const refreshed = await fetchAirtableJson(
             AIRTABLE_BASE_URL + "/" + encodeURIComponent(TABLE_CLIENT) + "/" + selectedClient.id
           );
@@ -754,19 +2008,120 @@
           const idx = allClients.findIndex(function (r) { return r.id === refreshed.id; });
           if (idx >= 0) allClients[idx] = refreshed;
 
-          const names = (created.records || []).map(function (r) {
-            return r.fields && r.fields[FIELD_ADSET_NAME];
-          }).filter(Boolean);
-
-          setStepStatus(
-            "Created " + names.length + " ad set(s): " + names.join(", "),
-            "success"
-          );
+          renderChargingOptions(normalizeChargingValue(refreshed.fields && refreshed.fields[FIELD_CHARGING]));
         } catch (err) {
-          setStepStatus(err.message || "Failed to create ad sets.", "error");
+          createError = err;
+          console.error("[Kickoff] Adset create failed", err);
         } finally {
           nextInProgress = false;
-          updateNextButton();
+        }
+
+        showKickoffStep(2);
+        if (createError) {
+          setStepStatus(
+            (createError.message || "Failed to create ad sets.") + " You can go back and try again, or continue.",
+            "error"
+          );
+        }
+        updateNavigationButtons();
+      }
+
+      async function advanceToContactsStep() {
+        const epoch = navigationEpoch;
+        await flushAdsetSubmitSaves();
+        if (epoch !== navigationEpoch || currentStep !== 5) return;
+
+        let migrationError = null;
+
+        if (!contactsMigrationDone) {
+          if (nextInProgress) return;
+          nextInProgress = true;
+          updateNavigationButtons();
+          setStepStatus("Processing billing contacts…", "");
+          try {
+            const migrated = await contactTools.migrateBillingContacts(selectedClient, kickoffAdsets);
+            if (epoch !== navigationEpoch || currentStep !== 5) return;
+            selectedClient = migrated.client;
+            kickoffAdsets = migrated.adsets;
+            const idx = allClients.findIndex(function (r) { return r.id === selectedClient.id; });
+            if (idx >= 0) allClients[idx] = selectedClient;
+          } catch (err) {
+            migrationError = err;
+            console.error("[Kickoff] Contacts migration failed", err);
+          } finally {
+            contactsMigrationDone = true;
+            nextInProgress = false;
+          }
+        }
+
+        if (epoch !== navigationEpoch || currentStep !== 5) return;
+
+        showKickoffStep(6);
+        let renderError = null;
+        try {
+          await renderContactsSections();
+        } catch (err) {
+          renderError = err;
+        }
+
+        if (epoch !== navigationEpoch) return;
+
+        if (migrationError) {
+          setStepStatus(
+            (migrationError.message || "Failed to process billing contacts.") + " You can still configure contacts below.",
+            "error"
+          );
+        } else if (renderError) {
+          setStepStatus(
+            (renderError.message || "Failed to load contacts.") + " You can go back or try again.",
+            "error"
+          );
+        }
+        updateNavigationButtons();
+      }
+
+      async function handleNextClick() {
+        if (nextInProgress) return;
+        try {
+          if (currentStep === 1) {
+            if (kickoffAdsets.length > 0) {
+              showKickoffStep(2);
+              return;
+            }
+            await createAdsetsForSelectedNiches();
+            return;
+          }
+          if (currentStep === 2) {
+            if (chargingDirty || chargingSaveTimer) {
+              if (chargingSaveTimer) {
+                clearTimeout(chargingSaveTimer);
+                chargingSaveTimer = null;
+              }
+              await saveCharging();
+            }
+            showKickoffStep(3);
+            return;
+          }
+          if (currentStep === 3) {
+            await flushAdsetCapSaves();
+            showKickoffStep(4);
+            return;
+          }
+          if (currentStep === 4) {
+            showKickoffStep(5);
+            return;
+          }
+          if (currentStep === 5) {
+            await advanceToContactsStep();
+          }
+        } catch (err) {
+          console.error("[Kickoff] Next step failed", err);
+          nextInProgress = false;
+          setStepStatus(
+            (err.message || "Something went wrong.") + " You can go back or try again.",
+            "error"
+          );
+          updateNavigationButtons();
         }
       }
 
@@ -779,7 +2134,8 @@
       document.addEventListener("keydown", function (e) {
         if (e.key === "Escape" && modalBackdrop.classList.contains("open")) closeClientModal();
       });
-      btnNext.addEventListener("click", createAdsetsForSelectedNiches);
+      btnBack.addEventListener("click", handleBackClick);
+      btnNext.addEventListener("click", handleNextClick);
 
       loadClients();
     })();
