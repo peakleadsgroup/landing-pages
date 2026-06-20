@@ -228,11 +228,54 @@
         return wrap;
       }
 
+      const phoneValue = f[CONFIG.FIELD_PHONE] || "";
+      const hasPhone = Boolean(String(phoneValue).trim());
+
       const grid = document.createElement("div");
       grid.className = "contact-row-grid";
       grid.appendChild(fieldInput("Name", CONFIG.FIELD_NAME, "text", f[CONFIG.FIELD_NAME]));
       grid.appendChild(fieldInput("Email", CONFIG.FIELD_EMAIL, "email", f[CONFIG.FIELD_EMAIL]));
-      grid.appendChild(fieldInput("Phone", CONFIG.FIELD_PHONE, "tel", f[CONFIG.FIELD_PHONE]));
+
+      const textWrap = document.createElement("div");
+      textWrap.className = "contact-field contact-text-toggle";
+      const textLabel = document.createElement("label");
+      textLabel.className = "contact-text-checkbox-label";
+      const textCheckbox = document.createElement("input");
+      textCheckbox.type = "checkbox";
+      textCheckbox.checked = hasPhone;
+      textLabel.appendChild(textCheckbox);
+      textLabel.appendChild(document.createTextNode("Text?"));
+      textWrap.appendChild(textLabel);
+      grid.appendChild(textWrap);
+
+      const phoneWrap = document.createElement("div");
+      phoneWrap.className = "contact-field contact-phone-field" + (hasPhone ? "" : " hidden");
+      const phoneLabel = document.createElement("label");
+      phoneLabel.textContent = "Phone";
+      const phoneInput = document.createElement("input");
+      phoneInput.type = "tel";
+      phoneInput.value = phoneValue;
+      phoneInput.dataset.contactId = contact.id;
+      phoneInput.dataset.contactField = CONFIG.FIELD_PHONE;
+      phoneInput.dataset.savedValue = phoneValue;
+      phoneInput.addEventListener("input", function () {
+        scheduleContactFieldSave(contact.id, CONFIG.FIELD_PHONE, phoneInput.value, phoneInput);
+      });
+      phoneWrap.appendChild(phoneLabel);
+      phoneWrap.appendChild(phoneInput);
+      grid.appendChild(phoneWrap);
+
+      textCheckbox.addEventListener("change", function () {
+        if (textCheckbox.checked) {
+          show(phoneWrap);
+          phoneInput.focus();
+          return;
+        }
+        phoneInput.value = "";
+        hide(phoneWrap);
+        scheduleContactFieldSave(contact.id, CONFIG.FIELD_PHONE, "", phoneInput);
+      });
+
       row.appendChild(grid);
 
       const actions = document.createElement("div");
@@ -346,13 +389,39 @@
       const emailInput = document.createElement("input");
       emailInput.type = "email";
       emailInput.placeholder = "Email";
-      const phoneInput = document.createElement("input");
-      phoneInput.type = "tel";
-      phoneInput.placeholder = "Phone";
 
       grid.appendChild(nameInput);
       grid.appendChild(emailInput);
-      grid.appendChild(phoneInput);
+
+      const textWrap = document.createElement("div");
+      textWrap.className = "contact-field contact-text-toggle";
+      const textLabel = document.createElement("label");
+      textLabel.className = "contact-text-checkbox-label";
+      const textCheckbox = document.createElement("input");
+      textCheckbox.type = "checkbox";
+      textLabel.appendChild(textCheckbox);
+      textLabel.appendChild(document.createTextNode("Text?"));
+      textWrap.appendChild(textLabel);
+      grid.appendChild(textWrap);
+
+      const phoneWrap = document.createElement("div");
+      phoneWrap.className = "contact-field contact-phone-field hidden";
+      const phoneInput = document.createElement("input");
+      phoneInput.type = "tel";
+      phoneInput.placeholder = "Phone";
+      phoneWrap.appendChild(phoneInput);
+      grid.appendChild(phoneWrap);
+
+      textCheckbox.addEventListener("change", function () {
+        if (textCheckbox.checked) {
+          show(phoneWrap);
+          phoneInput.focus();
+          return;
+        }
+        phoneInput.value = "";
+        hide(phoneWrap);
+      });
+
       wrap.appendChild(grid);
 
       const btn = document.createElement("button");
@@ -363,7 +432,7 @@
         const fields = {};
         const name = nameInput.value.trim();
         const email = emailInput.value.trim();
-        const phone = phoneInput.value.trim();
+        const phone = textCheckbox.checked ? phoneInput.value.trim() : "";
         if (name) fields[CONFIG.FIELD_NAME] = name;
         if (email) fields[CONFIG.FIELD_EMAIL] = email;
         if (phone) fields[CONFIG.FIELD_PHONE] = phone;
@@ -373,6 +442,8 @@
           nameInput.value = "";
           emailInput.value = "";
           phoneInput.value = "";
+          textCheckbox.checked = false;
+          hide(phoneWrap);
         }).catch(function (err) {
           console.error("[Kickoff Contacts] create failed", err);
         }).finally(function () {
