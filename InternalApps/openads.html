@@ -182,11 +182,24 @@
         return records;
       }
 
+      function shuffleArray(arr) {
+        var shuffled = arr.slice();
+        for (var i = shuffled.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var tmp = shuffled[i];
+          shuffled[i] = shuffled[j];
+          shuffled[j] = tmp;
+        }
+        return shuffled;
+      }
+
       function render(records) {
-        var withScript = records.filter(function (rec) {
-          var script = rec.fields && rec.fields.Script;
-          return script != null && String(script).trim() !== "";
-        });
+        var withScript = shuffleArray(
+          records.filter(function (rec) {
+            var script = rec.fields && rec.fields.Script;
+            return script != null && String(script).trim() !== "";
+          })
+        );
 
         if (!withScript.length) {
           statusEl.textContent = "No active scripts found.";
