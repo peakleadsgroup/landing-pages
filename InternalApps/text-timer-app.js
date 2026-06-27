@@ -356,7 +356,7 @@
     }
 
     if (els.buildScheduleBtn) {
-      els.buildScheduleBtn.disabled = state.loading || state.queued.length === 0;
+      els.buildScheduleBtn.disabled = state.queued.length === 0;
     }
   }
 
@@ -612,6 +612,7 @@
     state.loading = true;
     if (els.loadStatus) els.loadStatus.textContent = "Loading today's messages…";
     if (els.refreshBtn) els.refreshBtn.disabled = true;
+    if (els.buildScheduleBtn) els.buildScheduleBtn.disabled = true;
 
     try {
       var records = await fetchAllRecords(todayFilterFormula());
