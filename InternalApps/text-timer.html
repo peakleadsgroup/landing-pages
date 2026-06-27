@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" />
+  <title>Text Timer - PeakLeads</title>
+  <link rel="stylesheet" href="text-timer.css?v=1" />
+</head>
+<body class="tt-body">
+  <header class="tt-header">
+    <div class="tt-header-left">
+      <img src="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" alt="" width="36" height="36" />
+      <div>
+        <h1>Text Timer</h1>
+        <p class="tt-header-sub">Release today&apos;s queued messages to Pending in timed batches</p>
+      </div>
+    </div>
+    <div class="tt-header-actions">
+      <button type="button" id="refresh-btn" class="tt-btn tt-btn-ghost">Refresh data</button>
+    </div>
+  </header>
+
+  <div id="toast-area" class="tt-toast-area" aria-live="polite"></div>
+
+  <nav class="tt-steps" aria-label="Progress">
+    <ol id="step-nav" class="tt-step-nav">
+      <li class="tt-step-item active" data-step="1"><span class="tt-step-num">1</span> Review queue</li>
+      <li class="tt-step-item" data-step="2"><span class="tt-step-num">2</span> Preview schedule</li>
+      <li class="tt-step-item" data-step="3"><span class="tt-step-num">3</span> Run timer</li>
+    </ol>
+  </nav>
+
+  <main class="tt-main">
+    <!-- Step 1: Review -->
+    <section id="panel-step-1" class="tt-panel">
+      <div class="tt-stats-grid">
+        <div class="tt-stat-card">
+          <span class="tt-stat-label">Waiting (empty status)</span>
+          <span id="stat-queued" class="tt-stat-value">—</span>
+        </div>
+        <div class="tt-stat-card">
+          <span class="tt-stat-label">Already Pending</span>
+          <span id="stat-pending" class="tt-stat-value">—</span>
+        </div>
+        <div class="tt-stat-card">
+          <span class="tt-stat-label">Sent (Success)</span>
+          <span id="stat-success" class="tt-stat-value">—</span>
+        </div>
+        <div class="tt-stat-card">
+          <span class="tt-stat-label">Failed</span>
+          <span id="stat-failed" class="tt-stat-value">—</span>
+        </div>
+      </div>
+
+      <p id="load-status" class="tt-muted">Loading today&apos;s messages…</p>
+
+      <div class="tt-settings">
+        <h2>Timer settings</h2>
+        <div class="tt-settings-grid">
+          <label class="tt-field">
+            <span class="tt-label">Minutes between batches</span>
+            <input id="cfg-interval" class="tt-input" type="number" min="1" max="60" step="1" value="3" />
+          </label>
+          <label class="tt-field">
+            <span class="tt-label">Min per batch</span>
+            <input id="cfg-batch-min" class="tt-input" type="number" min="1" max="10" step="1" value="5" />
+          </label>
+          <label class="tt-field">
+            <span class="tt-label">Max per batch</span>
+            <input id="cfg-batch-max" class="tt-input" type="number" min="1" max="10" step="1" value="10" />
+          </label>
+          <label class="tt-field tt-field-check">
+            <input id="cfg-first-immediate" type="checkbox" checked />
+            <span>Release first batch immediately on start</span>
+          </label>
+        </div>
+        <p class="tt-muted tt-settings-note">
+          Each batch picks a random count between min and max (capped at 10 for Airtable). Only records created today with an empty Status field are queued.
+        </p>
+      </div>
+
+      <div class="tt-section">
+        <div class="tt-section-head">
+          <h2>Waiting queue</h2>
+          <span id="queue-count-label" class="tt-badge">0 records</span>
+        </div>
+        <div id="queue-table-wrap" class="tt-table-wrap">
+          <table class="tt-table">
+            <thead>
+              <tr>
+                <th>Created</th>
+                <th>Phone</th>
+                <th>Direction</th>
+                <th>Message</th>
+                <th>Business</th>
+              </tr>
+            </thead>
+            <tbody id="queue-tbody"></tbody>
+          </table>
+          <p id="queue-empty" class="tt-empty hidden">No messages waiting — all caught up for today.</p>
+        </div>
+      </div>
+
+      <div class="tt-section">
+        <div class="tt-section-head">
+          <h2>Already released today</h2>
+          <span id="released-count-label" class="tt-badge tt-badge-muted">0 records</span>
+        </div>
+        <div id="released-table-wrap" class="tt-table-wrap tt-table-wrap-short">
+          <table class="tt-table">
+            <thead>
+              <tr>
+                <th>Created</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Message</th>
+              </tr>
+            </thead>
+            <tbody id="released-tbody"></tbody>
+          </table>
+          <p id="released-empty" class="tt-empty hidden">Nothing released yet today.</p>
+        </div>
+      </div>
+
+      <div class="tt-panel-actions">
+        <button type="button" id="build-schedule-btn" class="tt-btn tt-btn-primary" disabled>Build schedule →</button>
+      </div>
+    </section>
+
+    <!-- Step 2: Preview schedule -->
+    <section id="panel-step-2" class="tt-panel hidden">
+      <div class="tt-preview-summary">
+        <p id="preview-summary-text" class="tt-preview-lead"></p>
+        <ul id="preview-stats" class="tt-preview-stats"></ul>
+      </div>
+
+      <div id="batch-list" class="tt-batch-list"></div>
+
+      <div class="tt-panel-actions">
+        <button type="button" id="back-to-review-btn" class="tt-btn tt-btn-ghost">← Back</button>
+        <button type="button" id="start-timer-btn" class="tt-btn tt-btn-primary">Start timer</button>
+      </div>
+    </section>
+
+    <!-- Step 3: Run -->
+    <section id="panel-step-3" class="tt-panel hidden">
+      <div class="tt-run-banner" id="run-banner">
+        <div class="tt-run-banner-main">
+          <span id="run-state-label" class="tt-run-state">Running</span>
+          <p id="run-countdown" class="tt-run-countdown">Next batch in —</p>
+        </div>
+        <div class="tt-run-banner-actions">
+          <button type="button" id="pause-btn" class="tt-btn tt-btn-ghost">Pause</button>
+          <button type="button" id="stop-btn" class="tt-btn tt-btn-danger">Stop</button>
+        </div>
+      </div>
+
+      <div class="tt-progress-wrap">
+        <div id="run-progress-bar" class="tt-progress-bar" style="width: 0%"></div>
+      </div>
+      <p id="run-progress-text" class="tt-progress-text">0 / 0 batches complete</p>
+
+      <div class="tt-run-columns">
+        <div class="tt-run-col">
+          <h3>Released this session</h3>
+          <p class="tt-muted tt-col-meta" id="released-session-meta">0 messages</p>
+          <ul id="released-session-list" class="tt-activity-list"></ul>
+        </div>
+        <div class="tt-run-col tt-run-col-highlight">
+          <h3>Up next</h3>
+          <p class="tt-muted tt-col-meta" id="upnext-meta">—</p>
+          <div id="upnext-detail" class="tt-upnext-detail"></div>
+        </div>
+        <div class="tt-run-col">
+          <h3>Still scheduled</h3>
+          <p class="tt-muted tt-col-meta" id="scheduled-meta">—</p>
+          <ul id="scheduled-list" class="tt-scheduled-list"></ul>
+        </div>
+      </div>
+
+      <div class="tt-section">
+        <h3>Activity log</h3>
+        <ul id="activity-log" class="tt-log"></ul>
+      </div>
+
+      <div id="run-complete" class="tt-run-complete hidden">
+        <p id="run-complete-text"></p>
+        <button type="button" id="run-done-btn" class="tt-btn tt-btn-primary">Back to review</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="text-timer-app.js?v=1"></script>
+</body>
+</html>
