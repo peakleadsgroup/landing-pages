@@ -483,8 +483,19 @@
                 </div>
             </div>
 
-            <!-- Step 4: Business name -->
+            <!-- Step 4: Lead providers -->
             <div class="form-step" id="step4">
+                <div class="step-header">How many lead providers do you currently work with?</div>
+                <div class="options">
+                    <div class="option" data-value="none" onclick="selectOption(this, 'lead_providers', 'none')">None</div>
+                    <div class="option" data-value="1_5" onclick="selectOption(this, 'lead_providers', '1_5')">1-5</div>
+                    <div class="option" data-value="5_10" onclick="selectOption(this, 'lead_providers', '5_10')">5-10</div>
+                    <div class="option" data-value="over_10" onclick="selectOption(this, 'lead_providers', 'over_10')">10+</div>
+                </div>
+            </div>
+
+            <!-- Step 5: Business name -->
+            <div class="form-step" id="step5">
                 <div class="step-header">Business name</div>
                 <div class="input-wrap">
                     <input type="text" id="businessName" class="text-input" placeholder="Your business name" autocomplete="organization">
@@ -493,8 +504,8 @@
                 <button type="button" class="nav-btn" onclick="validateAndNext('businessName')">Next</button>
             </div>
 
-            <!-- Step 5: Business website -->
-            <div class="form-step" id="step5">
+            <!-- Step 6: Business website -->
+            <div class="form-step" id="step6">
                 <div class="step-header">Business website</div>
                 <div class="input-wrap">
                     <input type="text" id="businessWebsite" class="text-input" placeholder="example.com" autocomplete="url">
@@ -503,8 +514,8 @@
                 <button type="button" class="nav-btn" onclick="validateAndNext('businessWebsite')">Next</button>
             </div>
 
-            <!-- Step 6: Your name -->
-            <div class="form-step" id="step6">
+            <!-- Step 7: Your name -->
+            <div class="form-step" id="step7">
                 <div class="step-header">Your name</div>
                 <div class="name-grid">
                     <div class="input-wrap">
@@ -521,8 +532,8 @@
                 <button type="button" class="nav-btn" onclick="validateAndNext('name')">Next</button>
             </div>
 
-            <!-- Step 7: Phone -->
-            <div class="form-step" id="step7">
+            <!-- Step 8: Phone -->
+            <div class="form-step" id="step8">
                 <div class="step-header">Your phone</div>
                 <div class="input-wrap">
                     <input type="tel" id="phone" class="text-input" placeholder="(555) 123-4567" inputmode="tel" autocomplete="tel">
@@ -532,8 +543,8 @@
                 <button type="button" class="nav-btn" onclick="validateAndNext('phone')">Next</button>
             </div>
 
-            <!-- Step 8: Email + Submit -->
-            <div class="form-step" id="step8">
+            <!-- Step 9: Email + Submit -->
+            <div class="form-step" id="step9">
                 <div class="step-header">Your email</div>
                 <div class="input-wrap">
                     <input type="email" id="email" class="text-input" placeholder="you@example.com" autocomplete="email">
@@ -661,7 +672,7 @@
             });
         }
 
-        const TOTAL_STEPS = 8;
+        const TOTAL_STEPS = 9;
         let currentStep = 1;
         const formData = {};
 
@@ -855,6 +866,12 @@
             '500k_1m': '$500,000-$1,000,000',
             over_1m: 'More than $1,000,000'
         };
+        const LEAD_PROVIDERS_LABELS = {
+            none: 'None',
+            '1_5': '1-5',
+            '5_10': '5-10',
+            over_10: '10+'
+        };
         function formatPhoneForDisplay(digits) {
             if (!digits || digits.length !== 10) return digits || '';
             return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
@@ -943,6 +960,7 @@
             if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
 
             const revenueLabel = REVENUE_LABELS[formData.revenue] || formData.revenue || '';
+            const leadProvidersLabel = LEAD_PROVIDERS_LABELS[formData.lead_providers] || formData.lead_providers || '';
             const summaryParts = [
                 '=== B2B BATHROOM QUALIFICATION ===',
                 '',
@@ -954,6 +972,9 @@
                 '',
                 'ESTIMATED MONTHLY REVENUE:',
                 revenueLabel,
+                '',
+                'LEAD PROVIDERS:',
+                `How many lead providers do you currently work with? ${leadProvidersLabel}`,
                 '',
                 'BUSINESS:',
                 `Business Name: ${formData.business_name || ''}`,
@@ -993,8 +1014,15 @@
                 // Track Lead conversion
                 if (typeof fbq === 'function') fbq('track', 'Lead');
 
-                // Redirect all submitted leads to the discovery session calendar
-                window.location.href = 'https://cal.com/daniel-wellish-plg/30min';
+                // Revenue over $100k: redirect to discovery session calendar
+                const revenueOver100k = ['100k_500k', '500k_1m', 'over_1m'].includes(formData.revenue);
+                if (revenueOver100k) {
+                    const name = encodeURIComponent(formData.contact_name || '');
+                    const email = encodeURIComponent(formData.email || '');
+                    window.location.href = `https://cal.com/daniel-wellish-plg/30min?name=${name}&email=${email}`;
+                } else {
+                    showFinalScreen();
+                }
             } catch (err) {
                 console.error(err);
                 alert('There was an error submitting your form. Please try again.');
