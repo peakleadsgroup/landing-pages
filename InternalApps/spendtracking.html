@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag("js", new Date());
+    gtag("config", "AW-18128405900");
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" />
+  <title>Spend Tracking - PeakLeads</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      background: #f1f3f4;
+      color: #202124;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 1.5rem;
+      background: #fff;
+      border-bottom: 1px solid #dadce0;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+
+    header img { width: 36px; height: 36px; }
+    header h1 { font-size: 1.25rem; font-weight: 600; }
+    header p { font-size: 0.8125rem; color: #5f6368; margin-left: auto; }
+
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1.25rem 1.5rem 2rem;
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid #dadce0;
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .panel-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #5f6368;
+      margin-bottom: 0.75rem;
+    }
+
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: flex-end;
+    }
+
+    .field { flex: 1; min-width: 200px; }
+
+    label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: #5f6368;
+      margin-bottom: 0.35rem;
+    }
+
+    input[type="search"],
+    select {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border: 1px solid #dadce0;
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      background: #fff;
+    }
+
+    input[type="search"]:focus,
+    select:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+    }
+
+    .search-wrap { position: relative; }
+
+    .suggestions {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      max-height: 260px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #dadce0;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+      z-index: 50;
+      display: none;
+    }
+
+    .suggestions.open { display: block; }
+
+    .suggestion {
+      padding: 0.6rem 0.75rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+      border-bottom: 1px solid #f1f3f4;
+    }
+
+    .suggestion:hover,
+    .suggestion.active { background: #e8f0fe; }
+
+    .suggestion small {
+      display: block;
+      color: #5f6368;
+      font-size: 0.75rem;
+      margin-top: 0.15rem;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      min-height: 2rem;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.6rem;
+      background: #e8f0fe;
+      color: #174ea6;
+      border-radius: 999px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+
+    .chip button {
+      border: none;
+      background: transparent;
+      color: #174ea6;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0 0.1rem;
+    }
+
+    .chip button:hover { color: #c5221f; }
+
+    .metric-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .pill {
+      border: 1px solid #dadce0;
+      background: #fff;
+      border-radius: 999px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.8125rem;
+      cursor: pointer;
+      color: #5f6368;
+    }
+
+    .pill:hover { border-color: #1a73e8; color: #1a73e8; }
+    .pill.active {
+      background: #1a73e8;
+      border-color: #1a73e8;
+      color: #fff;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .kpi {
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #e8eaed;
+      background: #f8f9fa;
+    }
+
+    .kpi-label {
+      font-size: 0.75rem;
+      color: #5f6368;
+      margin-bottom: 0.25rem;
+    }
+
+    .kpi-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #202124;
+    }
+
+    .kpi-sub {
+      font-size: 0.6875rem;
+      color: #80868b;
+      margin-top: 0.2rem;
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 380px;
+    }
+
+    .status {
+      font-size: 0.875rem;
+      color: #5f6368;
+      padding: 0.5rem 0;
+    }
+
+    .status.error { color: #c5221f; }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+    }
+
+    th, td {
+      padding: 0.55rem 0.65rem;
+      text-align: left;
+      border-bottom: 1px solid #e8eaed;
+      white-space: nowrap;
+    }
+
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #5f6368;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    th:hover { background: #e8eaed; }
+    th.sorted-asc::after { content: " \25B2"; font-size: 0.65rem; }
+    th.sorted-desc::after { content: " \25BC"; font-size: 0.65rem; }
+
+    tr:hover td { background: #f8f9fa; }
+
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.75rem;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 0.9rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      background: #e8eaed;
+      color: #202124;
+    }
+
+    .btn:hover { background: #dadce0; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: #1a73e8; color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #1557b0; }
+
+    .tooltip-card {
+      pointer-events: none;
+      position: fixed;
+      background: rgba(32, 33, 36, 0.94);
+      color: #fff;
+      border-radius: 8px;
+      padding: 0.75rem 0.9rem;
+      font-size: 0.75rem;
+      line-height: 1.45;
+      max-width: 320px;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+      display: none;
+    }
+
+    .tooltip-card.visible { display: block; }
+    .tooltip-card h4 {
+      font-size: 0.8125rem;
+      margin-bottom: 0.45rem;
+      font-weight: 600;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      padding-bottom: 0.35rem;
+    }
+
+    .tooltip-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .tooltip-row span:last-child { font-weight: 600; text-align: right; }
+
+    .empty-state {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: #5f6368;
+      font-size: 0.9375rem;
+    }
+
+    @media (max-width: 640px) {
+      header { flex-wrap: wrap; }
+      header p { margin-left: 0; width: 100%; }
+      .chart-wrap { height: 280px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" alt="" />
+    <h1>Spend Tracking</h1>
+    <p>CPL Tracking · daily ad spend &amp; performance by ad set</p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-title">Ad sets</div>
+      <div class="controls-row">
+        <div class="field search-wrap">
+          <label for="adset-search">Search ad sets</label>
+          <input type="search" id="adset-search" placeholder="Type to search ad set name…" autocomplete="off" />
+          <div id="suggestions" class="suggestions" role="listbox"></div>
+        </div>
+        <div class="field" style="flex: 0 0 auto; min-width: 140px;">
+          <label for="range-select">Date range</label>
+          <select id="range-select">
+            <option value="30">Last 30 days</option>
+            <option value="14">Last 14 days</option>
+            <option value="7">Last 7 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="all" selected>All time</option>
+          </select>
+        </div>
+      </div>
+      <div id="selected-chips" class="chips" aria-label="Selected ad sets"></div>
+      <p id="load-status" class="status">Loading ad sets…</p>
+    </section>
+
+    <section class="panel" id="chart-panel" hidden>
+      <div class="controls-row" style="margin-bottom: 1rem;">
+        <div class="field">
+          <label>Chart metric</label>
+          <div id="metric-pills" class="metric-pills"></div>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="spend-chart"></canvas>
+      </div>
+      <div id="chart-tooltip" class="tooltip-card"></div>
+      <div class="actions">
+        <button type="button" class="btn" id="export-csv-btn">Export CSV</button>
+        <button type="button" class="btn" id="refresh-btn">Refresh data</button>
+      </div>
+    </section>
+
+    <section class="panel" id="kpi-panel" hidden>
+      <div class="panel-title">Latest snapshot</div>
+      <div id="kpi-grid" class="kpi-grid"></div>
+    </section>
+
+    <section class="panel" id="table-panel" hidden>
+      <div class="panel-title">Daily records</div>
+      <div class="table-wrap">
+        <table>
+          <thead id="table-head"></thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" id="empty-panel">
+      <div class="empty-state">Search and select one or more ad sets to view spend trends.</div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var AIRTABLE_BASE_ID = "appmBb0lzqRK9dI8v";
+      var AIRTABLE_BASE_URL = "/api/airtable/v0/" + AIRTABLE_BASE_ID;
+      var TABLE_CPL = "tblIIxOyYiD5z8GE2";
+      var TABLE_ADSET = "tblee61crNCoSfurx";
+
+      var F = {
+        ADSET: "Adset",
+        REPORTING_DATE: "Reporting Date",
+        RUN_DATE: "Run Date",
+        LEAD_PRICE: "Lead Price",
+        SPEND_3: "3 Day Adspend",
+        SPEND_7: "7 Day Adspend",
+        SPEND_14: "14 Day Adspend",
+        SPEND_TOTAL: "Total Adspend",
+        LEADS_3: "3 Day Qualified Leads",
+        LEADS_7: "7 Day Qualified Leads",
+        LEADS_14: "14 Day Qualified Leads",
+        LEADS_TOTAL: "Total Qualified Leads",
+        CPL_3: "3 Day CPL",
+        CPL_7: "7 Day CPL",
+        CPL_14: "14 Day CPL",
+        CPL_TOTAL: "Total CPL",
+        MARGIN_3: "3 Day $ Margin",
+        MARGIN_7: "7 Day $ Margin",
+        MARGIN_14: "14 Day $ Margin",
+        MARGIN_TOTAL: "Total $ Margin",
+        PCT_3: "3 Day % Margin",
+        PCT_7: "7 Day % Margin",
+        PCT_14: "14 Day % Margin",
+        PCT_TOTAL: "Total % Margin"
+      };
+
+      var METRICS = [
+        { key: F.SPEND_TOTAL, label: "Total Spend", type: "currency" },
+        { key: F.SPEND_7, label: "7-Day Spend", type: "currency" },
+        { key: F.SPEND_14, label: "14-Day Spend", type: "currency" },
+        { key: F.CPL_TOTAL, label: "Total CPL", type: "currency" },
+        { key: F.CPL_7, label: "7-Day CPL", type: "currency" },
+        { key: F.LEADS_TOTAL, label: "Qualified Leads", type: "number" },
+        { key: F.MARGIN_TOTAL, label: "$ Margin", type: "currency" },
+        { key: F.PCT_TOTAL, label: "% Margin", type: "percent" }
+      ];
+
+      var CHART_COLORS = ["#1a73e8", "#e8710a", "#188038", "#a142f4", "#d93025", "#129eaf"];
+
+      var adsetsById = {};
+      var adsetList = [];
+      var selectedIds = [];
+      var recordsByAdset = {};
+      var activeMetric = F.SPEND_TOTAL;
+      var chart = null;
+      var sortCol = F.REPORTING_DATE;
+      var sortDir = "desc";
+      var activeSuggestion = -1;
+
+      var searchEl = document.getElementById("adset-search");
+      var suggestionsEl = document.getElementById("suggestions");
+      var chipsEl = document.getElementById("selected-chips");
+      var loadStatusEl = document.getElementById("load-status");
+      var rangeEl = document.getElementById("range-select");
+      var metricPillsEl = document.getElementById("metric-pills");
+      var chartPanel = document.getElementById("chart-panel");
+      var kpiPanel = document.getElementById("kpi-panel");
+      var tablePanel = document.getElementById("table-panel");
+      var emptyPanel = document.getElementById("empty-panel");
+      var kpiGridEl = document.getElementById("kpi-grid");
+      var tableHeadEl = document.getElementById("table-head");
+      var tableBodyEl = document.getElementById("table-body");
+      var tooltipEl = document.getElementById("chart-tooltip");
+      var exportBtn = document.getElementById("export-csv-btn");
+      var refreshBtn = document.getElementById("refresh-btn");
+
+      function fmtCurrency(n) {
+        if (n == null || n === "" || isNaN(n)) return "—";
+        return "$" + Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+
+      function fmtNumber(n) {
+        if (n == null || n === "" || isNaN(n)) return "—";
+        return Number(n).toLocaleString();
+      }
+
+      function fmtPercent(n) {
+        if (n == null || n === "" || isNaN(n)) return "—";
+        var v = Number(n);
+        if (Math.abs(v) <= 1) v *= 100;
+        return v.toFixed(0) + "%";
+      }
+
+      function fmtValue(key, val) {
+        if (key.indexOf("%") >= 0) return fmtPercent(val);
+        if (key.indexOf("CPL") >= 0 || key.indexOf("Adspend") >= 0 || key.indexOf("Margin") >= 0 || key === F.LEAD_PRICE) {
+          return fmtCurrency(val);
+        }
+        if (key.indexOf("Leads") >= 0) return fmtNumber(val);
+        return val == null ? "—" : String(val);
+      }
+
+      function parseDate(s) {
+        if (!s) return null;
+        var d = new Date(s + (s.length === 10 ? "T12:00:00" : ""));
+        return isNaN(d.getTime()) ? null : d;
+      }
+
+      function fmtDate(d) {
+        if (!d) return "—";
+        return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+      }
+
+      function escapeHtml(s) {
+        return String(s == null ? "" : s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      async function fetchJson(url) {
+        var res = await fetch(url);
+        var text = await res.text();
+        var data;
+        try { data = text ? JSON.parse(text) : {}; } catch (e) { throw new Error("Invalid JSON (" + res.status + ")"); }
+        if (!res.ok) {
+          var err = data && data.error;
+          var msg = (typeof err === "string" && err) || (err && err.message) || text || res.statusText;
+          throw new Error(typeof msg === "string" ? msg : "Request failed " + res.status);
+        }
+        return data;
+      }
+
+      function fetchAllRecords(tableId, filterFormula) {
+        var url = AIRTABLE_BASE_URL + "/" + encodeURIComponent(tableId);
+        if (filterFormula) url += "?filterByFormula=" + encodeURIComponent(filterFormula);
+        var records = [];
+
+        function page(offset) {
+          var pageUrl = url;
+          if (offset) pageUrl += (pageUrl.indexOf("?") >= 0 ? "&" : "?") + "offset=" + encodeURIComponent(offset);
+          return fetchJson(pageUrl).then(function (data) {
+            records.push.apply(records, data.records || []);
+            if (data.offset) return page(data.offset);
+          });
+        }
+
+        return page(null).then(function () { return records; });
+      }
+
+      function adsetLabel(id) {
+        var a = adsetsById[id];
+        return a ? a.label : id;
+      }
+
+      function buildMetricPills() {
+        metricPillsEl.innerHTML = "";
+        METRICS.forEach(function (m) {
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "pill" + (m.key === activeMetric ? " active" : "");
+          btn.textContent = m.label;
+          btn.dataset.key = m.key;
+          btn.addEventListener("click", function () {
+            activeMetric = m.key;
+            buildMetricPills();
+            renderChart();
+          });
+          metricPillsEl.appendChild(btn);
+        });
+      }
+
+      function renderChips() {
+        chipsEl.innerHTML = "";
+        if (!selectedIds.length) {
+          var hint = document.createElement("span");
+          hint.style.color = "#80868b";
+          hint.style.fontSize = "0.8125rem";
+          hint.textContent = "No ad sets selected";
+          chipsEl.appendChild(hint);
+          return;
+        }
+        selectedIds.forEach(function (id) {
+          var chip = document.createElement("span");
+          chip.className = "chip";
+          chip.innerHTML =
+            escapeHtml(adsetLabel(id)) +
+            ' <button type="button" aria-label="Remove">&times;</button>';
+          chip.querySelector("button").addEventListener("click", function () {
+            selectedIds = selectedIds.filter(function (x) { return x !== id; });
+            renderChips();
+            loadTrackingData();
+          });
+          chipsEl.appendChild(chip);
+        });
+      }
+
+      function filterSuggestions(q) {
+        q = (q || "").trim().toLowerCase();
+        if (!q) return adsetList.slice(0, 12);
+        return adsetList.filter(function (a) {
+          return a.label.toLowerCase().indexOf(q) >= 0;
+        }).slice(0, 20);
+      }
+
+      function renderSuggestions(items) {
+        suggestionsEl.innerHTML = "";
+        if (!items.length) {
+          suggestionsEl.classList.remove("open");
+          return;
+        }
+        items.forEach(function (a, i) {
+          var div = document.createElement("div");
+          div.className = "suggestion" + (i === activeSuggestion ? " active" : "");
+          div.setAttribute("role", "option");
+          div.innerHTML = escapeHtml(a.label) + (a.niche ? "<small>" + escapeHtml(a.niche) + "</small>" : "");
+          div.addEventListener("mousedown", function (e) {
+            e.preventDefault();
+            addAdset(a.id);
+          });
+          suggestionsEl.appendChild(div);
+        });
+        suggestionsEl.classList.add("open");
+      }
+
+      function addAdset(id) {
+        if (selectedIds.indexOf(id) >= 0) return;
+        if (selectedIds.length >= 6) {
+          loadStatusEl.textContent = "Maximum 6 ad sets for comparison.";
+          loadStatusEl.className = "status error";
+          return;
+        }
+        selectedIds.push(id);
+        searchEl.value = "";
+        suggestionsEl.classList.remove("open");
+        activeSuggestion = -1;
+        renderChips();
+        loadTrackingData();
+      }
+
+      function getRangeCutoff() {
+        var val = rangeEl.value;
+        if (val === "all") return null;
+        var days = parseInt(val, 10);
+        var d = new Date();
+        d.setDate(d.getDate() - days);
+        d.setHours(0, 0, 0, 0);
+        return d;
+      }
+
+      function filterRecordsByRange(records) {
+        var cutoff = getRangeCutoff();
+        if (!cutoff) return records;
+        return records.filter(function (r) {
+          var d = parseDate(r.fields[F.REPORTING_DATE]);
+          return d && d >= cutoff;
+        });
+      }
+
+      function cplFilterFormula(adsetIds) {
+        if (adsetIds.length === 1) {
+          return "{" + F.ADSET + "}='" + adsetIds[0].replace(/'/g, "''") + "'";
+        }
+        var parts = adsetIds.map(function (id) {
+          return "{" + F.ADSET + "}='" + id.replace(/'/g, "''") + "'";
+        });
+        return "OR(" + parts.join(",") + ")";
+      }
+
+      function normalizeRecord(rec, adsetId) {
+        var f = rec.fields || {};
+        var linked = f[F.ADSET];
+        var resolvedAdset = adsetId;
+        if (!resolvedAdset && Array.isArray(linked) && linked.length) resolvedAdset = linked[0];
+        return {
+          id: rec.id,
+          adsetId: resolvedAdset,
+          fields: f,
+          reportingDate: parseDate(f[F.REPORTING_DATE]),
+          sortKey: (f[F.REPORTING_DATE] || "") + (f[F.RUN_DATE] || "")
+        };
+      }
+
+      async function loadAdsets() {
+        loadStatusEl.textContent = "Loading ad sets…";
+        loadStatusEl.className = "status";
+        var rows = await fetchAllRecords(TABLE_ADSET);
+        adsetList = rows.map(function (r) {
+          var f = r.fields || {};
+          var label = String(f["Adset Name"] || f.Name || "Unnamed").trim();
+          var niche = f["Adset Niche"] ? String(f["Adset Niche"]) : "";
+          adsetsById[r.id] = { id: r.id, label: label, niche: niche };
+          return adsetsById[r.id];
+        }).sort(function (a, b) {
+          return a.label.localeCompare(b.label, undefined, { sensitivity: "base" });
+        });
+        loadStatusEl.textContent = adsetList.length + " ad sets loaded. Search to add one to the chart.";
+      }
+
+      async function loadTrackingData() {
+        if (!selectedIds.length) {
+          chartPanel.hidden = true;
+          kpiPanel.hidden = true;
+          tablePanel.hidden = true;
+          emptyPanel.hidden = false;
+          if (chart) { chart.destroy(); chart = null; }
+          return;
+        }
+
+        emptyPanel.hidden = true;
+        chartPanel.hidden = false;
+        loadStatusEl.textContent = "Loading CPL Tracking data…";
+        loadStatusEl.className = "status";
+        refreshBtn.disabled = true;
+
+        try {
+          var formula = cplFilterFormula(selectedIds);
+          var rows = await fetchAllRecords(TABLE_CPL, formula);
+          recordsByAdset = {};
+          selectedIds.forEach(function (id) { recordsByAdset[id] = []; });
+
+          rows.forEach(function (r) {
+            var linked = (r.fields && r.fields[F.ADSET]) || [];
+            var adId = Array.isArray(linked) ? linked[0] : linked;
+            if (!adId || recordsByAdset[adId] == null) return;
+            recordsByAdset[adId].push(normalizeRecord(r, adId));
+          });
+
+          Object.keys(recordsByAdset).forEach(function (id) {
+            recordsByAdset[id].sort(function (a, b) {
+              var da = a.reportingDate ? a.reportingDate.getTime() : 0;
+              var db = b.reportingDate ? b.reportingDate.getTime() : 0;
+              return da - db;
+            });
+          });
+
+          var total = rows.length;
+          loadStatusEl.textContent = total + " tracking record(s) for " + selectedIds.length + " ad set(s).";
+          loadStatusEl.className = "status";
+
+          renderChart();
+          renderKpis();
+          renderTable();
+          kpiPanel.hidden = false;
+          tablePanel.hidden = false;
+        } catch (err) {
+          loadStatusEl.textContent = err.message || "Failed to load tracking data.";
+          loadStatusEl.className = "status error";
+        } finally {
+          refreshBtn.disabled = false;
+        }
+      }
+
+      function getMetricType(key) {
+        for (var i = 0; i < METRICS.length; i++) {
+          if (METRICS[i].key === key) return METRICS[i].type;
+        }
+        if (key.indexOf("%") >= 0) return "percent";
+        if (key.indexOf("Leads") >= 0) return "number";
+        return "currency";
+      }
+
+      function metricValue(fields, key) {
+        var v = fields[key];
+        if (v == null || v === "") return null;
+        return Number(v);
+      }
+
+      function buildTooltipHtml(adsetName, fields) {
+        var date = fmtDate(parseDate(fields[F.REPORTING_DATE]));
+        var rows = [
+          ["Reporting date", date],
+          ["Lead price", fmtValue(F.LEAD_PRICE, fields[F.LEAD_PRICE])],
+          ["", ""],
+          ["3-day spend", fmtValue(F.SPEND_3, fields[F.SPEND_3])],
+          ["7-day spend", fmtValue(F.SPEND_7, fields[F.SPEND_7])],
+          ["14-day spend", fmtValue(F.SPEND_14, fields[F.SPEND_14])],
+          ["Total spend", fmtValue(F.SPEND_TOTAL, fields[F.SPEND_TOTAL])],
+          ["", ""],
+          ["3-day leads", fmtValue(F.LEADS_3, fields[F.LEADS_3])],
+          ["7-day leads", fmtValue(F.LEADS_7, fields[F.LEADS_7])],
+          ["14-day leads", fmtValue(F.LEADS_14, fields[F.LEADS_14])],
+          ["Total leads", fmtValue(F.LEADS_TOTAL, fields[F.LEADS_TOTAL])],
+          ["", ""],
+          ["3-day CPL", fmtValue(F.CPL_3, fields[F.CPL_3])],
+          ["7-day CPL", fmtValue(F.CPL_7, fields[F.CPL_7])],
+          ["14-day CPL", fmtValue(F.CPL_14, fields[F.CPL_14])],
+          ["Total CPL", fmtValue(F.CPL_TOTAL, fields[F.CPL_TOTAL])],
+          ["", ""],
+          ["3-day $ margin", fmtValue(F.MARGIN_3, fields[F.MARGIN_3])],
+          ["7-day $ margin", fmtValue(F.MARGIN_7, fields[F.MARGIN_7])],
+          ["Total $ margin", fmtValue(F.MARGIN_TOTAL, fields[F.MARGIN_TOTAL])],
+          ["Total % margin", fmtValue(F.PCT_TOTAL, fields[F.PCT_TOTAL])]
+        ];
+        var html = "<h4>" + escapeHtml(adsetName) + "</h4>";
+        rows.forEach(function (pair) {
+          if (!pair[0]) { html += "<div style='height:4px'></div>"; return; }
+          html += '<div class="tooltip-row"><span>' + escapeHtml(pair[0]) + '</span><span>' + escapeHtml(pair[1]) + "</span></div>";
+        });
+        return html;
+      }
+
+      function renderChart() {
+        var ctx = document.getElementById("spend-chart").getContext("2d");
+        var metricType = getMetricType(activeMetric);
+        var datasets = [];
+        var pointIndex = [];
+
+        selectedIds.forEach(function (adsetId, idx) {
+          var recs = filterRecordsByRange(recordsByAdset[adsetId] || []);
+          var data = recs.map(function (r, i) {
+            pointIndex.push({ adsetId: adsetId, record: r });
+            return {
+              x: r.reportingDate,
+              y: metricValue(r.fields, activeMetric),
+              _record: r
+            };
+          }).filter(function (p) { return p.x && p.y != null; });
+
+          datasets.push({
+            label: adsetLabel(adsetId),
+            data: data,
+            borderColor: CHART_COLORS[idx % CHART_COLORS.length],
+            backgroundColor: CHART_COLORS[idx % CHART_COLORS.length] + "33",
+            borderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 7,
+            tension: 0.2,
+            fill: selectedIds.length === 1
+          });
+        });
+
+        if (chart) chart.destroy();
+
+        chart = new Chart(ctx, {
+          type: "line",
+          data: { datasets: datasets },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "nearest", intersect: false },
+            plugins: {
+              legend: { display: selectedIds.length > 1, position: "top" },
+              tooltip: { enabled: false, external: externalTooltip }
+            },
+            scales: {
+              x: {
+                type: "time",
+                time: { unit: "day", tooltipFormat: "MMM d, yyyy" },
+                title: { display: true, text: "Reporting date" }
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: (function () {
+                    for (var mi = 0; mi < METRICS.length; mi++) {
+                      if (METRICS[mi].key === activeMetric) return METRICS[mi].label;
+                    }
+                    return activeMetric;
+                  })()
+                },
+                ticks: {
+                  callback: function (v) {
+                    if (metricType === "currency") return fmtCurrency(v);
+                    if (metricType === "percent") return fmtPercent(v);
+                    return fmtNumber(v);
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        function externalTooltip(context) {
+          var tooltip = context.tooltip;
+          if (!tooltip || tooltip.opacity === 0) {
+            tooltipEl.classList.remove("visible");
+            return;
+          }
+          var item = tooltip.dataPoints && tooltip.dataPoints[0];
+          if (!item) return;
+          var raw = item.raw && item.raw._record;
+          if (!raw) return;
+          tooltipEl.innerHTML = buildTooltipHtml(adsetLabel(raw.adsetId), raw.fields);
+          tooltipEl.classList.add("visible");
+          var left = tooltip.caretX + 14;
+          var top = tooltip.caretY - 12;
+          var wrap = context.chart.canvas.parentElement;
+          var wrapW = wrap ? wrap.clientWidth : 600;
+          if (left + 300 > wrapW) left = Math.max(8, tooltip.caretX - 310);
+          if (top + 280 > (wrap ? wrap.clientHeight : 380)) top = Math.max(8, tooltip.caretY - 280);
+          tooltipEl.style.left = left + "px";
+          tooltipEl.style.top = top + "px";
+        }
+      }
+
+      function renderKpis() {
+        kpiGridEl.innerHTML = "";
+        if (selectedIds.length !== 1) {
+          kpiGridEl.innerHTML = '<div class="kpi"><div class="kpi-label">Tip</div><div class="kpi-value" style="font-size:0.9rem">Select a single ad set to see latest KPIs</div></div>';
+          return;
+        }
+        var recs = filterRecordsByRange(recordsByAdset[selectedIds[0]] || []);
+        if (!recs.length) return;
+        var latest = recs[recs.length - 1].fields;
+        var cards = [
+          { label: "Total spend", value: fmtValue(F.SPEND_TOTAL, latest[F.SPEND_TOTAL]), sub: "Latest reporting date" },
+          { label: "7-day spend", value: fmtValue(F.SPEND_7, latest[F.SPEND_7]) },
+          { label: "Total CPL", value: fmtValue(F.CPL_TOTAL, latest[F.CPL_TOTAL]) },
+          { label: "7-day CPL", value: fmtValue(F.CPL_7, latest[F.CPL_7]) },
+          { label: "Qualified leads", value: fmtValue(F.LEADS_TOTAL, latest[F.LEADS_TOTAL]) },
+          { label: "$ margin", value: fmtValue(F.MARGIN_TOTAL, latest[F.MARGIN_TOTAL]) },
+          { label: "% margin", value: fmtValue(F.PCT_TOTAL, latest[F.PCT_TOTAL]) },
+          { label: "Lead price", value: fmtValue(F.LEAD_PRICE, latest[F.LEAD_PRICE]) }
+        ];
+        cards.forEach(function (c) {
+          var el = document.createElement("div");
+          el.className = "kpi";
+          el.innerHTML =
+            '<div class="kpi-label">' + escapeHtml(c.label) + '</div>' +
+            '<div class="kpi-value">' + escapeHtml(c.value) + '</div>' +
+            (c.sub ? '<div class="kpi-sub">' + escapeHtml(c.sub) + " · " + escapeHtml(fmtDate(parseDate(latest[F.REPORTING_DATE]))) + "</div>" : "");
+          kpiGridEl.appendChild(el);
+        });
+      }
+
+      var TABLE_COLS = [
+        F.REPORTING_DATE,
+        F.SPEND_TOTAL,
+        F.SPEND_7,
+        F.LEADS_TOTAL,
+        F.CPL_TOTAL,
+        F.CPL_7,
+        F.MARGIN_TOTAL,
+        F.PCT_TOTAL,
+        F.LEAD_PRICE
+      ];
+
+      function renderTable() {
+        var rows = [];
+        selectedIds.forEach(function (adsetId) {
+          filterRecordsByRange(recordsByAdset[adsetId] || []).forEach(function (r) {
+            rows.push({ adsetId: adsetId, record: r });
+          });
+        });
+
+        rows.sort(function (a, b) {
+          var av, bv;
+          if (sortCol === "_adset") {
+            av = adsetLabel(a.adsetId);
+            bv = adsetLabel(b.adsetId);
+            return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
+          }
+          av = a.record.fields[sortCol];
+          bv = b.record.fields[sortCol];
+          if (sortCol === F.REPORTING_DATE) {
+            av = a.record.reportingDate ? a.record.reportingDate.getTime() : 0;
+            bv = b.record.reportingDate ? b.record.reportingDate.getTime() : 0;
+          } else {
+            av = av == null ? -Infinity : Number(av);
+            bv = bv == null ? -Infinity : Number(bv);
+          }
+          return sortDir === "asc" ? av - bv : bv - av;
+        });
+
+        var headCols = selectedIds.length > 1 ? ["_adset"].concat(TABLE_COLS) : TABLE_COLS;
+        tableHeadEl.innerHTML = "<tr>" + headCols.map(function (col) {
+          var label = col === "_adset" ? "Ad set" : col;
+          var cls = col === sortCol || (col === "_adset" && sortCol === "_adset")
+            ? "sorted-" + sortDir : "";
+          return '<th class="' + cls + '" data-col="' + escapeHtml(col) + '">' + escapeHtml(label) + "</th>";
+        }).join("") + "</tr>";
+
+        tableHeadEl.querySelectorAll("th").forEach(function (th) {
+          th.addEventListener("click", function () {
+            var col = th.dataset.col;
+            if (sortCol === col) sortDir = sortDir === "asc" ? "desc" : "asc";
+            else { sortCol = col; sortDir = col === F.REPORTING_DATE ? "desc" : "asc"; }
+            renderTable();
+          });
+        });
+
+        if (!rows.length) {
+          tableBodyEl.innerHTML = '<tr><td colspan="' + headCols.length + '" style="text-align:center;color:#5f6368;padding:1.5rem">No records in this date range.</td></tr>';
+          return;
+        }
+
+        tableBodyEl.innerHTML = rows.map(function (row) {
+          var f = row.record.fields;
+          return "<tr>" + headCols.map(function (col) {
+            if (col === "_adset") return "<td>" + escapeHtml(adsetLabel(row.adsetId)) + "</td>";
+            if (col === F.REPORTING_DATE) return "<td>" + escapeHtml(fmtDate(parseDate(f[col]))) + "</td>";
+            return "<td>" + escapeHtml(fmtValue(col, f[col])) + "</td>";
+          }).join("") + "</tr>";
+        }).join("");
+      }
+
+      function exportCsv() {
+        var rows = [];
+        selectedIds.forEach(function (adsetId) {
+          filterRecordsByRange(recordsByAdset[adsetId] || []).forEach(function (r) {
+            rows.push({ adsetId: adsetId, fields: r.fields });
+          });
+        });
+        if (!rows.length) return;
+
+        var allKeys = [F.REPORTING_DATE, F.RUN_DATE, F.LEAD_PRICE,
+          F.SPEND_3, F.SPEND_7, F.SPEND_14, F.SPEND_TOTAL,
+          F.LEADS_3, F.LEADS_7, F.LEADS_14, F.LEADS_TOTAL,
+          F.CPL_3, F.CPL_7, F.CPL_14, F.CPL_TOTAL,
+          F.MARGIN_3, F.MARGIN_7, F.MARGIN_14, F.MARGIN_TOTAL,
+          F.PCT_3, F.PCT_7, F.PCT_14, F.PCT_TOTAL
+        ];
+        var header = ["Ad set"].concat(allKeys);
+        var lines = [header.map(csvCell).join(",")];
+        rows.forEach(function (row) {
+          var f = row.fields;
+          var line = [adsetLabel(row.adsetId)].concat(allKeys.map(function (k) {
+            return f[k] == null ? "" : f[k];
+          }));
+          lines.push(line.map(csvCell).join(","));
+        });
+
+        var blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "spend-tracking-" + new Date().toISOString().slice(0, 10) + ".csv";
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }
+
+      function csvCell(v) {
+        var s = String(v == null ? "" : v);
+        if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+        return s;
+      }
+
+      searchEl.addEventListener("input", function () {
+        activeSuggestion = -1;
+        renderSuggestions(filterSuggestions(searchEl.value));
+      });
+
+      searchEl.addEventListener("focus", function () {
+        renderSuggestions(filterSuggestions(searchEl.value));
+      });
+
+      searchEl.addEventListener("blur", function () {
+        setTimeout(function () { suggestionsEl.classList.remove("open"); }, 150);
+      });
+
+      searchEl.addEventListener("keydown", function (e) {
+        var items = filterSuggestions(searchEl.value);
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          activeSuggestion = Math.min(activeSuggestion + 1, items.length - 1);
+          renderSuggestions(items);
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          activeSuggestion = Math.max(activeSuggestion - 1, 0);
+          renderSuggestions(items);
+        } else if (e.key === "Enter" && activeSuggestion >= 0 && items[activeSuggestion]) {
+          e.preventDefault();
+          addAdset(items[activeSuggestion].id);
+        } else if (e.key === "Escape") {
+          suggestionsEl.classList.remove("open");
+        }
+      });
+
+      rangeEl.addEventListener("change", function () {
+        renderChart();
+        renderKpis();
+        renderTable();
+      });
+
+      exportBtn.addEventListener("click", exportCsv);
+      refreshBtn.addEventListener("click", loadTrackingData);
+
+      buildMetricPills();
+      renderChips();
+      loadAdsets().catch(function (err) {
+        loadStatusEl.textContent = err.message || "Failed to load ad sets.";
+        loadStatusEl.className = "status error";
+      });
+    })();
+  </script>
+</body>
+</html>
