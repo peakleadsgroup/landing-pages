@@ -224,6 +224,12 @@
       height: 380px;
     }
 
+    .chart-wrap .empty-state {
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
     .status {
       font-size: 0.875rem;
       color: #5f6368;
@@ -371,6 +377,9 @@
       </div>
       <div class="chart-wrap">
         <canvas id="spend-chart"></canvas>
+        <div id="chart-empty" class="empty-state" style="display:none;position:absolute;inset:0;background:rgba(255,255,255,0.9);">
+          No chart points for this metric/date range. Try another metric or widen the date range.
+        </div>
       </div>
       <div id="chart-tooltip" class="tooltip-card"></div>
       <div class="actions">
@@ -410,6 +419,8 @@
 
       var F = {
         ADSET: "Adset",
+        ADSET_CPL_LINK: "CPL Tracking",
+        CREATED: "Created",
         REPORTING_DATE: "Reporting Date",
         RUN_DATE: "Run Date",
         LEAD_PRICE: "Lead Price",
@@ -472,6 +483,7 @@
       var tableHeadEl = document.getElementById("table-head");
       var tableBodyEl = document.getElementById("table-body");
       var tooltipEl = document.getElementById("chart-tooltip");
+      var chartEmptyEl = document.getElementById("chart-empty");
       var exportBtn = document.getElementById("export-csv-btn");
       var refreshBtn = document.getElementById("refresh-btn");
 
@@ -503,8 +515,31 @@
 
       function parseDate(s) {
         if (!s) return null;
-        var d = new Date(s + (s.length === 10 ? "T12:00:00" : ""));
+        var str = String(s).trim();
+        var d = new Date(str.length === 10 ? str + "T12:00:00" : str);
         return isNaN(d.getTime()) ? null : d;
+      }
+
+      function getRecordDate(fields) {
+        if (!fields) return null;
+        return parseDate(fields[F.REPORTING_DATE])
+          || parseDate(fields[F.RUN_DATE])
+          || parseDate(fields[F.CREATED]);
+      }
+
+      function getLinkedAdsetId(fields) {
+        if (!fields) return null;
+        var linked = fields[F.ADSET];
+        if (!linked) return null;
+        if (Array.isArray(linked)) return linked[0] || null;
+        if (typeof linked === "string" && linked.indexOf("rec") === 0) return linked;
+        return null;
+      }
+
+      function chunk(arr, size) {
+        var out = [];
+        for (var i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+        return out;
       }
 
       function fmtDate(d) {
@@ -654,32 +689,81 @@
         var cutoff = getRangeCutoff();
         if (!cutoff) return records;
         return records.filter(function (r) {
-          var d = parseDate(r.fields[F.REPORTING_DATE]);
+          var d = r.reportingDate || getRecordDate(r.fields);
           return d && d >= cutoff;
         });
       }
 
-      function cplFilterFormula(adsetIds) {
-        if (adsetIds.length === 1) {
-          return "{" + F.ADSET + "}='" + adsetIds[0].replace(/'/g, "''") + "'";
+      async function fetchCplByRecordIds(ids) {
+        ids = (ids || []).filter(function (id) { return id && String(id).indexOf("rec") === 0; });
+        if (!ids.length) return [];
+        var unique = ids.filter(function (id, i, a) { return a.indexOf(id) === i; });
+        var all = [];
+        var batches = chunk(unique, 40);
+        for (var b = 0; b < batches.length; b++) {
+          var inner = batches[b].map(function (id) {
+            return 'RECORD_ID()="' + id + '"';
+          }).join(",");
+          var rows = await fetchAllRecords(TABLE_CPL, "OR(" + inner + ")");
+          all.push.apply(all, rows);
         }
-        var parts = adsetIds.map(function (id) {
-          return "{" + F.ADSET + "}='" + id.replace(/'/g, "''") + "'";
-        });
-        return "OR(" + parts.join(",") + ")";
+        return all;
+      }
+
+      async function fetchCplForOneAdset(adsetId) {
+        var byId = {};
+        var formulas = [
+          "{" + F.ADSET + "}='" + adsetId.replace(/'/g, "''") + "'",
+          'FIND("' + adsetId + '", ARRAYJOIN({' + F.ADSET + "}))",
+          "SEARCH('" + adsetId.replace(/'/g, "''") + "', ARRAYJOIN({" + F.ADSET + "}))"
+        ];
+
+        for (var fi = 0; fi < formulas.length; fi++) {
+          try {
+            var rows = await fetchAllRecords(TABLE_CPL, formulas[fi]);
+            rows.forEach(function (r) { byId[r.id] = r; });
+            if (Object.keys(byId).length) break;
+          } catch (e) {
+            console.warn("[SpendTracking] formula failed:", formulas[fi], e);
+          }
+        }
+
+        if (!Object.keys(byId).length) {
+          try {
+            var adsetRec = await fetchJson(
+              AIRTABLE_BASE_URL + "/" + encodeURIComponent(TABLE_ADSET) + "/" + encodeURIComponent(adsetId)
+            );
+            var cplLinks = (adsetRec.fields && adsetRec.fields[F.ADSET_CPL_LINK]) || [];
+            if (!Array.isArray(cplLinks)) cplLinks = cplLinks ? [cplLinks] : [];
+            if (cplLinks.length) {
+              var linked = await fetchCplByRecordIds(cplLinks);
+              linked.forEach(function (r) { byId[r.id] = r; });
+            }
+          } catch (e) {
+            console.warn("[SpendTracking] reverse link load failed for", adsetId, e);
+          }
+        }
+
+        if (!Object.keys(byId).length) {
+          console.log("[SpendTracking] scanning CPL table client-side for", adsetId);
+          var allRows = await fetchAllRecords(TABLE_CPL, null);
+          allRows.forEach(function (r) {
+            if (getLinkedAdsetId(r.fields) === adsetId) byId[r.id] = r;
+          });
+        }
+
+        return Object.keys(byId).map(function (k) { return byId[k]; });
       }
 
       function normalizeRecord(rec, adsetId) {
         var f = rec.fields || {};
-        var linked = f[F.ADSET];
-        var resolvedAdset = adsetId;
-        if (!resolvedAdset && Array.isArray(linked) && linked.length) resolvedAdset = linked[0];
+        var resolvedAdset = adsetId || getLinkedAdsetId(f);
         return {
           id: rec.id,
           adsetId: resolvedAdset,
           fields: f,
-          reportingDate: parseDate(f[F.REPORTING_DATE]),
-          sortKey: (f[F.REPORTING_DATE] || "") + (f[F.RUN_DATE] || "")
+          reportingDate: getRecordDate(f),
+          sortKey: (f[F.REPORTING_DATE] || f[F.RUN_DATE] || f[F.CREATED] || "")
         };
       }
 
@@ -716,16 +800,21 @@
         refreshBtn.disabled = true;
 
         try {
-          var formula = cplFilterFormula(selectedIds);
-          var rows = await fetchAllRecords(TABLE_CPL, formula);
           recordsByAdset = {};
           selectedIds.forEach(function (id) { recordsByAdset[id] = []; });
 
-          rows.forEach(function (r) {
-            var linked = (r.fields && r.fields[F.ADSET]) || [];
-            var adId = Array.isArray(linked) ? linked[0] : linked;
-            if (!adId || recordsByAdset[adId] == null) return;
-            recordsByAdset[adId].push(normalizeRecord(r, adId));
+          var fetchResults = await Promise.all(selectedIds.map(function (adsetId) {
+            return fetchCplForOneAdset(adsetId).then(function (rows) {
+              return { adsetId: adsetId, rows: rows };
+            });
+          }));
+
+          var total = 0;
+          fetchResults.forEach(function (result) {
+            result.rows.forEach(function (r) {
+              recordsByAdset[result.adsetId].push(normalizeRecord(r, result.adsetId));
+              total += 1;
+            });
           });
 
           Object.keys(recordsByAdset).forEach(function (id) {
@@ -736,9 +825,23 @@
             });
           });
 
-          var total = rows.length;
-          loadStatusEl.textContent = total + " tracking record(s) for " + selectedIds.length + " ad set(s).";
-          loadStatusEl.className = "status";
+          if (!total) {
+            loadStatusEl.textContent =
+              "No CPL Tracking rows found for the selected ad set(s). " +
+              "Check that rows are linked on the Adset or CPL Tracking table.";
+            loadStatusEl.className = "status error";
+          } else {
+            var chartable = 0;
+            selectedIds.forEach(function (id) {
+              filterRecordsByRange(recordsByAdset[id] || []).forEach(function (r) {
+                if (r.reportingDate && metricValue(r.fields, activeMetric) != null) chartable += 1;
+              });
+            });
+            loadStatusEl.textContent =
+              total + " tracking record(s) for " + selectedIds.length + " ad set(s)" +
+              (chartable ? " · " + chartable + " point(s) on chart." : " · no chart points for the current metric/range.");
+            loadStatusEl.className = "status";
+          }
 
           renderChart();
           renderKpis();
@@ -762,14 +865,25 @@
         return "currency";
       }
 
+      var METRIC_FALLBACKS = {};
+      METRIC_FALLBACKS[F.SPEND_TOTAL] = [F.SPEND_TOTAL, F.SPEND_7, F.SPEND_14, F.SPEND_3];
+      METRIC_FALLBACKS[F.SPEND_7] = [F.SPEND_7, F.SPEND_TOTAL, F.SPEND_14, F.SPEND_3];
+      METRIC_FALLBACKS[F.SPEND_14] = [F.SPEND_14, F.SPEND_TOTAL, F.SPEND_7, F.SPEND_3];
+      METRIC_FALLBACKS[F.CPL_TOTAL] = [F.CPL_TOTAL, F.CPL_7, F.CPL_14, F.CPL_3];
+      METRIC_FALLBACKS[F.CPL_7] = [F.CPL_7, F.CPL_TOTAL, F.CPL_14, F.CPL_3];
+      METRIC_FALLBACKS[F.LEADS_TOTAL] = [F.LEADS_TOTAL, F.LEADS_7, F.LEADS_14, F.LEADS_3];
+
       function metricValue(fields, key) {
-        var v = fields[key];
-        if (v == null || v === "") return null;
-        return Number(v);
+        var keys = METRIC_FALLBACKS[key] || [key];
+        for (var i = 0; i < keys.length; i++) {
+          var v = fields[keys[i]];
+          if (v != null && v !== "" && !isNaN(Number(v))) return Number(v);
+        }
+        return null;
       }
 
       function buildTooltipHtml(adsetName, fields) {
-        var date = fmtDate(parseDate(fields[F.REPORTING_DATE]));
+        var date = fmtDate(getRecordDate(fields));
         var rows = [
           ["Reporting date", date],
           ["Lead price", fmtValue(F.LEAD_PRICE, fields[F.LEAD_PRICE])],
@@ -817,7 +931,7 @@
               y: metricValue(r.fields, activeMetric),
               _record: r
             };
-          }).filter(function (p) { return p.x && p.y != null; });
+          }).filter(function (p) { return p.x; });
 
           datasets.push({
             label: adsetLabel(adsetId),
@@ -828,13 +942,21 @@
             pointRadius: 4,
             pointHoverRadius: 7,
             tension: 0.2,
+            spanGaps: true,
             fill: selectedIds.length === 1
           });
         });
 
         if (chart) chart.destroy();
 
-        chart = new Chart(ctx, {
+        var totalPoints = datasets.reduce(function (n, ds) { return n + ds.data.length; }, 0);
+        var pointsWithY = datasets.reduce(function (n, ds) {
+          return n + ds.data.filter(function (p) { return p.y != null; }).length;
+        }, 0);
+        chartEmptyEl.style.display = pointsWithY ? "none" : "flex";
+
+        try {
+          chart = new Chart(ctx, {
           type: "line",
           data: { datasets: datasets },
           options: {
@@ -872,6 +994,11 @@
             }
           }
         });
+        } catch (chartErr) {
+          console.error("[SpendTracking] chart error", chartErr);
+          loadStatusEl.textContent = "Chart failed to render: " + (chartErr.message || chartErr);
+          loadStatusEl.className = "status error";
+        }
 
         function externalTooltip(context) {
           var tooltip = context.tooltip;
@@ -921,7 +1048,7 @@
           el.innerHTML =
             '<div class="kpi-label">' + escapeHtml(c.label) + '</div>' +
             '<div class="kpi-value">' + escapeHtml(c.value) + '</div>' +
-            (c.sub ? '<div class="kpi-sub">' + escapeHtml(c.sub) + " · " + escapeHtml(fmtDate(parseDate(latest[F.REPORTING_DATE]))) + "</div>" : "");
+            (c.sub ? '<div class="kpi-sub">' + escapeHtml(c.sub) + " · " + escapeHtml(fmtDate(getRecordDate(latest))) + "</div>" : "");
           kpiGridEl.appendChild(el);
         });
       }
@@ -991,7 +1118,7 @@
           var f = row.record.fields;
           return "<tr>" + headCols.map(function (col) {
             if (col === "_adset") return "<td>" + escapeHtml(adsetLabel(row.adsetId)) + "</td>";
-            if (col === F.REPORTING_DATE) return "<td>" + escapeHtml(fmtDate(parseDate(f[col]))) + "</td>";
+            if (col === F.REPORTING_DATE) return "<td>" + escapeHtml(fmtDate(getRecordDate(f))) + "</td>";
             return "<td>" + escapeHtml(fmtValue(col, f[col])) + "</td>";
           }).join("") + "</tr>";
         }).join("");
