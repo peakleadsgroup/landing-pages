@@ -401,6 +401,8 @@
         .map(stateAbbrToName)
         .sort((a, b) => a.localeCompare(b));
     }
+
+    function normalizeZip(value) {
       const digits = String(value == null ? '' : value).replace(/\D/g, '');
       if (digits.length < 5) return null;
       return digits.slice(0, 5);
