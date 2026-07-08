@@ -288,7 +288,7 @@
             <tr>
               <th>Ad set</th>
               <th>Status</th>
-              <th>Linked zips</th>
+              <th>Zips</th>
             </tr>
           </thead>
           <tbody id="adsetTableBody">
@@ -334,10 +334,11 @@
     const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
     const AIRTABLE_BASE_URL = `/api/airtable/v0/${AIRTABLE_BASE_ID}`;
     const ADSET_TABLE = 'tblee61crNCoSfurx';
-    const ADSET_ZIPS_TABLE = 'tbl87JqHAdJwgq1GL';
-    const US_ZIPS_TABLE = 'tblieaHIf6rDfFZFl';
     const TARGET_NICHE = 'Bathrooms';
-    const RECORD_ID_CHUNK = 30;
+    const FIELD_COMMA_ZIPS = 'Comma Separated Zips';
+    const US_ZIP_STATE_URL = 'us_zip_state.json';
+
+    let zipStateCache = null;
 
     const ALL_US_STATES = [
       'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL',
@@ -418,25 +419,46 @@
       return all;
     }
 
-    function buildRecordIdFormula(ids) {
-      const parts = ids.map((id) => `RECORD_ID()="${airtableEscape(id)}"`);
-      return `OR(${parts.join(',')})`;
+    function parseCommaSeparatedZips(value) {
+      if (value == null || value === '') return [];
+      return String(value)
+        .split(',')
+        .map((part) => normalizeZip(part.trim()))
+        .filter(Boolean);
     }
 
-    async function fetchRecordsByIds(tableId, recordIds, fields, label, onProgress) {
-      const unique = [...new Set(recordIds.filter(Boolean))];
-      const out = [];
-      const chunks = [];
-      for (let i = 0; i < unique.length; i += RECORD_ID_CHUNK) {
-        chunks.push(unique.slice(i, i + RECORD_ID_CHUNK));
+    async function loadZipState() {
+      if (zipStateCache) return zipStateCache;
+      const res = await fetch(US_ZIP_STATE_URL);
+      if (!res.ok) {
+        throw new Error(`Could not load ${US_ZIP_STATE_URL} (${res.status})`);
       }
-      for (let i = 0; i < chunks.length; i += 1) {
-        if (onProgress) onProgress(label, i + 1, chunks.length, out.length);
-        const formula = buildRecordIdFormula(chunks[i]);
-        const records = await fetchAllRecords(tableId, { formula, fields });
-        out.push(...records);
+      zipStateCache = await res.json();
+      return zipStateCache;
+    }
+
+    function buildZipsByState(zipState) {
+      const byState = new Map();
+      for (const [zip, state] of Object.entries(zipState)) {
+        const st = String(state || '').trim().toUpperCase();
+        if (!st) continue;
+        if (!byState.has(st)) byState.set(st, new Set());
+        byState.get(st).add(zip);
       }
-      return out;
+      return byState;
+    }
+
+    function aggregateIncludedZips(adsets, zipState) {
+      const includedByZip = new Map();
+      for (const rec of adsets) {
+        const zips = parseCommaSeparatedZips(rec.fields?.[FIELD_COMMA_ZIPS]);
+        for (const zip of zips) {
+          const state = String(zipState[zip] || '').trim().toUpperCase();
+          if (!state) continue;
+          if (!includedByZip.has(zip)) includedByZip.set(zip, { zip, state });
+        }
+      }
+      return [...includedByZip.values()].sort((a, b) => a.zip.localeCompare(b.zip));
     }
 
     function nicheMatches(fields) {
@@ -489,74 +511,7 @@
       ));
     }
 
-    function collectJunctionIds(adsets) {
-      const ids = new Set();
-      for (const rec of adsets) {
-        const links = rec.fields?.['Adset Zip Tracking'];
-        if (!Array.isArray(links)) continue;
-        for (const id of links) {
-          if (typeof id === 'string' && id.startsWith('rec')) ids.add(id);
-        }
-      }
-      return [...ids];
-    }
-
-    async function fetchAllUsZipIndexes(onProgress) {
-      const usZipRecords = await fetchAllRecords(US_ZIPS_TABLE, {
-        fields: ['Zip', 'State'],
-      }, (pageNum, total) => {
-        if (onProgress) onProgress(pageNum, total);
-      });
-
-      const usZipByRecordId = new Map();
-      const allZipsByState = new Map();
-      for (const rec of usZipRecords) {
-        const zip = normalizeZip(rec.fields?.Zip);
-        const state = String(rec.fields?.State || '').trim().toUpperCase();
-        if (!zip || !state) continue;
-        usZipByRecordId.set(rec.id, { zip, state, recordId: rec.id });
-        if (!allZipsByState.has(state)) allZipsByState.set(state, new Set());
-        allZipsByState.get(state).add(zip);
-      }
-
-      return {
-        usZipByRecordId,
-        allZipsByState,
-        totalUsZipRows: usZipRecords.length,
-      };
-    }
-
-    async function resolveIncludedZips(junctionIds, usZipByRecordId, onProgress) {
-      const junctionRecords = await fetchRecordsByIds(
-        ADSET_ZIPS_TABLE,
-        junctionIds,
-        ['US Zips'],
-        'junction rows',
-        onProgress,
-      );
-
-      const usZipRecordIds = new Set();
-      for (const rec of junctionRecords) {
-        const link = rec.fields?.['US Zips'];
-        const id = Array.isArray(link) ? link[0] : link;
-        if (typeof id === 'string' && id.startsWith('rec')) usZipRecordIds.add(id);
-      }
-
-      const includedByZip = new Map();
-      for (const id of usZipRecordIds) {
-        const row = usZipByRecordId.get(id);
-        if (!row) continue;
-        if (!includedByZip.has(row.zip)) includedByZip.set(row.zip, row);
-      }
-
-      return {
-        includedZips: [...includedByZip.values()].sort((a, b) => a.zip.localeCompare(b.zip)),
-        junctionCount: junctionRecords.length,
-        usZipRecordCount: usZipRecordIds.size,
-      };
-    }
-
-    function computeExclusions(includedZips, allZipsByState, onProgress) {
+    function computeExclusions(includedZips, allZipsByState) {
       const byState = new Map();
       for (const row of includedZips) {
         if (!byState.has(row.state)) byState.set(row.state, new Set());
@@ -568,20 +523,15 @@
 
       const partialStates = [];
       const excludedZips = new Set();
-      let stateIndex = 0;
 
       for (const state of coveredStates) {
-        stateIndex += 1;
-        if (onProgress) {
-          onProgress(stateIndex, coveredStates.length, state);
-        }
-        const allInState = [...(allZipsByState.get(state) || new Set())];
+        const allInState = allZipsByState.get(state) || new Set();
         const includedInState = byState.get(state);
-        const missing = allInState.filter((zip) => !includedInState.has(zip));
+        const missing = [...allInState].filter((zip) => !includedInState.has(zip));
         if (missing.length > 0) {
           partialStates.push({
             state,
-            total: allInState.length,
+            total: allInState.size,
             included: includedInState.size,
             excluded: missing.length,
           });
@@ -608,10 +558,8 @@
           const f = rec.fields || {};
           const name = f['Adset Name'] || rec.id;
           const status = f['Adset Status'] || '—';
-          const linked = Array.isArray(f['Adset Zip Tracking'])
-            ? f['Adset Zip Tracking'].length
-            : (f['Linked Zips'] ?? '—');
-          return `<tr><td>${escapeHtml(name)}</td><td>${escapeHtml(String(status))}</td><td>${escapeHtml(String(linked))}</td></tr>`;
+          const zipCount = parseCommaSeparatedZips(f[FIELD_COMMA_ZIPS]).length;
+          return `<tr><td>${escapeHtml(name)}</td><td>${escapeHtml(String(status))}</td><td>${escapeHtml(String(zipCount))}</td></tr>`;
         })
         .join('');
       $('adsetTableMeta').textContent = `${adsets.length} ad set${adsets.length === 1 ? '' : 's'}`;
@@ -681,27 +629,19 @@
             'This tool must be opened through your site/dev server (not as a local file) so /api/airtable is available.',
           );
         }
-        setProgress('<strong>Step 1/4:</strong> Fetching active Bathrooms ad sets…');
-        const adsets = await fetchActiveBathroomsAdsets();
+        setProgress('<strong>Step 1/3:</strong> Fetching active Bathrooms ad sets…');
+        const [adsets, zipState] = await Promise.all([
+          fetchActiveBathroomsAdsets(),
+          loadZipState(),
+        ]);
         renderAdsetTable(adsets);
 
-        const junctionIds = collectJunctionIds(adsets);
-        setProgress(`<strong>Step 2/4:</strong> Loading US zip index and resolving ${junctionIds.length.toLocaleString()} junction links…`);
+        setProgress('<strong>Step 2/3:</strong> Aggregating included zips…');
+        const includedZips = aggregateIncludedZips(adsets, zipState);
+        const allZipsByState = buildZipsByState(zipState);
 
-        const { usZipByRecordId, allZipsByState } = await fetchAllUsZipIndexes((pageNum, total) => {
-          setProgress(`<strong>Step 2/4:</strong> Loading US zip index — page ${pageNum} (${total.toLocaleString()} rows so far)`);
-        });
-
-        const { includedZips } = await resolveIncludedZips(junctionIds, usZipByRecordId, (label, chunk, total, fetched) => {
-          setProgress(`<strong>Step 2/4:</strong> ${label} — batch ${chunk}/${total} (${fetched.toLocaleString()} rows so far)`);
-        });
-
-        setProgress(`<strong>Step 3/4:</strong> Computing state exclusions for ${includedZips.length.toLocaleString()} zips…`);
-        const exclusions = computeExclusions(includedZips, allZipsByState, (idx, total, state) => {
-          setProgress(`<strong>Step 3/4:</strong> Scanning state ${state} (${idx}/${total})…`);
-        });
-
-        setProgress('<strong>Step 4/4:</strong> Rendering results…');
+        setProgress(`<strong>Step 3/3:</strong> Computing exclusions for ${includedZips.length.toLocaleString()} zips…`);
+        const exclusions = computeExclusions(includedZips, allZipsByState);
         lastResults = {
           adsets,
           includedZips,
