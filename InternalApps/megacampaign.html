@@ -453,13 +453,40 @@
       return s.trim().toLowerCase() === 'active';
     }
 
+    function getCampaignStatusFieldValue(fields) {
+      const candidates = [
+        'Campaign Status',
+        'Location Campaign Status',
+        'Campaign Active',
+        'Campaign State',
+        'Campaign',
+      ];
+      for (const key of candidates) {
+        if (Object.prototype.hasOwnProperty.call(fields || {}, key)) {
+          return fields[key];
+        }
+      }
+      return undefined;
+    }
+
     async function fetchActiveBathroomsAdsets() {
       const formula = `AND(LOWER({Adset Status})="active",{Adset Niche}="${airtableEscape(TARGET_NICHE)}")`;
-      const records = await fetchAllRecords(ADSET_TABLE, {
-        formula,
-        fields: ['Adset Name', 'Adset Status', 'Adset Niche', 'Adset Zip Tracking', 'Linked Zips'],
-      });
-      return records.filter((rec) => nicheMatches(rec.fields) && isActiveStatus(rec.fields['Adset Status']));
+      const records = await fetchAllRecords(ADSET_TABLE, { formula });
+      if (records.length > 0) {
+        const hasCampaignStatusField = records.some((rec) => (
+          getCampaignStatusFieldValue(rec.fields) !== undefined
+        ));
+        if (!hasCampaignStatusField) {
+          throw new Error(
+            'Could not find a campaign status field on ad sets. Expected something like "Campaign Status" or "Location Campaign Status".',
+          );
+        }
+      }
+      return records.filter((rec) => (
+        nicheMatches(rec.fields)
+        && isActiveStatus(rec.fields['Adset Status'])
+        && isActiveStatus(getCampaignStatusFieldValue(rec.fields))
+      ));
     }
 
     function collectJunctionIds(adsets) {
