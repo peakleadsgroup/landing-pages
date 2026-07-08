@@ -501,7 +501,32 @@
       return [...ids];
     }
 
-    async function resolveIncludedZips(junctionIds, onProgress) {
+    async function fetchAllUsZipIndexes(onProgress) {
+      const usZipRecords = await fetchAllRecords(US_ZIPS_TABLE, {
+        fields: ['Zip', 'State'],
+      }, (pageNum, total) => {
+        if (onProgress) onProgress(pageNum, total);
+      });
+
+      const usZipByRecordId = new Map();
+      const allZipsByState = new Map();
+      for (const rec of usZipRecords) {
+        const zip = normalizeZip(rec.fields?.Zip);
+        const state = String(rec.fields?.State || '').trim().toUpperCase();
+        if (!zip || !state) continue;
+        usZipByRecordId.set(rec.id, { zip, state, recordId: rec.id });
+        if (!allZipsByState.has(state)) allZipsByState.set(state, new Set());
+        allZipsByState.get(state).add(zip);
+      }
+
+      return {
+        usZipByRecordId,
+        allZipsByState,
+        totalUsZipRows: usZipRecords.length,
+      };
+    }
+
+    async function resolveIncludedZips(junctionIds, usZipByRecordId, onProgress) {
       const junctionRecords = await fetchRecordsByIds(
         ADSET_ZIPS_TABLE,
         junctionIds,
@@ -517,47 +542,21 @@
         if (typeof id === 'string' && id.startsWith('rec')) usZipRecordIds.add(id);
       }
 
-      const usZipRecords = await fetchRecordsByIds(
-        US_ZIPS_TABLE,
-        [...usZipRecordIds],
-        ['Zip', 'State'],
-        'US zip rows',
-        onProgress,
-      );
-
       const includedByZip = new Map();
-      for (const rec of usZipRecords) {
-        const zip = normalizeZip(rec.fields?.Zip);
-        const state = String(rec.fields?.State || '').trim().toUpperCase();
-        if (!zip || !state) continue;
-        if (!includedByZip.has(zip)) includedByZip.set(zip, { zip, state, recordId: rec.id });
+      for (const id of usZipRecordIds) {
+        const row = usZipByRecordId.get(id);
+        if (!row) continue;
+        if (!includedByZip.has(row.zip)) includedByZip.set(row.zip, row);
       }
 
       return {
         includedZips: [...includedByZip.values()].sort((a, b) => a.zip.localeCompare(b.zip)),
         junctionCount: junctionRecords.length,
-        usZipRecordCount: usZipRecords.length,
+        usZipRecordCount: usZipRecordIds.size,
       };
     }
 
-    async function fetchAllZipsForState(state, onProgress) {
-      const formula = `{State}="${airtableEscape(state)}"`;
-      const records = await fetchAllRecords(US_ZIPS_TABLE, {
-        formula,
-        fields: ['Zip', 'State'],
-      }, (pageNum, total) => {
-        if (onProgress) onProgress(state, pageNum, total);
-      });
-      const zips = [];
-      for (const rec of records) {
-        const zip = normalizeZip(rec.fields?.Zip);
-        if (zip) zips.push(zip);
-      }
-      return zips;
-    }
-
-    async function computeExclusions(includedZips, onProgress) {
-      const includedSet = new Set(includedZips.map((z) => z.zip));
+    function computeExclusions(includedZips, allZipsByState, onProgress) {
       const byState = new Map();
       for (const row of includedZips) {
         if (!byState.has(row.state)) byState.set(row.state, new Set());
@@ -576,7 +575,7 @@
         if (onProgress) {
           onProgress(stateIndex, coveredStates.length, state);
         }
-        const allInState = await fetchAllZipsForState(state);
+        const allInState = [...(allZipsByState.get(state) || new Set())];
         const includedInState = byState.get(state);
         const missing = allInState.filter((zip) => !includedInState.has(zip));
         if (missing.length > 0) {
@@ -687,14 +686,18 @@
         renderAdsetTable(adsets);
 
         const junctionIds = collectJunctionIds(adsets);
-        setProgress(`<strong>Step 2/4:</strong> Resolving ${junctionIds.length.toLocaleString()} junction links…`);
+        setProgress(`<strong>Step 2/4:</strong> Loading US zip index and resolving ${junctionIds.length.toLocaleString()} junction links…`);
 
-        const { includedZips } = await resolveIncludedZips(junctionIds, (label, chunk, total, fetched) => {
+        const { usZipByRecordId, allZipsByState } = await fetchAllUsZipIndexes((pageNum, total) => {
+          setProgress(`<strong>Step 2/4:</strong> Loading US zip index — page ${pageNum} (${total.toLocaleString()} rows so far)`);
+        });
+
+        const { includedZips } = await resolveIncludedZips(junctionIds, usZipByRecordId, (label, chunk, total, fetched) => {
           setProgress(`<strong>Step 2/4:</strong> ${label} — batch ${chunk}/${total} (${fetched.toLocaleString()} rows so far)`);
         });
 
         setProgress(`<strong>Step 3/4:</strong> Computing state exclusions for ${includedZips.length.toLocaleString()} zips…`);
-        const exclusions = await computeExclusions(includedZips, (idx, total, state) => {
+        const exclusions = computeExclusions(includedZips, allZipsByState, (idx, total, state) => {
           setProgress(`<strong>Step 3/4:</strong> Scanning state ${state} (${idx}/${total})…`);
         });
 
