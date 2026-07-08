@@ -393,14 +393,15 @@
     }
 
     function buildListUrl(tableId, opts = {}, offset = null) {
-      const u = new URL(`${AIRTABLE_BASE_URL}/${tableId}`, window.location.origin);
-      if (opts.formula) u.searchParams.set('filterByFormula', opts.formula);
-      if (offset) u.searchParams.set('offset', offset);
+      const params = new URLSearchParams();
+      if (opts.formula) params.set('filterByFormula', opts.formula);
+      if (offset) params.set('offset', offset);
       if (opts.fields) {
-        for (const f of opts.fields) u.searchParams.append('fields[]', f);
+        for (const f of opts.fields) params.append('fields[]', f);
       }
-      if (opts.maxRecords) u.searchParams.set('maxRecords', String(opts.maxRecords));
-      return u.toString();
+      if (opts.maxRecords) params.set('maxRecords', String(opts.maxRecords));
+      const query = params.toString();
+      return `${AIRTABLE_BASE_URL}/${encodeURIComponent(tableId)}${query ? `?${query}` : ''}`;
     }
 
     async function fetchAllRecords(tableId, opts = {}, onPage) {
@@ -649,6 +650,11 @@
       setProgress('<strong>Starting…</strong>');
 
       try {
+        if (window.location.protocol === 'file:') {
+          throw new Error(
+            'This tool must be opened through your site/dev server (not as a local file) so /api/airtable is available.',
+          );
+        }
         setProgress('<strong>Step 1/4:</strong> Fetching active Bathrooms ad sets…');
         const adsets = await fetchActiveBathroomsAdsets();
         renderAdsetTable(adsets);
