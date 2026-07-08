@@ -238,8 +238,8 @@
     <header>
       <h1>Mega Campaign — Bathrooms</h1>
       <p>
-        Aggregates all zip codes from <strong>active</strong> ad sets with niche
-        <strong>Bathrooms</strong>, then computes Meta targeting exclusions:
+        Aggregates all zip codes from <strong>active</strong> Bathrooms ad sets whose linked
+        client is also <strong>active</strong>, then computes Meta targeting exclusions:
         states with no coverage, and individual zips missing from partially-covered states.
       </p>
     </header>
@@ -334,13 +334,9 @@
     const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
     const AIRTABLE_BASE_URL = `/api/airtable/v0/${AIRTABLE_BASE_ID}`;
     const ADSET_TABLE = 'tblee61crNCoSfurx';
-    const CAMPAIGN_TABLE = 'tbl6uhtOFzGzA7EMu';
     const TARGET_NICHE = 'Bathrooms';
     const FIELD_COMMA_ZIPS = 'Comma Separated Zips';
-    const FIELD_CAMPAIGN_LINK = 'Campaign';
-    const FIELD_CAMPAIGN_STATUS = 'Status';
     const US_ZIP_STATE_URL = 'us_zip_state.json';
-    const RECORD_ID_CHUNK = 15;
 
     let zipStateCache = null;
 
@@ -503,17 +499,10 @@
       return s.trim().toLowerCase() === 'active';
     }
 
-    function getLinkedCampaignIds(fields) {
-      const link = fields?.[FIELD_CAMPAIGN_LINK];
-      if (!Array.isArray(link)) return [];
-      return link.filter((id) => typeof id === 'string' && id.startsWith('rec'));
-    }
-
-    function getCampaignStatusLookup(fields) {
+    function getClientStatusValue(fields) {
       const candidates = [
-        'Status (from Campaign)',
-        'Campaign Status',
-        'Location Campaign Status',
+        'Client Status',
+        'Status (from Client)',
       ];
       for (const key of candidates) {
         if (Object.prototype.hasOwnProperty.call(fields || {}, key)) {
@@ -523,81 +512,29 @@
       return undefined;
     }
 
-    function linkedCampaignStatusesAreActive(statusVal) {
+    function clientStatusIsActive(statusVal) {
       if (statusVal == null || statusVal === '') return false;
       const values = Array.isArray(statusVal) ? statusVal : [statusVal];
       if (!values.length) return false;
       return values.every((val) => isActiveStatus(val));
     }
 
-    function buildRecordIdFormula(ids) {
-      const parts = ids.map((id) => `RECORD_ID()="${airtableEscape(id)}"`);
-      return `OR(${parts.join(',')})`;
-    }
-
-    async function fetchRecordsByIds(tableId, recordIds, fields) {
-      const unique = [...new Set(recordIds.filter(Boolean))];
-      if (!unique.length) return [];
-      const out = [];
-      for (let i = 0; i < unique.length; i += RECORD_ID_CHUNK) {
-        const chunk = unique.slice(i, i + RECORD_ID_CHUNK);
-        const formula = buildRecordIdFormula(chunk);
-        const records = await fetchAllRecords(tableId, { formula, fields });
-        out.push(...records);
-      }
-      return out;
-    }
-
-    async function fetchCampaignStatusMap(campaignIds) {
-      const records = await fetchRecordsByIds(
-        CAMPAIGN_TABLE,
-        campaignIds,
-        [FIELD_CAMPAIGN_STATUS],
-      );
-      const map = new Map();
-      for (const rec of records) {
-        map.set(rec.id, rec.fields?.[FIELD_CAMPAIGN_STATUS]);
-      }
-      return map;
-    }
-
-    function adsetHasActiveCampaign(fields, campaignStatusById) {
-      const lookup = getCampaignStatusLookup(fields);
-      if (lookup !== undefined) {
-        return linkedCampaignStatusesAreActive(lookup);
-      }
-      const campaignIds = getLinkedCampaignIds(fields);
-      if (!campaignIds.length) return false;
-      return campaignIds.every((id) => isActiveStatus(campaignStatusById.get(id)));
+    function adsetPassesStatusFilters(fields) {
+      if (!isActiveStatus(fields?.['Adset Status'])) return false;
+      const clientStatus = getClientStatusValue(fields);
+      if (clientStatus === undefined) return false;
+      return clientStatusIsActive(clientStatus);
     }
 
     async function fetchActiveBathroomsAdsets() {
       const formula = `AND(LOWER({Adset Status})="active",{Adset Niche}="${airtableEscape(TARGET_NICHE)}")`;
       const records = await fetchAllRecords(ADSET_TABLE, { formula });
-      const adsetCandidates = records.filter((rec) => (
-        nicheMatches(rec.fields)
-        && isActiveStatus(rec.fields['Adset Status'])
-      ));
-
-      const needsCampaignFetch = adsetCandidates.some((rec) => (
-        getCampaignStatusLookup(rec.fields) === undefined
-      ));
-      let campaignStatusById = new Map();
-      if (needsCampaignFetch) {
-        const campaignIds = new Set();
-        for (const rec of adsetCandidates) {
-          for (const id of getLinkedCampaignIds(rec.fields)) campaignIds.add(id);
-        }
-        campaignStatusById = await fetchCampaignStatusMap([...campaignIds]);
-      }
-
-      const filtered = adsetCandidates.filter((rec) => (
-        adsetHasActiveCampaign(rec.fields, campaignStatusById)
-      ));
+      const adsetCandidates = records.filter((rec) => nicheMatches(rec.fields));
+      const filtered = adsetCandidates.filter((rec) => adsetPassesStatusFilters(rec.fields));
 
       return {
         adsets: filtered,
-        matchedBeforeCampaignFilter: adsetCandidates.length,
+        matchedBeforeClientFilter: adsetCandidates.length,
       };
     }
 
@@ -721,14 +658,14 @@
           );
         }
         setProgress('<strong>Step 1/3:</strong> Fetching active Bathrooms ad sets…');
-        const [{ adsets, matchedBeforeCampaignFilter }, zipState] = await Promise.all([
+        const [{ adsets, matchedBeforeClientFilter }, zipState] = await Promise.all([
           fetchActiveBathroomsAdsets(),
           loadZipState(),
         ]);
         renderAdsetTable(adsets);
-        if (!adsets.length && matchedBeforeCampaignFilter > 0) {
+        if (!adsets.length && matchedBeforeClientFilter > 0) {
           setError(
-            `Found ${matchedBeforeCampaignFilter} active Bathrooms ad set${matchedBeforeCampaignFilter === 1 ? '' : 's'}, but none had an active linked Campaign.`,
+            `Found ${matchedBeforeClientFilter} active Bathrooms ad set${matchedBeforeClientFilter === 1 ? '' : 's'}, but none had Client Status = Active.`,
           );
         }
 
