@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead Margin Calculator</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #f7f7f5;
+    margin: 0;
+    padding: 40px 20px;
+    display: flex;
+    justify-content: center;
+  }
+  .card {
+    background: #ffffff;
+    border: 1px solid #e3e2dd;
+    border-radius: 12px;
+    padding: 28px 32px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  h1 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 20px;
+    color: #1a1a1a;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .row label {
+    font-size: 14px;
+    color: #666;
+    width: 120px;
+    flex-shrink: 0;
+  }
+  input[type="range"] {
+    flex: 1;
+    accent-color: #1a1a1a;
+  }
+  .row span {
+    font-size: 14px;
+    font-weight: 600;
+    min-width: 50px;
+    text-align: right;
+  }
+  .results {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 24px;
+  }
+  .stat {
+    background: #f4f3f0;
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .stat p.label {
+    font-size: 13px;
+    color: #666;
+    margin: 0 0 4px;
+  }
+  .stat p.value {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+  }
+  .negative { color: #c0392b; }
+  .positive { color: #1e8e50; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Lead margin calculator</h1>
+
+  <div class="row">
+    <label for="cost">Cost per lead</label>
+    <input type="range" id="cost" min="1" max="100" value="20" step="1">
+    <span id="cost-out">$20</span>
+  </div>
+
+  <div class="row">
+    <label for="price">Price per lead</label>
+    <input type="range" id="price" min="1" max="200" value="50" step="1">
+    <span id="price-out">$50</span>
+  </div>
+
+  <div class="row">
+    <label for="sellable">% Sellable</label>
+    <input type="range" id="sellable" min="1" max="100" value="30" step="1">
+    <span id="sellable-out">30%</span>
+  </div>
+
+  <div class="results">
+    <div class="stat">
+      <p class="label">Cost per sellable lead</p>
+      <p class="value" id="cpsl-out">$67</p>
+    </div>
+    <div class="stat">
+      <p class="label">Margins</p>
+      <p class="value negative" id="margin-out">-33.33%</p>
+    </div>
+  </div>
+</div>
+
+<script>
+function update() {
+  const cost = parseFloat(document.getElementById('cost').value);
+  const price = parseFloat(document.getElementById('price').value);
+  const sellable = parseFloat(document.getElementById('sellable').value);
+
+  document.getElementById('cost-out').textContent = '$' + cost;
+  document.getElementById('price-out').textContent = '$' + price;
+  document.getElementById('sellable-out').textContent = sellable + '%';
+
+  const cpsl = cost / (sellable / 100);
+  const margin = ((price - cpsl) / price) * 100;
+
+  document.getElementById('cpsl-out').textContent = '$' + Math.round(cpsl);
+
+  const marginEl = document.getElementById('margin-out');
+  marginEl.textContent = margin.toFixed(2) + '%';
+  marginEl.className = 'value ' + (margin < 0 ? 'negative' : 'positive');
+}
+
+['cost', 'price', 'sellable'].forEach(id => {
+  document.getElementById(id).addEventListener('input', update);
+});
+
+update();
+</script>
+
+</body>
+</html>
