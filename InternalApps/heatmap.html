@@ -423,7 +423,7 @@
     <div class="map-wrap">
       <div id="map"></div>
       <div class="legend" id="legend">
-        <h3>Monthly leads remaining</h3>
+        <h3>Leads remaining</h3>
         <div class="legend-row"><span class="swatch" style="background:var(--c0)"></span><span>0</span></div>
         <div class="legend-row"><span class="swatch" style="background:var(--c1)"></span><span>1–5</span></div>
         <div class="legend-row"><span class="swatch" style="background:var(--c2)"></span><span>6–15</span></div>
@@ -461,7 +461,7 @@
               <div class="value" id="detailNiche">—</div>
             </div>
             <div class="stat">
-              <div class="label">Monthly leads remaining</div>
+              <div class="label">Leads remaining</div>
               <div class="value" id="detailRemaining">—</div>
             </div>
             <div class="stat">
@@ -506,12 +506,15 @@
         trackingClientStatus: 'Client Status',
         trackingNiche: 'Niche',
         trackingRemaining: 'Monthly Leads Remaining',
+        trackingTotalRemaining: 'Total Leads Remaining',
         adsetName: 'Adset Name',
         adsetNiche: 'Adset Niche',
         adsetStatus: 'Adset Status',
         clientStatus: 'Client Status',
         monthlyCap: 'Monthly Cap',
         monthlyLeft: 'Monthly Leads Left',
+        totalCap: 'Total Cap',
+        totalLeft: 'Total Leads Left',
       };
 
       const COLOR_BUCKETS = [
@@ -591,9 +594,32 @@
         return Number.isFinite(n) ? n : null;
       }
 
-      function isUncappedAdset(adset) {
-        const cap = toNumber(adset.monthlyCap);
-        return cap == null;
+      // Capacity priority:
+      // 1) Monthly Cap set → Monthly Leads Remaining / Monthly Leads Left
+      // 2) else Total Cap set → Total Leads Remaining / Total Leads Left
+      // 3) else truly uncapped (neither cap set)
+      function resolveCapacity(adset, link) {
+        if (adset.monthlyCap != null) {
+          const remaining = link && link.monthlyLeft != null
+            ? link.monthlyLeft
+            : adset.monthlyLeft;
+          return {
+            uncapped: false,
+            source: 'monthly',
+            remaining: remaining == null ? 0 : remaining,
+          };
+        }
+        if (adset.totalCap != null) {
+          const remaining = link && link.totalLeft != null
+            ? link.totalLeft
+            : adset.totalLeft;
+          return {
+            uncapped: false,
+            source: 'total',
+            remaining: remaining == null ? 0 : remaining,
+          };
+        }
+        return { uncapped: true, source: 'uncapped', remaining: null };
       }
 
       function colorForInventory(n) {
@@ -677,6 +703,8 @@
           clientStatus: firstValue(f[FIELD.clientStatus]),
           monthlyCap: toNumber(f[FIELD.monthlyCap]),
           monthlyLeft: toNumber(f[FIELD.monthlyLeft]),
+          totalCap: toNumber(f[FIELD.totalCap]),
+          totalLeft: toNumber(f[FIELD.totalLeft]),
         };
       }
 
@@ -717,6 +745,8 @@
               FIELD.clientStatus,
               FIELD.monthlyCap,
               FIELD.monthlyLeft,
+              FIELD.totalCap,
+              FIELD.totalLeft,
             ],
             pageSize: 100,
           }, function (page, total) {
@@ -747,6 +777,7 @@
                 FIELD.trackingClientStatus,
                 FIELD.trackingNiche,
                 FIELD.trackingRemaining,
+                FIELD.trackingTotalRemaining,
               ]),
               pageSize: 100,
             }, function (page, total) {
@@ -788,6 +819,7 @@
             const adset = adsetsById.get(adsetId);
             const nicheFromTracking = normalizeNiche(f[FIELD.trackingNiche]);
             const remainingFromTracking = toNumber(f[FIELD.trackingRemaining]);
+            const totalRemainingFromTracking = toNumber(f[FIELD.trackingTotalRemaining]);
 
             for (const zipId of zipIds) {
               zipIdsNeeded.add(zipId);
@@ -796,6 +828,7 @@
                 adsetId: adsetId,
                 niche: nicheFromTracking || adset.niche,
                 monthlyLeft: remainingFromTracking != null ? remainingFromTracking : adset.monthlyLeft,
+                totalLeft: totalRemainingFromTracking != null ? totalRemainingFromTracking : adset.totalLeft,
                 adsetStatus: firstValue(f[FIELD.trackingAdsetStatus]) || adset.adsetStatus,
                 clientStatus: firstValue(f[FIELD.trackingClientStatus]) || adset.clientStatus,
               });
@@ -849,22 +882,20 @@
             if (entry._seenAdsets.has(adset.id)) continue;
             entry._seenAdsets.add(adset.id);
 
-            const uncapped = isUncappedAdset(adset);
-            const remaining = uncapped ? null : (link.monthlyLeft != null ? link.monthlyLeft : adset.monthlyLeft);
+            const capacity = resolveCapacity(adset, link);
 
-            if (uncapped) {
+            if (capacity.uncapped) {
               entry.uncappedAdsetCount += 1;
-            } else if (remaining != null && remaining > 0) {
-              entry.totalRemaining += remaining;
-            } else if (remaining != null) {
-              // include zero-capacity capped adsets in breakdown, but don't add to total
+            } else if (capacity.remaining > 0) {
+              entry.totalRemaining += capacity.remaining;
             }
 
             entry.adsets.push({
               id: adset.id,
               name: adset.name,
-              monthlyLeft: uncapped ? null : (remaining == null ? 0 : remaining),
-              uncapped: uncapped,
+              remaining: capacity.uncapped ? null : capacity.remaining,
+              capacitySource: capacity.source,
+              uncapped: capacity.uncapped,
               adsetStatus: link.adsetStatus || adset.adsetStatus || '—',
               clientStatus: link.clientStatus || adset.clientStatus || '—',
             });
@@ -874,8 +905,8 @@
             for (const entry of nicheMap.values()) {
               delete entry._seenAdsets;
               entry.adsets.sort(function (a, b) {
-                const av = a.uncapped ? Number.POSITIVE_INFINITY : (a.monthlyLeft || 0);
-                const bv = b.uncapped ? Number.POSITIVE_INFINITY : (b.monthlyLeft || 0);
+                const av = a.uncapped ? Number.POSITIVE_INFINITY : (a.remaining || 0);
+                const bv = b.uncapped ? Number.POSITIVE_INFINITY : (b.remaining || 0);
                 if (bv !== av) return bv - av;
                 return a.name.localeCompare(b.name);
               });
@@ -1042,7 +1073,13 @@
 
       function formatRemaining(adset) {
         if (adset.uncapped) return 'Uncapped';
-        return String(adset.monthlyLeft == null ? 0 : adset.monthlyLeft);
+        return String(adset.remaining == null ? 0 : adset.remaining);
+      }
+
+      function capacityLabel(adset) {
+        if (adset.uncapped || adset.capacitySource === 'uncapped') return 'Capacity';
+        if (adset.capacitySource === 'total') return 'Total remaining';
+        return 'Monthly remaining';
       }
 
       function statusBadge(val) {
@@ -1104,7 +1141,7 @@
           div.className = 'adset-item';
           div.innerHTML =
             '<div class="name">' + escapeHtml(a.name) + '</div>' +
-            '<div class="row"><span>Monthly remaining</span><span class="remaining">' +
+            '<div class="row"><span>' + escapeHtml(capacityLabel(a)) + '</span><span class="remaining">' +
               escapeHtml(formatRemaining(a)) + '</span></div>' +
             '<div class="row"><span>Adset status</span><span>' + statusBadge(a.adsetStatus) + '</span></div>' +
             '<div class="row"><span>Client status</span><span>' + statusBadge(a.clientStatus) + '</span></div>';
