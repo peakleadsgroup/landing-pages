@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>PLG ZIP Inventory Heatmap</title>
+  <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --bg: #eef1f5;
+      --panel: #ffffff;
+      --text: #1a1f2c;
+      --muted: #667085;
+      --border: #d5dbe3;
+      --primary: #2f6fed;
+      --primary-dark: #2458c4;
+      --danger: #c62828;
+      --radius: 8px;
+      --shadow: 0 2px 10px rgba(16, 24, 40, 0.08);
+      --c0: #9aa3af;
+      --c1: #e85d04;
+      --c2: #f4c430;
+      --c3: #2ea44f;
+      --c4: #1b6ca8;
+      --uncapped: #6b21a8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .app-header {
+      flex-shrink: 0;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .app-header h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      align-items: center;
+      flex: 1;
+    }
+
+    .control {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .control label { white-space: nowrap; }
+
+    select, button, input[type="search"] {
+      font: inherit;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      padding: 6px 10px;
+    }
+
+    select { min-width: 160px; }
+
+    button {
+      cursor: pointer;
+      background: var(--panel);
+    }
+
+    button:hover { border-color: var(--primary); }
+
+    button.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    button.primary:hover {
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .layout {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+    }
+
+    .map-wrap {
+      flex: 1;
+      position: relative;
+      min-width: 0;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      background: #dce3ea;
+    }
+
+    .legend {
+      position: absolute;
+      left: 12px;
+      bottom: 24px;
+      z-index: 900;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 10px 12px;
+      font-size: 0.78rem;
+      min-width: 140px;
+    }
+
+    .legend h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 4px 0;
+    }
+
+    .swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      flex-shrink: 0;
+    }
+
+    .swatch.uncapped {
+      border: 2px dashed var(--uncapped);
+      background: repeating-linear-gradient(
+        -45deg,
+        #fff,
+        #fff 2px,
+        rgba(107, 33, 168, 0.25) 2px,
+        rgba(107, 33, 168, 0.25) 4px
+      );
+      border-radius: 3px;
+    }
+
+    .status-banner {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 950;
+      background: rgba(255, 255, 255, 0.97);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: min(520px, 92%);
+      font-size: 0.88rem;
+    }
+
+    .status-banner[hidden] { display: none !important; }
+
+    .status-banner.error {
+      border-color: #f5c2c2;
+      background: #fff5f5;
+      color: var(--danger);
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #e5e7eb;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .sidebar {
+      width: min(400px, 42vw);
+      flex-shrink: 0;
+      background: var(--panel);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .sidebar-section {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      overflow: auto;
+      min-height: 0;
+    }
+
+    .sidebar-section.grow {
+      flex: 1;
+    }
+
+    .sidebar-section h2 {
+      font-size: 0.92rem;
+      margin-bottom: 10px;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .stat {
+      background: #f7f9fc;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+    }
+
+    .stat .label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+
+    .stat .value {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .stat.wide { grid-column: 1 / -1; }
+
+    .uncapped-note {
+      font-size: 0.84rem;
+      color: var(--uncapped);
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .adset-filter {
+      width: 100%;
+      margin-bottom: 8px;
+    }
+
+    .adset-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 280px;
+      overflow: auto;
+    }
+
+    .adset-item {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      background: #fff;
+    }
+
+    .adset-item .name {
+      font-weight: 600;
+      font-size: 0.88rem;
+      margin-bottom: 4px;
+    }
+
+    .adset-item .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .adset-item .remaining {
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      padding: 1px 6px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #f3f4f6;
+    }
+
+    .badge.active {
+      background: #e8f7ee;
+      border-color: #b7e0c5;
+      color: #166534;
+    }
+
+    .top-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .top-list button {
+      width: 100%;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 9px;
+      background: #f8fafc;
+    }
+
+    .top-list button:hover,
+    .top-list button.active {
+      border-color: var(--primary);
+      background: #eef4ff;
+    }
+
+    .top-list .zip { font-weight: 600; font-variant-numeric: tabular-nums; }
+    .top-list .inv { color: var(--muted); font-size: 0.82rem; }
+
+    .summary-bar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .summary-bar strong { color: var(--text); }
+
+    @media (max-width: 900px) {
+      .layout { flex-direction: column; }
+      .sidebar {
+        width: 100%;
+        max-height: 42vh;
+        border-left: none;
+        border-top: 1px solid var(--border);
+      }
+      .map-wrap { min-height: 48vh; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <h1>PLG ZIP Inventory Heatmap</h1>
+    <div class="controls">
+      <div class="control">
+        <label for="nicheSelect">Niche</label>
+        <select id="nicheSelect" disabled>
+          <option value="">Loading…</option>
+        </select>
+      </div>
+      <div class="control">
+        <label><input type="checkbox" id="onlyInventory" checked> Show only ZIPs with available inventory</label>
+      </div>
+      <div class="control">
+        <label><input type="checkbox" id="showUncapped" checked> Show uncapped ZIPs</label>
+      </div>
+      <button type="button" class="primary" id="refreshBtn">Refresh</button>
+      <span class="meta" id="lastUpdated">Last updated: —</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="map-wrap">
+      <div id="map"></div>
+      <div class="legend" id="legend">
+        <h3>Monthly leads remaining</h3>
+        <div class="legend-row"><span class="swatch" style="background:var(--c0)"></span><span>0</span></div>
+        <div class="legend-row"><span class="swatch" style="background:var(--c1)"></span><span>1–5</span></div>
+        <div class="legend-row"><span class="swatch" style="background:var(--c2)"></span><span>6–15</span></div>
+        <div class="legend-row"><span class="swatch" style="background:var(--c3)"></span><span>16–30</span></div>
+        <div class="legend-row"><span class="swatch" style="background:var(--c4)"></span><span>31+</span></div>
+        <div class="legend-row"><span class="swatch uncapped"></span><span>Has uncapped adset(s)</span></div>
+      </div>
+      <div class="status-banner" id="statusBanner" hidden>
+        <div class="spinner" id="statusSpinner"></div>
+        <span id="statusText">Loading…</span>
+      </div>
+    </div>
+
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h2>Overview</h2>
+        <div class="summary-bar" id="overviewStats">
+          <span>ZIPs: <strong>—</strong></span>
+          <span>Inventory: <strong>—</strong></span>
+          <span>Uncapped ZIPs: <strong>—</strong></span>
+        </div>
+      </div>
+
+      <div class="sidebar-section grow" id="detailSection">
+        <h2>Selected ZIP</h2>
+        <p class="empty" id="detailEmpty">Click a ZIP marker on the map to inspect inventory and contributing adsets.</p>
+        <div id="detailBody" hidden>
+          <div class="stat-grid">
+            <div class="stat">
+              <div class="label">ZIP</div>
+              <div class="value" id="detailZip">—</div>
+            </div>
+            <div class="stat">
+              <div class="label">Niche</div>
+              <div class="value" id="detailNiche">—</div>
+            </div>
+            <div class="stat">
+              <div class="label">Monthly leads remaining</div>
+              <div class="value" id="detailRemaining">—</div>
+            </div>
+            <div class="stat">
+              <div class="label">Active adsets</div>
+              <div class="value" id="detailAdsetCount">—</div>
+            </div>
+            <div class="stat wide">
+              <div class="label">Uncapped active adsets</div>
+              <div class="value" id="detailUncapped">—</div>
+            </div>
+          </div>
+          <div class="uncapped-note" id="detailUncappedNote" hidden></div>
+          <input type="search" class="adset-filter" id="adsetFilter" placeholder="Filter adsets by name…">
+          <div class="adset-list" id="adsetList"></div>
+        </div>
+      </div>
+
+      <div class="sidebar-section grow">
+        <h2>Top ZIPs by inventory</h2>
+        <ul class="top-list" id="topZips"></ul>
+        <p class="empty" id="topEmpty" hidden>No ZIPs for this niche/filter.</p>
+      </div>
+    </aside>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    (function () {
+      const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
+      const AIRTABLE_BASE_URL = '/api/airtable/v0/' + AIRTABLE_BASE_ID;
+      const TABLE_US_ZIPS = 'tblieaHIf6rDfFZFl';
+      const TABLE_TRACKING = 'tbl87JqHAdJwgq1GL';
+      const TABLE_ADSET = 'tblee61crNCoSfurx';
+
+      const FIELD = {
+        zip: 'Zip',
+        lat: 'Lat',
+        lng: 'Long',
+        trackingAdset: 'Adset',
+        trackingZips: 'US Zips',
+        trackingAdsetStatus: 'Adset Status',
+        trackingClientStatus: 'Client Status',
+        trackingNiche: 'Niche',
+        trackingRemaining: 'Monthly Leads Remaining',
+        adsetName: 'Adset Name',
+        adsetNiche: 'Adset Niche',
+        adsetStatus: 'Adset Status',
+        clientStatus: 'Client Status',
+        monthlyCap: 'Monthly Cap',
+        monthlyLeft: 'Monthly Leads Left',
+      };
+
+      const COLOR_BUCKETS = [
+        { max: 0, color: '#9aa3af', label: '0' },
+        { max: 5, color: '#e85d04', label: '1–5' },
+        { max: 15, color: '#f4c430', label: '6–15' },
+        { max: 30, color: '#2ea44f', label: '16–30' },
+        { max: Infinity, color: '#1b6ca8', label: '31+' },
+      ];
+
+      const state = {
+        niches: [],
+        selectedNiche: '',
+        selectedZip: null,
+        byNiche: new Map(),
+        lastUpdated: null,
+        loading: false,
+        markersByZip: new Map(),
+        markerLayer: null,
+      };
+
+      let map;
+
+      function $(id) { return document.getElementById(id); }
+
+      function escapeHtml(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function airtableEscape(s) {
+        return String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+      }
+
+      function firstValue(val) {
+        if (Array.isArray(val)) return val.length ? val[0] : null;
+        return val == null || val === '' ? null : val;
+      }
+
+      function asArray(val) {
+        if (val == null || val === '') return [];
+        return Array.isArray(val) ? val : [val];
+      }
+
+      function normalizeStatus(val) {
+        const parts = asArray(val).map((v) => String(v).trim().toLowerCase()).filter(Boolean);
+        return parts;
+      }
+
+      function isActiveStatus(val) {
+        const parts = normalizeStatus(val);
+        if (!parts.length) return false;
+        return parts.every((p) => p === 'active');
+      }
+
+      function normalizeNiche(val) {
+        const parts = asArray(val).map((v) => String(v).trim()).filter(Boolean);
+        return parts[0] || '';
+      }
+
+      function normalizeZip(val) {
+        if (typeof val === 'number' && Number.isFinite(val)) {
+          return String(Math.trunc(val)).padStart(5, '0').slice(-5);
+        }
+        const digits = String(val == null ? '' : val).replace(/\D/g, '');
+        if (digits.length < 5) return null;
+        return digits.slice(0, 5);
+      }
+
+      function toNumber(val) {
+        const v = firstValue(val);
+        if (v == null || v === '') return null;
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+      }
+
+      function isUncappedAdset(adset) {
+        const cap = toNumber(adset.monthlyCap);
+        return cap == null;
+      }
+
+      function colorForInventory(n) {
+        const value = Math.max(0, Number(n) || 0);
+        for (const bucket of COLOR_BUCKETS) {
+          if (value <= bucket.max) return bucket.color;
+        }
+        return COLOR_BUCKETS[COLOR_BUCKETS.length - 1].color;
+      }
+
+      function setStatus(msg, isError) {
+        const banner = $('statusBanner');
+        const spinner = $('statusSpinner');
+        const text = $('statusText');
+        if (!msg) {
+          banner.hidden = true;
+          return;
+        }
+        banner.hidden = false;
+        banner.classList.toggle('error', !!isError);
+        spinner.style.display = isError ? 'none' : 'block';
+        text.textContent = msg;
+      }
+
+      async function fetchAirtable(url) {
+        const res = await fetch(url, { headers: { 'Content-Type': 'application/json' } });
+        if (!res.ok) {
+          const body = await res.text();
+          throw new Error('Airtable ' + res.status + ': ' + body.slice(0, 280));
+        }
+        return res.json();
+      }
+
+      function buildListUrl(tableId, opts, offset) {
+        const params = new URLSearchParams();
+        if (opts.formula) params.set('filterByFormula', opts.formula);
+        if (offset) params.set('offset', offset);
+        if (opts.fields) {
+          for (const f of opts.fields) params.append('fields[]', f);
+        }
+        if (opts.pageSize) params.set('pageSize', String(opts.pageSize));
+        const q = params.toString();
+        return AIRTABLE_BASE_URL + '/' + encodeURIComponent(tableId) + (q ? '?' + q : '');
+      }
+
+      async function fetchAllRecords(tableId, opts, onPage) {
+        const all = [];
+        let url = buildListUrl(tableId, opts || {}, null);
+        let page = 0;
+        while (url) {
+          page += 1;
+          const data = await fetchAirtable(url);
+          if (data.records && data.records.length) all.push.apply(all, data.records);
+          if (onPage) onPage(page, all.length);
+          url = data.offset ? buildListUrl(tableId, opts || {}, data.offset) : null;
+        }
+        return all;
+      }
+
+      async function fetchRecordsByIds(tableId, ids, fields, onProgress) {
+        const unique = [...new Set(ids.filter(Boolean))];
+        const byId = new Map();
+        const chunkSize = 40;
+        for (let i = 0; i < unique.length; i += chunkSize) {
+          const chunk = unique.slice(i, i + chunkSize);
+          const formula = 'OR(' + chunk.map((id) => 'RECORD_ID()="' + airtableEscape(id) + '"').join(',') + ')';
+          const records = await fetchAllRecords(tableId, { formula: formula, fields: fields, pageSize: 100 });
+          for (const rec of records) byId.set(rec.id, rec);
+          if (onProgress) onProgress(Math.min(unique.length, i + chunk.length), unique.length);
+        }
+        return byId;
+      }
+
+      function parseAdsetRecord(rec) {
+        const f = rec.fields || {};
+        return {
+          id: rec.id,
+          name: String(f[FIELD.adsetName] || rec.id),
+          niche: normalizeNiche(f[FIELD.adsetNiche]),
+          adsetStatus: firstValue(f[FIELD.adsetStatus]),
+          clientStatus: firstValue(f[FIELD.clientStatus]),
+          monthlyCap: toNumber(f[FIELD.monthlyCap]),
+          monthlyLeft: toNumber(f[FIELD.monthlyLeft]),
+        };
+      }
+
+      function adsetPassesFilters(adset) {
+        if (!isActiveStatus(adset.adsetStatus)) return false;
+        if (adset.clientStatus != null && adset.clientStatus !== '') {
+          if (!isActiveStatus(adset.clientStatus)) return false;
+        }
+        return true;
+      }
+
+      function trackingPassesStatus(fields) {
+        if (Object.prototype.hasOwnProperty.call(fields, FIELD.trackingAdsetStatus)) {
+          if (!isActiveStatus(fields[FIELD.trackingAdsetStatus])) return false;
+        }
+        if (Object.prototype.hasOwnProperty.call(fields, FIELD.trackingClientStatus)) {
+          const cs = fields[FIELD.trackingClientStatus];
+          if (cs != null && cs !== '' && !isActiveStatus(cs)) return false;
+        }
+        return true;
+      }
+
+      async function loadData() {
+        if (state.loading) return;
+        state.loading = true;
+        $('refreshBtn').disabled = true;
+        $('nicheSelect').disabled = true;
+        setStatus('Loading active adsets…');
+
+        try {
+          const adsetFormula = 'LOWER({Adset Status})="active"';
+          const adsetRecords = await fetchAllRecords(TABLE_ADSET, {
+            formula: adsetFormula,
+            fields: [
+              FIELD.adsetName,
+              FIELD.adsetNiche,
+              FIELD.adsetStatus,
+              FIELD.clientStatus,
+              FIELD.monthlyCap,
+              FIELD.monthlyLeft,
+            ],
+            pageSize: 100,
+          }, function (page, total) {
+            setStatus('Loading active adsets… page ' + page + ' (' + total + ' records)');
+          });
+
+          const adsetsById = new Map();
+          for (const rec of adsetRecords) {
+            const adset = parseAdsetRecord(rec);
+            if (!adsetPassesFilters(adset)) continue;
+            if (!adset.niche) continue;
+            adsetsById.set(adset.id, adset);
+          }
+
+          setStatus('Loading ZIP tracking links…');
+          const trackingFields = [
+            FIELD.trackingAdset,
+            FIELD.trackingZips,
+            FIELD.trackingAdsetStatus,
+          ];
+          const trackingFormula =
+            'OR({Adset Status}="Active",FIND("Active",ARRAYJOIN({Adset Status}&"")))';
+          let trackingRecords;
+          try {
+            trackingRecords = await fetchAllRecords(TABLE_TRACKING, {
+              formula: trackingFormula,
+              fields: trackingFields.concat([
+                FIELD.trackingClientStatus,
+                FIELD.trackingNiche,
+                FIELD.trackingRemaining,
+              ]),
+              pageSize: 100,
+            }, function (page, total) {
+              setStatus('Loading ZIP tracking… page ' + page + ' (' + total + ' records)');
+            });
+          } catch (err) {
+            // Fallback if optional lookup fields are missing or formula rejects.
+            try {
+              trackingRecords = await fetchAllRecords(TABLE_TRACKING, {
+                formula: trackingFormula,
+                fields: trackingFields,
+                pageSize: 100,
+              }, function (page, total) {
+                setStatus('Loading ZIP tracking… page ' + page + ' (' + total + ' records)');
+              });
+            } catch (err2) {
+              trackingRecords = await fetchAllRecords(TABLE_TRACKING, {
+                fields: trackingFields,
+                pageSize: 100,
+              }, function (page, total) {
+                setStatus('Loading ZIP tracking… page ' + page + ' (' + total + ' records)');
+              });
+            }
+          }
+
+          const zipIdsNeeded = new Set();
+          const links = [];
+
+          for (const rec of trackingRecords) {
+            const f = rec.fields || {};
+            if (!trackingPassesStatus(f)) continue;
+
+            const adsetId = firstValue(f[FIELD.trackingAdset]);
+            if (!adsetId || !adsetsById.has(adsetId)) continue;
+
+            const zipIds = asArray(f[FIELD.trackingZips]).filter(Boolean);
+            if (!zipIds.length) continue;
+
+            const adset = adsetsById.get(adsetId);
+            const nicheFromTracking = normalizeNiche(f[FIELD.trackingNiche]);
+            const remainingFromTracking = toNumber(f[FIELD.trackingRemaining]);
+
+            for (const zipId of zipIds) {
+              zipIdsNeeded.add(zipId);
+              links.push({
+                zipId: zipId,
+                adsetId: adsetId,
+                niche: nicheFromTracking || adset.niche,
+                monthlyLeft: remainingFromTracking != null ? remainingFromTracking : adset.monthlyLeft,
+                adsetStatus: firstValue(f[FIELD.trackingAdsetStatus]) || adset.adsetStatus,
+                clientStatus: firstValue(f[FIELD.trackingClientStatus]) || adset.clientStatus,
+              });
+            }
+          }
+
+          setStatus('Loading ZIP coordinates… 0/' + zipIdsNeeded.size);
+          const zipsById = await fetchRecordsByIds(
+            TABLE_US_ZIPS,
+            [...zipIdsNeeded],
+            [FIELD.zip, FIELD.lat, FIELD.lng],
+            function (done, total) {
+              setStatus('Loading ZIP coordinates… ' + done + '/' + total);
+            }
+          );
+
+          const byNiche = new Map();
+
+          for (const link of links) {
+            const zipRec = zipsById.get(link.zipId);
+            if (!zipRec) continue;
+            const zf = zipRec.fields || {};
+            const zip = normalizeZip(zf[FIELD.zip]);
+            const lat = toNumber(zf[FIELD.lat]);
+            const lng = toNumber(zf[FIELD.lng]);
+            if (!zip || lat == null || lng == null) continue;
+
+            const adset = adsetsById.get(link.adsetId);
+            if (!adset) continue;
+
+            const niche = link.niche || adset.niche;
+            if (!niche) continue;
+
+            if (!byNiche.has(niche)) byNiche.set(niche, new Map());
+            const nicheMap = byNiche.get(niche);
+
+            if (!nicheMap.has(zip)) {
+              nicheMap.set(zip, {
+                zip: zip,
+                lat: lat,
+                lng: lng,
+                niche: niche,
+                totalRemaining: 0,
+                uncappedAdsetCount: 0,
+                adsets: [],
+                _seenAdsets: new Set(),
+              });
+            }
+
+            const entry = nicheMap.get(zip);
+            if (entry._seenAdsets.has(adset.id)) continue;
+            entry._seenAdsets.add(adset.id);
+
+            const uncapped = isUncappedAdset(adset);
+            const remaining = uncapped ? null : (link.monthlyLeft != null ? link.monthlyLeft : adset.monthlyLeft);
+
+            if (uncapped) {
+              entry.uncappedAdsetCount += 1;
+            } else if (remaining != null && remaining > 0) {
+              entry.totalRemaining += remaining;
+            } else if (remaining != null) {
+              // include zero-capacity capped adsets in breakdown, but don't add to total
+            }
+
+            entry.adsets.push({
+              id: adset.id,
+              name: adset.name,
+              monthlyLeft: uncapped ? null : (remaining == null ? 0 : remaining),
+              uncapped: uncapped,
+              adsetStatus: link.adsetStatus || adset.adsetStatus || '—',
+              clientStatus: link.clientStatus || adset.clientStatus || '—',
+            });
+          }
+
+          for (const nicheMap of byNiche.values()) {
+            for (const entry of nicheMap.values()) {
+              delete entry._seenAdsets;
+              entry.adsets.sort(function (a, b) {
+                const av = a.uncapped ? Number.POSITIVE_INFINITY : (a.monthlyLeft || 0);
+                const bv = b.uncapped ? Number.POSITIVE_INFINITY : (b.monthlyLeft || 0);
+                if (bv !== av) return bv - av;
+                return a.name.localeCompare(b.name);
+              });
+            }
+          }
+
+          state.byNiche = byNiche;
+          state.niches = [...byNiche.keys()].sort(function (a, b) {
+            return a.localeCompare(b);
+          });
+          state.lastUpdated = new Date();
+          state.selectedZip = null;
+
+          populateNicheSelect();
+          renderAll();
+          setStatus('');
+          $('lastUpdated').textContent = 'Last updated: ' + state.lastUpdated.toLocaleString();
+        } catch (err) {
+          console.error(err);
+          setStatus(err.message || String(err), true);
+        } finally {
+          state.loading = false;
+          $('refreshBtn').disabled = false;
+          $('nicheSelect').disabled = state.niches.length === 0;
+        }
+      }
+
+      function populateNicheSelect() {
+        const sel = $('nicheSelect');
+        const prev = state.selectedNiche;
+        sel.innerHTML = '';
+        if (!state.niches.length) {
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = 'No niches found';
+          sel.appendChild(opt);
+          state.selectedNiche = '';
+          return;
+        }
+        for (const niche of state.niches) {
+          const opt = document.createElement('option');
+          opt.value = niche;
+          opt.textContent = niche;
+          sel.appendChild(opt);
+        }
+        state.selectedNiche = state.niches.indexOf(prev) >= 0 ? prev : state.niches[0];
+        sel.value = state.selectedNiche;
+      }
+
+      function getFilterFlags() {
+        return {
+          onlyInventory: $('onlyInventory').checked,
+          showUncapped: $('showUncapped').checked,
+        };
+      }
+
+      function getVisibleEntries() {
+        const niche = state.selectedNiche;
+        if (!niche || !state.byNiche.has(niche)) return [];
+        const flags = getFilterFlags();
+        const entries = [...state.byNiche.get(niche).values()];
+        return entries.filter(function (e) {
+          const hasInv = e.totalRemaining > 0;
+          const hasUncapped = e.uncappedAdsetCount > 0;
+          if (flags.onlyInventory) {
+            if (hasInv) return true;
+            return flags.showUncapped && hasUncapped;
+          }
+          if (!flags.showUncapped && hasUncapped && !hasInv) return false;
+          return true;
+        }).sort(function (a, b) {
+          if (b.totalRemaining !== a.totalRemaining) return b.totalRemaining - a.totalRemaining;
+          if (b.uncappedAdsetCount !== a.uncappedAdsetCount) return b.uncappedAdsetCount - a.uncappedAdsetCount;
+          return a.zip.localeCompare(b.zip);
+        });
+      }
+
+      function initMap() {
+        map = L.map('map', { preferCanvas: true }).setView([39.8283, -98.5795], 4);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap',
+          maxZoom: 18,
+        }).addTo(map);
+        state.markerLayer = L.layerGroup().addTo(map);
+      }
+
+      function markerStyle(entry) {
+        const hasUncapped = entry.uncappedAdsetCount > 0;
+        return {
+          radius: hasUncapped ? 7 : 6,
+          fillColor: colorForInventory(entry.totalRemaining),
+          color: hasUncapped ? '#6b21a8' : '#ffffff',
+          weight: hasUncapped ? 2.5 : 1,
+          dashArray: hasUncapped ? '3 2' : null,
+          fillOpacity: 0.88,
+          opacity: 1,
+        };
+      }
+
+      function renderMap(entries) {
+        state.markerLayer.clearLayers();
+        state.markersByZip.clear();
+
+        const bounds = [];
+        for (const entry of entries) {
+          const marker = L.circleMarker([entry.lat, entry.lng], markerStyle(entry));
+          marker.on('click', function () {
+            selectZip(entry.zip, true);
+          });
+          marker.bindTooltip(
+            entry.zip + ' · ' + entry.totalRemaining +
+            (entry.uncappedAdsetCount ? ' · uncapped ' + entry.uncappedAdsetCount : ''),
+            { direction: 'top', opacity: 0.95 }
+          );
+          marker.addTo(state.markerLayer);
+          state.markersByZip.set(entry.zip, marker);
+          bounds.push([entry.lat, entry.lng]);
+        }
+
+        if (bounds.length && !state.selectedZip) {
+          try {
+            map.fitBounds(bounds, { padding: [24, 24], maxZoom: 8 });
+          } catch (_) { /* ignore */ }
+        }
+      }
+
+      function renderOverview(entries) {
+        const totalInv = entries.reduce(function (sum, e) { return sum + e.totalRemaining; }, 0);
+        const uncappedZips = entries.filter(function (e) { return e.uncappedAdsetCount > 0; }).length;
+        $('overviewStats').innerHTML =
+          '<span>ZIPs: <strong>' + entries.length.toLocaleString() + '</strong></span>' +
+          '<span>Inventory: <strong>' + totalInv.toLocaleString() + '</strong></span>' +
+          '<span>Uncapped ZIPs: <strong>' + uncappedZips.toLocaleString() + '</strong></span>';
+      }
+
+      function renderTopZips(entries) {
+        const list = $('topZips');
+        const empty = $('topEmpty');
+        list.innerHTML = '';
+        const top = entries.slice(0, 40);
+        if (!top.length) {
+          empty.hidden = false;
+          return;
+        }
+        empty.hidden = true;
+        for (const entry of top) {
+          const li = document.createElement('li');
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          if (state.selectedZip === entry.zip) btn.classList.add('active');
+          const uncappedBit = entry.uncappedAdsetCount
+            ? ' · U' + entry.uncappedAdsetCount
+            : '';
+          btn.innerHTML =
+            '<span class="zip">' + escapeHtml(entry.zip) + '</span>' +
+            '<span class="inv">' + entry.totalRemaining.toLocaleString() + uncappedBit + '</span>';
+          btn.addEventListener('click', function () {
+            selectZip(entry.zip, true);
+          });
+          li.appendChild(btn);
+          list.appendChild(li);
+        }
+      }
+
+      function formatRemaining(adset) {
+        if (adset.uncapped) return 'Uncapped';
+        return String(adset.monthlyLeft == null ? 0 : adset.monthlyLeft);
+      }
+
+      function statusBadge(val) {
+        const s = String(val == null ? '—' : val);
+        const cls = s.toLowerCase() === 'active' ? 'badge active' : 'badge';
+        return '<span class="' + cls + '">' + escapeHtml(s) + '</span>';
+      }
+
+      function renderDetail() {
+        const empty = $('detailEmpty');
+        const body = $('detailBody');
+        if (!state.selectedZip || !state.selectedNiche) {
+          empty.hidden = false;
+          body.hidden = true;
+          return;
+        }
+        const nicheMap = state.byNiche.get(state.selectedNiche);
+        const entry = nicheMap && nicheMap.get(state.selectedZip);
+        if (!entry) {
+          empty.hidden = false;
+          empty.textContent = 'Selected ZIP is not in the current niche/filter.';
+          body.hidden = true;
+          return;
+        }
+
+        empty.hidden = true;
+        body.hidden = false;
+        $('detailZip').textContent = entry.zip;
+        $('detailNiche').textContent = entry.niche;
+        $('detailRemaining').textContent = entry.totalRemaining.toLocaleString();
+        $('detailAdsetCount').textContent = String(entry.adsets.length);
+        $('detailUncapped').textContent = String(entry.uncappedAdsetCount);
+
+        const note = $('detailUncappedNote');
+        if (entry.uncappedAdsetCount > 0) {
+          note.hidden = false;
+          note.textContent = 'Uncapped active adsets: ' + entry.uncappedAdsetCount;
+        } else {
+          note.hidden = true;
+        }
+
+        renderAdsetList(entry);
+      }
+
+      function renderAdsetList(entry) {
+        const q = String($('adsetFilter').value || '').trim().toLowerCase();
+        const list = $('adsetList');
+        list.innerHTML = '';
+        const rows = entry.adsets.filter(function (a) {
+          if (!q) return true;
+          return a.name.toLowerCase().indexOf(q) >= 0;
+        });
+        if (!rows.length) {
+          list.innerHTML = '<p class="empty">No adsets match this filter.</p>';
+          return;
+        }
+        for (const a of rows) {
+          const div = document.createElement('div');
+          div.className = 'adset-item';
+          div.innerHTML =
+            '<div class="name">' + escapeHtml(a.name) + '</div>' +
+            '<div class="row"><span>Monthly remaining</span><span class="remaining">' +
+              escapeHtml(formatRemaining(a)) + '</span></div>' +
+            '<div class="row"><span>Adset status</span><span>' + statusBadge(a.adsetStatus) + '</span></div>' +
+            '<div class="row"><span>Client status</span><span>' + statusBadge(a.clientStatus) + '</span></div>';
+          list.appendChild(div);
+        }
+      }
+
+      function selectZip(zip, pan) {
+        state.selectedZip = zip;
+        renderDetail();
+        renderTopZips(getVisibleEntries());
+
+        const marker = state.markersByZip.get(zip);
+        if (marker) {
+          marker.setStyle(Object.assign({}, markerStyle(
+            state.byNiche.get(state.selectedNiche).get(zip)
+          ), { weight: 3, radius: 9 }));
+          if (pan) {
+            map.panTo(marker.getLatLng(), { animate: true });
+            if (map.getZoom() < 8) map.setZoom(8);
+          }
+        }
+
+        // reset other marker styles
+        const entries = getVisibleEntries();
+        for (const e of entries) {
+          if (e.zip === zip) continue;
+          const m = state.markersByZip.get(e.zip);
+          if (m) m.setStyle(markerStyle(e));
+        }
+      }
+
+      function renderAll() {
+        const entries = getVisibleEntries();
+        renderOverview(entries);
+        renderMap(entries);
+        renderTopZips(entries);
+        renderDetail();
+      }
+
+      function bindEvents() {
+        $('refreshBtn').addEventListener('click', loadData);
+        $('nicheSelect').addEventListener('change', function () {
+          state.selectedNiche = this.value;
+          state.selectedZip = null;
+          renderAll();
+        });
+        $('onlyInventory').addEventListener('change', function () {
+          renderAll();
+        });
+        $('showUncapped').addEventListener('change', function () {
+          renderAll();
+        });
+        $('adsetFilter').addEventListener('input', function () {
+          if (!state.selectedZip || !state.selectedNiche) return;
+          const nicheMap = state.byNiche.get(state.selectedNiche);
+          const entry = nicheMap && nicheMap.get(state.selectedZip);
+          if (entry) renderAdsetList(entry);
+        });
+      }
+
+      initMap();
+      bindEvents();
+      loadData();
+    })();
+  </script>
+</body>
+</html>
