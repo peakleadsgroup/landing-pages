@@ -213,7 +213,29 @@ export async function onRequest(context) {
     const website = meta(session, "website");
     const serviceArea = meta(session, "service_area");
     const signerName = meta(session, "signer_name");
-    const b2bLeadId = meta(session, "b2b_lead_id");
+    const sourceType = (meta(session, "source_type") || "").toLowerCase();
+    const sourceRecordId = meta(session, "source_record_id");
+    let b2bLeadId = meta(session, "b2b_lead_id");
+    // Only treat as B2B when source_type says so. If source_type is missing
+    // but b2b_lead_id is present (legacy sessions), verify it actually lives
+    // in the B2B table before linking.
+    let isB2b =
+      sourceType === "b2b" ||
+      sourceType === "b2b_leads" ||
+      sourceType === "lead";
+    if (!isB2b) {
+      if (b2bLeadId && !sourceType) {
+        try {
+          await airtableGetRecord(context.env, B2B_LEADS_TABLE_ID, b2bLeadId);
+          isB2b = true;
+        } catch {
+          isB2b = false;
+          b2bLeadId = "";
+        }
+      } else {
+        b2bLeadId = "";
+      }
+    }
 
     // Create Customers row
     const customerFields = {
@@ -242,6 +264,8 @@ export async function onRequest(context) {
       `signed_by=${signerName || "(unknown)"}`,
       `contact=${contactName || ""}`,
       `email=${email || ""}`,
+      sourceType ? `source_type=${sourceType}` : null,
+      sourceRecordId ? `source_record_id=${sourceRecordId}` : null,
       `iso=${new Date().toISOString()}`,
       `stripe_customer=${stripeCustomerId}`,
       paymentMethodId ? `payment_method=${paymentMethodId}` : null,

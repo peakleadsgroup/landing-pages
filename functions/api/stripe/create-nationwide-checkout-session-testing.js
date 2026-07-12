@@ -63,7 +63,9 @@ export async function onRequest(context) {
     const website = clean(body.website, 500);
     const serviceArea = clean(body.serviceArea, 2000);
     const signerName = clean(body.signerName, 250);
-    const b2bLeadId = clean(body.b2bLeadId, 40);
+    const sourceType = clean(body.sourceType || body.source || "", 40).toLowerCase();
+    const sourceRecordId = clean(body.sourceRecordId || body.recordID || body.recordId || "", 40);
+    let b2bLeadId = clean(body.b2bLeadId, 40);
 
     if (!businessName) return json({ error: "businessName is required" }, 400, cors);
     if (!contactName) return json({ error: "contactName is required" }, 400, cors);
@@ -74,9 +76,16 @@ export async function onRequest(context) {
     }
     if (!serviceArea) return json({ error: "serviceArea is required" }, 400, cors);
     if (!signerName) return json({ error: "signerName is required" }, 400, cors);
+    if (sourceRecordId && !/^rec[a-zA-Z0-9]{14,}$/.test(sourceRecordId)) {
+      return json({ error: "Invalid sourceRecordId" }, 400, cors);
+    }
     if (b2bLeadId && !/^rec[a-zA-Z0-9]{14,}$/.test(b2bLeadId)) {
       return json({ error: "Invalid b2bLeadId" }, 400, cors);
     }
+    // Only link B2B Lead field for actual B2B table records
+    const isB2b = sourceType === "b2b" || sourceType === "b2b_leads" || sourceType === "lead";
+    if (!isB2b) b2bLeadId = "";
+    if (!b2bLeadId && isB2b && sourceRecordId) b2bLeadId = sourceRecordId;
 
     const origin = new URL(context.request.url).origin;
     const path = "/nationwide-agreement.html";
@@ -95,6 +104,8 @@ export async function onRequest(context) {
       signer_name: signerName,
       lead_price: "49",
       payment_model: "Nationwide",
+      source_type: sourceType || (b2bLeadId ? "b2b" : ""),
+      source_record_id: sourceRecordId || b2bLeadId || "",
     };
     if (b2bLeadId) meta.b2b_lead_id = b2bLeadId;
 
@@ -103,7 +114,7 @@ export async function onRequest(context) {
       "payment_method_types[0]": "card",
       customer_creation: "always",
       customer_email: email,
-      client_reference_id: b2bLeadId || businessName.slice(0, 200),
+      client_reference_id: (sourceRecordId || b2bLeadId || businessName).slice(0, 200),
       success_url: successUrl,
       cancel_url: cancelUrl,
       ...CHECKOUT_DISABLE_LINK_PARAMS,

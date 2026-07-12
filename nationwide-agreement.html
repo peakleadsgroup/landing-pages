@@ -569,7 +569,11 @@
           sourceType: srcType || ''
         };
         var rec = qs('recordID') || qs('recordId') || qs('b2bLeadId') || qs('sourceRecordId') || '';
-        if (looksLikeRec(rec)) payload.b2bLeadId = rec;
+        if (looksLikeRec(rec)) {
+          payload.sourceRecordId = rec;
+          // Only true B2B leads belong in the B2B Lead linked field
+          if (srcType === 'b2b') payload.b2bLeadId = rec;
+        }
 
         // TEMP: sandbox testing endpoints (STRIPE_TEST_SECRET_KEY). Flip back to
         // /api/stripe/create-nationwide-checkout-session before real pilot sends.
