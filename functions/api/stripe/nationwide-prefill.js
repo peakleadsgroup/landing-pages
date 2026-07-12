@@ -179,21 +179,32 @@ async function serviceAreaFromClientAdsets(env, adsetIds) {
   const ids = (adsetIds || []).filter(looksLikeRec).slice(0, 8);
   const zips = new Set();
   const blobs = [];
+  const errors = [];
   for (const aid of ids) {
     try {
       const rec = await airtableGetRecord(env, ADSETS_TABLE_ID, aid);
       const f = rec.fields || {};
-      const blob = [f["Comma Separated Zips"], f["Service Area"], f.Zips, f.ZIP]
+      const blob = [
+        f["Comma Separated Zips"],
+        f["Service Area"],
+        f["Exact Raw Zips"],
+        f.Zips,
+        f.ZIP,
+      ]
         .map((x) => String(x || ""))
         .join(" ");
       blobs.push(blob);
       for (const z of extractZips(blob)) zips.add(z);
-    } catch {
-      // ignore single adset failures
+      if (!blob.trim()) errors.push(`adset ${aid}: no zip fields`);
+    } catch (e) {
+      errors.push(`adset ${aid}: ${(e && e.message) || "fetch failed"}`);
     }
   }
-  if (zips.size) return Array.from(zips).sort().join(" ");
-  return blobs.join(" ").trim();
+  if (zips.size) {
+    return { serviceArea: Array.from(zips).sort().join(" "), errors };
+  }
+  const joined = blobs.join(" ").trim();
+  return { serviceArea: joined, errors };
 }
 
 async function prefillChurned(env, recordId) {
@@ -257,9 +268,12 @@ async function prefillClosed(env, recordId) {
   }
 
   let serviceArea = clean(f["Service Area"] || "", 4000);
+  let warnings = [];
   if (!extractZips(serviceArea)) {
     const fromAdsets = await serviceAreaFromClientAdsets(env, f.Adsets || []);
-    if (fromAdsets) serviceArea = fromAdsets;
+    if (fromAdsets.serviceArea) serviceArea = fromAdsets.serviceArea;
+    if (fromAdsets.errors && fromAdsets.errors.length) warnings = fromAdsets.errors;
+    if (!serviceArea && !(f.Adsets || []).length) warnings.push("no linked adsets");
   }
 
   return {
@@ -270,6 +284,7 @@ async function prefillClosed(env, recordId) {
     phone,
     website: clean(f.Website || "", 500),
     serviceArea: compactServiceArea(serviceArea, { source: "closed" }),
+    warnings,
   };
 }
 
