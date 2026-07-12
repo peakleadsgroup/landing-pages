@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
+  <title>Peak Leads Group — Nationwide $49 Exclusive Leads</title>
+  <meta name="description" content="Nationwide exclusive bathroom leads at $49 — Peak Leads Group coverage network.">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6; color: #333; background: #e8ecf1;
+    }
+    .header { background: white; padding: 1rem 0; box-shadow: 0 2px 10px rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 100; }
+    .nav-container { max-width: 1000px; margin: 0 auto; display: flex; justify-content: center; padding: 0 1.5rem; }
+    .logo { height: 56px; }
+    .hero {
+      background: linear-gradient(145deg, #2f4a6e 0%, #4a6fa5 42%, #3d5d8a 100%);
+      color: white; text-align: center; padding: 2.5rem 1.25rem;
+    }
+    .hero h1 { font-size: clamp(1.75rem, 4vw, 2.6rem); font-weight: 700; margin-bottom: 0.5rem; }
+    .hero .subtitle { font-size: 1.1rem; opacity: 0.95; max-width: 36rem; margin: 0 auto; }
+    .badge {
+      display: inline-block; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 999px; padding: 0.3rem 0.85rem; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.9rem;
+    }
+    .wrap { max-width: 760px; margin: -1.5rem auto 3rem; padding: 0 1rem; position: relative; z-index: 1; }
+    .card {
+      background: #fff; border-radius: 12px; border: 1px solid #dde3ea;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 1.75rem 1.35rem; margin-bottom: 1rem;
+    }
+    @media (min-width: 640px) { .card { padding: 2rem; } }
+    h2 { font-size: 1.25rem; color: #1f2937; margin-bottom: 0.85rem; border-bottom: 2px solid #4a6fa5; padding-bottom: 0.55rem; }
+    h3 { font-size: 1.05rem; margin: 1rem 0 0.4rem; color: #1f2937; }
+    p, li { color: #374151; font-size: 0.98rem; }
+    ul { margin: 0.4rem 0 0.8rem 1.2rem; }
+    li { margin: 0.3rem 0; }
+    .callout {
+      background: #f0f6ff; border-left: 4px solid #4a6fa5; border-radius: 8px;
+      padding: 0.9rem 1rem; margin: 0.9rem 0; font-size: 0.95rem;
+    }
+    .warn {
+      background: #fff8e6; border-left: 4px solid #f39c12; border-radius: 8px;
+      padding: 0.9rem 1rem; margin: 0.9rem 0; font-size: 0.95rem;
+    }
+    .price-row {
+      display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0;
+    }
+    .price-pill {
+      flex: 1 1 180px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px; padding: 0.9rem 1rem;
+    }
+    .price-pill strong { display: block; font-size: 1.4rem; color: #1f2937; }
+    .price-pill span { font-size: 0.85rem; color: #6b7280; }
+    label.field { display: block; font-weight: 600; font-size: 0.88rem; color: #374151; margin: 0.85rem 0 0.35rem; }
+    input[type="text"], input[type="email"], input[type="tel"], input[type="url"], textarea {
+      width: 100%; padding: 0.7rem 0.85rem; border: 1px solid #d1d5db; border-radius: 9px;
+      font-size: 1rem; font-family: inherit; background: #fff;
+    }
+    input:focus, textarea:focus { outline: none; border-color: #4a6fa5; box-shadow: 0 0 0 3px rgba(74,111,165,0.2); }
+    textarea { min-height: 90px; resize: vertical; }
+    .check-row { display: flex; align-items: flex-start; gap: 0.65rem; margin: 1rem 0; font-size: 0.92rem; color: #374151; }
+    .check-row input { margin-top: 0.2rem; accent-color: #4a6fa5; width: 1.05rem; height: 1.05rem; flex-shrink: 0; }
+    .btn-primary {
+      display: inline-block; width: 100%; background: #4a6fa5; color: white; border: none;
+      padding: 0.95rem 1.5rem; font-size: 1.05rem; font-weight: 600; border-radius: 10px;
+      cursor: pointer; box-shadow: 0 4px 14px rgba(74,111,165,0.35); margin-top: 0.5rem;
+    }
+    .btn-primary:hover:not(:disabled) { background: #3d5d8a; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+    .error {
+      display: none; margin: 0.75rem 0; padding: 0.7rem 0.9rem; background: #fef2f2; color: #991b1b;
+      border: 1px solid #fecaca; border-radius: 9px; font-size: 0.9rem;
+    }
+    .error.visible { display: block; }
+    .state { text-align: center; padding: 2rem 1rem; }
+    .state h2 { border: none; }
+    .muted { color: #6b7280; font-size: 0.92rem; }
+    .footer { background: white; border-top: 1px solid #e9ecef; padding: 2rem 1rem; text-align: center; color: #666; font-size: 0.9rem; }
+    .hidden { display: none !important; }
+    .grid-2 { display: grid; grid-template-columns: 1fr; gap: 0 1rem; }
+    @media (min-width: 640px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="nav-container">
+      <a href="https://peakleadsgroup.com">
+        <img src="https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png" alt="Peak Leads Marketing Group" class="logo">
+      </a>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="badge">Nationwide Coverage Network</div>
+    <h1>$49 Exclusive Bathroom Leads</h1>
+    <p class="subtitle">Same quality homeowner leads we send for $99 dedicated — less volume, exclusive once assigned, card on file.</p>
+  </div>
+
+  <div class="wrap">
+    <!-- Loading / processing -->
+    <div id="panel-loading" class="card state hidden">
+      <h2 id="loading-title">Working…</h2>
+      <p class="muted" id="loading-msg">Please wait.</p>
+    </div>
+
+    <!-- Success -->
+    <div id="panel-success" class="card state hidden">
+      <h2>You're all set.</h2>
+      <p style="margin: 0.75rem 0 1rem;">Thanks for joining the Peak Leads Group Nationwide network.</p>
+      <div class="callout" style="text-align:left;">
+        <strong>Here's what happens now:</strong>
+        <ul>
+          <li>Your card is on file for <strong>$49 exclusive bathroom leads</strong> (charged only when a lead is delivered).</li>
+          <li>Your account is in <strong>Setup</strong> while we finalize coverage and routing.</li>
+          <li>When your market is live, exclusive leads in your area can be sent to you automatically.</li>
+          <li>Dedicated campaigns always get priority — national fills coverage where dedicated isn't active.</li>
+          <li>Questions? Email <a href="mailto:daniel@peakleadsgroup.com">daniel@peakleadsgroup.com</a>.</li>
+        </ul>
+      </div>
+      <p class="muted">No kickoff call needed. No further forms required.</p>
+    </div>
+
+    <!-- Error -->
+    <div id="panel-error" class="card state hidden">
+      <h2>Something went wrong</h2>
+      <p id="error-msg" style="margin:0.75rem 0;"></p>
+      <p class="muted">Please contact <a href="mailto:daniel@peakleadsgroup.com">daniel@peakleadsgroup.com</a> — do not submit payment again until we confirm.</p>
+    </div>
+
+    <!-- Main form flow -->
+    <div id="panel-form">
+      <div class="card">
+        <h2>What you're signing up for</h2>
+        <div class="price-row">
+          <div class="price-pill">
+            <strong>$49</strong>
+            <span>per exclusive lead</span>
+          </div>
+          <div class="price-pill">
+            <strong>Bathrooms</strong>
+            <span>v1 vertical only</span>
+          </div>
+          <div class="price-pill">
+            <strong>Card on file</strong>
+            <span>charged per delivered lead</span>
+          </div>
+        </div>
+        <div class="callout">
+          <strong>Quick & clear:</strong> These are the same quality exclusive homeowner leads we currently send on dedicated ~$99 campaigns — just less volume because this is a shared nationwide network, not a dedicated campaign for your market alone.
+        </div>
+        <div class="warn">
+          We do <strong>not</strong> promise a set number of leads. We promise a clear CPL ($49) and exclusive assignment once a lead is sent to you.
+        </div>
+        <h3>Key terms</h3>
+        <ul>
+          <li><strong>Price:</strong> $49 per exclusive qualified bathroom lead.</li>
+          <li><strong>Billing:</strong> Card on file; auto-charge when a lead is delivered. No monthly subscription required for this product.</li>
+          <li><strong>Exclusivity:</strong> Once assigned to you, that lead is not resold.</li>
+          <li><strong>Routing:</strong> Active dedicated campaigns in a ZIP get priority. Nationwide buyers receive leads where dedicated is not active (or not accepting).</li>
+          <li><strong>Service area:</strong> You provide your coverage area; we route matching leads when available.</li>
+          <li><strong>Volume:</strong> Not guaranteed. National supply is shared coverage, not dedicated fill.</li>
+          <li><strong>Agreement:</strong> Electronic signature + card authorization for future off-session charges for delivered leads.</li>
+          <li><strong>Go-live:</strong> Account starts in Setup; delivery begins when the network is launched for your area.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Your details</h2>
+        <div id="form-error" class="error" role="alert"></div>
+        <form id="nationwide-form" novalidate>
+          <div class="grid-2">
+            <div>
+              <label class="field" for="businessName">Business name *</label>
+              <input id="businessName" name="businessName" type="text" autocomplete="organization" maxlength="250" required>
+            </div>
+            <div>
+              <label class="field" for="contactName">Your full name *</label>
+              <input id="contactName" name="contactName" type="text" autocomplete="name" maxlength="250" required>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label class="field" for="email">Email *</label>
+              <input id="email" name="email" type="email" autocomplete="email" maxlength="250" required>
+            </div>
+            <div>
+              <label class="field" for="phone">Phone</label>
+              <input id="phone" name="phone" type="tel" autocomplete="tel" maxlength="50">
+            </div>
+          </div>
+          <label class="field" for="website">Website</label>
+          <input id="website" name="website" type="url" placeholder="https://example.com" autocomplete="url" maxlength="500">
+          <label class="field" for="serviceArea">Service area (cities, ZIPs, or radius) *</label>
+          <textarea id="serviceArea" name="serviceArea" maxlength="2000" placeholder="e.g. Dallas–Fort Worth metro, or ZIP list / 30-mile radius around 75001" required></textarea>
+
+          <label class="field" for="signerName">Type your full legal name to sign *</label>
+          <input id="signerName" name="signerName" type="text" maxlength="250" required>
+
+          <label class="check-row">
+            <input type="checkbox" id="agreeTerms" required>
+            <span>I agree to the Nationwide terms above, authorize Peak Leads Group to store my card and charge <strong>$49 per exclusive bathroom lead</strong> delivered to my account, and I understand volume is not guaranteed.</span>
+          </label>
+          <label class="check-row">
+            <input type="checkbox" id="agreeEsign" required>
+            <span>I agree to sign this agreement electronically. My typed name is my legal signature.</span>
+          </label>
+
+          <button type="submit" class="btn-primary" id="submit-btn">Sign &amp; add card securely</button>
+          <p class="muted" style="margin-top:0.75rem; text-align:center;">You'll be redirected to Stripe to save your card. No charge today — only when leads are delivered.</p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>Peak Leads Group · Nationwide Coverage Network</p>
+    <p>Questions: <a href="mailto:daniel@peakleadsgroup.com">daniel@peakleadsgroup.com</a></p>
+  </footer>
+
+  <script>
+  (function () {
+    function $(id) { return document.getElementById(id); }
+    function show(id) { var n = $(id); if (n) n.classList.remove('hidden'); }
+    function hide(id) { var n = $(id); if (n) n.classList.add('hidden'); }
+    function setError(msg) {
+      var e = $('form-error');
+      if (!e) return;
+      if (msg) { e.textContent = msg; e.classList.add('visible'); }
+      else { e.textContent = ''; e.classList.remove('visible'); }
+    }
+    function emailOk(s) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
+    function qs(name) {
+      return new URLSearchParams(window.location.search).get(name) || '';
+    }
+    function looksLikeSession(id) { return /^cs_[a-zA-Z0-9_]+$/.test(id || ''); }
+    function looksLikeRec(id) { return /^rec[a-zA-Z0-9]{14,}$/.test(id || ''); }
+
+    async function fetchJson(url, options) {
+      var res = await fetch(url, options);
+      var text = await res.text();
+      var data = {};
+      try { data = text ? JSON.parse(text) : {}; } catch (e) {
+        throw new Error('Invalid server response (' + res.status + ')');
+      }
+      if (!res.ok) {
+        var msg = (data && (data.error || data.message)) || ('Request failed ' + res.status);
+        throw new Error(typeof msg === 'string' ? msg : 'Request failed');
+      }
+      return data;
+    }
+
+    async function finalize(sessionId) {
+      hide('panel-form');
+      hide('panel-error');
+      hide('panel-success');
+      show('panel-loading');
+      $('loading-title').textContent = 'Saving your account…';
+      $('loading-msg').textContent = 'Confirming card on file and creating your Nationwide Setup account.';
+      try {
+        var out = await fetchJson('/api/stripe/finalize-nationwide-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: sessionId })
+        });
+        // Clean URL
+        try {
+          var u = new URL(window.location.href);
+          u.searchParams.delete('session_id');
+          u.searchParams.set('done', '1');
+          if (out.clientsRecordId) u.searchParams.set('client', out.clientsRecordId);
+          window.history.replaceState({}, '', u.pathname + u.search);
+        } catch (e) {}
+        hide('panel-loading');
+        show('panel-success');
+      } catch (e) {
+        hide('panel-loading');
+        show('panel-error');
+        $('error-msg').textContent = (e && e.message) || 'Could not finalize signup.';
+      }
+    }
+
+    async function onSubmit(ev) {
+      if (ev && ev.preventDefault) ev.preventDefault();
+      setError('');
+      var businessName = $('businessName').value.trim();
+      var contactName = $('contactName').value.trim();
+      var email = $('email').value.trim();
+      var phone = $('phone').value.trim();
+      var website = $('website').value.trim();
+      var serviceArea = $('serviceArea').value.trim();
+      var signerName = $('signerName').value.trim();
+      if (!businessName) return setError('Business name is required.');
+      if (!contactName) return setError('Your name is required.');
+      if (!emailOk(email)) return setError('A valid email is required.');
+      if (!serviceArea) return setError('Service area is required.');
+      if (!signerName) return setError('Please type your full legal name to sign.');
+      if (!$('agreeTerms').checked) return setError('Please accept the Nationwide terms.');
+      if (!$('agreeEsign').checked) return setError('Please accept electronic signature.');
+
+      var btn = $('submit-btn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Starting secure checkout…'; }
+      try {
+        var payload = {
+          businessName: businessName,
+          contactName: contactName,
+          email: email,
+          phone: phone,
+          website: website,
+          serviceArea: serviceArea,
+          signerName: signerName
+        };
+        var b2b = qs('recordID') || qs('recordId') || qs('b2bLeadId') || '';
+        if (looksLikeRec(b2b)) payload.b2bLeadId = b2b;
+
+        var data = await fetchJson('/api/stripe/create-nationwide-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!data.url) throw new Error('No checkout URL returned');
+        window.location.href = data.url;
+      } catch (e) {
+        setError((e && e.message) || 'Could not start checkout.');
+        if (btn) { btn.disabled = false; btn.textContent = 'Sign & add card securely'; }
+      }
+    }
+
+    function init() {
+      // Prefill from query if present
+      var bn = qs('businessName') || qs('company') || '';
+      var em = qs('email') || '';
+      var ph = qs('phone') || '';
+      if (bn && $('businessName')) $('businessName').value = bn;
+      if (em && $('email')) $('email').value = em;
+      if (ph && $('phone')) $('phone').value = ph;
+
+      var sessionId = qs('session_id');
+      if (looksLikeSession(sessionId)) {
+        finalize(sessionId.trim());
+        return;
+      }
+      if (qs('done') === '1') {
+        hide('panel-form');
+        show('panel-success');
+        return;
+      }
+      if (qs('checkout') === 'cancel') {
+        setError('Checkout canceled — you can try again when ready. No card was saved.');
+        try {
+          var u = new URL(window.location.href);
+          u.searchParams.delete('checkout');
+          window.history.replaceState({}, '', u.pathname + u.search);
+        } catch (e) {}
+      }
+      var form = $('nationwide-form');
+      if (form) form.addEventListener('submit', onSubmit);
+    }
+    init();
+  })();
+  </script>
+</body>
+</html>
