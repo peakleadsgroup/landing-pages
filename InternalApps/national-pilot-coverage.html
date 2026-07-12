@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
+  <title>National Pilot Coverage Map — Peak Leads Group</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      color: #202124;
+    }
+    #header {
+      flex-shrink: 0;
+      background: white;
+      color: #1a73e8;
+      padding: 0.85rem 1.25rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      z-index: 10;
+    }
+    #header-logo { height: 36px; width: auto; }
+    #header h1 { font-size: 1.25rem; font-weight: 600; margin: 0; color: #202124; }
+    #header .sub { font-size: 0.8rem; color: #5f6368; margin-left: 0.25rem; }
+    #container { flex: 1; min-height: 0; display: flex; flex-direction: row; }
+    #sidebar {
+      width: 380px;
+      flex-shrink: 0;
+      background: #f8f9fa;
+      border-right: 1px solid #dadce0;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .panel {
+      padding: 0.95rem 1.1rem;
+      border-bottom: 1px solid #dadce0;
+    }
+    .panel h2 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #202124;
+      margin-bottom: 0.65rem;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    .stat {
+      background: #fff;
+      border: 1px solid #dadce0;
+      border-radius: 8px;
+      padding: 0.55rem 0.65rem;
+    }
+    .stat .label { font-size: 0.7rem; color: #5f6368; text-transform: uppercase; letter-spacing: 0.03em; }
+    .stat .value { font-size: 1.15rem; font-weight: 700; margin-top: 0.1rem; }
+    .legend { display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.82rem; color: #3c4043; }
+    .legend-row { display: flex; align-items: center; gap: 0.5rem; }
+    .legend-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.15); flex-shrink: 0;
+    }
+    .toggles { display: flex; flex-direction: column; gap: 0.4rem; }
+    .toggles label {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.85rem; cursor: pointer; user-select: none;
+    }
+    .toggles input { accent-color: #1a73e8; }
+    .hint { font-size: 0.75rem; color: #5f6368; margin-top: 0.45rem; line-height: 1.4; }
+    .search {
+      width: 100%;
+      padding: 0.5rem 0.65rem;
+      border: 1px solid #dadce0;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin-bottom: 0.55rem;
+    }
+    .search:focus { outline: none; border-color: #1a73e8; box-shadow: 0 0 0 2px rgba(26,115,232,0.12); }
+    .list { max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.4rem; }
+    .card {
+      background: #fff;
+      border: 1px solid #dadce0;
+      border-radius: 8px;
+      padding: 0.55rem 0.65rem;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .card:hover { border-color: #1a73e8; }
+    .card.active {
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26,115,232,0.18);
+      background: #e8f0fe;
+    }
+    .card .name { font-weight: 600; font-size: 0.86rem; color: #202124; }
+    .card .meta { font-size: 0.75rem; color: #5f6368; margin-top: 0.15rem; line-height: 1.35; }
+    .badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.1rem 0.4rem;
+      border-radius: 999px;
+      background: #e8eaed;
+      color: #3c4043;
+      margin-right: 0.25rem;
+    }
+    .badge.clear { background: #e6f4ea; color: #137333; }
+    .badge.partial { background: #fef7e0; color: #b06000; }
+    .badge.source { background: #e8f0fe; color: #174ea6; }
+    .detail {
+      background: #fff;
+      border: 1px solid #dadce0;
+      border-radius: 8px;
+      padding: 0.65rem 0.75rem;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      color: #3c4043;
+    }
+    .detail strong { color: #202124; }
+    .detail a { color: #1a73e8; }
+    .btn {
+      display: inline-block;
+      padding: 0.5rem 0.85rem;
+      background: #1a73e8;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn:hover { background: #1557b0; }
+    .btn-secondary { background: #5f6368; }
+    .btn-secondary:hover { background: #494c50; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.55rem; }
+    #map-wrap { flex: 1; min-width: 0; position: relative; overflow: hidden; }
+    #map { width: 100%; height: 100%; }
+    #loading {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: white; padding: 0.9rem 1.25rem; border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 2000;
+      display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem;
+    }
+    .spinner {
+      border: 3px solid #f3f3f3; border-top: 3px solid #1a73e8;
+      border-radius: 50%; width: 20px; height: 20px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #map-legend {
+      position: absolute; top: 12px; right: 12px; z-index: 1000;
+      background: rgba(255,255,255,0.96); border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15); padding: 0.65rem 0.8rem;
+      font-size: 0.78rem; line-height: 1.5;
+    }
+    #map-legend .row { display: flex; align-items: center; gap: 0.4rem; }
+    @media (max-width: 900px) {
+      #container { flex-direction: column; }
+      #sidebar { width: 100%; max-height: 42vh; border-right: none; border-bottom: 1px solid #dadce0; }
+    }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <img id="header-logo" src="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" alt="PLG">
+    <div>
+      <h1>National Pilot Coverage Map</h1>
+      <div class="sub">Active dedicated bathroom zips vs pilot 50 prospect areas</div>
+    </div>
+  </div>
+
+  <div id="container">
+    <div id="sidebar">
+      <div class="panel">
+        <h2>Summary</h2>
+        <div class="stats" id="stats"></div>
+        <div class="hint" id="generated-at"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Layers</h2>
+        <div class="toggles">
+          <label><input type="checkbox" id="tog-active" checked> Active dedicated only <span id="cnt-active"></span></label>
+          <label><input type="checkbox" id="tog-pilot" checked> Pilot only <span id="cnt-pilot"></span></label>
+          <label><input type="checkbox" id="tog-overlap" checked> Overlap <span id="cnt-overlap"></span></label>
+          <label><input type="checkbox" id="tog-selected" checked> Selected prospect only</label>
+        </div>
+        <div class="legend" style="margin-top:0.65rem">
+          <div class="legend-row"><span class="legend-dot" style="background:#1a73e8"></span> Blue = active dedicated only</div>
+          <div class="legend-row"><span class="legend-dot" style="background:#34a853"></span> Green = pilot prospect only</div>
+          <div class="legend-row"><span class="legend-dot" style="background:#ea4335"></span> Red = overlap (both)</div>
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn btn-secondary" id="btn-clear">Clear selection</button>
+          <button type="button" class="btn btn-secondary" id="btn-fit">Fit all</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Selected</h2>
+        <div class="detail" id="selected-detail">Click a pilot candidate or active adset to focus the map.</div>
+      </div>
+
+      <div class="panel">
+        <h2>Pilot candidates (50)</h2>
+        <input class="search" id="pilot-search" placeholder="Search pilot name, source, email…">
+        <div class="list" id="pilot-list"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Active dedicated adsets</h2>
+        <input class="search" id="active-search" placeholder="Search active adset…">
+        <div class="list" id="active-list"></div>
+      </div>
+    </div>
+
+    <div id="map-wrap">
+      <div id="map"></div>
+      <div id="map-legend">
+        <div class="row"><span class="legend-dot" style="background:#1a73e8"></span> Active only</div>
+        <div class="row"><span class="legend-dot" style="background:#34a853"></span> Pilot only</div>
+        <div class="row"><span class="legend-dot" style="background:#ea4335"></span> Overlap</div>
+      </div>
+      <div id="loading"><div class="spinner"></div><span>Loading map data…</span></div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+  (function () {
+    const COLORS = {
+      active_only: '#1a73e8',
+      pilot_only: '#34a853',
+      overlap: '#ea4335',
+      selected: '#9c27b0'
+    };
+
+    let map;
+    let zipCoords = {};
+    let data = null;
+    let layerGroup = null;
+    let selected = null; // { type: 'pilot'|'active', id }
+    let markerIndex = {}; // zip -> marker
+
+    function $(id) { return document.getElementById(id); }
+    function esc(s) {
+      const d = document.createElement('div');
+      d.textContent = s == null ? '' : String(s);
+      return d.innerHTML;
+    }
+    function fmt(n) { return (n == null ? 0 : n).toLocaleString(); }
+
+    function setLoading(msg, isError) {
+      const el = $('loading');
+      if (!msg) { el.style.display = 'none'; return; }
+      el.style.display = 'flex';
+      el.innerHTML = isError
+        ? '<span style="color:#c5221f">' + esc(msg) + '</span>'
+        : '<div class="spinner"></div><span>' + esc(msg) + '</span>';
+    }
+
+    function initMap() {
+      map = L.map('map').setView([39.8283, -98.5795], 4);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(map);
+      layerGroup = L.layerGroup().addTo(map);
+    }
+
+    function zipLatLng(zip) {
+      const d = zipCoords[zip];
+      if (!d || d.lat == null || d.lng == null) return null;
+      return [d.lat, d.lng];
+    }
+
+    function currentVisibility() {
+      return {
+        active: $('tog-active').checked,
+        pilot: $('tog-pilot').checked,
+        overlap: $('tog-overlap').checked,
+        selectedOnly: $('tog-selected').checked
+      };
+    }
+
+    function selectedZipSet() {
+      if (!selected || !data) return null;
+      if (selected.type === 'pilot') {
+        const p = data.pilot_candidates.find(x => x.record_id === selected.id);
+        return p ? new Set(p.zips || []) : null;
+      }
+      if (selected.type === 'active') {
+        const a = data.active_adsets.find(x => x.id === selected.id);
+        return a ? new Set(a.zips || []) : null;
+      }
+      return null;
+    }
+
+    function classifyZip(zip, activeSet, pilotOnlySet, overlapSet) {
+      if (overlapSet.has(zip)) return 'overlap';
+      if (pilotOnlySet.has(zip)) return 'pilot_only';
+      if (activeSet.has(zip)) return 'active_only';
+      return null;
+    }
+
+    function redraw() {
+      if (!map || !data) return;
+      layerGroup.clearLayers();
+      markerIndex = {};
+
+      const vis = currentVisibility();
+      const activeOnly = new Set(data.sets.active_only || []);
+      const pilotOnly = new Set(data.sets.pilot_only || []);
+      const overlap = new Set(data.sets.overlap || []);
+      const focus = selectedZipSet();
+
+      // Base union of all zips we might plot
+      let zips = [];
+      if (vis.active) zips = zips.concat(data.sets.active_only || []);
+      if (vis.pilot) zips = zips.concat(data.sets.pilot_only || []);
+      if (vis.overlap) zips = zips.concat(data.sets.overlap || []);
+
+      // If a selection is active and "selected only" is on, restrict to that candidate/adset
+      // but still color by global classification within that set.
+      if (selected && vis.selectedOnly && focus) {
+        zips = Array.from(focus);
+      } else if (selected && focus && !vis.selectedOnly) {
+        // keep global layers, and also ensure selected zips are included
+        const extra = Array.from(focus);
+        zips = zips.concat(extra);
+      }
+
+      const uniq = Array.from(new Set(zips));
+      const bounds = [];
+
+      uniq.forEach(function (zip) {
+        // If selected-only mode, still classify vs global active/pilot
+        let kind = classifyZip(zip, activeOnly, pilotOnly, overlap);
+        if (!kind) {
+          // selected zip outside the three global sets? treat as pilot_only if pilot selected
+          if (selected && selected.type === 'pilot') kind = 'pilot_only';
+          else if (selected && selected.type === 'active') kind = 'active_only';
+          else return;
+        }
+
+        // layer filters when not in selected-only focus mode
+        if (!(selected && vis.selectedOnly)) {
+          if (kind === 'active_only' && !vis.active) return;
+          if (kind === 'pilot_only' && !vis.pilot) return;
+          if (kind === 'overlap' && !vis.overlap) return;
+        } else {
+          // selected-only: still respect layer toggles for coloring classes
+          if (kind === 'active_only' && !vis.active) return;
+          if (kind === 'pilot_only' && !vis.pilot) return;
+          if (kind === 'overlap' && !vis.overlap) return;
+        }
+
+        const ll = zipLatLng(zip);
+        if (!ll) return;
+
+        const inFocus = focus ? focus.has(zip) : false;
+        const color = (selected && inFocus && kind !== 'overlap')
+          ? (kind === 'active_only' ? COLORS.active_only : COLORS.pilot_only)
+          : COLORS[kind];
+
+        const radius = (selected && inFocus) ? 7 : 5;
+        const m = L.circleMarker(ll, {
+          radius: radius,
+          fillColor: color,
+          color: '#fff',
+          weight: 1,
+          fillOpacity: selected && inFocus ? 0.95 : 0.75,
+          opacity: 0.9
+        });
+        const pop = data.pilot_candidates
+          .filter(p => (p.zips || []).indexOf(zip) >= 0)
+          .slice(0, 5)
+          .map(p => esc(p.name))
+          .join('<br>');
+        const act = data.active_adsets
+          .filter(a => (a.zips || []).indexOf(zip) >= 0)
+          .slice(0, 5)
+          .map(a => esc(a.name))
+          .join('<br>');
+        m.bindPopup(
+          '<strong>Zip ' + esc(zip) + '</strong><br>' +
+          'Class: <strong>' + esc(kind.replace('_', ' ')) + '</strong>' +
+          (act ? '<br><br><em>Active adsets</em><br>' + act : '') +
+          (pop ? '<br><br><em>Pilot candidates</em><br>' + pop : '')
+        );
+        m.addTo(layerGroup);
+        markerIndex[zip] = m;
+        bounds.push(ll);
+      });
+
+      if (selected && focus && bounds.length) {
+        try {
+          map.fitBounds(bounds, { padding: [30, 30], maxZoom: 9 });
+        } catch (e) {}
+      }
+    }
+
+    function renderStats() {
+      const s = data.summary;
+      $('stats').innerHTML = [
+        ['Active adsets', s.active_adsets],
+        ['Active zips', s.active_zips],
+        ['Pilot candidates', s.pilot_candidates],
+        ['Pilot union zips', s.pilot_union_zips],
+        ['Overlap zips', s.overlap_zips],
+        ['Pilot-only zips', s.pilot_only_zips],
+        ['Active-only zips', s.active_only_zips],
+        ['Churned / Closed / B2B',
+          (s.by_source['Clients Churned'] || 0) + ' / ' +
+          (s.by_source['Client Closed'] || 0) + ' / ' +
+          (s.by_source['B2B Leads'] || 0)]
+      ].map(function (pair) {
+        return '<div class="stat"><div class="label">' + esc(pair[0]) + '</div><div class="value">' +
+          (typeof pair[1] === 'number' ? fmt(pair[1]) : esc(pair[1])) + '</div></div>';
+      }).join('');
+      $('cnt-active').textContent = '(' + fmt(s.active_only_zips) + ')';
+      $('cnt-pilot').textContent = '(' + fmt(s.pilot_only_zips) + ')';
+      $('cnt-overlap').textContent = '(' + fmt(s.overlap_zips) + ')';
+      $('generated-at').textContent = 'Data generated: ' + (data.generated_at || '—') +
+        ' · Active = bathroom adsets with Active client + Active adset status.';
+    }
+
+    function renderSelectedDetail() {
+      const el = $('selected-detail');
+      if (!selected) {
+        el.innerHTML = 'Click a pilot candidate or active adset to focus the map.';
+        return;
+      }
+      if (selected.type === 'pilot') {
+        const p = data.pilot_candidates.find(x => x.record_id === selected.id);
+        if (!p) { el.textContent = 'Not found.'; return; }
+        el.innerHTML =
+          '<strong>' + esc(p.name) + '</strong><br>' +
+          '<span class="badge source">' + esc(p.source) + '</span>' +
+          '<span class="badge ' + (p.decision === 'ENROLL_CLEAR' ? 'clear' : 'partial') + '">' + esc(p.decision || '') + '</span><br>' +
+          'Prospect zips: <strong>' + fmt(p.prospect_zip_count) + '</strong> · ' +
+          'Overlap: <strong>' + fmt(p.overlap_zip_count) + '</strong> (' +
+          (p.overlap_pct == null ? 'n/a' : p.overlap_pct + '%') + ')<br>' +
+          'Mode: ' + esc(p.coverage_mode || '—') + '<br>' +
+          (p.email ? 'Email: ' + esc(p.email) + '<br>' : '') +
+          (p.phone ? 'Phone: ' + esc(p.phone) + '<br>' : '') +
+          (p.signup_link ? '<a href="' + esc(p.signup_link) + '" target="_blank" rel="noopener">Signup link</a>' : '');
+        return;
+      }
+      if (selected.type === 'active') {
+        const a = data.active_adsets.find(x => x.id === selected.id);
+        if (!a) { el.textContent = 'Not found.'; return; }
+        el.innerHTML =
+          '<strong>' + esc(a.name) + '</strong><br>' +
+          '<span class="badge source">Active dedicated</span><br>' +
+          'Zips: <strong>' + fmt(a.zip_count) + '</strong><br>' +
+          'Adset: <code>' + esc(a.id) + '</code>';
+      }
+    }
+
+    function markActiveCards() {
+      document.querySelectorAll('#pilot-list .card, #active-list .card').forEach(function (c) {
+        const t = c.getAttribute('data-type');
+        const id = c.getAttribute('data-id');
+        c.classList.toggle('active', !!(selected && selected.type === t && selected.id === id));
+      });
+    }
+
+    function selectItem(type, id, opts) {
+      opts = opts || {};
+      selected = { type: type, id: id };
+      // When selecting, default to focusing selected prospect zips
+      if (!opts.keepSelectedOnly) {
+        $('tog-selected').checked = true;
+      }
+      renderSelectedDetail();
+      markActiveCards();
+      redraw();
+    }
+
+    function clearSelection() {
+      selected = null;
+      $('tog-selected').checked = false;
+      renderSelectedDetail();
+      markActiveCards();
+      redraw();
+      if (map) map.setView([39.8283, -98.5795], 4);
+    }
+
+    function renderPilotList(filter) {
+      const q = (filter || '').toLowerCase().trim();
+      const list = $('pilot-list');
+      const rows = data.pilot_candidates.filter(function (p) {
+        if (!q) return true;
+        const blob = [p.name, p.source, p.email, p.phone, p.decision, p.record_id].join(' ').toLowerCase();
+        return blob.indexOf(q) >= 0;
+      });
+      list.innerHTML = rows.map(function (p) {
+        return '<div class="card" data-type="pilot" data-id="' + esc(p.record_id) + '">' +
+          '<div class="name">' + esc(p.name) + '</div>' +
+          '<div class="meta">' +
+            '<span class="badge source">' + esc(p.source) + '</span>' +
+            '<span class="badge ' + (p.decision === 'ENROLL_CLEAR' ? 'clear' : 'partial') + '">' + esc(p.decision || '') + '</span>' +
+            fmt(p.prospect_zip_count) + ' zips · overlap ' +
+            (p.overlap_pct == null ? 'n/a' : p.overlap_pct + '%') +
+          '</div></div>';
+      }).join('') || '<div class="hint">No matches.</div>';
+
+      list.querySelectorAll('.card').forEach(function (card) {
+        card.addEventListener('click', function () {
+          selectItem(card.getAttribute('data-type'), card.getAttribute('data-id'));
+        });
+      });
+      markActiveCards();
+    }
+
+    function renderActiveList(filter) {
+      const q = (filter || '').toLowerCase().trim();
+      const list = $('active-list');
+      const rows = data.active_adsets.filter(function (a) {
+        if (!q) return true;
+        return (a.name + ' ' + a.id).toLowerCase().indexOf(q) >= 0;
+      });
+      list.innerHTML = rows.map(function (a) {
+        return '<div class="card" data-type="active" data-id="' + esc(a.id) + '">' +
+          '<div class="name">' + esc(a.name) + '</div>' +
+          '<div class="meta">' + fmt(a.zip_count) + ' zips · ' + esc(a.id) + '</div></div>';
+      }).join('') || '<div class="hint">No matches.</div>';
+      list.querySelectorAll('.card').forEach(function (card) {
+        card.addEventListener('click', function () {
+          selectItem(card.getAttribute('data-type'), card.getAttribute('data-id'));
+        });
+      });
+      markActiveCards();
+    }
+
+    function fitAll() {
+      if (!data || !map) return;
+      const all = []
+        .concat(data.sets.active_only || [])
+        .concat(data.sets.pilot_only || [])
+        .concat(data.sets.overlap || []);
+      const bounds = [];
+      all.forEach(function (z) {
+        const ll = zipLatLng(z);
+        if (ll) bounds.push(ll);
+      });
+      if (bounds.length) map.fitBounds(bounds, { padding: [20, 20], maxZoom: 6 });
+    }
+
+    async function load() {
+      setLoading('Loading zip coordinates…');
+      initMap();
+      try {
+        const [zipRes, dataRes] = await Promise.all([
+          fetch('us_zip_complete.json'),
+          fetch('national-pilot-coverage-data.json')
+        ]);
+        if (!zipRes.ok) throw new Error('Failed to load us_zip_complete.json (' + zipRes.status + ')');
+        if (!dataRes.ok) throw new Error('Failed to load national-pilot-coverage-data.json (' + dataRes.status + ')');
+        setLoading('Parsing data…');
+        zipCoords = await zipRes.json();
+        data = await dataRes.json();
+      } catch (e) {
+        setLoading((e && e.message) || 'Failed to load data', true);
+        return;
+      }
+
+      renderStats();
+      renderPilotList('');
+      renderActiveList('');
+      renderSelectedDetail();
+
+      ['tog-active', 'tog-pilot', 'tog-overlap', 'tog-selected'].forEach(function (id) {
+        $(id).addEventListener('change', redraw);
+      });
+      $('pilot-search').addEventListener('input', function (e) { renderPilotList(e.target.value); });
+      $('active-search').addEventListener('input', function (e) { renderActiveList(e.target.value); });
+      $('btn-clear').addEventListener('click', clearSelection);
+      $('btn-fit').addEventListener('click', fitAll);
+
+      // Default view: all three layers, no selection focus
+      $('tog-selected').checked = false;
+      redraw();
+      fitAll();
+      setLoading(null);
+    }
+
+    load();
+  })();
+  </script>
+</body>
+</html>
