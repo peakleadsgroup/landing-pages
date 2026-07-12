@@ -242,7 +242,8 @@ export async function onRequest(context) {
     log("customer created", customerRecordId);
 
     const notes = [
-      `[SANDBOX TEST] Nationwide signup`,
+      `[SANDBOX TEST] Nationwide signup $49 exclusive bathroom leads`,
+      `same quality as dedicated $99-$150; no volume guarantee; card on file only`,
       `session=${sessionId}`,
       `signed_by=${signerName || "(unknown)"}`,
       `contact=${contactName || ""}`,

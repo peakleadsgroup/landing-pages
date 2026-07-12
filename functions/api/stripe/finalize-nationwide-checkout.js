@@ -236,7 +236,8 @@ export async function onRequest(context) {
 
     // Create Clients row — Setup until deliberate launch
     const notes = [
-      `Nationwide signup`,
+      `Nationwide signup $49 exclusive bathroom leads`,
+      `same quality as dedicated $99-$150; no volume guarantee; card on file only`,
       `session=${sessionId}`,
       `signed_by=${signerName || "(unknown)"}`,
       `contact=${contactName || ""}`,

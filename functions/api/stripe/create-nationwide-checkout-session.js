@@ -62,6 +62,11 @@ export async function onRequest(context) {
     if (!businessName) return json({ error: "businessName is required" }, 400, cors);
     if (!contactName) return json({ error: "contactName is required" }, 400, cors);
     if (!email || !EMAIL_RE.test(email)) return json({ error: "Valid email is required" }, 400, cors);
+    const phoneDigits = phone.replace(/\D/g, "").replace(/^1(\d{10})$/, "$1");
+    if (!phone || phoneDigits.length !== 10) {
+      return json({ error: "Valid 10-digit phone is required" }, 400, cors);
+    }
+    if (!serviceArea) return json({ error: "serviceArea is required" }, 400, cors);
     if (!signerName) return json({ error: "signerName is required" }, 400, cors);
     if (b2bLeadId && !/^rec[a-zA-Z0-9]{14,}$/.test(b2bLeadId)) {
       return json({ error: "Invalid b2bLeadId" }, 400, cors);
