@@ -228,7 +228,7 @@ async function prefillChurned(env, recordId) {
   }
 
   let serviceArea = clean(f["Service Area"] || "", 4000);
-  if (!extractZips(serviceArea)) {
+  if (!extractZips(serviceArea).length) {
     const map = clean(f["Service Area Map"] || "", 4000);
     const parsedMap = parseMapDevelopersCircles(map);
     if (parsedMap) serviceArea = parsedMap;
@@ -269,7 +269,7 @@ async function prefillClosed(env, recordId) {
 
   let serviceArea = clean(f["Service Area"] || "", 4000);
   let warnings = [];
-  if (!extractZips(serviceArea)) {
+  if (!extractZips(serviceArea).length) {
     const fromAdsets = await serviceAreaFromClientAdsets(env, f.Adsets || []);
     if (fromAdsets.serviceArea) serviceArea = fromAdsets.serviceArea;
     if (fromAdsets.errors && fromAdsets.errors.length) warnings = fromAdsets.errors;
