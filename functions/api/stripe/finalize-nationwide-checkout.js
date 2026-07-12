@@ -6,12 +6,12 @@
  * On completed setup Checkout session:
  *   1) attach payment method to Stripe Customer
  *   2) create Customers row (Stripe Customer ID + Payment Method ID)
- *   3) create Clients row: Status=Setup, Payment Model=Nationwide, Lead Price=49
- *   4) link Customer ↔ Clients; optional B2B lead links + payment flags
+ *   3) create Client row (singular / correct CRM table): Status=Setup, Model=Nationwide, Lead Price=49
+ *   4) link Customer ↔ Client via Customers."Client 2"; optional B2B lead links + payment flags
  *
  * Does NOT:
  *   - touch dedicated finalize-checkout
- *   - create legacy Client (tblH2nVfmGNG8pAjC)
+ *   - write to legacy Clients plural table (tblMl8Y97cMSbricC)
  *   - run onboarding form / kickoff
  *   - fire dedicated Make payment webhook
  *
@@ -37,21 +37,22 @@ const log = (...a) => console.log(LOG, ...a);
 const warn = (...a) => console.warn(LOG, ...a);
 const err = (...a) => console.error(LOG, ...a);
 
-const CLIENTS_TABLE_ID = "tblMl8Y97cMSbricC";
+// Correct CRM table (singular). Do NOT use legacy Clients plural tblMl8Y97cMSbricC.
+const CLIENT_TABLE_ID = "tblH2nVfmGNG8pAjC";
 const CUSTOMERS_TABLE_ID = DEFAULT_AIRTABLE_CUSTOMER_TABLE_ID;
 
 const CF = {
   NAME: "Name",
   STATUS: "Status",
-  PAYMENT_MODEL: "Payment Model",
+  MODEL: "Model",
   LEAD_PRICE: "Lead Price",
   NICHE: "Niche",
   WEBSITE: "Website",
-  PHONE: "Phone",
-  SERVICE_AREA: "Service Area",
-  STRIPE_CUSTOMER: "Stripe Customer",
+  CUSTOMERS: "Customers",
   B2B_LEAD: "B2B Lead",
   NOTES: "Notes",
+  TCPA_CONTACT: "TCPA Contact",
+  CHARGING: "Charging",
 };
 
 const CU = {
@@ -59,7 +60,8 @@ const CU = {
   EMAIL: "Email",
   STRIPE_CUSTOMER_ID: "Stripe Customer ID",
   PAYMENT_METHOD_ID: "Payment Method ID",
-  CLIENT: "Client", // links to Clients (tblMl8Y97cMSbricC)
+  // Schema: "Client" -> legacy Clients plural; "Client 2" -> correct Client singular
+  CLIENT_2: "Client 2",
   B2B_LEAD: "B2B Lead",
   B2B_LEADS: "B2B Leads",
 };
@@ -89,8 +91,11 @@ export async function onRequest(context) {
   }
 
   try {
-    if (!context.env.STRIPE_SECRET_KEY || !context.env.AIRTABLE_API_KEY) {
-      return json({ error: "STRIPE_SECRET_KEY and AIRTABLE_API_KEY required" }, 503, cors);
+    if (!context.env.AIRTABLE_API_KEY) {
+      return json({ error: "AIRTABLE_API_KEY required" }, 503, cors);
+    }
+    if (!context.env.STRIPE_SECRET_KEY) {
+      return json({ error: "STRIPE_SECRET_KEY required" }, 503, cors);
     }
 
     let body;
@@ -105,9 +110,9 @@ export async function onRequest(context) {
       return json({ error: "Invalid sessionId" }, 400, cors);
     }
 
-    // Idempotency: if we already created a Clients row for this session, return it.
+    // Idempotency: if we already created a Client row for this session, return it.
     try {
-      const existing = await airtableListRecords(context.env, CLIENTS_TABLE_ID, {
+      const existing = await airtableListRecords(context.env, CLIENT_TABLE_ID, {
         filterByFormula: `FIND('${sessionId.replace(/'/g, "''")}', {Notes})`,
         maxRecords: 1,
       });
@@ -117,7 +122,8 @@ export async function onRequest(context) {
           {
             ok: true,
             alreadyFinalized: true,
-            clientsRecordId: existing[0].id,
+            clientRecordId: existing[0].id,
+            clientsRecordId: existing[0].id, // alias for older clients
             sessionId,
           },
           200,
@@ -256,14 +262,17 @@ export async function onRequest(context) {
     if (!customerRecordId) throw new Error("Customer create returned no id");
     log("customer created", customerRecordId);
 
-    // Create Clients row — Setup until deliberate launch
+    // Create Client row (singular / correct table) — Setup until deliberate launch
     const notes = [
       `Nationwide signup $49 exclusive bathroom leads`,
       `same quality as dedicated $99-$150; no volume guarantee; card on file only`,
+      `payment_model=Nationwide`,
       `session=${sessionId}`,
       `signed_by=${signerName || "(unknown)"}`,
       `contact=${contactName || ""}`,
       `email=${email || ""}`,
+      phone ? `phone=${phone}` : null,
+      serviceArea ? `service_area=${serviceArea}` : null,
       sourceType ? `source_type=${sourceType}` : null,
       sourceRecordId ? `source_record_id=${sourceRecordId}` : null,
       `iso=${new Date().toISOString()}`,
@@ -273,34 +282,46 @@ export async function onRequest(context) {
       .filter(Boolean)
       .join(" | ");
 
-    const clientsFields = {
+    const clientFields = {
       [CF.NAME]: businessName,
       [CF.STATUS]: "Setup",
-      [CF.PAYMENT_MODEL]: "Nationwide",
+      // Prefer Nationwide option on Client.Model (typecast may create option if permitted)
+      [CF.MODEL]: "Nationwide",
       [CF.LEAD_PRICE]: 49,
       [CF.NICHE]: ["Bathrooms"],
-      [CF.STRIPE_CUSTOMER]: [customerRecordId],
+      [CF.CUSTOMERS]: [customerRecordId],
       [CF.NOTES]: notes,
+      [CF.CHARGING]: "Pause", // not live until network launch
     };
-    if (website) clientsFields[CF.WEBSITE] = website.startsWith("http") ? website : `https://${website}`;
-    if (phone) clientsFields[CF.PHONE] = phone;
-    if (serviceArea) clientsFields[CF.SERVICE_AREA] = serviceArea;
-    if (b2bLeadId) clientsFields[CF.B2B_LEAD] = [b2bLeadId];
+    if (website) clientFields[CF.WEBSITE] = website.startsWith("http") ? website : `https://${website}`;
+    if (email) clientFields[CF.TCPA_CONTACT] = email;
+    if (b2bLeadId) clientFields[CF.B2B_LEAD] = [b2bLeadId];
 
-    const clientsRec = await airtableCreateRecord(context.env, CLIENTS_TABLE_ID, clientsFields, {
-      typecast: true,
-    });
-    const clientsRecordId = clientsRec.id;
-    if (!clientsRecordId) throw new Error("Clients create returned no id");
-    log("clients created", clientsRecordId);
+    let clientRec;
+    try {
+      clientRec = await airtableCreateRecord(context.env, CLIENT_TABLE_ID, clientFields, {
+        typecast: true,
+      });
+    } catch (modelErr) {
+      // Fallback if Nationwide is not yet an allowed Model option and typecast is blocked
+      warn("Client create with Model=Nationwide failed; retrying Postpay Each Lead", modelErr && modelErr.message);
+      clientFields[CF.MODEL] = "Postpay Each Lead";
+      clientFields[CF.NOTES] = `${notes} | model_fallback=Postpay Each Lead (Nationwide intended)`;
+      clientRec = await airtableCreateRecord(context.env, CLIENT_TABLE_ID, clientFields, {
+        typecast: true,
+      });
+    }
+    const clientRecordId = clientRec.id;
+    if (!clientRecordId) throw new Error("Client create returned no id");
+    log("client created", clientRecordId);
 
-    // Link Customer → Clients
+    // Link Customer → Client (singular) via Client 2
     try {
       await airtablePatchRecord(context.env, CUSTOMERS_TABLE_ID, customerRecordId, {
-        [CU.CLIENT]: [clientsRecordId],
+        [CU.CLIENT_2]: [clientRecordId],
       });
     } catch (linkErr) {
-      warn("customer→clients link failed", linkErr && linkErr.message);
+      warn("customer→Client 2 link failed", linkErr && linkErr.message);
     }
 
     // Optional B2B lead updates (flags only; no dedicated Make webhook)
@@ -311,7 +332,8 @@ export async function onRequest(context) {
         const leadPatch = {
           ...leadPaymentSuccessFields(),
           [F.CUSTOMER_LINK]: [customerRecordId],
-          Business: [clientsRecordId],
+          // B2B.Client links to singular Client table
+          Client: [clientRecordId],
         };
         // Discovery Status Close Won is best-effort (may not apply to all sources)
         try {
@@ -328,7 +350,7 @@ export async function onRequest(context) {
       }
     }
 
-    log("complete", { clientsRecordId, customerRecordId, ms: Date.now() - t0 });
+    log("complete", { clientRecordId, customerRecordId, ms: Date.now() - t0 });
     return json(
       {
         ok: true,
@@ -336,7 +358,8 @@ export async function onRequest(context) {
         stripeCustomerId,
         paymentMethodId,
         customersRecordId: customerRecordId,
-        clientsRecordId,
+        clientRecordId,
+        clientsRecordId: clientRecordId, // alias
         status: "Setup",
         paymentModel: "Nationwide",
         leadPrice: 49,

@@ -2,8 +2,10 @@
  * POST /api/stripe/finalize-nationwide-checkout-testing
  *
  * Sandbox/test-mode copy of finalize-nationwide-checkout.
- * Uses STRIPE_TEST_SECRET_KEY only. Writes Airtable Clients/Customers the same
+ * Uses STRIPE_TEST_SECRET_KEY only. Writes Airtable Client/Customers the same
  * way as prod so Drew can self-test end-to-end; Notes are tagged [SANDBOX TEST].
+ *
+ * Correct CRM table = Client singular (tblH2nVfmGNG8pAjC), NOT legacy Clients plural.
  */
 import {
   json,
@@ -27,21 +29,22 @@ const log = (...a) => console.log(LOG, ...a);
 const warn = (...a) => console.warn(LOG, ...a);
 const err = (...a) => console.error(LOG, ...a);
 
-const CLIENTS_TABLE_ID = "tblMl8Y97cMSbricC";
+// Correct CRM table (singular). Do NOT use legacy Clients plural tblMl8Y97cMSbricC.
+const CLIENT_TABLE_ID = "tblH2nVfmGNG8pAjC";
 const CUSTOMERS_TABLE_ID = DEFAULT_AIRTABLE_CUSTOMER_TABLE_ID;
 
 const CF = {
   NAME: "Name",
   STATUS: "Status",
-  PAYMENT_MODEL: "Payment Model",
+  MODEL: "Model",
   LEAD_PRICE: "Lead Price",
   NICHE: "Niche",
   WEBSITE: "Website",
-  PHONE: "Phone",
-  SERVICE_AREA: "Service Area",
-  STRIPE_CUSTOMER: "Stripe Customer",
+  CUSTOMERS: "Customers",
   B2B_LEAD: "B2B Lead",
   NOTES: "Notes",
+  TCPA_CONTACT: "TCPA Contact",
+  CHARGING: "Charging",
 };
 
 const CU = {
@@ -49,7 +52,8 @@ const CU = {
   EMAIL: "Email",
   STRIPE_CUSTOMER_ID: "Stripe Customer ID",
   PAYMENT_METHOD_ID: "Payment Method ID",
-  CLIENT: "Client",
+  // Schema: "Client" -> legacy Clients plural; "Client 2" -> correct Client singular
+  CLIENT_2: "Client 2",
   B2B_LEAD: "B2B Lead",
   B2B_LEADS: "B2B Leads",
 };
@@ -108,7 +112,7 @@ export async function onRequest(context) {
     }
 
     try {
-      const existing = await airtableListRecords(context.env, CLIENTS_TABLE_ID, {
+      const existing = await airtableListRecords(context.env, CLIENT_TABLE_ID, {
         filterByFormula: `FIND('${sessionId.replace(/'/g, "''")}', {Notes})`,
         maxRecords: 1,
       });
@@ -118,6 +122,7 @@ export async function onRequest(context) {
           {
             ok: true,
             alreadyFinalized: true,
+            clientRecordId: existing[0].id,
             clientsRecordId: existing[0].id,
             sessionId,
             testMode: true,
@@ -224,9 +229,6 @@ export async function onRequest(context) {
     const sourceType = (meta(session, "source_type") || "").toLowerCase();
     const sourceRecordId = meta(session, "source_record_id");
     let b2bLeadId = meta(session, "b2b_lead_id");
-    // Only treat as B2B when source_type says so. If source_type is missing
-    // but b2b_lead_id is present (legacy sessions), verify it actually lives
-    // in the B2B table before linking.
     let isB2b =
       sourceType === "b2b" ||
       sourceType === "b2b_leads" ||
@@ -266,10 +268,13 @@ export async function onRequest(context) {
     const notes = [
       `[SANDBOX TEST] Nationwide signup $49 exclusive bathroom leads`,
       `same quality as dedicated $99-$150; no volume guarantee; card on file only`,
+      `payment_model=Nationwide`,
       `session=${sessionId}`,
       `signed_by=${signerName || "(unknown)"}`,
       `contact=${contactName || ""}`,
       `email=${email || ""}`,
+      phone ? `phone=${phone}` : null,
+      serviceArea ? `service_area=${serviceArea}` : null,
       sourceType ? `source_type=${sourceType}` : null,
       sourceRecordId ? `source_record_id=${sourceRecordId}` : null,
       `iso=${new Date().toISOString()}`,
@@ -280,33 +285,43 @@ export async function onRequest(context) {
       .filter(Boolean)
       .join(" | ");
 
-    const clientsFields = {
+    const clientFields = {
       [CF.NAME]: `[SANDBOX] ${businessName}`,
       [CF.STATUS]: "Setup",
-      [CF.PAYMENT_MODEL]: "Nationwide",
+      [CF.MODEL]: "Nationwide",
       [CF.LEAD_PRICE]: 49,
       [CF.NICHE]: ["Bathrooms"],
-      [CF.STRIPE_CUSTOMER]: [customerRecordId],
+      [CF.CUSTOMERS]: [customerRecordId],
       [CF.NOTES]: notes,
+      [CF.CHARGING]: "Pause",
     };
-    if (website) clientsFields[CF.WEBSITE] = website.startsWith("http") ? website : `https://${website}`;
-    if (phone) clientsFields[CF.PHONE] = phone;
-    if (serviceArea) clientsFields[CF.SERVICE_AREA] = serviceArea;
-    if (b2bLeadId) clientsFields[CF.B2B_LEAD] = [b2bLeadId];
+    if (website) clientFields[CF.WEBSITE] = website.startsWith("http") ? website : `https://${website}`;
+    if (email) clientFields[CF.TCPA_CONTACT] = email;
+    if (b2bLeadId) clientFields[CF.B2B_LEAD] = [b2bLeadId];
 
-    const clientsRec = await airtableCreateRecord(context.env, CLIENTS_TABLE_ID, clientsFields, {
-      typecast: true,
-    });
-    const clientsRecordId = clientsRec.id;
-    if (!clientsRecordId) throw new Error("Clients create returned no id");
-    log("clients created", clientsRecordId);
+    let clientRec;
+    try {
+      clientRec = await airtableCreateRecord(context.env, CLIENT_TABLE_ID, clientFields, {
+        typecast: true,
+      });
+    } catch (modelErr) {
+      warn("Client create with Model=Nationwide failed; retrying Postpay Each Lead", modelErr && modelErr.message);
+      clientFields[CF.MODEL] = "Postpay Each Lead";
+      clientFields[CF.NOTES] = `${notes} | model_fallback=Postpay Each Lead (Nationwide intended)`;
+      clientRec = await airtableCreateRecord(context.env, CLIENT_TABLE_ID, clientFields, {
+        typecast: true,
+      });
+    }
+    const clientRecordId = clientRec.id;
+    if (!clientRecordId) throw new Error("Client create returned no id");
+    log("client created", clientRecordId);
 
     try {
       await airtablePatchRecord(context.env, CUSTOMERS_TABLE_ID, customerRecordId, {
-        [CU.CLIENT]: [clientsRecordId],
+        [CU.CLIENT_2]: [clientRecordId],
       });
     } catch (linkErr) {
-      warn("customer→clients link failed", linkErr && linkErr.message);
+      warn("customer→Client 2 link failed", linkErr && linkErr.message);
     }
 
     let b2bUpdated = false;
@@ -316,7 +331,7 @@ export async function onRequest(context) {
         const leadPatch = {
           ...leadPaymentSuccessFields(),
           [F.CUSTOMER_LINK]: [customerRecordId],
-          Business: [clientsRecordId],
+          Client: [clientRecordId],
         };
         try {
           await airtablePatchRecord(context.env, B2B_LEADS_TABLE_ID, b2bLeadId, {
@@ -332,7 +347,7 @@ export async function onRequest(context) {
       }
     }
 
-    log("complete", { clientsRecordId, customerRecordId, ms: Date.now() - t0 });
+    log("complete", { clientRecordId, customerRecordId, ms: Date.now() - t0 });
     return json(
       {
         ok: true,
@@ -341,7 +356,8 @@ export async function onRequest(context) {
         stripeCustomerId,
         paymentMethodId,
         customersRecordId: customerRecordId,
-        clientsRecordId,
+        clientRecordId,
+        clientsRecordId: clientRecordId,
         status: "Setup",
         paymentModel: "Nationwide",
         leadPrice: 49,
