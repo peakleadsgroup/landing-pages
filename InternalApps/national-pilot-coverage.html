@@ -191,12 +191,12 @@
           <label><input type="checkbox" id="tog-active" checked> Active dedicated only <span id="cnt-active"></span></label>
           <label><input type="checkbox" id="tog-pilot" checked> Pilot only <span id="cnt-pilot"></span></label>
           <label><input type="checkbox" id="tog-overlap" checked> Overlap <span id="cnt-overlap"></span></label>
-          <label><input type="checkbox" id="tog-selected" checked> Selected prospect only</label>
+          <label><input type="checkbox" id="tog-selected"> Selected prospect only</label>
         </div>
         <div class="legend" style="margin-top:0.65rem">
-          <div class="legend-row"><span class="legend-dot" style="background:#1a73e8"></span> Blue = active dedicated only</div>
-          <div class="legend-row"><span class="legend-dot" style="background:#34a853"></span> Green = pilot prospect only</div>
-          <div class="legend-row"><span class="legend-dot" style="background:#ea4335"></span> Red = overlap (both)</div>
+          <div class="legend-row"><span class="legend-dot" style="background:#1a73e8"></span> Blue = active dedicated only (not pilot)</div>
+          <div class="legend-row"><span class="legend-dot" style="background:#34a853"></span> Green = pilot only (not occupied)</div>
+          <div class="legend-row"><span class="legend-dot" style="background:#ea4335"></span> Red = overlap (pilot intersects occupied: active dedicated or 30d leads)</div>
         </div>
         <div class="btn-row">
           <button type="button" class="btn btn-secondary" id="btn-clear">Clear selection</button>
@@ -430,7 +430,7 @@
       $('cnt-pilot').textContent = '(' + fmt(s.pilot_only_zips) + ')';
       $('cnt-overlap').textContent = '(' + fmt(s.overlap_zips) + ')';
       $('generated-at').textContent = 'Data generated: ' + (data.generated_at || '—') +
-        ' · Active = bathroom adsets with Active client + Active adset status.';
+        ' · Blue = live dedicated only. Red = pilot overlap with occupied footprint (active dedicated or 30d bath leads). Green = pilot-only.';
     }
 
     function renderSelectedDetail() {
