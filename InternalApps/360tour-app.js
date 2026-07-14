@@ -1,5 +1,5 @@
 /**
- * 360 Tour — mobile-friendly reply inbox for WTP 360 College Tour SMS.
+ * 360 Tour - mobile-friendly reply inbox for WTP 360 College Tour SMS.
  * Reads/writes PLG Messages via same-origin /api/airtable proxy.
  */
 (function () {
