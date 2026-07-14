@@ -65,7 +65,7 @@
 
   function formatPhoneDisplay(keyOrPhone) {
     var k = normalizePhoneKey(keyOrPhone);
-    if (k.length !== 10) return String(keyOrPhone || "—");
+    if (k.length !== 10) return String(keyOrPhone || "-");
     return "(" + k.slice(0, 3) + ") " + k.slice(3, 6) + "-" + k.slice(6);
   }
 
