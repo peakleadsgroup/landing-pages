@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#0b0f14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" />
+  <title>360 Tour — replies</title>
+  <link rel="stylesheet" href="360tour.css?v=1" />
+</head>
+<body class="t-body">
+  <div id="toast-area" class="t-toast-area" aria-live="polite"></div>
+
+  <!-- LIST VIEW -->
+  <section id="view-list" class="t-view t-view-list">
+    <header class="t-topbar">
+      <div class="t-topbar-text">
+        <p class="t-kicker">WE THE PEOPLE</p>
+        <h1>360 Tour</h1>
+      </div>
+      <button type="button" id="refresh-btn" class="t-icon-btn" aria-label="Refresh">↻</button>
+    </header>
+
+    <div class="t-filters">
+      <input
+        id="search"
+        class="t-search"
+        type="search"
+        placeholder="Search name, school, phone…"
+        autocomplete="off"
+        enterkeyhint="search"
+      />
+      <div class="t-chip-row" role="tablist" aria-label="Filter">
+        <button type="button" class="t-chip active" data-filter="needs_reply">Needs reply</button>
+        <button type="button" class="t-chip" data-filter="all">All replies</button>
+        <button type="button" class="t-chip" data-filter="waiting">Waiting on them</button>
+      </div>
+      <p id="thread-count" class="t-count">Loading…</p>
+    </div>
+
+    <div id="thread-list" class="t-thread-list" role="list"></div>
+    <p id="thread-empty" class="t-empty hidden">No replied threads yet.</p>
+  </section>
+
+  <!-- CHAT VIEW -->
+  <section id="view-chat" class="t-view t-view-chat hidden">
+    <header class="t-chat-top">
+      <button type="button" id="back-btn" class="t-icon-btn" aria-label="Back">←</button>
+      <div class="t-chat-id">
+        <h2 id="chat-name">—</h2>
+        <p id="chat-sub" class="t-chat-sub"></p>
+      </div>
+      <a id="chat-call" class="t-icon-btn" href="#" aria-label="Call">☎</a>
+    </header>
+
+    <div id="message-scroll" class="t-messages" role="log" aria-live="polite"></div>
+
+    <form id="compose-form" class="t-compose">
+      <textarea
+        id="compose-input"
+        class="t-compose-input"
+        rows="1"
+        placeholder="Type a reply…"
+        enterkeyhint="send"
+      ></textarea>
+      <button type="submit" id="compose-send" class="t-send-btn" disabled>Send</button>
+    </form>
+  </section>
+
+  <script src="360tour-app.js?v=1"></script>
+</body>
+</html>
