@@ -199,6 +199,15 @@ function guessNameFromOutbound(messages) {
     }, 3500);
   }
 
+  function isWtp360Outbound(fields) {
+    if (!fields) return false;
+    if (fields[F.DIRECTION] !== "Outbound") return false;
+    if (String(fields[F.BUSINESS] || "") !== BUSINESS) return false;
+    var tags = fieldAsArray(fields[F.TAG]).join(" ").toLowerCase();
+    // Prefer 360 tag, but still count plain WTP outbound from this campaign window.
+    return !tags || tags.indexOf("360") >= 0 || tags.indexOf("college tour") >= 0;
+  }
+
   function buildThreads(records) {
     var byPhone = {};
     records.forEach(function (rec) {
@@ -213,6 +222,13 @@ function guessNameFromOutbound(messages) {
       var messages = byPhone[key].slice().sort(function (a, b) {
         return parseDate(a.fields[F.CREATED]) - parseDate(b.fields[F.CREATED]);
       });
+
+      // Only show numbers we actually texted for WTP 360.
+      // Inbounds often land with blank Business/Tag from the SMS webhook.
+      var hasWtpOutbound = messages.some(function (m) {
+        return isWtp360Outbound(m.fields || {});
+      });
+      if (!hasWtpOutbound) return;
 
       var humanInbound = messages.filter(function (m) {
         return m.fields[F.DIRECTION] === "Inbound" && !isCarrierNoise(m.fields[F.CONTENT]);
@@ -254,6 +270,18 @@ function guessNameFromOutbound(messages) {
       return parseDate(b.lastCreated) - parseDate(a.lastCreated);
     });
     return threads;
+  }
+
+  function mergeRecordsById(lists) {
+    var map = {};
+    lists.forEach(function (list) {
+      (list || []).forEach(function (rec) {
+        if (rec && rec.id) map[rec.id] = rec;
+      });
+    });
+    return Object.keys(map).map(function (id) {
+      return map[id];
+    });
   }
 
   async function loadLeadMap(phoneKeys) {
@@ -482,9 +510,21 @@ function guessNameFromOutbound(messages) {
     if (!silent && els.threadCount) els.threadCount.textContent = "Loading…";
     if (els.refreshBtn) els.refreshBtn.disabled = true;
     try {
-      // Pull WTP messages; prefer 360 tag but include all WTP so older/misc still show.
-      var formula = 'AND({Business}="' + BUSINESS + '", IS_AFTER(CREATED_TIME(), "2026-07-01"))';
-      var records = await fetchAllRecords(PLG_BASE, TABLE_MESSAGES, formula);
+      // SMS webhook usually writes inbound with blank Business/Tag.
+      // Pull:
+      //  1) all WTP messages (our outbound + rare tagged inbound)
+      //  2) all recent inbound (any business) so replies attach to WTP phones
+      var since = "2026-07-01";
+      var wtpFormula =
+        'AND({Business}="' + BUSINESS + '", IS_AFTER(CREATED_TIME(), "' + since + '"))';
+      var inboundFormula =
+        'AND({Direction}="Inbound", IS_AFTER(CREATED_TIME(), "' + since + '"))';
+
+      var settled = await Promise.all([
+        fetchAllRecords(PLG_BASE, TABLE_MESSAGES, wtpFormula),
+        fetchAllRecords(PLG_BASE, TABLE_MESSAGES, inboundFormula),
+      ]);
+      var records = mergeRecordsById(settled);
       state.records = records;
 
       // provisional threads to know which phones to enrich
