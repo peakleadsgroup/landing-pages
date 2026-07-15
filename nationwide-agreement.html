@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
-  <title>Peak Leads Group - Nationwide $49 Exclusive Leads (TEST)</title>
+  <title>Peak Leads Group - Nationwide $49 Exclusive Leads</title>
   <meta name="description" content="Same exclusive shower-replacement leads partners pay $99-$150 for - now $49. No volume guarantee. No upfront payment.">
   <style>
     .test-mode-banner {
@@ -204,8 +204,7 @@
     }
   </style>
 </head>
-<body class="has-test-banner">
-  <div class="test-mode-banner" role="status" aria-label="Test mode">TEST MODE - Stripe sandbox<small>This page uses Stripe test keys. Use card 4242 4242 4242 4242. No real charges.</small></div>
+<body>
   <header class="header">
     <div class="nav-container">
       <a href="https://peakleadsgroup.com">
@@ -528,9 +527,7 @@
       $('loading-title').textContent = 'Saving your account...';
       $('loading-msg').textContent = 'Confirming card on file and saving your Nationwide account.';
       try {
-        // TEMP: sandbox testing endpoints (STRIPE_TEST_SECRET_KEY). Flip back to
-        // /api/stripe/finalize-nationwide-checkout before real pilot sends.
-        var out = await fetchJson('/api/stripe/finalize-nationwide-checkout-testing', {
+        var out = await fetchJson('/api/stripe/finalize-nationwide-checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sessionId: sessionId })
@@ -722,9 +719,7 @@
           if (srcType === 'b2b') payload.b2bLeadId = rec;
         }
 
-        // TEMP: sandbox testing endpoints (STRIPE_TEST_SECRET_KEY). Flip back to
-        // /api/stripe/create-nationwide-checkout-session before real pilot sends.
-        var data = await fetchJson('/api/stripe/create-nationwide-checkout-session-testing', {
+        var data = await fetchJson('/api/stripe/create-nationwide-checkout-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
