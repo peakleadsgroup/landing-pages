@@ -58,7 +58,46 @@
     #cards {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 1.75rem;
+    }
+
+    .niche-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .niche-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.15rem 0.15rem 0.35rem;
+      border-bottom: 1px solid #e0e3e7;
+      position: sticky;
+      top: 0;
+      background: #f8f9fa;
+      z-index: 1;
+    }
+
+    .niche-header h2 {
+      font-size: 1.05rem;
+      font-weight: 650;
+      color: #202124;
+      letter-spacing: -0.01em;
+    }
+
+    .niche-count {
+      font-size: 0.8125rem;
+      color: #5f6368;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .niche-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
     }
 
     .card {
@@ -107,8 +146,22 @@
       "use strict";
 
       var AIRTABLE_BASE_ID = "appmBb0lzqRK9dI8v";
-      var TABLE_ID = "tblnyzakoO67vFwhZ";
+      var TABLE_ID = "tblnyzakoO67vFwhZ"; // Recordings
       var BASE_URL = "/api/airtable/v0/" + AIRTABLE_BASE_ID + "/" + TABLE_ID;
+
+      // Preferred niche order; anything else sorts alphabetically after these.
+      var NICHE_ORDER = [
+        "Bathrooms",
+        "Kitchens",
+        "Kitchen Reface",
+        "Floor Coating",
+        "Windows",
+        "Fencing",
+        "Sealcoating/Striping",
+        "Concrete Polishing",
+        "Roofing",
+        "Solar"
+      ];
 
       var statusEl = document.getElementById("status");
       var cardsEl = document.getElementById("cards");
@@ -126,7 +179,7 @@
         return escaped.replace(/\b(https?:\/\/[^\s<]+)/gi, function (match) {
           var url = match;
           var trail = "";
-          while (/[.,;:!?)\]]$/.test(url)) {
+          while (/[.,;:!?)\\]]$/.test(url)) {
             trail = url.slice(-1) + trail;
             url = url.slice(0, -1);
           }
@@ -141,14 +194,24 @@
         });
       }
 
-      async function fetchAllActiveRecords() {
-        var records = [];
+      function buildListUrl(offset) {
         var url =
           BASE_URL +
           "?filterByFormula=" +
           encodeURIComponent("{Active}") +
           "&fields[]=" +
-          encodeURIComponent("Script");
+          encodeURIComponent("Script") +
+          "&fields[]=" +
+          encodeURIComponent("Niche");
+        if (offset) {
+          url += "&offset=" + encodeURIComponent(offset);
+        }
+        return url;
+      }
+
+      async function fetchAllActiveRecords() {
+        var records = [];
+        var url = buildListUrl(null);
 
         while (url) {
           var res = await fetch(url, { headers: { Accept: "application/json" } });
@@ -168,15 +231,7 @@
             records = records.concat(data.records);
           }
 
-          url = data.offset
-            ? BASE_URL +
-              "?filterByFormula=" +
-              encodeURIComponent("{Active}") +
-              "&fields[]=" +
-              encodeURIComponent("Script") +
-              "&offset=" +
-              encodeURIComponent(data.offset)
-            : null;
+          url = data.offset ? buildListUrl(data.offset) : null;
         }
 
         return records;
@@ -193,13 +248,51 @@
         return shuffled;
       }
 
+      function nicheLabel(value) {
+        var niche = value == null ? "" : String(value).trim();
+        return niche || "Uncategorized";
+      }
+
+      function nicheSortKey(label) {
+        var idx = NICHE_ORDER.indexOf(label);
+        if (idx >= 0) return { bucket: 0, idx: idx, name: label.toLowerCase() };
+        if (label === "Uncategorized") return { bucket: 2, idx: 999, name: label.toLowerCase() };
+        return { bucket: 1, idx: 999, name: label.toLowerCase() };
+      }
+
+      function compareNiches(a, b) {
+        var ka = nicheSortKey(a);
+        var kb = nicheSortKey(b);
+        if (ka.bucket !== kb.bucket) return ka.bucket - kb.bucket;
+        if (ka.idx !== kb.idx) return ka.idx - kb.idx;
+        if (ka.name < kb.name) return -1;
+        if (ka.name > kb.name) return 1;
+        return 0;
+      }
+
+      function groupByNiche(records) {
+        var groups = {};
+        records.forEach(function (rec) {
+          var label = nicheLabel(rec.fields && rec.fields.Niche);
+          if (!groups[label]) groups[label] = [];
+          groups[label].push(rec);
+        });
+
+        return Object.keys(groups)
+          .sort(compareNiches)
+          .map(function (label) {
+            return {
+              niche: label,
+              records: shuffleArray(groups[label])
+            };
+          });
+      }
+
       function render(records) {
-        var withScript = shuffleArray(
-          records.filter(function (rec) {
-            var script = rec.fields && rec.fields.Script;
-            return script != null && String(script).trim() !== "";
-          })
-        );
+        var withScript = records.filter(function (rec) {
+          var script = rec.fields && rec.fields.Script;
+          return script != null && String(script).trim() !== "";
+        });
 
         if (!withScript.length) {
           statusEl.textContent = "No active scripts found.";
@@ -207,17 +300,46 @@
           return;
         }
 
+        var groups = groupByNiche(withScript);
+        var nicheCount = groups.length;
+
         statusEl.textContent =
           withScript.length +
           " active script" +
-          (withScript.length === 1 ? "" : "s");
+          (withScript.length === 1 ? "" : "s") +
+          " · " +
+          nicheCount +
+          " niche" +
+          (nicheCount === 1 ? "" : "s");
 
-        cardsEl.innerHTML = withScript
-          .map(function (rec) {
+        cardsEl.innerHTML = groups
+          .map(function (group) {
+            var cards = group.records
+              .map(function (rec) {
+                return (
+                  '<article class="card">' +
+                  linkifyText(rec.fields.Script) +
+                  "</article>"
+                );
+              })
+              .join("");
+
             return (
-              '<article class="card">' +
-              linkifyText(rec.fields.Script) +
-              "</article>"
+              '<section class="niche-section">' +
+              '<div class="niche-header">' +
+              "<h2>" +
+              escapeHtml(group.niche) +
+              "</h2>" +
+              '<span class="niche-count">' +
+              group.records.length +
+              " script" +
+              (group.records.length === 1 ? "" : "s") +
+              "</span>" +
+              "</div>" +
+              '<div class="niche-cards">' +
+              cards +
+              "</div>" +
+              "</section>"
             );
           })
           .join("");
