@@ -104,6 +104,10 @@
             font-style: italic;
         }
 
+        .sub-heading.plain {
+            font-style: normal;
+        }
+
         .options {
             display: flex;
             flex-direction: column;
@@ -526,7 +530,7 @@
         <!-- STEP 8: Card on file (Stripe Elements — stays on this page, no Peak Leads Checkout branding) -->
         <div class="form-step" id="step-card">
             <div class="question">Last step!</div>
-            <div class="sub-heading">Save your card on file for the first filter shipment. We only charge your card when the filters ship. No payment will be made right now.</div>
+            <div class="sub-heading plain">Save your card on file for the first filter shipment. We only charge your card when the filters ship. No payment will be made right now.</div>
             <div class="contact-stack" id="cardContactFields">
                 <div class="field-group">
                     <label class="field-label" for="cardName">Name on card</label>
@@ -537,7 +541,7 @@
                     <input type="email" class="field-input" id="cardEmail" placeholder="your@email.com" autocomplete="email" oninput="onCardContactInput()">
                 </div>
             </div>
-            <div class="payment-element-wrap">
+            <div class="payment-element-wrap" id="paymentElementWrap">
                 <div id="payment-element">
                     <p class="secure-note" id="paymentElementPlaceholder">Loading secure card form…</p>
                 </div>
@@ -997,6 +1001,8 @@
             setupClientSecret = null;
             btn.disabled = true;
             btn.textContent = 'Save Card & Finish';
+            const wrap = document.getElementById('paymentElementWrap');
+            if (wrap) wrap.style.display = '';
             if (mount) mount.innerHTML = '<p class="secure-note" id="paymentElementPlaceholder">Loading secure card form…</p>';
             if (err) err.textContent = '';
 
@@ -1030,9 +1036,9 @@
                     paymentMode = 'checkout';
                     checkoutUrl = data.url;
                     paymentReady = true;
-                    if (mount) {
-                        mount.innerHTML = '<p class="secure-note">Test mode: continue to Stripe to save your card. No charge today.</p>';
-                    }
+                    const wrap = document.getElementById('paymentElementWrap');
+                    if (wrap) wrap.style.display = 'none';
+                    if (mount) mount.innerHTML = '';
                     btn.disabled = false;
                     btn.textContent = 'Continue to Save Card';
                     return;
@@ -1050,6 +1056,8 @@
 
                 paymentMode = 'elements';
                 setupClientSecret = data.clientSecret;
+                const wrap = document.getElementById('paymentElementWrap');
+                if (wrap) wrap.style.display = '';
                 stripe = window.Stripe(data.publishableKey);
                 stripeElements = stripe.elements({
                     clientSecret: setupClientSecret,
