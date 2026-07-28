@@ -1,23 +1,21 @@
 /**
- * POST /api/stripe/create-airfilter-setup-session
+ * POST /api/stripe/create-airfilter-setup-intent
  *
- * Creates a Stripe Checkout Session in setup mode (save card, no charge)
- * for the Home Filter Plan landing page. Uses STRIPE_TEST_SECRET_KEY
- * (or STRIPE_SECRET_KEY when it is already sk_test_).
+ * Creates a Stripe Customer + SetupIntent for the Home Filter Plan landing page
+ * so the card can be collected with Stripe Elements on-page (no hosted Checkout,
+ * so Peak Leads Group branding is not shown).
  *
- * Body JSON: {
- *   email, name?,
- *   filterCount?, frequencyMonths?, price?,
- *   knowsSizes?, timing?, shipDate?, address?, filterSizes?
- * }
+ * Uses STRIPE_TEST_SECRET_KEY (+ STRIPE_TEST_PUBLISHABLE_KEY / STRIPE_PUBLISHABLE_KEY).
+ *
+ * Body JSON: { email, name?, ...signup metadata }
+ * Returns: { clientSecret, customerId, setupIntentId, publishableKey, testMode }
  */
 import {
   json,
   corsFor,
   stripePostForm,
-  CHECKOUT_DISABLE_LINK_PARAMS,
-  STRIPE_CHECKOUT_API_VERSION,
   resolveStripeTestSecretKey,
+  resolveStripeTestPublishableKey,
   stripeEnvWithSecretKey,
 } from "./stripe-lib.js";
 
@@ -51,6 +49,18 @@ export async function onRequest(context) {
         cors
       );
     }
+    const publishableKey = resolveStripeTestPublishableKey(context.env);
+    if (!publishableKey) {
+      return json(
+        {
+          error:
+            "Stripe test publishable key not configured. Set STRIPE_TEST_PUBLISHABLE_KEY (pk_test_) in Cloudflare.",
+        },
+        503,
+        cors
+      );
+    }
+
     const stripeEnv = stripeEnvWithSecretKey(context.env, sandboxKey);
 
     let body;
@@ -65,11 +75,6 @@ export async function onRequest(context) {
     if (!email || !EMAIL_RE.test(email)) {
       return json({ error: "Valid email is required" }, 400, cors);
     }
-
-    const origin = new URL(context.request.url).origin;
-    const path = "/main/airfilters.html";
-    const successUrl = `${origin}${path}?session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${origin}${path}?checkout=cancel`;
 
     const meta = {
       product: "airfilter",
@@ -99,41 +104,42 @@ export async function onRequest(context) {
       ),
     };
 
-    const sessionParams = {
-      mode: "setup",
+    const customerParams = {
+      email,
+      description: "HomeFilter.co subscription signup",
+    };
+    if (name) customerParams.name = name;
+    for (const [k, v] of Object.entries(meta)) {
+      if (v == null || v === "") continue;
+      customerParams[`metadata[${k}]`] = String(v).slice(0, 500);
+    }
+
+    const customer = await stripePostForm(stripeEnv, "/v1/customers", customerParams);
+
+    const setupParams = {
+      customer: customer.id,
       "payment_method_types[0]": "card",
-      customer_creation: "always",
-      customer_email: email,
-      client_reference_id: ("airfilter:" + email).slice(0, 200),
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      ...CHECKOUT_DISABLE_LINK_PARAMS,
+      usage: "off_session",
     };
     for (const [k, v] of Object.entries(meta)) {
       if (v == null || v === "") continue;
-      sessionParams[`metadata[${k}]`] = String(v).slice(0, 500);
-      sessionParams[`setup_intent_data[metadata][${k}]`] = String(v).slice(0, 500);
+      setupParams[`metadata[${k}]`] = String(v).slice(0, 500);
     }
 
-    let session;
-    try {
-      session = await stripePostForm(stripeEnv, "/v1/checkout/sessions", sessionParams, {
-        apiVersion: STRIPE_CHECKOUT_API_VERSION,
-      });
-    } catch (e) {
-      const msg = e && e.message ? String(e.message) : "";
-      if (!/wallet_options|unknown parameter/i.test(msg)) throw e;
-      const retry = { ...sessionParams };
-      delete retry["wallet_options[link][display]"];
-      session = await stripePostForm(stripeEnv, "/v1/checkout/sessions", retry);
-    }
-
-    if (!session.url) {
-      return json({ error: "Stripe did not return a checkout URL" }, 502, cors);
+    const setupIntent = await stripePostForm(stripeEnv, "/v1/setup_intents", setupParams);
+    if (!setupIntent.client_secret) {
+      return json({ error: "Stripe did not return a setup client secret" }, 502, cors);
     }
 
     return json(
-      { url: session.url, sessionId: session.id, testMode: true, livemode: !!session.livemode },
+      {
+        clientSecret: setupIntent.client_secret,
+        setupIntentId: setupIntent.id,
+        customerId: customer.id,
+        publishableKey,
+        testMode: true,
+        livemode: !!setupIntent.livemode,
+      },
       200,
       cors
     );

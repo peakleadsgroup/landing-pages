@@ -59,6 +59,18 @@ export function resolveStripeTestSecretKey(env) {
   return "";
 }
 
+/**
+ * Resolve a Stripe test publishable key (pk_test_).
+ * Accepts STRIPE_TEST_PUBLISHABLE_KEY or STRIPE_PUBLISHABLE_KEY when that value is pk_test_.
+ */
+export function resolveStripeTestPublishableKey(env) {
+  const testKey = (env.STRIPE_TEST_PUBLISHABLE_KEY || "").trim();
+  if (testKey.startsWith("pk_test_")) return testKey;
+  const mainKey = (env.STRIPE_PUBLISHABLE_KEY || "").trim();
+  if (mainKey.startsWith("pk_test_")) return mainKey;
+  return "";
+}
+
 /** Env object with STRIPE_SECRET_KEY set for stripe-lib HTTP helpers. */
 export function stripeEnvWithSecretKey(env, secretKey) {
   return { ...env, STRIPE_SECRET_KEY: secretKey };
