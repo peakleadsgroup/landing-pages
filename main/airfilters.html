@@ -66,10 +66,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: -8px auto 18px;
-            padding: 14px 18px;
-            background: #000;
-            border-radius: 12px;
+            margin: 0 auto 18px;
+            padding: 0;
+            background: transparent;
             max-width: 100%;
         }
 
@@ -602,8 +601,18 @@
             } else if (formData.knowsSizes === false) {
                 flow.push('step-contact');
             }
-            flow.push('step-timing', 'step-address', 'step-card', 'step-congrats');
+            flow.push('step-timing', 'step-address');
+            if (!hasContactForStripe()) flow.push('step-card');
+            flow.push('step-congrats');
             return flow;
+        }
+
+        function hasContactForStripe() {
+            const c = formData.contact;
+            if (!c) return false;
+            const name = [c.firstName, c.lastName].filter(Boolean).join(' ').trim();
+            const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(c.email || '').trim());
+            return name.length > 1 && emailOk;
         }
 
         function selectFilterCount(el, count) {
@@ -808,6 +817,15 @@
         function saveAddressAndContinue() {
             validateAddressForm();
             if (!formData.address) return;
+            if (hasContactForStripe()) {
+                const name = [formData.contact.firstName, formData.contact.lastName].filter(Boolean).join(' ').trim();
+                const email = formData.contact.email.trim();
+                startStripeCheckout(name, email, {
+                    button: document.getElementById('addressNextBtn'),
+                    fromAddress: true,
+                });
+                return;
+            }
             prepareCardStep();
             showStep('step-card');
         }
@@ -843,9 +861,7 @@
 
         const STORAGE_KEY = 'airfilterSignup';
 
-        function persistSignup() {
-            const name = document.getElementById('cardName').value.trim();
-            const email = document.getElementById('cardEmail').value.trim();
+        function persistSignup(name, email) {
             const payload = {
                 filterCount: formData.filterCount,
                 frequencyMonths: formData.frequencyMonths,
@@ -900,16 +916,18 @@
             showStep('step-congrats');
         }
 
-        async function finishSignup() {
-            if (!validateCardForm()) return;
-
-            const btn = document.getElementById('cardSubmitBtn');
+        async function startStripeCheckout(name, email, opts) {
+            opts = opts || {};
+            const btn = opts.button || document.getElementById('cardSubmitBtn') || document.getElementById('addressNextBtn');
             const err = document.getElementById('cardError');
             if (err) err.textContent = '';
-            const payload = persistSignup();
 
-            btn.disabled = true;
-            btn.textContent = 'Redirecting to secure checkout…';
+            const payload = persistSignup(name, email);
+            const prevLabel = btn ? btn.textContent : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Redirecting to secure checkout…';
+            }
 
             try {
                 const res = await fetch('/api/stripe/create-airfilter-setup-session', {
@@ -936,9 +954,30 @@
                 window.location.href = data.url;
             } catch (e) {
                 if (err) err.textContent = (e && e.message) || 'Could not start Stripe checkout.';
-                btn.disabled = false;
-                btn.textContent = 'Save Card Securely';
+                // If we skipped the card step, show it so the error is visible / retryable
+                if (opts.fromAddress) {
+                    prepareCardStep();
+                    const nameEl = document.getElementById('cardName');
+                    const emailEl = document.getElementById('cardEmail');
+                    if (nameEl) nameEl.value = name;
+                    if (emailEl) emailEl.value = email;
+                    showStep('step-card');
+                    validateCardForm();
+                }
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = prevLabel || 'Save Card Securely';
+                }
             }
+        }
+
+        async function finishSignup() {
+            if (!validateCardForm()) return;
+            const name = document.getElementById('cardName').value.trim();
+            const email = document.getElementById('cardEmail').value.trim();
+            await startStripeCheckout(name, email, {
+                button: document.getElementById('cardSubmitBtn'),
+            });
         }
 
         function handleCheckoutReturn() {
