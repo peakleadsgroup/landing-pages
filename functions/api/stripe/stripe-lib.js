@@ -61,13 +61,20 @@ export function resolveStripeTestSecretKey(env) {
 
 /**
  * Resolve a Stripe test publishable key (pk_test_).
- * Accepts STRIPE_TEST_PUBLISHABLE_KEY or STRIPE_PUBLISHABLE_KEY when that value is pk_test_.
+ * Checks common Cloudflare / Pages env names; never returns a live pk_live_ key.
  */
 export function resolveStripeTestPublishableKey(env) {
-  const testKey = (env.STRIPE_TEST_PUBLISHABLE_KEY || "").trim();
-  if (testKey.startsWith("pk_test_")) return testKey;
-  const mainKey = (env.STRIPE_PUBLISHABLE_KEY || "").trim();
-  if (mainKey.startsWith("pk_test_")) return mainKey;
+  const candidates = [
+    env.STRIPE_TEST_PUBLISHABLE_KEY,
+    env.STRIPE_TEST_PUBLIC_KEY,
+    env.STRIPE_PUBLISHABLE_TEST_KEY,
+    env.STRIPE_PUBLISHABLE_KEY,
+    env.STRIPE_PUBLIC_KEY,
+  ];
+  for (const raw of candidates) {
+    const key = String(raw || "").trim();
+    if (key.startsWith("pk_test_")) return key;
+  }
   return "";
 }
 
