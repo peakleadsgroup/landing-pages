@@ -1,17 +1,16 @@
 /**
  * POST /api/stripe/create-airfilter-setup-intent
  *
- * HomeFilter card-on-file (TEST MODE ONLY).
- * Always uses STRIPE_TEST_SECRET_KEY / sk_test_ — never live sk_live_.
+ * HomeFilter card-on-file — LIVE MODE.
+ * Uses STRIPE_SECRET_KEY (sk_live_) and STRIPE_PUBLISHABLE_KEY (pk_live_).
  *
- * Preferred: Stripe Elements when STRIPE_TEST_PUBLISHABLE_KEY (pk_test_) is set.
- * Fallback: hosted Checkout setup session (still test-mode secret) if publishable
- * key is missing, so signup can be tested with only STRIPE_TEST_SECRET_KEY.
+ * Preferred: Stripe Elements when publishable key is set.
+ * Fallback: hosted Checkout setup session if publishable key is missing.
  *
  * Body JSON: { email, name?, ...signup metadata }
  * Returns either:
- *   { mode: "elements", clientSecret, publishableKey, testMode, ... }
- *   { mode: "checkout", url, sessionId, testMode, ... }
+ *   { mode: "elements", clientSecret, publishableKey, ... }
+ *   { mode: "checkout", url, sessionId, ... }
  */
 import {
   json,
@@ -19,8 +18,8 @@ import {
   stripePostForm,
   CHECKOUT_DISABLE_LINK_PARAMS,
   STRIPE_CHECKOUT_API_VERSION,
-  resolveStripeTestSecretKey,
-  resolveStripeTestPublishableKey,
+  resolveStripeLiveSecretKey,
+  resolveStripeLivePublishableKey,
   stripeEnvWithSecretKey,
 } from "./stripe-lib.js";
 
@@ -35,7 +34,7 @@ function clean(str, max = 250) {
 function buildMeta(body, email, name) {
   return {
     product: "airfilter",
-    test_mode: "true",
+    test_mode: "false",
     email,
     name,
     filter_count: clean(body.filterCount, 20),
@@ -91,7 +90,7 @@ async function createElementsSetup(stripeEnv, publishableKey, email, name, meta)
     setupIntentId: setupIntent.id,
     customerId: customer.id,
     publishableKey,
-    testMode: true,
+    testMode: false,
     livemode: !!setupIntent.livemode,
   };
 }
@@ -137,9 +136,9 @@ async function createCheckoutSetup(stripeEnv, requestUrl, email, name, meta) {
     mode: "checkout",
     url: session.url,
     sessionId: session.id,
-    testMode: true,
+    testMode: false,
     livemode: !!session.livemode,
-    note: "Using test Checkout because STRIPE_TEST_PUBLISHABLE_KEY is not set. Add pk_test_ to enable on-page Elements.",
+    note: "Using Checkout because STRIPE_PUBLISHABLE_KEY (pk_live_) is not set. Add it for on-page Elements.",
   };
 }
 
@@ -154,24 +153,19 @@ export async function onRequest(context) {
   }
 
   try {
-    const sandboxKey = resolveStripeTestSecretKey(context.env);
-    if (!sandboxKey) {
+    const liveKey = resolveStripeLiveSecretKey(context.env);
+    if (!liveKey) {
       return json(
         {
           error:
-            "Stripe test secret not configured. Set STRIPE_TEST_SECRET_KEY (sk_test_) in Cloudflare.",
+            "Stripe live secret not configured. Set STRIPE_SECRET_KEY (sk_live_) in Cloudflare.",
         },
         503,
         cors
       );
     }
 
-    // Hard guard: never use live secret on this endpoint
-    if (!sandboxKey.startsWith("sk_test_")) {
-      return json({ error: "Refusing non-test Stripe secret on airfilter endpoint." }, 503, cors);
-    }
-
-    const stripeEnv = stripeEnvWithSecretKey(context.env, sandboxKey);
+    const stripeEnv = stripeEnvWithSecretKey(context.env, liveKey);
 
     let body;
     try {
@@ -187,7 +181,7 @@ export async function onRequest(context) {
     }
 
     const meta = buildMeta(body, email, name);
-    const publishableKey = resolveStripeTestPublishableKey(context.env);
+    const publishableKey = resolveStripeLivePublishableKey(context.env);
 
     const payload = publishableKey
       ? await createElementsSetup(stripeEnv, publishableKey, email, name, meta)

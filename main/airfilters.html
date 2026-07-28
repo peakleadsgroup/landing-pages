@@ -253,6 +253,36 @@
             margin-top: 8px;
         }
 
+        #payment-request-button {
+            margin-bottom: 12px;
+        }
+
+        #payment-request-button:empty {
+            display: none;
+            margin: 0;
+        }
+
+        .wallet-divider {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin: 4px 0 14px;
+            color: #9aa3af;
+            font-size: 12px;
+        }
+
+        .wallet-divider.visible {
+            display: flex;
+        }
+
+        .wallet-divider::before,
+        .wallet-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
         .hidden-initially {
             display: none !important;
         }
@@ -559,6 +589,8 @@
                 </div>
             </div>
             <div class="payment-element-wrap" id="paymentElementWrap">
+                <div id="payment-request-button"></div>
+                <div class="wallet-divider" id="walletDivider">Or pay with card</div>
                 <div id="payment-element">
                     <p class="secure-note" id="paymentElementPlaceholder">Loading secure card form…</p>
                 </div>
@@ -1025,6 +1057,7 @@
         let stripe = null;
         let stripeElements = null;
         let paymentElement = null;
+        let paymentRequestButton = null;
         let setupClientSecret = null;
         let checkoutUrl = null;
         let paymentMode = null; // 'elements' | 'checkout'
@@ -1200,12 +1233,9 @@
                 const data = await res.json().catch(function () { return {}; });
                 if (!res.ok) throw new Error(data.error || ('Stripe error ' + res.status));
 
-                // Checkout fallback (test secret only — no publishable key in Cloudflare yet)
+                // Checkout fallback when publishable key is not set
                 if (data.mode === 'checkout' || data.url) {
                     if (!data.url) throw new Error('No checkout URL returned');
-                    if (data.livemode === true) {
-                        throw new Error('Refusing live Stripe Checkout for HomeFilter test flow.');
-                    }
                     paymentMode = 'checkout';
                     checkoutUrl = data.url;
                     paymentReady = true;
@@ -1220,8 +1250,8 @@
                 if (!data.clientSecret || !data.publishableKey) {
                     throw new Error('Incomplete Stripe setup response');
                 }
-                if (!String(data.publishableKey).startsWith('pk_test_')) {
-                    throw new Error('Expected Stripe test publishable key (pk_test_).');
+                if (!String(data.publishableKey).startsWith('pk_live_') && !String(data.publishableKey).startsWith('pk_test_')) {
+                    throw new Error('Invalid Stripe publishable key returned by server.');
                 }
                 if (!window.Stripe) {
                     throw new Error('Stripe.js failed to load. Please refresh and try again.');
@@ -1229,8 +1259,8 @@
 
                 paymentMode = 'elements';
                 setupClientSecret = data.clientSecret;
-                const wrap = document.getElementById('paymentElementWrap');
-                if (wrap) wrap.style.display = '';
+                const wrapEl = document.getElementById('paymentElementWrap');
+                if (wrapEl) wrapEl.style.display = '';
                 stripe = window.Stripe(data.publishableKey);
                 stripeElements = stripe.elements({
                     clientSecret: setupClientSecret,
@@ -1247,10 +1277,78 @@
                     try { paymentElement.unmount(); } catch (e) {}
                     paymentElement = null;
                 }
+                if (paymentRequestButton) {
+                    try { paymentRequestButton.unmount(); } catch (e) {}
+                    paymentRequestButton = null;
+                }
+
+                const prMount = document.getElementById('payment-request-button');
+                const divider = document.getElementById('walletDivider');
+                if (prMount) prMount.innerHTML = '';
+                if (divider) divider.classList.remove('visible');
+
+                // Apple Pay / Google Pay button (Payment Request)
+                try {
+                    const paymentRequest = stripe.paymentRequest({
+                        country: 'US',
+                        currency: 'usd',
+                        total: {
+                            label: 'HomeFilter.co — save card',
+                            amount: 0,
+                        },
+                        requestPayerName: true,
+                        requestPayerEmail: true,
+                    });
+                    const prElements = stripe.elements();
+                    paymentRequestButton = prElements.create('paymentRequestButton', {
+                        paymentRequest: paymentRequest,
+                        style: {
+                            paymentRequestButton: {
+                                type: 'default',
+                                theme: 'dark',
+                                height: '48px',
+                            },
+                        },
+                    });
+                    const canPay = await paymentRequest.canMakePayment();
+                    if (canPay && prMount) {
+                        paymentRequestButton.mount('#payment-request-button');
+                        if (divider) divider.classList.add('visible');
+                    } else {
+                        paymentRequestButton = null;
+                    }
+
+                    paymentRequest.on('paymentmethod', async function (ev) {
+                        const errEl = document.getElementById('cardError');
+                        try {
+                            const result = await stripe.confirmCardSetup(setupClientSecret, {
+                                payment_method: ev.paymentMethod.id,
+                            });
+                            if (result.error) {
+                                ev.complete('fail');
+                                if (errEl) errEl.textContent = result.error.message || 'Apple Pay / wallet setup failed.';
+                                return;
+                            }
+                            ev.complete('success');
+                            const contactInfo = getCardContact();
+                            showCongratsFromPayload(restoreSignup() || persistSignup(contactInfo.name, contactInfo.email));
+                        } catch (walletErr) {
+                            ev.complete('fail');
+                            if (errEl) errEl.textContent = (walletErr && walletErr.message) || 'Apple Pay / wallet setup failed.';
+                        }
+                    });
+                } catch (walletSetupErr) {
+                    console.warn('Wallet button unavailable', walletSetupErr);
+                }
+
                 mount.innerHTML = '';
                 paymentElement = stripeElements.create('payment', {
                     layout: 'tabs',
-                    paymentMethodOrder: ['card'],
+                    wallets: {
+                        applePay: 'auto',
+                        googlePay: 'auto',
+                    },
+                    paymentMethodOrder: ['apple_pay', 'google_pay', 'card'],
                 });
                 paymentElement.mount('#payment-element');
                 paymentElement.on('ready', function () {

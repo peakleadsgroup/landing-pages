@@ -78,6 +78,31 @@ export function resolveStripeTestPublishableKey(env) {
   return "";
 }
 
+/**
+ * Resolve live Stripe secret (sk_live_). Uses STRIPE_SECRET_KEY only when live.
+ */
+export function resolveStripeLiveSecretKey(env) {
+  const mainKey = (env.STRIPE_SECRET_KEY || "").trim();
+  if (mainKey.startsWith("sk_live_")) return mainKey;
+  return "";
+}
+
+/**
+ * Resolve live Stripe publishable key (pk_live_).
+ */
+export function resolveStripeLivePublishableKey(env) {
+  const candidates = [
+    env.STRIPE_PUBLISHABLE_KEY,
+    env.STRIPE_PUBLIC_KEY,
+    env.STRIPE_LIVE_PUBLISHABLE_KEY,
+  ];
+  for (const raw of candidates) {
+    const key = String(raw || "").trim();
+    if (key.startsWith("pk_live_")) return key;
+  }
+  return "";
+}
+
 /** Env object with STRIPE_SECRET_KEY set for stripe-lib HTTP helpers. */
 export function stripeEnvWithSecretKey(env, secretKey) {
   return { ...env, STRIPE_SECRET_KEY: secretKey };
