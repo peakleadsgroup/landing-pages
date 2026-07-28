@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
+    <title>Home Air Filter Plan</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            background: linear-gradient(160deg, #e8f4fc 0%, #f5f7fa 45%, #eef2f6 100%);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 0%, rgba(33, 150, 243, 0.12), transparent 50%),
+                radial-gradient(ellipse at 80% 100%, rgba(76, 175, 80, 0.08), transparent 45%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .main-heading {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .brand {
+            font-size: 13px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #1976d2;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .question {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .sub-heading {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 25px;
+            font-style: italic;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .option {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .option:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .option.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            color: #1976d2;
+        }
+
+        .option .recommended {
+            display: block;
+            font-size: 12px;
+            color: #4CAF50;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .address-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .address-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .size-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .address-input,
+        .field-input {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f8f9fa;
+            width: 100%;
+        }
+
+        .address-input:focus,
+        .field-input:focus {
+            outline: none;
+            border-color: #2196f3;
+            background: #fff;
+        }
+
+        .address-input.error,
+        .field-input.error {
+            border-color: #f44336;
+        }
+
+        .address-field,
+        .field-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .address-label,
+        .field-label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .address-error {
+            color: #f44336;
+            font-size: 12px;
+            margin-top: 5px;
+            text-align: left;
+            display: none;
+        }
+
+        .hidden-initially {
+            display: none !important;
+        }
+
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4CAF50;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            gap: 12px;
+        }
+
+        .nav-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .name-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .contact-stack {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .plan-price {
+            font-size: 36px;
+            font-weight: 800;
+            color: #1976d2;
+            margin: 10px 0 6px;
+            line-height: 1.2;
+        }
+
+        .plan-cadence {
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 18px;
+        }
+
+        .plan-note {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .other-wrap {
+            margin-top: 8px;
+            text-align: left;
+        }
+
+        .confirmation-content {
+            text-align: center;
+            padding: 20px 10px 10px;
+        }
+
+        .confirmation-content svg {
+            margin: 0 auto 24px;
+            display: block;
+        }
+
+        .confirm-detail {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.6;
+            margin-top: 12px;
+        }
+
+        .phone-help {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+            text-align: left;
+        }
+
+        @media (max-width: 600px) {
+            .form-container { padding: 25px; margin: 10px; }
+            .address-row,
+            .name-grid,
+            .size-row { grid-template-columns: 1fr; }
+            .main-heading { font-size: 20px; }
+            .question { font-size: 18px; }
+            .plan-price { font-size: 30px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="brand">Fresh Filter Plan</div>
+        <div id="mainHeading">
+            <h1 class="main-heading">Set up worry-free air filter delivery</h1>
+        </div>
+
+        <div class="progress-bar" id="progressBarContainer">
+            <div class="progress-fill" id="progressFill" style="width: 12%"></div>
+        </div>
+
+        <!-- STEP 1: Filter count -->
+        <div class="form-step active" id="step-count">
+            <div class="question">How many air filters does your home have?</div>
+            <div class="options" id="countOptions">
+                <div class="option" data-value="1" onclick="selectFilterCount(this, 1)">1</div>
+                <div class="option" data-value="2" onclick="selectFilterCount(this, 2)">2</div>
+                <div class="option" data-value="3" onclick="selectFilterCount(this, 3)">3</div>
+                <div class="option" data-value="4" onclick="selectFilterCount(this, 4)">4</div>
+                <div class="option" data-value="other" onclick="selectFilterCountOther(this)">Other</div>
+            </div>
+            <div class="other-wrap hidden-initially" id="otherCountWrap">
+                <label class="field-label" for="otherCount">How many filters?</label>
+                <input type="number" class="field-input" id="otherCount" min="1" step="1" inputmode="numeric" placeholder="Enter amount" oninput="validateOtherCount()">
+                <div class="nav-buttons">
+                    <button class="nav-btn" id="otherCountBtn" onclick="confirmOtherCount()" disabled>Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2: Frequency -->
+        <div class="form-step" id="step-frequency">
+            <div class="question">How often do you want to change your filters?</div>
+            <div class="options">
+                <div class="option" onclick="selectFrequency(this, 1)">Every month</div>
+                <div class="option" onclick="selectFrequency(this, 2)">Every 2 months</div>
+                <div class="option" onclick="selectFrequency(this, 3)">Every 3 months<span class="recommended">Recommended</span></div>
+                <div class="option" onclick="selectFrequency(this, 4)">Every 4 months</div>
+            </div>
+        </div>
+
+        <!-- STEP 3: Plan -->
+        <div class="form-step" id="step-plan">
+            <div class="question">Your worry free filter plan</div>
+            <div class="plan-price" id="planPrice">$19.99</div>
+            <div class="plan-cadence" id="planCadence">every 3 months</div>
+            <p class="plan-note">Charged only when the filters ship, cancel anytime</p>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="goToKnowSizes()">Get Started!</button>
+            </div>
+        </div>
+
+        <!-- STEP 4: Know sizes? -->
+        <div class="form-step" id="step-know-sizes">
+            <div class="question">Do you know your filter sizes?</div>
+            <div class="options">
+                <div class="option" onclick="selectKnowSizes(this, true)">Yes</div>
+                <div class="option" onclick="selectKnowSizes(this, false)">No</div>
+            </div>
+        </div>
+
+        <!-- STEP 5a: Filter sizes (dynamic container) -->
+        <div class="form-step" id="step-filter-sizes">
+            <div class="question" id="filterSizeTitle">Filter #1 Size</div>
+            <div class="sub-heading">Length × Width × Thickness</div>
+            <div class="size-row">
+                <div class="field-group">
+                    <label class="field-label" for="filterLength">Length</label>
+                    <input type="number" class="field-input" id="filterLength" min="0" step="0.1" inputmode="decimal" placeholder="in" oninput="validateFilterSize()">
+                </div>
+                <div class="field-group">
+                    <label class="field-label" for="filterWidth">Width</label>
+                    <input type="number" class="field-input" id="filterWidth" min="0" step="0.1" inputmode="decimal" placeholder="in" oninput="validateFilterSize()">
+                </div>
+                <div class="field-group">
+                    <label class="field-label" for="filterThickness">Thickness</label>
+                    <input type="number" class="field-input" id="filterThickness" min="0" step="0.1" inputmode="decimal" placeholder="in" oninput="validateFilterSize()">
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" id="filterSizeBtn" onclick="saveFilterSize()" disabled>Next</button>
+            </div>
+        </div>
+
+        <!-- STEP 5b: Contact when sizes unknown -->
+        <div class="form-step" id="step-contact">
+            <div class="question">No worries! Where can we reach you?</div>
+            <div class="sub-heading">We'll ask for your filter sizes whenever it's convenient to check</div>
+            <div class="name-grid">
+                <div class="field-group">
+                    <label class="field-label" for="firstName">First Name</label>
+                    <input type="text" class="field-input" id="firstName" placeholder="First Name" autocomplete="given-name" oninput="validateContactForm()">
+                </div>
+                <div class="field-group">
+                    <label class="field-label" for="lastName">Last Name</label>
+                    <input type="text" class="field-input" id="lastName" placeholder="Last Name" autocomplete="family-name" oninput="validateContactForm()">
+                </div>
+            </div>
+            <div class="contact-stack">
+                <div class="field-group">
+                    <label class="field-label" for="email">Email</label>
+                    <input type="email" class="field-input" id="email" placeholder="your@email.com" autocomplete="email" oninput="validateContactForm()">
+                </div>
+                <div class="field-group">
+                    <label class="field-label" for="phone">Phone</label>
+                    <input type="tel" class="field-input" id="phone" placeholder="(___) ___-____" autocomplete="tel" inputmode="tel" oninput="formatPhone(this); validateContactForm()">
+                    <small class="phone-help">US number, 10 digits.</small>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" id="contactNextBtn" onclick="saveContactAndContinue()" disabled>Next</button>
+            </div>
+        </div>
+
+        <!-- STEP 6: First delivery timing -->
+        <div class="form-step" id="step-timing">
+            <div class="question">When do you want your first filters?</div>
+            <div class="options">
+                <div class="option" onclick="selectTiming(this, 'asap')">ASAP</div>
+                <div class="option" onclick="selectTiming(this, 1)">In a month</div>
+                <div class="option" onclick="selectTiming(this, 2)">In 2 months</div>
+                <div class="option" onclick="selectTiming(this, 3)">In 3 months</div>
+            </div>
+        </div>
+
+        <!-- STEP 7: Shipping address -->
+        <div class="form-step" id="step-address">
+            <div class="question">Where should we ship your filters?</div>
+            <div class="sub-heading">Start typing your address and select from the suggestions</div>
+            <div class="address-grid">
+                <div class="address-field">
+                    <label class="address-label" for="street">Street Address</label>
+                    <input type="text" class="address-input" id="street" placeholder="Street Address" oninput="validateAddressForm()">
+                    <div class="address-error" id="streetError">Street address must start with a number</div>
+                </div>
+                <div id="cityField" class="address-field hidden-initially">
+                    <label class="address-label" for="city">City</label>
+                    <input type="text" class="address-input" id="city" placeholder="City" oninput="validateAddressForm()">
+                </div>
+                <div class="address-row hidden-initially" id="stateZipRow">
+                    <div class="address-field">
+                        <label class="address-label" for="state">State</label>
+                        <input type="text" class="address-input" id="state" placeholder="State" oninput="validateAddressForm()">
+                    </div>
+                    <div class="address-field">
+                        <label class="address-label" for="zip">Zip Code</label>
+                        <input type="text" class="address-input" id="zip" placeholder="Zip Code" oninput="validateAddressForm()" maxlength="5">
+                    </div>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" id="addressNextBtn" onclick="saveAddressAndContinue()" disabled>Next</button>
+            </div>
+        </div>
+
+        <!-- STEP 8: Card on file -->
+        <div class="form-step" id="step-card">
+            <div class="question">Last step!</div>
+            <div class="sub-heading">Save your card on file for the first filter shipment. We only charge your card when the filters ship. No payment will be made right now.</div>
+            <div class="contact-stack">
+                <div class="field-group">
+                    <label class="field-label" for="cardName">Name on card</label>
+                    <input type="text" class="field-input" id="cardName" placeholder="Name on card" autocomplete="cc-name" oninput="validateCardForm()">
+                </div>
+                <div class="field-group">
+                    <label class="field-label" for="cardNumber">Card number</label>
+                    <input type="text" class="field-input" id="cardNumber" placeholder="•••• •••• •••• ••••" inputmode="numeric" maxlength="19" autocomplete="cc-number" oninput="formatCardNumber(this); validateCardForm()">
+                </div>
+                <div class="address-row">
+                    <div class="field-group">
+                        <label class="field-label" for="cardExpiry">Expiry</label>
+                        <input type="text" class="field-input" id="cardExpiry" placeholder="MM/YY" maxlength="5" inputmode="numeric" autocomplete="cc-exp" oninput="formatExpiry(this); validateCardForm()">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label" for="cardCvc">CVC</label>
+                        <input type="text" class="field-input" id="cardCvc" placeholder="123" maxlength="4" inputmode="numeric" autocomplete="cc-csc" oninput="validateCardForm()">
+                    </div>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" id="cardSubmitBtn" onclick="finishSignup()" disabled>Save Card & Finish</button>
+            </div>
+        </div>
+
+        <!-- STEP 9: Congratulations -->
+        <div class="form-step" id="step-congrats">
+            <div class="confirmation-content">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" fill="#e8f5e9"/>
+                    <path d="M9 12l2 2 4-4" stroke="#4CAF50" stroke-width="3"/>
+                </svg>
+                <div style="font-size: 28px; color: #2c3e50; margin-bottom: 12px; font-weight: bold;">Congratulations!</div>
+                <div style="font-size: 18px; color: #666; line-height: 1.6;">
+                    You can breathe easier knowing fresh air filters will show up right when you need them.
+                </div>
+                <p class="confirm-detail" id="congratsDetail"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const formData = {
+            filterCount: null,
+            frequencyMonths: null,
+            knowsSizes: null,
+            filterSizes: [],
+            currentFilterIndex: 0,
+            contact: null,
+            timing: null,
+            shipDate: null,
+            address: null
+        };
+
+        let currentStepId = 'step-count';
+
+        function priceForCount(count) {
+            if (count <= 0) return 0;
+            if (count === 1) return 19.99;
+            if (count === 2) return 39.99;
+            if (count === 3) return 59.99;
+            if (count === 4) return 79.99;
+            return 79.99 + ((count - 4) * 20);
+        }
+
+        function formatMoney(n) {
+            return '$' + n.toFixed(2);
+        }
+
+        function monthsLabel(months) {
+            if (months === 1) return 'every month';
+            return 'every ' + months + ' months';
+        }
+
+        function showStep(stepId) {
+            document.querySelectorAll('.form-step').forEach(el => el.classList.remove('active'));
+            const next = document.getElementById(stepId);
+            if (next) next.classList.add('active');
+            currentStepId = stepId;
+            updateProgress();
+            if (stepId === 'step-congrats') {
+                document.getElementById('progressBarContainer').style.display = 'none';
+                document.getElementById('mainHeading').style.display = 'none';
+            }
+        }
+
+        function updateProgress() {
+            const flow = getProgressFlow();
+            let idx = flow.indexOf(currentStepId);
+            if (currentStepId === 'step-filter-sizes') {
+                // Account for Filter #1, #2, ... as separate progress ticks
+                idx = flow.indexOf('step-know-sizes') + 1 + formData.currentFilterIndex;
+            }
+            idx = Math.max(0, idx);
+            const pct = ((idx + 1) / flow.length) * 100;
+            const fill = document.getElementById('progressFill');
+            if (fill) fill.style.width = pct + '%';
+        }
+
+        function getProgressFlow() {
+            const flow = ['step-count', 'step-frequency', 'step-plan', 'step-know-sizes'];
+            if (formData.knowsSizes === true) {
+                for (let i = 0; i < (formData.filterCount || 1); i++) flow.push('step-filter-sizes');
+            } else if (formData.knowsSizes === false) {
+                flow.push('step-contact');
+            }
+            flow.push('step-timing', 'step-address', 'step-card', 'step-congrats');
+            return flow;
+        }
+
+        function selectFilterCount(el, count) {
+            document.getElementById('otherCountWrap').classList.add('hidden-initially');
+            document.querySelectorAll('#countOptions .option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            formData.filterCount = count;
+            setTimeout(() => showStep('step-frequency'), 200);
+        }
+
+        function selectFilterCountOther(el) {
+            document.querySelectorAll('#countOptions .option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            formData.filterCount = null;
+            document.getElementById('otherCountWrap').classList.remove('hidden-initially');
+            document.getElementById('otherCount').focus();
+            validateOtherCount();
+        }
+
+        function validateOtherCount() {
+            const raw = document.getElementById('otherCount').value;
+            const n = parseInt(raw, 10);
+            const valid = Number.isInteger(n) && n >= 1 && String(n) === String(raw).trim();
+            document.getElementById('otherCountBtn').disabled = !valid;
+            return valid ? n : null;
+        }
+
+        function confirmOtherCount() {
+            const n = validateOtherCount();
+            if (!n) return;
+            formData.filterCount = n;
+            showStep('step-frequency');
+        }
+
+        function selectFrequency(el, months) {
+            el.parentElement.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            formData.frequencyMonths = months;
+            updatePlanDisplay();
+            setTimeout(() => showStep('step-plan'), 200);
+        }
+
+        function updatePlanDisplay() {
+            const price = priceForCount(formData.filterCount);
+            document.getElementById('planPrice').textContent = formatMoney(price);
+            document.getElementById('planCadence').textContent = monthsLabel(formData.frequencyMonths);
+        }
+
+        function goToKnowSizes() {
+            showStep('step-know-sizes');
+        }
+
+        function selectKnowSizes(el, knows) {
+            el.parentElement.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            formData.knowsSizes = knows;
+            formData.filterSizes = [];
+            formData.currentFilterIndex = 0;
+            setTimeout(() => {
+                if (knows) {
+                    prepareFilterSizeStep();
+                    showStep('step-filter-sizes');
+                } else {
+                    showStep('step-contact');
+                }
+            }, 200);
+        }
+
+        function prepareFilterSizeStep() {
+            const idx = formData.currentFilterIndex;
+            document.getElementById('filterSizeTitle').textContent = 'Filter #' + (idx + 1) + ' Size';
+            document.getElementById('filterLength').value = '';
+            document.getElementById('filterWidth').value = '';
+            document.getElementById('filterThickness').value = '';
+            document.getElementById('filterSizeBtn').disabled = true;
+        }
+
+        function validateFilterSize() {
+            const L = parseFloat(document.getElementById('filterLength').value);
+            const W = parseFloat(document.getElementById('filterWidth').value);
+            const T = parseFloat(document.getElementById('filterThickness').value);
+            const valid = L > 0 && W > 0 && T > 0;
+            document.getElementById('filterSizeBtn').disabled = !valid;
+            return valid;
+        }
+
+        function saveFilterSize() {
+            if (!validateFilterSize()) return;
+            formData.filterSizes[formData.currentFilterIndex] = {
+                length: parseFloat(document.getElementById('filterLength').value),
+                width: parseFloat(document.getElementById('filterWidth').value),
+                thickness: parseFloat(document.getElementById('filterThickness').value)
+            };
+            formData.currentFilterIndex++;
+            if (formData.currentFilterIndex < formData.filterCount) {
+                prepareFilterSizeStep();
+                updateProgress();
+            } else {
+                showStep('step-timing');
+            }
+        }
+
+        function formatPhone(input) {
+            const digits = input.value.replace(/\D/g, '').slice(0, 10);
+            let out = digits;
+            if (digits.length >= 6) {
+                out = '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6);
+            } else if (digits.length >= 3) {
+                out = '(' + digits.slice(0, 3) + ') ' + digits.slice(3);
+            }
+            input.value = out;
+        }
+
+        function validateContactForm() {
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phoneDigits = document.getElementById('phone').value.replace(/\D/g, '');
+            const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            const valid = firstName && lastName && emailOk && phoneDigits.length === 10;
+            document.getElementById('contactNextBtn').disabled = !valid;
+            return valid;
+        }
+
+        function saveContactAndContinue() {
+            if (!validateContactForm()) return;
+            formData.contact = {
+                firstName: document.getElementById('firstName').value.trim(),
+                lastName: document.getElementById('lastName').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('phone').value.trim()
+            };
+            showStep('step-timing');
+        }
+
+        function selectTiming(el, value) {
+            el.parentElement.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            formData.timing = value;
+            formData.shipDate = computeShipDate(value);
+            setTimeout(() => showStep('step-address'), 200);
+        }
+
+        function computeShipDate(timing) {
+            const d = new Date();
+            if (timing === 'asap') {
+                d.setDate(d.getDate() + 3);
+            } else {
+                d.setMonth(d.getMonth() + Number(timing));
+            }
+            return d;
+        }
+
+        function formatShipDate(date) {
+            return date.toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        function validateAddressForm() {
+            const street = document.getElementById('street').value.trim();
+            const city = document.getElementById('city').value.trim();
+            const state = document.getElementById('state').value.trim();
+            const zip = document.getElementById('zip').value.trim();
+            const cityField = document.getElementById('cityField');
+            const stateZipRow = document.getElementById('stateZipRow');
+            const streetInput = document.getElementById('street');
+            const streetError = document.getElementById('streetError');
+            const startsWithNumber = /^\d/.test(street);
+
+            if (street.length > 0) {
+                if (!startsWithNumber) {
+                    streetInput.classList.add('error');
+                    streetError.style.display = 'block';
+                } else {
+                    streetInput.classList.remove('error');
+                    streetError.style.display = 'none';
+                }
+                cityField.classList.remove('hidden-initially');
+                stateZipRow.classList.remove('hidden-initially');
+            } else {
+                streetInput.classList.remove('error');
+                streetError.style.display = 'none';
+                cityField.classList.add('hidden-initially');
+                stateZipRow.classList.add('hidden-initially');
+                document.getElementById('city').value = '';
+                document.getElementById('state').value = '';
+                document.getElementById('zip').value = '';
+            }
+
+            const valid = !!(street && city && state && zip && startsWithNumber);
+            document.getElementById('addressNextBtn').disabled = !valid;
+            if (valid) {
+                formData.address = { street, city, state, zip };
+            } else if (formData.address) {
+                delete formData.address;
+            }
+        }
+
+        function saveAddressAndContinue() {
+            validateAddressForm();
+            if (!formData.address) return;
+            showStep('step-card');
+        }
+
+        function formatCardNumber(input) {
+            const digits = input.value.replace(/\D/g, '').slice(0, 16);
+            input.value = digits.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
+        }
+
+        function formatExpiry(input) {
+            let v = input.value.replace(/\D/g, '').slice(0, 4);
+            if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2);
+            input.value = v;
+        }
+
+        function validateCardForm() {
+            const name = document.getElementById('cardName').value.trim();
+            const number = document.getElementById('cardNumber').value.replace(/\D/g, '');
+            const expiry = document.getElementById('cardExpiry').value.trim();
+            const cvc = document.getElementById('cardCvc').value.replace(/\D/g, '');
+            const expiryOk = /^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry);
+            const valid = name.length > 1 && number.length >= 13 && expiryOk && cvc.length >= 3;
+            document.getElementById('cardSubmitBtn').disabled = !valid;
+            return valid;
+        }
+
+        function formatAddressLine(addr) {
+            return addr.street + ', ' + addr.city + ', ' + addr.state + ' ' + addr.zip;
+        }
+
+        function finishSignup() {
+            if (!validateCardForm()) return;
+
+            // Frontend-only test flow — no Airtable / payment processing
+            console.log('=== AIR FILTER SIGNUP (TEST MODE — NO WRITE) ===');
+            console.log(JSON.stringify({
+                filterCount: formData.filterCount,
+                frequencyMonths: formData.frequencyMonths,
+                price: priceForCount(formData.filterCount),
+                knowsSizes: formData.knowsSizes,
+                filterSizes: formData.filterSizes,
+                contact: formData.contact,
+                timing: formData.timing,
+                shipDate: formData.shipDate && formData.shipDate.toISOString(),
+                address: formData.address,
+                cardSaved: true
+            }, null, 2));
+            console.log('=== END ===');
+
+            const count = formData.filterCount;
+            const dateStr = formatShipDate(formData.shipDate);
+            const addressStr = formatAddressLine(formData.address);
+            const detail = document.getElementById('congratsDetail');
+
+            if (formData.knowsSizes) {
+                detail.textContent = "We'll ship " + count + " filter" + (count === 1 ? "" : "s") +
+                    " on " + dateStr + " to " + addressStr + ".";
+            } else {
+                detail.textContent = "We'll reach out to get your filter sizes so we can ship the first " +
+                    count + " filter" + (count === 1 ? "" : "s") + " on " + dateStr + " to " + addressStr + ".";
+            }
+
+            showStep('step-congrats');
+        }
+
+        // Google Places autocomplete — same pattern as bathroom landing pages
+        window.__attachPlaces = function() {
+            if (!window.google || !google.maps || !google.maps.places) return;
+            const addressInput = document.getElementById('street');
+            if (!addressInput) return;
+            const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+                types: ['address'],
+                componentRestrictions: { country: ['us'] },
+                fields: ['address_components', 'formatted_address', 'geometry']
+            });
+            autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace();
+                if (!place || !place.address_components) return;
+                const comps = Object.fromEntries(place.address_components.flatMap(c => c.types.map(t => [t, c])));
+                let streetAddress = '';
+                if (comps.street_number) streetAddress += comps.street_number.long_name + ' ';
+                if (comps.route) streetAddress += comps.route.long_name;
+                if (streetAddress.trim()) addressInput.value = streetAddress.trim();
+                const cityField = document.getElementById('cityField');
+                const stateZipRow = document.getElementById('stateZipRow');
+                if (streetAddress.trim()) {
+                    cityField.classList.remove('hidden-initially');
+                    stateZipRow.classList.remove('hidden-initially');
+                }
+                const cityInput = document.getElementById('city');
+                const stateInput = document.getElementById('state');
+                const zipInput = document.getElementById('zip');
+                if (comps.locality && cityInput) cityInput.value = comps.locality.long_name;
+                else if (comps.sublocality && cityInput) cityInput.value = comps.sublocality.long_name;
+                if (comps.administrative_area_level_1 && stateInput) stateInput.value = comps.administrative_area_level_1.short_name;
+                if (comps.postal_code && zipInput) zipInput.value = comps.postal_code.long_name;
+                validateAddressForm();
+            });
+        };
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&loading=async&libraries=places&callback=__attachPlaces"></script>
+</body>
+</html>
