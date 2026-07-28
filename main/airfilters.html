@@ -6,6 +6,23 @@
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
     <title>HomeFilter.Co</title>
+    <!-- Meta Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1042392011322469');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1042392011322469&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Meta Pixel Code -->
     <style>
         * {
             margin: 0;
@@ -583,6 +600,57 @@
         };
 
         let currentStepId = 'step-count';
+        const META_PIXEL_ID = '1042392011322469';
+        const pixelFired = {
+            ViewContent: false,
+            Lead: false,
+            InitiateCheckout: false,
+            AddPaymentInfo: false,
+            CompleteRegistration: false,
+        };
+
+        function newEventId(prefix) {
+            return prefix + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+        }
+
+        function trackPixel(eventName, params, onceKey) {
+            if (onceKey) {
+                if (pixelFired[onceKey]) return;
+                pixelFired[onceKey] = true;
+            }
+            if (typeof fbq !== 'function') return;
+            try {
+                const payload = Object.assign({
+                    content_name: 'HomeFilter Autopilot',
+                    content_category: 'Air Filters',
+                }, params || {});
+                const eventId = newEventId(eventName);
+                fbq('track', eventName, payload, { eventID: eventId });
+            } catch (e) {
+                console.warn('Meta pixel track failed', eventName, e);
+            }
+        }
+
+        function pixelValue() {
+            try {
+                return Number(priceForCount(formData.filterCount || 0).toFixed(2));
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        function trackFunnelComplete() {
+            const value = pixelValue();
+            const shared = {
+                value: value,
+                currency: 'USD',
+                num_items: formData.filterCount || 1,
+                content_ids: ['homefilter-plan'],
+            };
+            trackPixel('AddPaymentInfo', shared, 'AddPaymentInfo');
+            trackPixel('CompleteRegistration', shared, 'CompleteRegistration');
+            trackPixel('Lead', shared, 'Lead');
+        }
 
         function priceForCount(count) {
             if (count <= 0) return 0;
@@ -651,6 +719,12 @@
             document.querySelectorAll('#countOptions .option').forEach(o => o.classList.remove('selected'));
             el.classList.add('selected');
             formData.filterCount = count;
+            trackPixel('ViewContent', {
+                content_type: 'product',
+                content_ids: ['homefilter-plan'],
+                value: pixelValue(),
+                currency: 'USD',
+            }, 'ViewContent');
             setTimeout(() => showStep('step-frequency'), 200);
         }
 
@@ -675,6 +749,12 @@
             const n = validateOtherCount();
             if (!n) return;
             formData.filterCount = n;
+            trackPixel('ViewContent', {
+                content_type: 'product',
+                content_ids: ['homefilter-plan'],
+                value: pixelValue(),
+                currency: 'USD',
+            }, 'ViewContent');
             showStep('step-frequency');
         }
 
@@ -693,6 +773,12 @@
         }
 
         function goToKnowSizes() {
+            trackPixel('InitiateCheckout', {
+                value: pixelValue(),
+                currency: 'USD',
+                num_items: formData.filterCount || 1,
+                content_ids: ['homefilter-plan'],
+            }, 'InitiateCheckout');
             showStep('step-know-sizes');
         }
 
@@ -776,6 +862,11 @@
                 email: document.getElementById('email').value.trim(),
                 phone: document.getElementById('phone').value.trim()
             };
+            trackPixel('Lead', {
+                value: pixelValue(),
+                currency: 'USD',
+                content_name: 'HomeFilter contact captured',
+            }, 'Lead');
             showStep('step-timing');
         }
 
@@ -959,6 +1050,7 @@
 
         function showCongratsFromPayload(payload) {
             if (!payload) {
+                trackFunnelComplete();
                 showStep('step-congrats');
                 return;
             }
@@ -979,6 +1071,7 @@
                 detail.textContent = "We'll reach out to get your filter sizes so we can ship the first " +
                     count + " filter" + (count === 1 ? "" : "s") + " on " + dateStr + " to " + addressStr + ".";
             }
+            trackFunnelComplete();
             showStep('step-congrats');
             try { sessionStorage.removeItem(STORAGE_KEY); } catch (e) {}
         }
