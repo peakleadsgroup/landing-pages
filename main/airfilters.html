@@ -601,6 +601,10 @@
 
         let currentStepId = 'step-count';
         const META_PIXEL_ID = '1042392011322469';
+        const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
+        const AIRTABLE_SIGNUPS_TABLE = 'tblv8lnvqBnx9pgqM';
+        const AIRTABLE_BASE_URL = '/api/airtable/v0/' + AIRTABLE_BASE_ID;
+        let airtableSaved = false;
         const pixelFired = {
             ViewContent: false,
             Lead: false,
@@ -650,6 +654,80 @@
             trackPixel('AddPaymentInfo', shared, 'AddPaymentInfo');
             trackPixel('CompleteRegistration', shared, 'CompleteRegistration');
             trackPixel('Lead', shared, 'Lead');
+        }
+
+        function buildAllInfoText(payload) {
+            const data = payload || {};
+            const contact = data.contact || formData.contact || {};
+            const address = data.address || formData.address || {};
+            const lines = [
+                'HomeFilter.co Signup',
+                'Completed: ' + new Date().toISOString(),
+                '',
+                'Name: ' + (data.cardName || [contact.firstName, contact.lastName].filter(Boolean).join(' ') || '—'),
+                'Email: ' + (data.email || contact.email || '—'),
+                'Phone: ' + (contact.phone || '—'),
+                '',
+                'Filter count: ' + (data.filterCount != null ? data.filterCount : formData.filterCount),
+                'Frequency (months): ' + (data.frequencyMonths != null ? data.frequencyMonths : formData.frequencyMonths),
+                'Plan price: $' + (data.price != null ? Number(data.price).toFixed(2) : priceForCount(formData.filterCount || 0).toFixed(2)),
+                'Knows sizes: ' + String(data.knowsSizes != null ? data.knowsSizes : formData.knowsSizes),
+                'Timing: ' + (data.timing != null ? data.timing : formData.timing),
+                'Ship date: ' + (data.shipDate || (formData.shipDate && formData.shipDate.toISOString()) || '—'),
+                '',
+                'Address:',
+                '  Street: ' + (address.street || '—'),
+                '  City: ' + (address.city || '—'),
+                '  State: ' + (address.state || '—'),
+                '  ZIP: ' + (address.zip || '—'),
+                '',
+                'Filter sizes: ' + JSON.stringify(data.filterSizes || formData.filterSizes || []),
+                '',
+                'Card on file: saved (Stripe setup — not charged)',
+                '',
+                'Raw JSON:',
+                JSON.stringify({
+                    filterCount: data.filterCount != null ? data.filterCount : formData.filterCount,
+                    frequencyMonths: data.frequencyMonths != null ? data.frequencyMonths : formData.frequencyMonths,
+                    price: data.price != null ? data.price : priceForCount(formData.filterCount || 0),
+                    knowsSizes: data.knowsSizes != null ? data.knowsSizes : formData.knowsSizes,
+                    filterSizes: data.filterSizes || formData.filterSizes || [],
+                    contact: contact,
+                    cardName: data.cardName || null,
+                    email: data.email || contact.email || null,
+                    timing: data.timing != null ? data.timing : formData.timing,
+                    shipDate: data.shipDate || (formData.shipDate && formData.shipDate.toISOString()) || null,
+                    address: address,
+                    completedAt: new Date().toISOString(),
+                }, null, 2),
+            ];
+            return lines.join('\n');
+        }
+
+        async function saveSignupToAirtable(payload) {
+            if (airtableSaved) return;
+            airtableSaved = true;
+            try {
+                const res = await fetch(AIRTABLE_BASE_URL + '/' + encodeURIComponent(AIRTABLE_SIGNUPS_TABLE), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        records: [{
+                            fields: {
+                                'ALL INFO': buildAllInfoText(payload),
+                            },
+                        }],
+                    }),
+                });
+                if (!res.ok) {
+                    const text = await res.text();
+                    console.error('Airtable signup save failed', res.status, text.slice(0, 300));
+                    airtableSaved = false;
+                }
+            } catch (e) {
+                console.error('Airtable signup save error', e);
+                airtableSaved = false;
+            }
         }
 
         function priceForCount(count) {
@@ -1051,6 +1129,7 @@
         function showCongratsFromPayload(payload) {
             if (!payload) {
                 trackFunnelComplete();
+                saveSignupToAirtable(restoreSignup() || {});
                 showStep('step-congrats');
                 return;
             }
@@ -1072,6 +1151,7 @@
                     count + " filter" + (count === 1 ? "" : "s") + " on " + dateStr + " to " + addressStr + ".";
             }
             trackFunnelComplete();
+            saveSignupToAirtable(payload);
             showStep('step-congrats');
             try { sessionStorage.removeItem(STORAGE_KEY); } catch (e) {}
         }
