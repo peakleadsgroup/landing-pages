@@ -62,6 +62,25 @@
             margin-bottom: 8px;
         }
 
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: -8px auto 18px;
+            padding: 14px 18px;
+            background: #000;
+            border-radius: 12px;
+            max-width: 100%;
+        }
+
+        .brand-logo img {
+            display: block;
+            width: min(280px, 100%);
+            height: auto;
+            max-height: 72px;
+            object-fit: contain;
+        }
+
         .question {
             font-size: 20px;
             color: #2c3e50;
@@ -108,8 +127,8 @@
         .option .recommended {
             display: block;
             font-size: 12px;
-            color: #4CAF50;
-            font-weight: 600;
+            color: #9aa3af;
+            font-weight: 500;
             margin-top: 4px;
         }
 
@@ -176,6 +195,19 @@
             margin-top: 5px;
             text-align: left;
             display: none;
+        }
+
+        .card-error {
+            color: #c62828;
+            font-size: 13px;
+            margin-top: 10px;
+            min-height: 1.2em;
+        }
+
+        .secure-note {
+            font-size: 12px;
+            color: #9aa3af;
+            margin-top: 10px;
         }
 
         .hidden-initially {
@@ -313,7 +345,9 @@
 </head>
 <body>
     <div class="form-container">
-        <div class="brand">Fresh Filter Plan</div>
+        <div class="brand-logo">
+            <img src="../Images/homefilterlogo.png" alt="homefilter.co" width="280" height="72">
+        </div>
         <div id="mainHeading">
             <h1 class="main-heading">Set up worry-free air filter delivery</h1>
         </div>
@@ -347,7 +381,7 @@
             <div class="options">
                 <div class="option" onclick="selectFrequency(this, 1)">Every month</div>
                 <div class="option" onclick="selectFrequency(this, 2)">Every 2 months</div>
-                <div class="option" onclick="selectFrequency(this, 3)">Every 3 months<span class="recommended">Recommended</span></div>
+                <div class="option" onclick="selectFrequency(this, 3)">⭐ Every 3 months ⭐<span class="recommended">Recommended</span></div>
                 <div class="option" onclick="selectFrequency(this, 4)">Every 4 months</div>
             </div>
         </div>
@@ -466,7 +500,7 @@
             </div>
         </div>
 
-        <!-- STEP 8: Card on file -->
+        <!-- STEP 8: Card on file (Stripe Checkout — test mode) -->
         <div class="form-step" id="step-card">
             <div class="question">Last step!</div>
             <div class="sub-heading">Save your card on file for the first filter shipment. We only charge your card when the filters ship. No payment will be made right now.</div>
@@ -476,22 +510,14 @@
                     <input type="text" class="field-input" id="cardName" placeholder="Name on card" autocomplete="cc-name" oninput="validateCardForm()">
                 </div>
                 <div class="field-group">
-                    <label class="field-label" for="cardNumber">Card number</label>
-                    <input type="text" class="field-input" id="cardNumber" placeholder="•••• •••• •••• ••••" inputmode="numeric" maxlength="19" autocomplete="cc-number" oninput="formatCardNumber(this); validateCardForm()">
-                </div>
-                <div class="address-row">
-                    <div class="field-group">
-                        <label class="field-label" for="cardExpiry">Expiry</label>
-                        <input type="text" class="field-input" id="cardExpiry" placeholder="MM/YY" maxlength="5" inputmode="numeric" autocomplete="cc-exp" oninput="formatExpiry(this); validateCardForm()">
-                    </div>
-                    <div class="field-group">
-                        <label class="field-label" for="cardCvc">CVC</label>
-                        <input type="text" class="field-input" id="cardCvc" placeholder="123" maxlength="4" inputmode="numeric" autocomplete="cc-csc" oninput="validateCardForm()">
-                    </div>
+                    <label class="field-label" for="cardEmail">Email for receipt</label>
+                    <input type="email" class="field-input" id="cardEmail" placeholder="your@email.com" autocomplete="email" oninput="validateCardForm()">
                 </div>
             </div>
+            <p class="secure-note">Secure Stripe checkout · Test mode · Card saved, not charged</p>
+            <div class="card-error" id="cardError"></div>
             <div class="nav-buttons">
-                <button class="nav-btn" id="cardSubmitBtn" onclick="finishSignup()" disabled>Save Card & Finish</button>
+                <button class="nav-btn" id="cardSubmitBtn" onclick="finishSignup()" disabled>Save Card Securely</button>
             </div>
         </div>
 
@@ -782,27 +808,31 @@
         function saveAddressAndContinue() {
             validateAddressForm();
             if (!formData.address) return;
+            prepareCardStep();
             showStep('step-card');
         }
 
-        function formatCardNumber(input) {
-            const digits = input.value.replace(/\D/g, '').slice(0, 16);
-            input.value = digits.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
-        }
-
-        function formatExpiry(input) {
-            let v = input.value.replace(/\D/g, '').slice(0, 4);
-            if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2);
-            input.value = v;
+        function prepareCardStep() {
+            const nameEl = document.getElementById('cardName');
+            const emailEl = document.getElementById('cardEmail');
+            const err = document.getElementById('cardError');
+            if (err) err.textContent = '';
+            if (formData.contact) {
+                if (nameEl && !nameEl.value) {
+                    nameEl.value = [formData.contact.firstName, formData.contact.lastName].filter(Boolean).join(' ');
+                }
+                if (emailEl && !emailEl.value && formData.contact.email) {
+                    emailEl.value = formData.contact.email;
+                }
+            }
+            validateCardForm();
         }
 
         function validateCardForm() {
             const name = document.getElementById('cardName').value.trim();
-            const number = document.getElementById('cardNumber').value.replace(/\D/g, '');
-            const expiry = document.getElementById('cardExpiry').value.trim();
-            const cvc = document.getElementById('cardCvc').value.replace(/\D/g, '');
-            const expiryOk = /^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry);
-            const valid = name.length > 1 && number.length >= 13 && expiryOk && cvc.length >= 3;
+            const email = document.getElementById('cardEmail').value.trim();
+            const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            const valid = name.length > 1 && emailOk;
             document.getElementById('cardSubmitBtn').disabled = !valid;
             return valid;
         }
@@ -811,39 +841,133 @@
             return addr.street + ', ' + addr.city + ', ' + addr.state + ' ' + addr.zip;
         }
 
-        function finishSignup() {
-            if (!validateCardForm()) return;
+        const STORAGE_KEY = 'airfilterSignup';
 
-            // Frontend-only test flow — no Airtable / payment processing
-            console.log('=== AIR FILTER SIGNUP (TEST MODE — NO WRITE) ===');
-            console.log(JSON.stringify({
+        function persistSignup() {
+            const name = document.getElementById('cardName').value.trim();
+            const email = document.getElementById('cardEmail').value.trim();
+            const payload = {
                 filterCount: formData.filterCount,
                 frequencyMonths: formData.frequencyMonths,
                 price: priceForCount(formData.filterCount),
                 knowsSizes: formData.knowsSizes,
                 filterSizes: formData.filterSizes,
-                contact: formData.contact,
+                contact: formData.contact || { email: email, firstName: name },
+                cardName: name,
+                email: email,
                 timing: formData.timing,
                 shipDate: formData.shipDate && formData.shipDate.toISOString(),
                 address: formData.address,
-                cardSaved: true
-            }, null, 2));
-            console.log('=== END ===');
+            };
+            try {
+                sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+            } catch (e) {}
+            return payload;
+        }
 
-            const count = formData.filterCount;
-            const dateStr = formatShipDate(formData.shipDate);
-            const addressStr = formatAddressLine(formData.address);
+        function restoreSignup() {
+            try {
+                const raw = sessionStorage.getItem(STORAGE_KEY);
+                if (!raw) return null;
+                return JSON.parse(raw);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function showCongratsFromPayload(payload) {
+            if (!payload) {
+                showStep('step-congrats');
+                return;
+            }
+            formData.filterCount = payload.filterCount;
+            formData.knowsSizes = payload.knowsSizes;
+            formData.address = payload.address;
+            formData.shipDate = payload.shipDate ? new Date(payload.shipDate) : null;
+
+            const count = payload.filterCount;
+            const dateStr = formData.shipDate ? formatShipDate(formData.shipDate) : 'your selected date';
+            const addressStr = payload.address ? formatAddressLine(payload.address) : 'your address';
             const detail = document.getElementById('congratsDetail');
 
-            if (formData.knowsSizes) {
+            if (payload.knowsSizes) {
                 detail.textContent = "We'll ship " + count + " filter" + (count === 1 ? "" : "s") +
                     " on " + dateStr + " to " + addressStr + ".";
             } else {
                 detail.textContent = "We'll reach out to get your filter sizes so we can ship the first " +
                     count + " filter" + (count === 1 ? "" : "s") + " on " + dateStr + " to " + addressStr + ".";
             }
-
             showStep('step-congrats');
+        }
+
+        async function finishSignup() {
+            if (!validateCardForm()) return;
+
+            const btn = document.getElementById('cardSubmitBtn');
+            const err = document.getElementById('cardError');
+            if (err) err.textContent = '';
+            const payload = persistSignup();
+
+            btn.disabled = true;
+            btn.textContent = 'Redirecting to secure checkout…';
+
+            try {
+                const res = await fetch('/api/stripe/create-airfilter-setup-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: payload.email,
+                        name: payload.cardName,
+                        filterCount: payload.filterCount,
+                        frequencyMonths: payload.frequencyMonths,
+                        price: payload.price,
+                        knowsSizes: payload.knowsSizes,
+                        timing: payload.timing,
+                        shipDate: payload.shipDate,
+                        address: payload.address,
+                        filterSizes: payload.filterSizes,
+                    }),
+                });
+                const data = await res.json().catch(function () { return {}; });
+                if (!res.ok) {
+                    throw new Error(data.error || ('Stripe error ' + res.status));
+                }
+                if (!data.url) throw new Error('No checkout URL returned');
+                window.location.href = data.url;
+            } catch (e) {
+                if (err) err.textContent = (e && e.message) || 'Could not start Stripe checkout.';
+                btn.disabled = false;
+                btn.textContent = 'Save Card Securely';
+            }
+        }
+
+        function handleCheckoutReturn() {
+            const params = new URLSearchParams(window.location.search);
+            const sessionId = params.get('session_id');
+            if (sessionId && /^cs_/.test(sessionId)) {
+                const payload = restoreSignup();
+                showCongratsFromPayload(payload);
+                try {
+                    const u = new URL(window.location.href);
+                    u.searchParams.delete('session_id');
+                    window.history.replaceState({}, '', u.pathname + u.search);
+                } catch (e) {}
+                try { sessionStorage.removeItem(STORAGE_KEY); } catch (e) {}
+                return true;
+            }
+            if (params.get('checkout') === 'cancel') {
+                prepareCardStep();
+                showStep('step-card');
+                const err = document.getElementById('cardError');
+                if (err) err.textContent = 'Checkout canceled — you can try again. No card was saved.';
+                try {
+                    const u = new URL(window.location.href);
+                    u.searchParams.delete('checkout');
+                    window.history.replaceState({}, '', u.pathname + u.search);
+                } catch (e) {}
+                return true;
+            }
+            return false;
         }
 
         // Google Places autocomplete — same pattern as bathroom landing pages
@@ -880,6 +1004,8 @@
                 validateAddressForm();
             });
         };
+
+        handleCheckoutReturn();
     </script>
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANMfDpc1o2RoVn2qtQM091Rs840U0O7QE&loading=async&libraries=places&callback=__attachPlaces"></script>
 </body>
