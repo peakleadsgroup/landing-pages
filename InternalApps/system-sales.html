@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag("js", new Date());
+    gtag("config", "AW-18128405900");
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" />
+  <title>B2B System Sales Ops - PeakLeads</title>
+  <link rel="stylesheet" href="system-sales.css?v=1" />
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <img src="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" alt="" width="36" height="36" />
+      <div>
+        <div class="eyebrow">Peak Leads Group · InternalApps</div>
+        <h1>B2B System Sales Ops</h1>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button type="button" class="btn" id="refresh-btn">Refresh</button>
+      <button type="button" class="btn secondary" id="reload-btn">Reload leads</button>
+    </div>
+  </header>
+
+  <p class="sub">Pipeline + next-send queue for the wind-down system/asset sale. Mutations are local campaign state only — this UI never fires live SMS/email.</p>
+  <div class="banner" id="banner">Loading…</div>
+  <div class="grid" id="kpis"></div>
+
+  <div class="toolbar">
+    <input type="search" id="q" placeholder="Search business / phone / email" autocomplete="off" />
+    <select id="status" aria-label="Filter status">
+      <option value="">All statuses</option>
+      <option value="active">active</option>
+      <option value="paused">paused</option>
+      <option value="stopped">stopped</option>
+      <option value="completed_no_reply">completed_no_reply</option>
+      <option value="completed_failed">completed_failed</option>
+    </select>
+  </div>
+
+  <div class="row">
+    <section class="panel">
+      <div class="ph"><h2>Next 2 hours</h2><span id="upn"></span></div>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>When (UTC)</th><th>Biz</th><th>Step</th><th>Ch</th><th>Rank</th></tr></thead>
+          <tbody id="upcoming"></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="ph"><h2>HOT / inbound stops</h2><span id="hotn"></span></div>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Business</th><th>Reason</th><th>Preview</th></tr></thead>
+          <tbody id="hot"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel" style="margin-top:12px">
+    <div class="ph"><h2>Leads</h2><span id="leadn"></span></div>
+    <div class="scroll tall">
+      <table>
+        <thead><tr><th>Rank</th><th>Business</th><th>Status</th><th>Next</th><th>Rev</th><th>Out/In</th><th></th></tr></thead>
+        <tbody id="leads"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel detail" id="detail">
+    <div class="ph"><h2 id="dtitle">Lead</h2><button type="button" class="btn secondary" id="close-detail">Close</button></div>
+    <div class="dbody" id="dbody"></div>
+  </section>
+</div>
+<script src="system-sales-app.js?v=1"></script>
+</body>
+</html>
