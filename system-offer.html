@@ -144,7 +144,8 @@
       <h2>You're in.</h2>
       <p class="amount" id="paid-amount"></p>
       <p id="paid-summary"></p>
-      <p class="muted">We'll send access instructions to <strong id="paid-email"></strong> within two business days. Questions: daniel@peakleadsgroup.com · (919) 803-9255</p>
+      <p class="muted">We'll send the materials to <strong id="paid-email"></strong> within 14 business days. Questions: daniel@peakleadsgroup.com · (919) 803-9255</p>
+      <p class="muted" id="paid-guarantee" style="display:none;margin-top:0.75rem"></p>
     </div>
   </div>
 
@@ -214,17 +215,18 @@
         <p>Licensee's contractors may use the Materials solely on Licensee's behalf. Licensee is responsible for their compliance.</p>
 
         <h3>5. Fees and payment</h3>
-        <p>The Fee is due in full upon Licensee's electronic signature, via the Stripe checkout presented immediately after signing. Access to the Materials is conditioned on successful payment. Unless required by law, the Fee is non-refundable once Materials access has been delivered, because the Materials are confidential digital assets.</p>
+        <p>The Fee is due in full upon Licensee's electronic signature, via the Stripe checkout presented immediately after signing. Access to the Materials is conditioned on successful payment. Unless required by law, the Fee is non-refundable once Materials access has been delivered, except for the Tier 3 lead guarantee in Section 7 (available only if Licensee purchased Tier 3).</p>
         <p>If payment fails, is reversed, or is charged back, the license terminates automatically and Licensee must delete all copies of the Materials and certify destruction upon request.</p>
 
         <h3>6. Delivery</h3>
-        <p>After payment, Peak Leads will send access instructions to <strong id="legal-email"></strong> within two (2) business days, or as otherwise agreed in writing. Licensee is responsible for providing a working email and for safeguarding access credentials.</p>
+        <p>After payment, Peak Leads will send the Materials to <strong id="legal-email"></strong> within fourteen (14) business days, or as otherwise agreed in writing. Licensee is responsible for providing a working email and for safeguarding access credentials.</p>
 
-        <h3>7. Tier 3 support and custom work</h3>
+        <h3>7. Tier 3 support, custom work, and lead guarantee</h3>
         <p id="legal-tier3"></p>
+        <p id="legal-guarantee"></p>
 
         <h3>8. No performance guarantee</h3>
-        <p>Advertising results depend on Licensee's market, offer, budget, sales process, creative execution, and platform changes outside Peak Leads' control. Peak Leads does not guarantee lead volume, cost per lead, close rate, or revenue. The System reflects methods Peak Leads has used; past performance is not a promise of future results.</p>
+        <p>Except for the Tier 3 lead guarantee in Section 7 (if Licensee purchased Tier 3), advertising results depend on Licensee's market, offer, budget, sales process, creative execution, and platform changes outside Peak Leads' control. Peak Leads does not otherwise guarantee lead volume, cost per lead, close rate, or revenue. The System reflects methods Peak Leads has used; past performance is not a promise of future results.</p>
 
         <h3>9. Confidentiality</h3>
         <p>The Materials, pricing, and non-public know-how disclosed under this Agreement are Peak Leads' confidential information. Licensee will protect them with at least reasonable care and will not disclose them except as permitted in Section 4. This duty survives termination. Licensee may disclose information if required by law, after giving Peak Leads prompt notice where legally allowed.</p>
@@ -239,7 +241,7 @@
         <p>To the maximum extent permitted by law, Peak Leads' total liability under this Agreement will not exceed the Fee actually paid by Licensee. Peak Leads will not be liable for indirect, incidental, special, consequential, or lost-profits damages, even if advised of the possibility.</p>
 
         <h3>13. Term and termination</h3>
-        <p>This Agreement starts on the Effective Date. The license continues unless terminated. Peak Leads may terminate if Licensee materially breaches and fails to cure within ten (10) days after written notice (or immediately for payment failure, unauthorized disclosure, or resale of the Materials). On termination, the license ends and Licensee must stop using and delete the Materials. Sections 4, 5, 8–12, 14, and 15 survive.</p>
+        <p>This Agreement starts on the Effective Date. The license continues unless terminated. Peak Leads may terminate if Licensee materially breaches and fails to cure within ten (10) days after written notice (or immediately for payment failure, unauthorized disclosure, or resale of the Materials). On termination, the license ends and Licensee must stop using and delete the Materials. Sections 4, 5, 7 (as to any then-outstanding Tier 3 lead-guarantee claim), 8–12, 14, and 15 survive.</p>
 
         <h3>14. Governing law</h3>
         <p>This Agreement is governed by the laws of the State of North Carolina, without regard to conflict-of-law principles. The state and federal courts located in Wake County, North Carolina, have exclusive jurisdiction, and each Party consents to that venue.</p>
@@ -352,9 +354,11 @@
       $("agency-date").textContent = "Date: " + new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
       if (Number(o.tier) === 3) {
-        $("legal-tier3").innerHTML = "Because Licensee selected Tier 3 (Hands-On Buildout), Peak Leads will (a) provide support through Licensee's first thirty (30) days of live ad spend, including a commercially reasonable number of scheduled calls with Peak Leads' team as agreed during onboarding, and (b) build a custom, branded landing page and help connect inbound leads to Licensee's CRM. Support hours unused in that 30-day window do not roll over. Custom page work begins after payment and receipt of Licensee's brand assets, CRM details, and qualifying questions. Peak Leads' support does not include running Licensee's ad account indefinitely or guaranteeing results.";
+        $("legal-tier3").textContent = "Because Licensee selected Tier 3 (Hands-On Buildout), Peak Leads will (a) provide support through Licensee's first thirty (30) days of live ad spend, including a commercially reasonable number of scheduled calls with Peak Leads' team as agreed during onboarding, and (b) build a custom, branded landing page and help connect inbound leads to Licensee's CRM. Support hours unused in that 30-day window do not roll over. Custom page work begins after payment and receipt of Licensee's brand assets, CRM details, and qualifying questions. Peak Leads' support does not include running Licensee's ad account indefinitely.";
+        $("legal-guarantee").textContent = "Lead guarantee (Tier 3 only). Licensee may request a full refund of the Fee if Licensee's Meta advertising using the Materials generates zero (0) leads during a Qualifying Spend Period. A Qualifying Spend Period means thirty (30) days on which Licensee actually ran Meta ads using the Materials, with Meta ad spend of at least twenty U.S. dollars ($20) on each such day. Those thirty days need not be consecutive, and the clock does not start on the purchase date: days with no spend, or spend below $20, do not count. This guarantee is not available on Tier 1 or Tier 2. To claim it, Licensee must email daniel@peakleadsgroup.com within fourteen (14) days after completing the Qualifying Spend Period and provide Ads Manager (or equivalent) evidence of (i) daily spend of at least $20 on each of the thirty qualifying days and (ii) zero leads from those campaigns during that period. Upon verification, Peak Leads will refund the Fee in full. The license then terminates, and Licensee must delete all copies of the Materials. For this Section, a \"lead\" means a form fill, call, Messenger contact, or other inquiry generated through Licensee's Meta campaigns that used the Materials.";
       } else {
-        $("legal-tier3").textContent = "Tier 3 support, scheduled calls, and a custom landing page are not included in the selected package. Licensee may upgrade later under a separate written agreement.";
+        $("legal-tier3").textContent = "Tier 3 support, scheduled calls, custom landing page, and the lead guarantee are not included in the selected package. Licensee may upgrade later under a separate written agreement.";
+        $("legal-guarantee").textContent = "";
       }
     }
 
@@ -365,6 +369,16 @@
       $("paid-amount").textContent = o.priceLabel || "";
       $("paid-summary").textContent = (o.company || "") + " · " + (o.tierKicker || "") + " " + (o.tierName || "");
       $("paid-email").textContent = o.email || "";
+      var g = $("paid-guarantee");
+      if (g) {
+        if (Number(o.tier) === 3) {
+          g.style.display = "";
+          g.textContent = "Tier 3 includes a full refund if you get zero leads after 30 days of actually running Meta ads at $20 or more per day (not 30 days from purchase). Email daniel@peakleadsgroup.com with Ads Manager proof if you need to claim it.";
+        } else {
+          g.style.display = "none";
+          g.textContent = "";
+        }
+      }
     }
 
     async function fetchJson(url, options) {

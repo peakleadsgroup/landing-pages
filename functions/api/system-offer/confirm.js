@@ -7,21 +7,6 @@
 import { stripeGet } from "../stripe/stripe-lib.js";
 import { json, corsFor, PRODUCT, formatUsdFromCents, TIERS } from "./offer-lib.js";
 
-const MAKE_PAYMENT_WEBHOOK_URL =
-  "https://hook.us2.make.com/lnb3ggrqony2qi5l5s7r2c6x68hxhd5l";
-
-async function notifyPaymentWebhook(payload, waitUntil) {
-  const promise = fetch(MAKE_PAYMENT_WEBHOOK_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  }).catch((err) => {
-    console.warn("[system-offer/confirm] webhook failed", err && err.message);
-  });
-  if (typeof waitUntil === "function") waitUntil(promise);
-  else await promise;
-}
-
 export async function onRequest(context) {
   const cors = corsFor(context.request);
 
@@ -87,29 +72,6 @@ export async function onRequest(context) {
       signerTitle: meta.signer_title || "",
       signedAt: meta.signed_at || "",
     };
-
-    await notifyPaymentWebhook(
-      {
-        product: PRODUCT,
-        mode: "live",
-        business_name: offer.company,
-        contact_name: offer.contact,
-        email: offer.email,
-        tier: offer.tier,
-        tier_name: offer.tierName,
-        amount_cents: priceCents,
-        signer_name: offer.signerName,
-        stripe_session_id: sessionId,
-        stripe_customer_id:
-          typeof session.customer === "string" ? session.customer : session.customer?.id || "",
-        payment_intent_id:
-          typeof session.payment_intent === "string"
-            ? session.payment_intent
-            : session.payment_intent?.id || "",
-        offer_id: offer.id,
-      },
-      context.waitUntil
-    );
 
     return json({ ok: true, paid: true, offer }, 200, cors);
   } catch (e) {

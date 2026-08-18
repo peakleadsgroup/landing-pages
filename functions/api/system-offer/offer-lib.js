@@ -47,6 +47,7 @@ export const TIERS = {
       "First 30 days of support and scheduled calls",
       "Custom landing page, built and branded for you",
       "Leads wired into your CRM — we help you connect it",
+      "Full refund if you get zero leads after 30 days of running Meta ads at $20+/day",
     ],
   },
 };
