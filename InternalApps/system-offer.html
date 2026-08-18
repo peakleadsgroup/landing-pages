@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
+  <title>System Offer Desk | Peak Leads</title>
+  <style>
+    :root {
+      --navy: #243b5a;
+      --navy-2: #4a6fa5;
+      --ink: #152033;
+      --muted: #5b6575;
+      --line: #e4e8ee;
+      --bg: #eef2f7;
+      --card: #fff;
+      --gold: #b0893e;
+      --good: #166534;
+      --bad: #991b1b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+    header {
+      background: var(--navy);
+      color: #fff;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+    header img { height: 36px; }
+    header h1 { font-size: 1.05rem; font-weight: 650; letter-spacing: -0.01em; }
+    header p { font-size: 0.8rem; opacity: 0.75; margin-top: 0.1rem; }
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 3rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.15rem;
+    }
+    @media (min-width: 920px) {
+      main { grid-template-columns: 1.15fr 0.85fr; align-items: start; }
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 1.35rem 1.25rem;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+    }
+    h2 { font-size: 1.05rem; margin-bottom: 0.35rem; }
+    .hint { color: var(--muted); font-size: 0.88rem; margin-bottom: 1.1rem; line-height: 1.45; }
+    label { display: block; font-size: 0.8rem; font-weight: 650; color: #374151; margin: 0.75rem 0 0.3rem; }
+    input[type="text"], input[type="email"], input[type="tel"], input[type="number"] {
+      width: 100%;
+      padding: 0.7rem 0.8rem;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-family: inherit;
+      background: #fff;
+    }
+    input:focus { outline: none; border-color: var(--navy-2); box-shadow: 0 0 0 3px rgba(74,111,165,0.2); }
+    .grid-2 { display: grid; grid-template-columns: 1fr; gap: 0 0.85rem; }
+    @media (min-width: 640px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
+    .tiers { display: grid; grid-template-columns: 1fr; gap: 0.7rem; margin: 0.35rem 0 0.5rem; }
+    @media (min-width: 640px) { .tiers { grid-template-columns: 1fr 1fr 1fr; } }
+    .tier {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.85rem 0.8rem 0.95rem;
+      cursor: pointer;
+      background: #f8fafc;
+      min-height: 100%;
+    }
+    .tier input { display: none; }
+    .tier:hover { border-color: #93c5fd; }
+    .tier.selected {
+      background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+      border-color: #93c5fd;
+      box-shadow: inset 0 0 0 1px #93c5fd;
+    }
+    .tier .kicker {
+      font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--navy-2);
+    }
+    .tier h3 { font-size: 0.98rem; margin: 0.15rem 0 0.25rem; }
+    .tier p { font-size: 0.78rem; color: var(--muted); line-height: 1.35; }
+    .price-wrap { position: relative; }
+    .price-wrap span {
+      position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%);
+      color: #6b7280; font-weight: 650;
+    }
+    .price-wrap input { padding-left: 1.5rem; font-size: 1.15rem; font-weight: 650; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+      width: 100%; margin-top: 1.1rem; border: 0; border-radius: 12px;
+      padding: 0.9rem 1.1rem; font-size: 1rem; font-weight: 650; cursor: pointer;
+      background: linear-gradient(180deg, #5b84bc 0%, #4a6fa5 100%); color: #fff;
+      box-shadow: 0 8px 20px rgba(74,111,165,0.28);
+    }
+    .btn:hover:not(:disabled) { background: linear-gradient(180deg, #4a6fa5 0%, #3d5d8a 100%); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+    .btn-ghost {
+      background: #fff; color: var(--navy); border: 1px solid #d1d5db;
+      box-shadow: none; margin-top: 0.55rem;
+    }
+    .error, .ok {
+      display: none; margin-top: 0.85rem; padding: 0.7rem 0.85rem;
+      border-radius: 10px; font-size: 0.9rem;
+    }
+    .error.visible { display: block; background: #fef2f2; color: var(--bad); border: 1px solid #fecaca; }
+    .ok.visible { display: block; background: #ecfdf3; color: var(--good); border: 1px solid #bbf7d0; }
+    .link-box {
+      margin-top: 0.9rem; padding: 0.85rem; background: #f8fafc;
+      border: 1px dashed #cbd5e1; border-radius: 12px; word-break: break-all;
+      font-size: 0.82rem; color: #334155; display: none;
+    }
+    .link-box.visible { display: block; }
+    .preview-kicker {
+      font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 0.35rem;
+    }
+    .preview h3 { font-size: 1.2rem; letter-spacing: -0.02em; }
+    .preview .company { font-size: 1.45rem; margin: 0.15rem 0 0.5rem; }
+    .preview .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 0.9rem; }
+    .pill {
+      display: inline-block; background: #eff6ff; color: #1e3a5f;
+      border-radius: 999px; padding: 0.2rem 0.65rem; font-size: 0.78rem; font-weight: 700;
+    }
+    .price-lg { font-size: 1.8rem; font-weight: 750; letter-spacing: -0.03em; margin: 0.35rem 0 0.9rem; }
+    .includes { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
+    .includes li { font-size: 0.88rem; color: #334155; padding-left: 1.2rem; position: relative; }
+    .includes li::before { content: "✓"; position: absolute; left: 0; color: #16a34a; font-weight: 800; }
+    .empty { color: var(--muted); font-size: 0.92rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png" alt="">
+    <div>
+      <h1>Peak Leads System — Offer Desk</h1>
+      <p>Pick a tier, set the price, send a unique signing + payment link.</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>New offer</h2>
+      <p class="hint">This creates a unique link with the company, tier, and price locked in. They sign the contract, then Stripe charges that amount.</p>
+
+      <form id="form" novalidate>
+        <div class="grid-2">
+          <div>
+            <label for="company">Company name</label>
+            <input id="company" name="company" type="text" autocomplete="organization" required maxlength="250" placeholder="Acme Bath Co.">
+          </div>
+          <div>
+            <label for="contact">Buyer contact name</label>
+            <input id="contact" name="contact" type="text" autocomplete="name" required maxlength="250" placeholder="Jane Smith">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <label for="email">Buyer email (for Stripe + delivery)</label>
+            <input id="email" name="email" type="email" autocomplete="email" required maxlength="250" placeholder="jane@acme.com">
+          </div>
+          <div>
+            <label for="phone">Phone (optional)</label>
+            <input id="phone" name="phone" type="tel" autocomplete="tel" maxlength="50" placeholder="(919) 555-0100">
+          </div>
+        </div>
+        <label for="vertical">Vertical (optional)</label>
+        <input id="vertical" name="vertical" type="text" maxlength="120" placeholder="Bathrooms, windows, floor coating…">
+
+        <label>Tier</label>
+        <div class="tiers" id="tiers"></div>
+
+        <label for="price">Final price (USD)</label>
+        <div class="price-wrap">
+          <span>$</span>
+          <input id="price" name="price" type="number" min="1" step="0.01" required placeholder="25000">
+        </div>
+
+        <button type="submit" class="btn" id="submit">Generate unique link</button>
+        <div id="error" class="error" role="alert"></div>
+        <div id="ok" class="ok"></div>
+        <div id="link-box" class="link-box"></div>
+        <button type="button" class="btn btn-ghost" id="copy" style="display:none">Copy link</button>
+        <button type="button" class="btn btn-ghost" id="open" style="display:none">Open buyer page</button>
+      </form>
+    </section>
+
+    <aside class="card preview" id="preview">
+      <div class="preview-kicker">Buyer will see</div>
+      <div class="empty" id="preview-empty">Fill in the company, pick a tier, and enter a price. The contract link will lock these in.</div>
+      <div id="preview-body" style="display:none">
+        <div class="pill" id="pv-tier"></div>
+        <div class="company" id="pv-company"></div>
+        <div class="meta" id="pv-meta"></div>
+        <div class="price-lg" id="pv-price"></div>
+        <ul class="includes" id="pv-includes"></ul>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+  (function () {
+    var TIERS = {
+      1: {
+        name: "The Vault",
+        kicker: "Tier 1",
+        tagline: "Everything you need to run it yourself.",
+        includes: [
+          "Ad bank with winners flagged",
+          "Budget and pacing strategy",
+          "Multiple budgets across multiple areas",
+          "Full tool stack",
+          "Meta setup and run SOP",
+          "Out-of-area and duplicate lead removal",
+          "Qualifying questions and landing page structure"
+        ]
+      },
+      2: {
+        name: "Creative Engine",
+        kicker: "Tier 2",
+        tagline: "How to keep leads coming after the bank runs its course.",
+        includes: [
+          "Everything in Tier 1 — The Vault",
+          "Ad creation videos (research, hook, script, assembly)",
+          "Ad creation tools and sites",
+          "Iteration SOP — fatigue, refreshes, and turning one winner into many"
+        ]
+      },
+      3: {
+        name: "Hands-On Buildout",
+        kicker: "Tier 3",
+        tagline: "We get you live, then stay on it for a month.",
+        includes: [
+          "Everything in Tier 1 and Tier 2",
+          "First 30 days of support and scheduled calls",
+          "Custom landing page, built and branded for you",
+          "Leads wired into your CRM — we help you connect it"
+        ]
+      }
+    };
+
+    var selectedTier = 1;
+    var lastUrl = "";
+
+    function money(n) {
+      var num = Number(n);
+      if (!isFinite(num) || num <= 0) return "";
+      return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(num);
+    }
+
+    function val(id) { return (document.getElementById(id).value || "").trim(); }
+
+    function renderTiers() {
+      var root = document.getElementById("tiers");
+      root.innerHTML = "";
+      [1, 2, 3].forEach(function (id) {
+        var t = TIERS[id];
+        var el = document.createElement("label");
+        el.className = "tier" + (selectedTier === id ? " selected" : "");
+        el.innerHTML = '<input type="radio" name="tier" value="' + id + '"' + (selectedTier === id ? " checked" : "") + ">" +
+          '<div class="kicker">' + t.kicker + "</div><h3>" + t.name + "</h3><p>" + t.tagline + "</p>";
+        el.addEventListener("click", function () {
+          selectedTier = id;
+          renderTiers();
+          renderPreview();
+        });
+        root.appendChild(el);
+      });
+    }
+
+    function renderPreview() {
+      var company = val("company");
+      var contact = val("contact");
+      var email = val("email");
+      var vertical = val("vertical");
+      var price = Number(val("price"));
+      var t = TIERS[selectedTier];
+      var empty = document.getElementById("preview-empty");
+      var body = document.getElementById("preview-body");
+      if (!company && !price) {
+        empty.style.display = "";
+        body.style.display = "none";
+        return;
+      }
+      empty.style.display = "none";
+      body.style.display = "";
+      document.getElementById("pv-tier").textContent = t.kicker + " · " + t.name;
+      document.getElementById("pv-company").textContent = company || "Company";
+      var bits = [];
+      if (contact) bits.push(contact);
+      if (email) bits.push(email);
+      if (vertical) bits.push(vertical);
+      document.getElementById("pv-meta").textContent = bits.join(" · ") || t.tagline;
+      document.getElementById("pv-price").textContent = money(price) || "Set a price";
+      var ul = document.getElementById("pv-includes");
+      ul.innerHTML = t.includes.map(function (x) { return "<li>" + x + "</li>"; }).join("");
+    }
+
+    ["company", "contact", "email", "phone", "vertical", "price"].forEach(function (id) {
+      document.getElementById(id).addEventListener("input", renderPreview);
+    });
+
+    function showError(msg) {
+      var e = document.getElementById("error");
+      e.textContent = msg || "";
+      e.classList.toggle("visible", !!msg);
+      document.getElementById("ok").classList.remove("visible");
+    }
+    function showOk(msg) {
+      var e = document.getElementById("ok");
+      e.textContent = msg || "";
+      e.classList.toggle("visible", !!msg);
+      document.getElementById("error").classList.remove("visible");
+    }
+
+    document.getElementById("form").addEventListener("submit", async function (ev) {
+      ev.preventDefault();
+      showError("");
+      var company = val("company");
+      var contact = val("contact");
+      var email = val("email");
+      var price = Number(val("price"));
+      if (!company) return showError("Company name is required.");
+      if (!contact) return showError("Contact name is required.");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError("Valid email is required.");
+      if (!price || price < 1) return showError("Enter a final price.");
+
+      var btn = document.getElementById("submit");
+      btn.disabled = true;
+      btn.textContent = "Generating…";
+      try {
+        var res = await fetch("/api/system-offer/create-link", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            company: company,
+            contact: contact,
+            email: email,
+            phone: val("phone"),
+            vertical: val("vertical"),
+            tier: selectedTier,
+            price: price
+          })
+        });
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok) throw new Error(data.error || "Could not create link");
+        lastUrl = data.url;
+        document.getElementById("link-box").textContent = lastUrl;
+        document.getElementById("link-box").classList.add("visible");
+        document.getElementById("copy").style.display = "";
+        document.getElementById("open").style.display = "";
+        showOk("Link ready. Send it to " + contact + " at " + company + ".");
+      } catch (err) {
+        showError(err.message || "Could not create link.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Generate unique link";
+      }
+    });
+
+    document.getElementById("copy").addEventListener("click", function () {
+      if (!lastUrl) return;
+      navigator.clipboard.writeText(lastUrl).then(function () {
+        showOk("Copied. You can paste it into an email or text.");
+      }).catch(function () {
+        prompt("Copy this link:", lastUrl);
+      });
+    });
+    document.getElementById("open").addEventListener("click", function () {
+      if (lastUrl) window.open(lastUrl, "_blank", "noopener");
+    });
+
+    renderTiers();
+    renderPreview();
+  })();
+  </script>
+</body>
+</html>
