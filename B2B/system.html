@@ -1,0 +1,1177 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head><!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18128405900"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18128405900');
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="https://peakleadsgroup.com/Images/PLG%20FAVICON%20(3).png">
+    <title>Meta Ads System - Peak Leads Marketing Group</title>
+
+    <!-- Meta Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1878589522997411');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1878589522997411&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Meta Pixel Code -->
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .form-wrapper {
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo-container {
+            margin-top: 30px;
+            margin-bottom: 30px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-img {
+            max-width: 200px;
+            max-height: 80px;
+            object-fit: contain;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            margin-top: 30px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .progress-area {
+            text-align: left;
+            margin-bottom: 25px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #2196f3;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .back-button {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 10px 0;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .back-button:hover {
+            color: #555;
+        }
+
+        .step-header {
+            font-size: 24px;
+            color: #000;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            font-weight: bold;
+        }
+
+        .step-subheader {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 25px;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .option {
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px 20px;
+            font-size: 16px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .option:hover {
+            background: #f5f5f5;
+            border-color: #bdbdbd;
+        }
+
+        .option.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            color: #1976d2;
+        }
+
+        .option.multi {
+            text-align: left;
+            position: relative;
+            padding-left: 48px;
+        }
+
+        .option.multi::before {
+            content: '';
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            background: #fff;
+        }
+
+        .option.multi.selected::before {
+            background: #2196f3;
+            border-color: #2196f3;
+        }
+
+        .option.multi.selected::after {
+            content: '✓';
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            text-align: center;
+            color: #fff;
+            font-size: 13px;
+            font-weight: bold;
+            line-height: 20px;
+        }
+
+        .multi-hint {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 15px;
+        }
+
+        .text-input {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f8f9fa;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #2196f3;
+            background: #fff;
+        }
+
+        .text-input.error {
+            border-color: #f44336;
+        }
+
+        .input-label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+            text-align: left;
+            font-size: 14px;
+            display: block;
+        }
+
+        .input-wrap {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .field-error {
+            color: #f44336;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .name-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .nav-btn {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .nav-btn:hover {
+            background: #1976d2;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .tcpa-disclaimer {
+            margin-top: 12px;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #666;
+        }
+
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        .important-screen .step-header {
+            color: #d32f2f;
+            font-size: 28px;
+        }
+
+        .important-screen .step-subheader {
+            margin-bottom: 0;
+        }
+
+
+        .by-the-numbers-header {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stat-card {
+            text-align: center;
+        }
+
+        .get-leads-cta {
+            text-align: center;
+            margin-top: 30px;
+            margin-bottom: 40px;
+        }
+
+        .get-leads-btn {
+            padding: 18px 48px;
+            font-size: 18px;
+            position: relative;
+            min-width: 200px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .get-leads-btn .get-leads-btn-label {
+            transition: opacity 0.15s ease;
+        }
+
+        .get-leads-btn .get-leads-btn-spinner {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.35);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: get-leads-spin 0.65s linear infinite;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .get-leads-btn.is-loading .get-leads-btn-label {
+            opacity: 0;
+        }
+
+        .get-leads-btn.is-loading .get-leads-btn-spinner {
+            opacity: 1;
+        }
+
+        .get-leads-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.92;
+        }
+
+        @keyframes get-leads-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .stat-number {
+            font-size: 48px;
+            font-weight: bold;
+            color: #2196f3;
+            margin-bottom: 5px;
+        }
+
+        .stat-subheader {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .stat-body {
+            font-size: 15px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+
+        .partners-header {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .partners-subtext {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .partners-carousel-wrap {
+            overflow: hidden;
+            padding: 10px 0;
+        }
+
+        .partners-carousel {
+            display: flex;
+            gap: 30px;
+            padding: 10px 0;
+            animation: partners-scroll 25s linear infinite;
+        }
+
+        .partners-carousel img {
+            height: 60px;
+            width: auto;
+            max-width: 140px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        @keyframes partners-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 12px;
+        }
+
+        .video-result {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #333;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+
+        .testimonial-card blockquote {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: #444;
+            margin: 0 0 1.5rem 0;
+            font-style: italic;
+        }
+
+        .testimonial-card .quote-author {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #333;
+            margin: 0;
+        }
+
+        .testimonial-card .quote-author span {
+            font-weight: 400;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <img src="https://peakleadsgroup.com/Images/Peak%20Leads%20Flattened%20Logo.png" 
+             alt="Peak Leads Marketing Group" 
+             class="logo-img">
+    </div>
+
+    <div class="form-wrapper">
+        <div class="progress-area" id="progressArea">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 8%"></div>
+            </div>
+            <button type="button" class="back-button" id="backButton" onclick="prevStep()" style="display: none;">&larr; Back</button>
+        </div>
+
+            <!-- Step 1: Time for ads -->
+            <div class="form-step active" id="step1">
+                <div class="step-header" id="offerHeadline">Run Meta ads in-house with Peak Leads' system</div>
+                <div class="step-subheader">Do you or your team have 3 hours per week to create and maintain an ad account?</div>
+                <div class="options">
+                    <div class="option" data-value="yes" onclick="selectOption(this, 'time_for_ads', 'yes')">Yes</div>
+                    <div class="option" data-value="no" onclick="selectOption(this, 'time_for_ads', 'no')">No</div>
+                </div>
+            </div>
+
+            <!-- Step 2: Marketing spend -->
+            <div class="form-step" id="step2">
+                <div class="step-header">How much do you currently spend on lead gen / marketing per month?</div>
+                <div class="options">
+                    <div class="option" data-value="less_1k" onclick="selectOption(this, 'marketing_spend', 'less_1k')">Less than $1,000</div>
+                    <div class="option" data-value="1k_5k" onclick="selectOption(this, 'marketing_spend', '1k_5k')">$1,000–$4,999</div>
+                    <div class="option" data-value="5k_10k" onclick="selectOption(this, 'marketing_spend', '5k_10k')">$5,000–$10,000</div>
+                    <div class="option" data-value="10k_25k" onclick="selectOption(this, 'marketing_spend', '10k_25k')">$10,000–$25,000</div>
+                    <div class="option" data-value="over_25k" onclick="selectOption(this, 'marketing_spend', 'over_25k')">More than $25,000</div>
+                </div>
+            </div>
+
+            <!-- Step 3: Sales team -->
+            <div class="form-step" id="step3">
+                <div class="step-header">How many people are on your sales team?</div>
+                <div class="options">
+                    <div class="option" data-value="none" onclick="selectOption(this, 'sales_team', 'none')">None</div>
+                    <div class="option" data-value="1_2" onclick="selectOption(this, 'sales_team', '1_2')">1–2</div>
+                    <div class="option" data-value="3_5" onclick="selectOption(this, 'sales_team', '3_5')">3–5</div>
+                    <div class="option" data-value="6_10" onclick="selectOption(this, 'sales_team', '6_10')">6–10</div>
+                    <div class="option" data-value="over_10" onclick="selectOption(this, 'sales_team', 'over_10')">10+</div>
+                </div>
+            </div>
+
+            <!-- Step 4: Lead sources (multi-select) -->
+            <div class="form-step" id="step4">
+                <div class="step-header">How are you getting leads currently?</div>
+                <div class="multi-hint">Select all that apply</div>
+                <div class="options" id="leadSourcesOptions">
+                    <div class="option multi" data-value="google_ads" onclick="toggleMultiOption(this, 'lead_sources', 'google_ads')">Google Ads</div>
+                    <div class="option multi" data-value="meta_ads" onclick="toggleMultiOption(this, 'lead_sources', 'meta_ads')">Meta / Facebook Ads</div>
+                    <div class="option multi" data-value="seo" onclick="toggleMultiOption(this, 'lead_sources', 'seo')">SEO / Website</div>
+                    <div class="option multi" data-value="referrals" onclick="toggleMultiOption(this, 'lead_sources', 'referrals')">Referrals</div>
+                    <div class="option multi" data-value="lead_providers" onclick="toggleMultiOption(this, 'lead_sources', 'lead_providers')">Lead providers (Angi, HomeAdvisor, etc.)</div>
+                    <div class="option multi" data-value="direct_mail" onclick="toggleMultiOption(this, 'lead_sources', 'direct_mail')">Direct mail / door hangers</div>
+                    <div class="option multi" data-value="yard_signs" onclick="toggleMultiOption(this, 'lead_sources', 'yard_signs')">Yard signs</div>
+                    <div class="option multi" data-value="other" onclick="toggleMultiOption(this, 'lead_sources', 'other')">Other</div>
+                </div>
+                <div class="field-error" id="leadSourcesError"></div>
+                <button type="button" class="nav-btn" onclick="validateAndNext('lead_sources')">Next</button>
+            </div>
+
+            <!-- Step 5: Vertical -->
+            <div class="form-step" id="step5">
+                <div class="step-header">What vertical are you in?</div>
+                <div class="options">
+                    <div class="option" data-value="Bathroom remodeling" onclick="selectOption(this, 'vertical', 'Bathroom remodeling')">Bathroom remodeling</div>
+                    <div class="option" data-value="Kitchen remodeling" onclick="selectOption(this, 'vertical', 'Kitchen remodeling')">Kitchen remodeling</div>
+                    <div class="option" data-value="Roofing" onclick="selectOption(this, 'vertical', 'Roofing')">Roofing</div>
+                    <div class="option" data-value="Windows" onclick="selectOption(this, 'vertical', 'Windows')">Windows</div>
+                    <div class="option" data-value="Floor Coating" onclick="selectOption(this, 'vertical', 'Floor Coating')">Floor coating</div>
+                    <div class="option" data-value="Painting" onclick="selectOption(this, 'vertical', 'Painting')">Painting</div>
+                    <div class="option" data-value="HVAC" onclick="selectOption(this, 'vertical', 'HVAC')">HVAC</div>
+                    <div class="option" data-value="Concrete polishing" onclick="selectOption(this, 'vertical', 'Concrete polishing')">Concrete polishing</div>
+                    <div class="option" data-value="Other" onclick="selectOption(this, 'vertical', 'Other')">Other</div>
+                </div>
+            </div>
+
+            <!-- Step 6: Meta ads experience -->
+            <div class="form-step" id="step6">
+                <div class="step-header">Have you run Meta ads before?</div>
+                <div class="options">
+                    <div class="option" data-value="yes" onclick="selectOption(this, 'meta_ads_before', 'yes')">Yes</div>
+                    <div class="option" data-value="no" onclick="selectOption(this, 'meta_ads_before', 'no')">No</div>
+                </div>
+            </div>
+
+            <!-- Step 7: Facebook account -->
+            <div class="form-step" id="step7">
+                <div class="step-header">Do you have a Facebook account?</div>
+                <div class="options">
+                    <div class="option" data-value="yes" onclick="selectOption(this, 'has_fb', 'yes')">Yes</div>
+                    <div class="option" data-value="no" onclick="selectOption(this, 'has_fb', 'no')">No</div>
+                </div>
+            </div>
+
+            <!-- Step 8: Business website -->
+            <div class="form-step" id="step8">
+                <div class="step-header">Business website</div>
+                <div class="input-wrap">
+                    <input type="text" id="businessWebsite" class="text-input" placeholder="example.com" autocomplete="url">
+                    <div class="field-error" id="businessWebsiteError"></div>
+                </div>
+                <button type="button" class="nav-btn" onclick="validateAndNext('businessWebsite')">Next</button>
+            </div>
+
+            <!-- Step 9: Business name -->
+            <div class="form-step" id="step9">
+                <div class="step-header">Business name</div>
+                <div class="input-wrap">
+                    <input type="text" id="businessName" class="text-input" placeholder="Your business name" autocomplete="organization">
+                    <div class="field-error" id="businessNameError"></div>
+                </div>
+                <button type="button" class="nav-btn" onclick="validateAndNext('businessName')">Next</button>
+            </div>
+
+            <!-- Step 10: Your name -->
+            <div class="form-step" id="step10">
+                <div class="step-header">Your name</div>
+                <div class="name-grid">
+                    <div class="input-wrap">
+                        <label class="input-label" for="firstName">First</label>
+                        <input type="text" id="firstName" class="text-input" placeholder="First name" autocomplete="given-name">
+                        <div class="field-error" id="firstNameError"></div>
+                    </div>
+                    <div class="input-wrap">
+                        <label class="input-label" for="lastName">Last</label>
+                        <input type="text" id="lastName" class="text-input" placeholder="Last name" autocomplete="family-name">
+                        <div class="field-error" id="lastNameError"></div>
+                    </div>
+                </div>
+                <button type="button" class="nav-btn" onclick="validateAndNext('name')">Next</button>
+            </div>
+
+            <!-- Step 11: Phone -->
+            <div class="form-step" id="step11">
+                <div class="step-header">Your phone</div>
+                <div class="input-wrap">
+                    <input type="tel" id="phone" class="text-input" placeholder="(555) 123-4567" inputmode="tel" autocomplete="tel">
+                    <small style="color:#666;font-size:12px;display:block;margin-top:5px;">US number, 10 digits.</small>
+                    <div class="field-error" id="phoneError"></div>
+                </div>
+                <button type="button" class="nav-btn" onclick="validateAndNext('phone')">Next</button>
+            </div>
+
+            <!-- Step 12: Email + Submit -->
+            <div class="form-step" id="step12">
+                <div class="step-header">Your email</div>
+                <div class="input-wrap">
+                    <input type="email" id="email" class="text-input" placeholder="you@example.com" autocomplete="email">
+                    <div class="field-error" id="emailError"></div>
+                </div>
+                <button type="button" class="nav-btn" id="submitBtn" onclick="submitForm()">Book a Call</button>
+                <p class="tcpa-disclaimer">By clicking "Book a Call" I permit Peak Leads Group to call, email, and/or text me regarding my inquiry.</p>
+            </div>
+
+            <!-- Final: IMPORTANT screen -->
+            <div class="form-step important-screen" id="stepFinal">
+                <div class="step-header">IMPORTANT</div>
+                <div class="step-subheader">Not every business is the right fit. A team member will review your submission and reach out if it looks like a good match for our Meta ads system</div>
+            </div>
+
+        <div class="video-embed-card content-card" style="margin-top: 30px;">
+            <div class="video-wrapper">
+                <iframe src="https://www.youtube.com/embed/3Tfgv-ddE2k" title="Peak Leads Meta ads system" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </div>
+
+        <div class="by-the-numbers-header">By the numbers</div>
+        <div class="stat-card content-card">
+            <div class="stat-number">70%</div>
+            <div class="stat-subheader">Average Connect Rate</div>
+            <div class="stat-body">Current partners are speaking with 70% of our leads on average</div>
+        </div>
+        <div class="stat-card content-card">
+            <div class="stat-number">50%</div>
+            <div class="stat-subheader">Appointments Booked</div>
+            <div class="stat-body">Of the leads that our partners are connecting with they are booking half of them on average</div>
+        </div>
+        <div class="stat-card content-card">
+            <div class="stat-number">?</div>
+            <div class="stat-subheader">Close Rate</div>
+            <div class="stat-body">Ask your sales team!</div>
+        </div>
+
+        <div class="partners-card content-card">
+            <div class="partners-header">Our Partners</div>
+            <div class="partners-subtext">Trusted by some of the top names in home improvement</div>
+            <div class="partners-carousel-wrap">
+                <div class="partners-carousel">
+                    <img src="../images/fivestarbathsolutionslogo.png" alt="Five Star Bath Solutions">
+                    <img src="../images/primebathslogo.webp" alt="Prime Baths">
+                    <img src="../images/newbathtodaylogo.webp" alt="New Bath Today">
+                    <img src="../images/homeprologo.webp" alt="HomePro">
+                    <img src="../images/homefixlogo.webp" alt="HomeFix">
+                    <img src="../images/fivestarbathsolutionslogo.png" alt="Five Star Bath Solutions">
+                    <img src="../images/primebathslogo.webp" alt="Prime Baths">
+                    <img src="../images/newbathtodaylogo.webp" alt="New Bath Today">
+                    <img src="../images/homeprologo.webp" alt="HomePro">
+                    <img src="../images/homefixlogo.webp" alt="HomeFix">
+                </div>
+            </div>
+        </div>
+
+        <div class="video-embed-card content-card">
+            <div class="video-wrapper">
+                <iframe src="https://www.youtube.com/embed/kuV3DZNhLyM" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            <div class="video-result">Fortress closed $318,000 in 4 months</div>
+        </div>
+
+        <div class="testimonial-card content-card">
+            <blockquote>
+                "We've been working with Peak Leads Group for about six months now, and the experience has been excellent from day one. Their team is extremely thoughtful, responsive, and genuinely invested in our success - it never feels like we're just another account.<br><br>
+                Since partnering with PLG, we've been able to significantly scale our business and confidently expand our service territory into Tennessee. Their lead quality and strategic approach have played a major role in our growth and have helped us take the next step as a company.<br><br>
+                We truly view Peak Leads Group as a growth partner, not just a marketing vendor, and we're excited to continue building with them."
+            </blockquote>
+            <p class="quote-author">Justin Michael, <span>Managing Partner, Bedrock Bath Pros</span></p>
+        </div>
+
+        <div class="video-embed-card content-card">
+            <div class="video-wrapper">
+                <iframe src="https://www.youtube.com/embed/RYAMf40CCFo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            <div class="video-result">$261,000 in 6 months for a 5% cost of marketing</div>
+        </div>
+
+        <div class="get-leads-cta">
+            <button type="button" class="nav-btn get-leads-btn" id="getLeadsCtaBtn" onclick="getLeadsScrollToForm(this)" aria-busy="false">
+                <span class="get-leads-btn-label">Get Started</span>
+                <span class="get-leads-btn-spinner" aria-hidden="true"></span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function getLeadsScrollToForm(btn) {
+            if (!btn || btn.disabled || btn.classList.contains('is-loading')) return;
+            btn.disabled = true;
+            btn.classList.add('is-loading');
+            btn.setAttribute('aria-busy', 'true');
+            const wrap = document.querySelector('.form-wrapper');
+            if (wrap) wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            let settled = false;
+            const done = () => {
+                if (settled) return;
+                settled = true;
+                btn.disabled = false;
+                btn.classList.remove('is-loading');
+                btn.setAttribute('aria-busy', 'false');
+            };
+            const fallbackMs = 1200;
+            const t = setTimeout(done, fallbackMs);
+            window.addEventListener('scrollend', () => {
+                clearTimeout(t);
+                done();
+            }, { once: true, passive: true });
+        }
+
+        const pageParams = new URLSearchParams(window.location.search);
+        const offerHeadlineOverride = pageParams.get('offerHeadline');
+        if (offerHeadlineOverride) {
+            const offerHeadlineEl = document.getElementById('offerHeadline');
+            if (offerHeadlineEl) offerHeadlineEl.textContent = offerHeadlineOverride;
+        }
+        const compactMode = pageParams.get('compactMode') === '1';
+        if (compactMode) {
+            const extraSections = document.querySelectorAll(
+                '.by-the-numbers-header, .stat-card, .partners-card, .video-embed-card, .testimonial-card, .get-leads-cta'
+            );
+            extraSections.forEach((el) => {
+                el.style.display = 'none';
+            });
+        }
+
+        const TOTAL_STEPS = 12;
+        let currentStep = 1;
+        const formData = {
+            lead_sources: []
+        };
+
+        function updateProgress() {
+            const pct = Math.min(100, (currentStep / TOTAL_STEPS) * 100);
+            const pf = document.getElementById('progressFill');
+            if (pf) pf.style.width = pct + '%';
+            const back = document.getElementById('backButton');
+            if (back) back.style.display = currentStep > 1 ? 'flex' : 'none';
+        }
+
+        function showStep(stepNum) {
+            document.querySelectorAll('.form-step').forEach(el => el.classList.remove('active'));
+            const stepEl = document.getElementById('step' + stepNum);
+            if (stepEl) stepEl.classList.add('active');
+            currentStep = stepNum;
+            updateProgress();
+        }
+
+        function selectOption(el, field, value) {
+            el.parentElement.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            formData[field] = value;
+            setTimeout(() => nextStep(), 300);
+        }
+
+        function toggleMultiOption(el, field, value) {
+            if (!Array.isArray(formData[field])) formData[field] = [];
+            const idx = formData[field].indexOf(value);
+            if (idx >= 0) {
+                formData[field].splice(idx, 1);
+                el.classList.remove('selected');
+            } else {
+                formData[field].push(value);
+                el.classList.add('selected');
+            }
+            const errEl = document.getElementById('leadSourcesError');
+            if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+        }
+
+        function nextStep() {
+            if (currentStep < TOTAL_STEPS) {
+                showStep(currentStep + 1);
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                showStep(currentStep - 1);
+            }
+        }
+
+        // Website: must have .something
+        function validateWebsite() {
+            const val = document.getElementById('businessWebsite').value.trim();
+            if (!val) return { valid: false, error: 'Please enter your business website.' };
+            if (!/\.([a-zA-Z]{2,})(\/|$)/.test(val)) return { valid: false, error: 'Please enter a valid website (e.g., example.com).' };
+            return { valid: true };
+        }
+
+        // Phone validation (from floorcoating)
+        function formatPhone(val) {
+            const d = val.replace(/\D/g, '').slice(0, 10);
+            let f = d;
+            if (d.length > 6) f = `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+            else if (d.length > 3) f = `(${d.slice(0,3)}) ${d.slice(3)}`;
+            else if (d.length > 0) f = `(${d}`;
+            return { formatted: f, digits: d };
+        }
+
+        function isValidPhoneNumber(digits) {
+            if (digits.length !== 10) return { valid: false, error: 'Phone number must be 10 digits.' };
+            if (digits.charAt(0) === '1') return { valid: false, error: "Phone number shouldn't start with a 1." };
+            const areaCode = digits.substring(0, 3);
+            const exchange = digits.substring(3, 6);
+            const lineNumber = digits.substring(6, 10);
+            if (/^(\d)\1{2}$/.test(areaCode)) return { valid: false, error: 'Invalid area code.' };
+            if (areaCode === '555') return { valid: false, error: 'Area code 555 is not valid.' };
+            const tollFree = ['800', '888', '877', '866', '855', '844', '833'];
+            if (tollFree.includes(areaCode)) return { valid: false, error: 'Toll-free numbers are not accepted.' };
+            if (['911', '411', '611'].includes(exchange)) return { valid: false, error: 'Invalid exchange code.' };
+            if (exchange.charAt(0) === '0' || exchange.charAt(0) === '1') return { valid: false, error: 'Invalid exchange code.' };
+            if (digits === '1234567890' || digits === '0123456789') return { valid: false, error: 'Sequential numbers are not valid.' };
+            if (/^(\d)\1{9}$/.test(digits)) return { valid: false, error: 'All digits cannot be the same.' };
+            if (areaCode === exchange && areaCode === lineNumber.substring(0, 3)) return { valid: false, error: 'Repeating patterns are not valid.' };
+            if (exchange === '555' && lineNumber.startsWith('01')) return { valid: false, error: 'Test numbers are not valid.' };
+            if (digits.includes('000') || digits.includes('0000')) return { valid: false, error: 'Invalid phone number format.' };
+            if (lineNumber === '9999' || exchange === '999') return { valid: false, error: 'Invalid phone number format.' };
+            return { valid: true };
+        }
+
+        function isValidEmail(email) {
+            if (!email || !email.trim()) return { valid: false, error: 'Please enter your email.' };
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return { valid: false, error: 'Please enter a valid email address.' };
+            return { valid: true };
+        }
+
+        function showError(fieldId, msg) {
+            const el = document.getElementById(fieldId);
+            const errEl = document.getElementById(fieldId + 'Error');
+            if (el) el.classList.add('error');
+            if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
+        }
+
+        function clearError(fieldId) {
+            const el = document.getElementById(fieldId);
+            const errEl = document.getElementById(fieldId + 'Error');
+            if (el) el.classList.remove('error');
+            if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+        }
+
+        function validateAndNext(field) {
+            if (field === 'lead_sources') {
+                if (!formData.lead_sources || formData.lead_sources.length === 0) {
+                    const errEl = document.getElementById('leadSourcesError');
+                    if (errEl) {
+                        errEl.textContent = 'Please select at least one lead source.';
+                        errEl.style.display = 'block';
+                    }
+                    return;
+                }
+            } else if (field === 'businessName') {
+                const val = document.getElementById('businessName').value.trim();
+                if (!val) { showError('businessName', 'Please enter your business name.'); return; }
+                clearError('businessName');
+                formData.business_name = val;
+            } else if (field === 'businessWebsite') {
+                const r = validateWebsite();
+                if (!r.valid) { showError('businessWebsite', r.error); return; }
+                clearError('businessWebsite');
+                formData.business_website = document.getElementById('businessWebsite').value.trim();
+            } else if (field === 'name') {
+                const first = document.getElementById('firstName').value.trim();
+                const last = document.getElementById('lastName').value.trim();
+                if (!first) { showError('firstName', 'Please enter your first name.'); return; }
+                if (!last) { showError('lastName', 'Please enter your last name.'); return; }
+                clearError('firstName'); clearError('lastName');
+                formData.contact_name = first + ' ' + last;
+            } else if (field === 'phone') {
+                const phoneInput = document.getElementById('phone');
+                const p = formatPhone(phoneInput.value);
+                phoneInput.value = p.formatted;
+                const r = isValidPhoneNumber(p.digits);
+                if (!r.valid) { showError('phone', r.error); return; }
+                clearError('phone');
+                formData.phone = p.digits;
+            }
+            nextStep();
+        }
+
+        // Phone formatting
+        document.getElementById('phone').addEventListener('input', function() {
+            const p = formatPhone(this.value);
+            if (this.value !== p.formatted) this.value = p.formatted;
+        });
+
+        // Airtable config (see airtable-base-schema.json for field reference)
+        const AIRTABLE_BASE_ID = 'appmBb0lzqRK9dI8v';
+        const B2B_LEADS_TABLE = 'B2B Leads';
+        const B2B_ADS_TABLE = 'B2B Ads';
+        /** Primary field on B2B Ads used to match Meta {{ad.name}} (change if your primary column differs). */
+        const B2B_AD_PRIMARY_FIELD = 'Name';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const adATIDFromUrl = urlParams.get('adATID');
+
+        function escapeAirtableFormulaString(s) {
+            return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        }
+
+        /**
+         * Resolves adATID from the URL: Airtable record IDs (rec...) are used directly;
+         * otherwise matches B2B Ads by primary field (e.g. Meta ?adATID={{ad.name}}).
+         */
+        async function resolveB2BAdRecordId(adParam) {
+            if (!adParam || !String(adParam).trim()) return null;
+            const trimmed = String(adParam).trim();
+            if (trimmed.startsWith('rec')) return trimmed;
+            const formula = `{${B2B_AD_PRIMARY_FIELD}}='${escapeAirtableFormulaString(trimmed)}'`;
+            const url = `/api/airtable/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(B2B_ADS_TABLE)}?maxRecords=1&filterByFormula=${encodeURIComponent(formula)}`;
+            try {
+                const res = await fetch(url);
+                if (!res.ok) return null;
+                const data = await res.json();
+                if (data.records && data.records.length > 0) return data.records[0].id;
+            } catch (e) {
+                console.warn('B2B Ads lookup failed', e);
+            }
+            return null;
+        }
+
+        const SPEND_LABELS = {
+            less_1k: 'Less than $1,000',
+            '1k_5k': '$1,000–$4,999',
+            '5k_10k': '$5,000–$10,000',
+            '10k_25k': '$10,000–$25,000',
+            over_25k: 'More than $25,000'
+        };
+        const SALES_TEAM_LABELS = {
+            none: 'None',
+            '1_2': '1–2',
+            '3_5': '3–5',
+            '6_10': '6–10',
+            over_10: '10+'
+        };
+        const LEAD_SOURCE_LABELS = {
+            google_ads: 'Google Ads',
+            meta_ads: 'Meta / Facebook Ads',
+            seo: 'SEO / Website',
+            referrals: 'Referrals',
+            lead_providers: 'Lead providers (Angi, HomeAdvisor, etc.)',
+            direct_mail: 'Direct mail / door hangers',
+            yard_signs: 'Yard signs',
+            other: 'Other'
+        };
+
+        /** Niches that exist on B2B Leads Niche(s) — HVAC is captured in Notes only. */
+        const AIRTABLE_NICHE_VALUES = new Set([
+            'Roofing', 'Windows', 'Siding', 'Floor Coating', 'Bathroom Remodeling', 'Other',
+            'Painting', 'Concrete/Coatings', 'Interior Flooring', 'Kitchen Remodeling',
+            'Sprinkler & irrigation', 'Concrete polishing', 'Fencing', 'Line striping',
+            'Commercial roof coating', 'Patios', 'Basement & attic finishing', 'EV charging',
+            'Decks', 'Custom closets', 'Restoration', 'Foundation repair', 'Pools',
+            'Hardwood flooring', 'Kitchen remodeling', 'Bathroom remodeling'
+        ]);
+
+        function formatPhoneForDisplay(digits) {
+            if (!digits || digits.length !== 10) return digits || '';
+            return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+        }
+
+        function isQualifiedForBooking() {
+            const spendOk = ['5k_10k', '10k_25k', 'over_25k'].includes(formData.marketing_spend);
+            const salesOk = formData.sales_team && formData.sales_team !== 'none';
+            return formData.time_for_ads === 'yes'
+                && spendOk
+                && salesOk
+                && formData.has_fb === 'yes';
+        }
+
+        /**
+         * Tiered POST to B2B Leads: if a field breaks (bad link, niche typo, URL type, etc.),
+         * retry with fewer fields so the lead is not lost. Notes always holds the full summary.
+         */
+        async function submitB2BLeadWithFallback(fullFields, notesPlain) {
+            const url = `/api/airtable/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(B2B_LEADS_TABLE)}`;
+            let lastErrText = '';
+            const pick = (f) => Object.assign({}, f);
+            const tiers = [
+                () => pick(fullFields),
+                () => { const f = pick(fullFields); delete f['B2B Ads']; return f; },
+                () => { const f = pick(fullFields); delete f['B2B Ads']; delete f['Niche(s)']; return f; },
+                () => {
+                    const f = pick(fullFields);
+                    delete f['B2B Ads'];
+                    delete f['Niche(s)'];
+                    delete f['Website'];
+                    return f;
+                },
+                () => {
+                    const f = pick(fullFields);
+                    delete f['B2B Ads'];
+                    delete f['Niche(s)'];
+                    delete f['Website'];
+                    delete f['Phone Number'];
+                    delete f['Contact Email'];
+                    return f;
+                },
+                () => {
+                    const f = pick(fullFields);
+                    [
+                        'B2B Ads', 'Niche(s)', 'Website', 'Phone Number', 'Contact Email',
+                        'Contact Name', 'Business Name', 'Location', 'Estimated monthly revenue'
+                    ].forEach((k) => { delete f[k]; });
+                    return f;
+                },
+                () => {
+                    const errBit = lastErrText
+                        ? '\n\n--- Airtable API errors on prior save attempts (truncated) ---\n' + String(lastErrText).slice(0, 1500)
+                        : '';
+                    return {
+                        'Source': fullFields['Source'] || 'Meta Ads',
+                        'Notes': (notesPlain + errBit).slice(0, 99000)
+                    };
+                }
+            ];
+            for (let i = 0; i < tiers.length; i++) {
+                const fields = tiers[i]();
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fields })
+                });
+                const text = await res.text();
+                if (res.ok) {
+                    if (i > 0) console.warn('B2B Airtable: submit succeeded using fallback tier', i);
+                    return { ok: true, tier: i };
+                }
+                lastErrText = text || String(res.status);
+                console.warn('B2B Airtable: tier', i, 'failed', res.status, lastErrText);
+            }
+            return { ok: false, error: lastErrText };
+        }
+
+        async function submitForm() {
+            const emailVal = document.getElementById('email').value.trim();
+            const r = isValidEmail(emailVal);
+            if (!r.valid) {
+                showError('email', r.error);
+                return;
+            }
+            clearError('email');
+            formData.email = emailVal;
+
+            let b2bAdRecordId = null;
+            if (adATIDFromUrl) {
+                b2bAdRecordId = await resolveB2BAdRecordId(adATIDFromUrl);
+            }
+
+            const btn = document.getElementById('submitBtn');
+            if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
+
+            const spendLabel = SPEND_LABELS[formData.marketing_spend] || formData.marketing_spend || '';
+            const salesLabel = SALES_TEAM_LABELS[formData.sales_team] || formData.sales_team || '';
+            const sourcesLabel = (formData.lead_sources || [])
+                .map((v) => LEAD_SOURCE_LABELS[v] || v)
+                .join(', ');
+            const qualified = isQualifiedForBooking();
+            const summaryParts = [
+                '=== B2B AD MANAGEMENT QUALIFICATION ===',
+                '',
+                'TIME FOR ADS:',
+                `3 hours/week to create & maintain ad account? ${formData.time_for_ads === 'yes' ? 'Yes' : 'No'}`,
+                '',
+                'MARKETING SPEND:',
+                spendLabel,
+                '',
+                'SALES TEAM:',
+                salesLabel,
+                '',
+                'LEAD SOURCES:',
+                sourcesLabel || 'None selected',
+                '',
+                'VERTICAL:',
+                formData.vertical || '',
+                '',
+                'META / FACEBOOK:',
+                `Run Meta ads before? ${formData.meta_ads_before === 'yes' ? 'Yes' : 'No'}`,
+                `Has Facebook account? ${formData.has_fb === 'yes' ? 'Yes' : 'No'}`,
+                '',
+                'BUSINESS:',
+                `Business Name: ${formData.business_name || ''}`,
+                `Website: ${formData.business_website || ''}`,
+                '',
+                'CONTACT:',
+                `Name: ${formData.contact_name || ''}`,
+                `Phone: ${formatPhoneForDisplay(formData.phone)}`,
+                `Email: ${formData.email || ''}`,
+                '',
+                `Qualified for booking? ${qualified ? 'Yes' : 'No'}`,
+                `Submitted: ${new Date().toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York' })} EST`
+            ];
+            if (adATIDFromUrl && !b2bAdRecordId) {
+                summaryParts.push('', 'AD REF (URL, not linked):', adATIDFromUrl);
+            }
+            const notes = summaryParts.join('\n');
+
+            const airtableFields = {
+                'Source': 'Meta Ads',
+                'Notes': notes
+            };
+            if (formData.vertical && AIRTABLE_NICHE_VALUES.has(formData.vertical)) {
+                airtableFields['Niche(s)'] = [formData.vertical];
+            }
+            if (formData.phone) airtableFields['Phone Number'] = formData.phone;
+            if (formData.business_name) airtableFields['Business Name'] = formData.business_name;
+            if (formData.business_website) airtableFields['Website'] = formData.business_website;
+            if (formData.contact_name) airtableFields['Contact Name'] = formData.contact_name;
+            if (formData.email) airtableFields['Contact Email'] = formData.email;
+            if (b2bAdRecordId) airtableFields['B2B Ads'] = [b2bAdRecordId];
+
+            try {
+                const submitResult = await submitB2BLeadWithFallback(airtableFields, notes);
+                if (!submitResult.ok) {
+                    throw new Error(submitResult.error || 'Airtable submit failed');
+                }
+                // Track Lead conversion
+                if (typeof fbq === 'function') fbq('track', 'Lead');
+
+                // Qualified: time for ads + $5k+ spend + sales team + FB account → booking
+                if (qualified) {
+                    const name = encodeURIComponent(formData.contact_name || '');
+                    const email = encodeURIComponent(formData.email || '');
+                    window.location.href = `https://cal.com/daniel-wellish-plg/30min?name=${name}&email=${email}`;
+                } else {
+                    showFinalScreen();
+                }
+            } catch (err) {
+                console.error(err);
+                alert('There was an error submitting your form. Please try again.');
+                if (btn) { btn.disabled = false; btn.textContent = 'Book a Call'; }
+            }
+        }
+
+        function showFinalScreen() {
+            document.querySelectorAll('.form-step').forEach(el => el.classList.remove('active'));
+            document.getElementById('stepFinal')?.classList.add('active');
+            document.getElementById('progressArea').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
